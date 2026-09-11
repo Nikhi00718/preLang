@@ -1,0 +1,9 @@
+# Deliberate LEXICAL errors -- exercises the scanner's error recovery.
+
+LOAD "students.csv" AS students;
+
+NORMALIZE students$age;          # '$' is not a legal PrepLang character
+
+FILTER students WHERE marks = 50;  # '=' alone is not an operator
+
+SAVE students AS "broken.csv;     # unterminated string literal

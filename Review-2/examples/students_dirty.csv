@@ -1,0 +1,6 @@
+name,age,marks,attendance,department,passed
+Nikhil,20,85,92.5,CSE,TRUE
+Rahul,21,95,88.0,CSE,TRUE
+Sam,abc,150,75.5,ECE,TRUE
+Arjun,22,45,60.0,MECH,FALSE
+,19,-12,95.0,CSE,TRUE

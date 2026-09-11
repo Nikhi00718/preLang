@@ -1,0 +1,11 @@
+# Deliberate SYNTAX errors -- exercises the parser's panic-mode recovery.
+
+LOAD "students.csv" students;     # missing the AS keyword
+
+NORMALIZE . age students;         # operands in the wrong order
+
+FILTER students WHERE marks >;    # missing right operand
+
+SELECT students [ ];              # empty column list
+
+SAVE students AS "clean.csv"      # missing the ';' terminator
