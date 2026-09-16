@@ -1,62 +1,57 @@
-# PrepLang
+# PrepLang — C++ Compiler Project
 
-PrepLang is a small domain-specific language for describing data-preprocessing
-steps. The current project scope is **Review 1 only**: a simple C++17 lexer and
-LL(1) syntax recogniser.
-
-## Current Review-1 pipeline
+PrepLang is a small, human-readable language for describing data-preprocessing
+steps. The project is split into three review milestones and uses only C++17
+and the standard library.
 
 ```text
-PrepLang source (.prep)
-        ↓
-Lexer: characters → tokens
-        ↓
-Parser: tokens → recognised statements
-        ↓
-Diagnostics: lexical and syntax errors with line/column locations
+Review 1: Lexer → Parser → Parse Tree → Error Handling
+Review 2: AST → Symbol Table → Semantic Analysis → IR
+Review 3: Optimizer → C++-style Code Generator → CSV Executor
 ```
 
-Example:
+The implementation follows the possible compiler components in the supplied
+course material: lexical analysis, syntax analysis, AST construction, semantic
+analysis, symbol-table management, intermediate code, execution, and error
+handling.
 
-```text
-LOAD "students.csv" AS students;
-EXPECT students.age NUMBER;
-NORMALIZE students.age;
-FILTER students WHERE marks >= 50;
-SAVE students AS "cleaned_students.csv";
-```
+## Build everything
 
-## Run Review 1
+From the repository root:
 
 ```bash
-cd Review-1
-g++ -std=c++17 -Wall -Wextra -pedantic main.cpp -o preplang
-./preplang examples/demo_valid.prep
-./preplang examples/demo_lexical_error.prep --no-tokens
-./preplang examples/demo_syntax_error.prep --no-tokens
-./preplang --demo
+cmake -S . -B build
+cmake --build build
 ```
 
-On Windows with Visual C++:
+This creates `preplang_r1`, `preplang_r2`, and `preplang_r3` in the build
+folder. On Windows they have an `.exe` suffix.
 
-```bat
-cd Review-1
-cl /std:c++17 /EHsc /W4 main.cpp /Fe:preplang.exe
-preplang.exe examples/demo_valid.prep
+## Quick demonstrations
+
+```bash
+build/Release/preplang_r1 Review-1/examples/demo_valid.prep
+build/Release/preplang_r1 --demo
+
+build/Release/preplang_r2 Review-2/examples/front_end.prep
+build/Release/preplang_r2 Review-2/examples/semantic_error.prep --no-tokens
+
+build/Release/preplang_r3 Review-3/examples/full_pipeline.prep --run
 ```
 
-Review 1 is intentionally small. It does not build an AST, read CSV data,
-perform semantic/type checking, optimise code, or generate target code yet.
+The full teacher script is in [`TEACHER_DEMO.md`](TEACHER_DEMO.md).
 
 ## Repository layout
 
-| Folder | Purpose |
+| Location | Purpose |
 |---|---|
-| [`Review-1/`](Review-1/) | Active C++ implementation, examples and first-review documents |
-| `Review-2/` | Later-phase reference material kept for future work |
-| `Review-3/` | Later-phase reference material kept for future work |
-| [`PrepLang_Project_Idea.md`](PrepLang_Project_Idea.md) | Original project idea and long-term plan |
+| [`src/`](src/) | Separate C++ modules shared by the three milestones |
+| [`Review-1/`](Review-1/) | Lexer, parser, parse tree and first-review demo |
+| [`Review-2/`](Review-2/) | AST, symbols, semantic checks and IR demo |
+| [`Review-3/`](Review-3/) | Optimization, generated plan and execution demo |
+| [`PLAN.md`](PLAN.md) | Component-to-review plan based on the course screenshot |
+| [`PrepLang_Project_Idea.md`](PrepLang_Project_Idea.md) | Original long-term project idea |
 
-See [`Review-1/README.md`](Review-1/README.md) and
-[`Review-1/REVIEW1_GUIDE.md`](Review-1/REVIEW1_GUIDE.md) for the full first-review
-scope and presentation steps.
+Each review has its own `main.cpp`, examples and README. The shared modules
+keep the behaviour in one place, which makes the code easier to explain and
+maintain.

@@ -1,73 +1,44 @@
-# PrepLang — Review 1 in C++
+# PrepLang — Review 1
 
-PrepLang is a small language for writing data-preprocessing instructions. For
-the first review, the project contains only the two front-end phases required
-to demonstrate the language:
+Review 1 is the small, explainable C++ front end. It implements the two first
+compiler phases and a parse-tree display:
 
-1. **Lexical analysis** — source text is converted into tokens.
-2. **Syntax analysis** — a simple LL(1) recursive-descent parser checks the
-   grammar and reports errors.
+1. **Lexical analysis**: characters become tokens.
+2. **Syntax analysis**: the LL(1) parser checks the grammar.
+3. **Parse tree**: valid statements are printed as a tree.
+4. **Error handling**: lexical and syntax errors include a line and column.
 
-The parser recognises statements; it does not build an AST or process CSV data
-yet. Those features belong to later reviews and are intentionally out of this
-small first-review program.
-
-## Files
-
-```text
-Review-1/
-├── README.md                   this file
-├── main.cpp                    lexer, parser, diagnostics and CLI
-├── examples/                   small .prep programs and CSV examples
-├── docs/                       language, grammar and architecture notes
-├── REVIEW1_GUIDE.md            presentation and viva guide
-└── PrepLang_Review1_Report.docx
-```
+Review 1 does not build a full AST, check dataset types, generate IR, or run
+CSV operations. Those pieces are added in Review 2 and Review 3.
 
 ## Build
 
-The program uses only the C++17 standard library.
+From the repository root:
 
 ```bash
-cd Review-1
-g++ -std=c++17 -Wall -Wextra -pedantic main.cpp -o preplang
+cmake -S . -B build
+cmake --build build
 ```
 
-On Windows with Visual C++:
+The target is `build/Release/preplang_r1.exe` with the Visual Studio generator
+or `build/preplang_r1` with a single-configuration generator.
 
-```bat
-cd Review-1
-cl /std:c++17 /EHsc /W4 main.cpp /Fe:preplang.exe
-```
-
-## Run
+## Demonstrate
 
 ```bash
-# valid program: tokens + recognised statements
-./preplang examples/demo_valid.prep
-
-# show only diagnostics
-./preplang examples/demo_lexical_error.prep --no-tokens
-./preplang examples/demo_syntax_error.prep --no-tokens
-
-# compile a short program directly
-./preplang -c "NORMALIZE students.age;"
-
-# run all bundled examples
-./preplang --demo
+build/preplang_r1 Review-1/examples/demo_valid.prep
+build/preplang_r1 Review-1/examples/demo_lexical_error.prep --no-tokens
+build/preplang_r1 Review-1/examples/demo_syntax_error.prep --no-tokens
+build/preplang_r1 --demo
 ```
 
-On Windows, use `preplang.exe` instead of `./preplang`.
+When explaining the code, open the files in this order:
 
-## What the first review demonstrates
-
-- case-insensitive keywords such as `load` and `LOAD`;
-- identifiers, numbers, strings, booleans and relational operators;
-- comments beginning with `#` or `--`;
-- line and column tracking for every token;
-- the nine statement forms in the grammar;
-- precise lexical and syntax diagnostics; and
-- panic-mode recovery, so later statements are still checked after an error.
-
-The implementation is deliberately kept in one readable C++ file so each
-compiler step can be explained easily during the review.
+```text
+src/Token.h        what a token stores
+src/Lexer.cpp      how characters are grouped
+src/Parser.cpp     how grammar rules are checked
+src/ParseTree.cpp  how the parse tree is printed
+src/Diagnostics.cpp how errors are shown
+Review-1/main.cpp  how the phases are called
+```

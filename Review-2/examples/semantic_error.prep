@@ -1,0 +1,3 @@
+LOAD "Review-2/examples/students.csv" AS students;
+EXPECT students.name STRING;
+NORMALIZE students.name;

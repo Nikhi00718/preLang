@@ -1,18 +1,13 @@
-# Exercises every production of the PrepLang grammar exactly once.
-
-LOAD "employees.csv" AS emp;
-
-EXPECT emp.age NUMBER;
-EXPECT emp.name STRING;
-EXPECT emp.active BOOLEAN;
-EXPECT emp.rating BETWEEN 1 AND 5;
-EXPECT emp.emp_id NOT_NULL;
-
-DROP_NULL emp;
-FILL_NULL emp.salary WITH 0;
-FILL_NULL emp.department WITH "UNKNOWN";
-NORMALIZE emp.salary;
-FILTER emp WHERE age > 21;
-DROP emp [ phone, email, pf_number ];
-SELECT emp [ name, age, salary, department ];
-SAVE emp AS "clean_employees.csv";
+LOAD "students.csv" AS students;
+EXPECT students.age NUMBER;
+EXPECT students.name STRING;
+EXPECT students.active BOOLEAN;
+EXPECT students.marks BETWEEN 0 AND 100;
+EXPECT students.name NOT_NULL;
+DROP_NULL students;
+FILL_NULL students.age WITH 0;
+NORMALIZE students.age;
+FILTER students WHERE marks >= 50;
+DROP students [ active ];
+SELECT students [ name, age, marks ];
+SAVE students AS "cleaned_students.csv";
