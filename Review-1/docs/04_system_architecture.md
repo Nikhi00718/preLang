@@ -6,12 +6,12 @@
                        PrepLang source program (.prep)
                                    │
         ┌──────────────────────────▼──────────────────────────┐
-        │  PHASE 1   LEXICAL ANALYSIS            lexer.py     │   ← Review 1
+        │  PHASE 1   LEXICAL ANALYSIS            main.cpp     │   ← Review 1
         │  characters ──► tokens   (+ lexical errors)         │
         └──────────────────────────┬──────────────────────────┘
                                 token stream
         ┌──────────────────────────▼──────────────────────────┐
-        │  PHASE 2   SYNTAX ANALYSIS             parser.py    │   ← Review 1 (recogniser)
+        │  PHASE 2   SYNTAX ANALYSIS             main.cpp     │   ← Review 1 (recogniser)
         │  tokens ──► parse decisions ──► AST  (+ syntax errs)│     Review 2 (AST)
         └──────────────────────────┬──────────────────────────┘
                           Abstract Syntax Tree
@@ -55,8 +55,8 @@
                           processed CSV dataset
 
         ┌──────────────────────────────────────────────────────┐
-        │  CROSS-CUTTING:  errors.py (diagnostics for every     │
-        │  phase)  ·  ui.py / main.py (stage visualisation)     │
+        │  CROSS-CUTTING:  ErrorReporter (diagnostics for every │
+        │  phase)  ·  main.cpp (terminal stage output)         │
         └──────────────────────────────────────────────────────┘
 ```
 
@@ -78,10 +78,7 @@ from the program text. It is the core idea of the project.
 
 | Module | Phase | Delivered in | Responsibility |
 |---|---|---|---|
-| `tokens.py` | 1 | Review 1 | Token categories, reserved words, `Token` record |
-| `errors.py` | all | Review 1 | Structured diagnostics + `ErrorReporter` collector |
-| `lexer.py` | 1 | Review 1 | Characters → tokens; lexical error recovery |
-| `parser_basic.py` | 2 | Review 1 | LL(1) recursive-descent recogniser |
+| `main.cpp` | 1–2 | Review 1 | Tokens, diagnostics, lexer and LL(1) recogniser |
 | `ast_nodes.py` | 2 | Review 2 | AST node dataclasses + pretty printer |
 | `parser.py` | 2 | Review 2 | Full parser producing an AST |
 | `symbol_table.py` | 3 | Review 2 | Dataset/column symbols, types, liveness |
@@ -123,9 +120,9 @@ compiler phase at a time, each with its own test module:
    artefact. No phase reaches back into an earlier one.
 3. **Collect errors, never abort.** Each phase records diagnostics and
    recovers, so one compilation reports many problems.
-4. **Test each phase independently.** `pytest` modules mirror the phases
-   (`test_lexer.py`, `test_parser_basic.py`, …), with both positive tests
-   (valid programs) and negative tests (each error class).
+4. **Test each phase independently.** The valid, lexical-error and
+   syntax-error examples mirror the phases, with both positive programs and
+   negative programs (including recovery behaviour).
 5. **Keep every artefact printable.** Tokens, AST, symbol table, IR and
    generated code all have a `format_*` renderer, which is what makes the
    Review 3 visual IDE a thin layer rather than a separate system.
@@ -146,6 +143,5 @@ CompilerError
 └── RuntimeError_   (execution) file missing, Pandas failure
 ```
 
-Every diagnostic carries: phase, line, column, problem, expected, found,
-optional hint and optional "did you mean" suggestions computed with
-`difflib`.
+Every diagnostic carries: phase, line, column, problem, expected, found and an
+optional hint. The first review keeps this infrastructure small and readable.

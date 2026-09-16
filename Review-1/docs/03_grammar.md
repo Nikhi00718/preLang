@@ -118,8 +118,8 @@ production:
    `identifier_list_tail`) is *right* recursive.
 
 Therefore a predictive parser needs exactly **one token of lookahead** and
-never backtracks. This is why `parser_basic.py` can dispatch on
-`self.current` with a plain dictionary lookup — that dictionary *is* the LL(1)
+never backtracks. This is why `Parser::parseStatement()` can dispatch on the
+current token with a short chain of keyword checks — that dispatch is the LL(1)
 parsing table.
 
 ## 3.5 LL(1) parsing table (statement level)

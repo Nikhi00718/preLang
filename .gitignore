@@ -1,0 +1,13 @@
+# C++ build output
+Review-1/preplang
+Review-1/preplang.exe
+Review-1/*.o
+Review-1/*.obj
+Review-1/*.pdb
+Review-1/*.ilk
+Review-1/build/
+
+# Python caches from the later-review reference folders
+__pycache__/
+*.py[cod]
+.pytest_cache/

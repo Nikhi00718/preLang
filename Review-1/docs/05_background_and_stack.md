@@ -4,12 +4,12 @@
 
 | Concept | Standard definition | Application in PrepLang |
 |---|---|---|
-| Lexical analysis | Grouping characters into tokens using a DFA | `lexer.py`; regular definitions in doc 02 |
+| Lexical analysis | Grouping characters into tokens using a DFA | `Lexer::tokenize()` in `main.cpp` |
 | Regular definitions | RE description of token classes | `identifier`, `number`, `string`, `relop` |
 | Maximal munch | Longest lexeme wins | `>=` vs `>`; `DROP_NULL` vs `DROP` |
 | Context-free grammar | Productions describing valid programs | BNF in doc 03 |
 | FIRST / FOLLOW, LL(1) | Predictive-parsing decision procedure | Proof in doc 03 §3.4 |
-| Recursive-descent parsing | One function per non-terminal | `parser_basic.py` |
+| Recursive-descent parsing | One function per non-terminal | `Parser` methods in `main.cpp` |
 | Panic-mode recovery | Skip to a synchronising token after an error | Synchronising set `{';'} ∪ FIRST(statement)` |
 | Abstract Syntax Tree | Condensed parse tree | `ast_nodes.py` (Review 2) |
 | Symbol table | Name → attribute mapping | Datasets + columns + types + liveness |
@@ -20,7 +20,7 @@
 | Machine-independent optimisation | Improving IR before code generation | Column pruning, redundancy and dead-op elimination |
 | Live-variable analysis | Which values are needed later | Live-column analysis driving column pruning |
 | Dead-code elimination | Removing computations with no effect | `NORMALIZE` on a later-dropped column |
-| Target code generation | IR → executable form | Python/Pandas emitter |
+| Target code generation | IR → executable form | Planned after Review 1 |
 | Error reporting and recovery | Useful diagnostics, continued analysis | `errors.py`, six error classes |
 
 ## 5.2 Related work
@@ -46,13 +46,13 @@ individually built compiler.
 
 | Layer | Choice | Justification |
 |---|---|---|
-| Implementation language | **Python 3.10+** | Fast development, dataclasses model AST nodes cleanly, `csv` in the standard library, permitted by the instruction manual |
+| Implementation language | **C++17** | Standard-library-only implementation with simple structs, vectors and strings |
 | Lexer | **Hand-written DFA scanner** | The lab is about understanding the phase; a hand-written scanner makes the automaton explicit and explainable in the viva |
 | Parser | **Hand-written recursive descent (LL(1))** | One function per non-terminal maps 1:1 onto the BNF; no generator black box; full control of error recovery |
-| Schema inference | **`csv` module (standard library)** | Keeps the *front end* dependency-free; Pandas is needed only to execute the generated code |
-| Execution backend | **Pandas** | The generated target code is ordinary Pandas, so the output is useful outside the project |
-| Visualisation | **Tkinter** (standard library) | No installation required for the demo machine; each compiler stage gets one tab |
-| Testing | **pytest** | Concise assertions; one test module per compiler phase |
+| Schema inference | **Planned after Review 1** | The first review stops after syntax validation |
+| Execution backend | **Planned after Review 1** | Data execution is outside the first-review prototype |
+| Visualisation | **Terminal output** | Keeps the first-review demo dependency-free |
+| Testing | **Bundled `.prep` examples** | Valid and invalid programs exercise the lexer, parser and recovery |
 | Version control | **Git** | Development log and phase-wise history |
 
 ### Deliberately *not* used
@@ -67,10 +67,10 @@ individually built compiler.
 
 ```
 OS               : Windows 11
-Python           : 3.10 or newer   (developed on 3.14)
+Compiler         : C++17 (GCC or Visual C++)
 Editor           : Visual Studio Code
-Required package : pandas   (execution backend only, Review 3)
-Test runner      : pytest
+Dependencies     : C++ standard library only
+Test method      : bundled example programs
 Version control  : Git
 ```
 
@@ -78,8 +78,9 @@ Installation for Review 1 (no third-party package is needed):
 
 ```bash
 cd Review-1
-python main.py examples/demo_valid.prep
-python -m pytest -q
+g++ -std=c++17 -Wall -Wextra -pedantic main.cpp -o preplang
+./preplang examples/demo_valid.prep
+./preplang --demo
 ```
 
 ## 5.5 References
