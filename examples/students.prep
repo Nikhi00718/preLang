@@ -1,0 +1,21 @@
+# Clean the student dataset and keep only the useful columns.
+LOAD "students.csv" AS students;
+
+EXPECT students.age NUMBER;
+EXPECT students.marks BETWEEN 0 AND 100;
+EXPECT students.name NOT_NULL;
+
+FILL_NULL students.department WITH "UNKNOWN";
+DROP_NULL students;
+NORMALIZE students.attendance USING MINMAX;
+
+FILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);
+
+# After the FILTER the compiler only knows marks is in [50, 95],
+# so this contract cannot be proven and is checked when the program runs.
+EXPECT students.marks BETWEEN 60 AND 100;
+
+DROP students [department];
+SELECT students [name, age, marks];
+
+SAVE students AS "clean.csv";

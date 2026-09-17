@@ -1,0 +1,3 @@
+# Keep CSV bytes exactly as committed on every OS. The generated script checks
+# a hash of each input CSV, so changed line endings would look like a changed file.
+*.csv -text

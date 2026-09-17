@@ -1,5 +1,0 @@
-# Review 1: deliberate lexical errors
-LOAD "students.csv" AS students;
-NORMALIZE students$age;
-FILTER students WHERE marks = 50;
-SAVE students AS "missing_quote.csv;

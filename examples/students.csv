@@ -1,0 +1,9 @@
+name,age,marks,attendance,passed,department
+Asha,20,85,92.5,true,CSE
+Rahul,21,95,88.0,true,ECE
+Meera,19,42,61.5,false,CSE
+Karthik,,78,75.0,true,MECH
+Divya,22,67,80.25,true,
+Arjun,20,35,55.0,false,ECE
+Sneha,23,91,97.0,true,CSE
+Vikram,21,58,70.5,false,MECH

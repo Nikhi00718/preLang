@@ -1,15 +1,5 @@
-# C++ build output
+# CMake build folder
 build/
-cmake-build-*/
-*.exe
-*.out
-*.o
-*.obj
-*.pdb
-*.ilk
-Review-3/examples/cleaned_students.csv
 
-# Python caches from the later-review reference folders
-__pycache__/
-*.py[cod]
-.pytest_cache/
+# CSV files written by the unit tests when run from the project folder
+test_*_students.csv

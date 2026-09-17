@@ -1,6 +1,0 @@
-# Review 1: deliberate syntax errors
-LOAD "students.csv" students;
-NORMALIZE . age students;
-FILTER students WHERE marks >;
-SELECT students [ ];
-SAVE students AS "cleaned.csv"

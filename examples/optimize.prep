@@ -1,0 +1,17 @@
+# Shows every optimization. Run with --ir to see the IR before and after.
+LOAD "students.csv" AS top;
+
+EXPECT top.marks BETWEEN 0 AND 100;    # proven from the data: the run-time check is removed
+FILL_NULL top.marks WITH 0;            # marks has no missing values: removed
+FILTER top WHERE marks >= 0;           # always true for marks in [35, 95]: removed
+NORMALIZE top.attendance;              # attendance is never saved: dead store, removed
+FILTER top WHERE marks >= 80;
+SELECT top [name, marks];              # only name and marks are read from the CSV
+SAVE top AS "top_students.csv";
+
+# DROP_NULL looks at every column, so this LOAD must read all of them
+# even though only two are saved. Pruning here would change the result.
+LOAD "students.csv" AS complete;
+DROP_NULL complete;
+SELECT complete [name, age];
+SAVE complete AS "complete_rows.csv";

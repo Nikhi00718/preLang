@@ -1,0 +1,5 @@
+# This program has 3 lexical errors: characters PrepLang does not allow.
+LOAD "students.csv" AS students;
+NORMALIZE students$age;
+FILTER students WHERE marks = 50;
+SAVE students AS "clean.csv;

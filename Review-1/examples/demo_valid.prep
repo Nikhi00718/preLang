@@ -1,7 +1,0 @@
-# Review 1: a valid program
-LOAD "students.csv" AS students;
-EXPECT students.age NUMBER;
-NORMALIZE students.age;
-FILTER students WHERE marks >= 50;
-SELECT students [ name, age, marks ];
-SAVE students AS "cleaned_students.csv";

@@ -1,0 +1,11 @@
+# This program has 4 syntax errors. The parser reports all of them in one run.
+LOAD "students.csv" AS students;
+
+NORMALISE students.age;
+
+SELECT students [name, number];
+
+FILTER students WHERE marks > ;
+
+DROP_NULL students
+SAVE students AS "clean.csv";
