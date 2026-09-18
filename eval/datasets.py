@@ -57,8 +57,55 @@ def make_example_images():
     print("wrote", folder)
 
 
+DATA = ROOT / "eval" / "data"
+
+
+def make_wide_table(rows=200_000):
+    """id, 30 floats (f1 has 1% missing values), 5 small integers and 4 text columns."""
+    rng = np.random.default_rng(7)
+    import pandas as pd
+    frame = pd.DataFrame({"id": np.arange(rows)})
+    for i in range(30):
+        frame[f"f{i}"] = rng.random(rows).round(6)
+    frame.loc[rng.random(rows) < 0.01, "f1"] = np.nan
+    for i in range(5):
+        frame[f"k{i}"] = rng.integers(0, 5, rows)
+    for i in range(4):
+        frame[f"s{i}"] = rng.choice(["red", "green", "blue", "gray"], rows)
+    frame.to_csv(DATA / "wide.csv", index=False)
+
+
+def make_tall_tables():
+    """Tables of 10k, 100k and 1M rows with 10 columns, for compile-time scaling."""
+    rng = np.random.default_rng(11)
+    import pandas as pd
+    for rows in (10_000, 100_000, 1_000_000):
+        frame = pd.DataFrame({f"c{i}": rng.random(rows).round(4) for i in range(8)})
+        frame["n"] = rng.integers(0, 1000, rows)
+        frame["t"] = rng.choice(["a", "b", "c"], rows)
+        frame.to_csv(DATA / f"tall_{rows}.csv", index=False)
+
+
+def make_image_folders():
+    """640x480 JPG images: folders of 100, 1000 and 3000 files."""
+    for count in (100, 1000, 3000):
+        folder = DATA / f"images_{count}"
+        for i in range(count):
+            write(folder / f"img_{i:05d}.jpg", synthetic_image(640, 480, 3, i))
+
+
+def make_benchmark_data():
+    DATA.mkdir(parents=True, exist_ok=True)
+    make_wide_table()
+    make_tall_tables()
+    make_image_folders()
+    print("wrote", DATA)
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["examples"]:
         make_example_images()
+    elif sys.argv[1:] == ["benchmark"]:
+        make_benchmark_data()
     else:
-        sys.exit("usage: py -3 eval/datasets.py examples")
+        sys.exit("usage: py -3 eval/datasets.py examples|benchmark")

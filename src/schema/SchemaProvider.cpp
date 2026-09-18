@@ -2,10 +2,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <iterator>
 #include <map>
 
 namespace fs = std::filesystem;
@@ -22,6 +22,8 @@ std::string trim(const std::string& text) {
     const size_t last = text.find_last_not_of(" \t\r");
     return text.substr(first, last - first + 1);
 }
+
+bool isBlank(const std::string& text) { return text.find_first_not_of(" \t\r") == std::string::npos; }
 
 std::string toLower(std::string text) {
     for (char& c : text) {
@@ -52,16 +54,19 @@ std::uint32_t crc32(const std::string& bytes) {
 }
 
 std::uint64_t fileFingerprint(const std::string& path) {
-    std::ifstream file(path, std::ios::binary);
-    return crc32(std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()));
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    std::string bytes(static_cast<size_t>(file.tellg()), ' ');
+    file.seekg(0);
+    file.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    return crc32(bytes);
 }
 
 // ---------- CSV ----------
 
-// Splits one CSV line into trimmed fields. A field inside double quotes may
-// contain commas, and "" inside quotes stands for a single quote character.
-std::vector<std::string> splitCsvLine(const std::string& line) {
-    std::vector<std::string> fields;
+// Splits one CSV line into trimmed fields, reusing `fields`. A field inside double
+// quotes may contain commas, and "" inside quotes stands for a single quote character.
+void splitCsvLine(const std::string& line, std::vector<std::string>& fields) {
+    fields.clear();
     std::string field;
     bool inQuotes = false;
     for (size_t i = 0; i < line.size(); ++i) {
@@ -85,7 +90,6 @@ std::vector<std::string> splitCsvLine(const std::string& line) {
         }
     }
     fields.push_back(trim(field));
-    return fields;
 }
 
 // Reads the header line, dropping the UTF-8 byte-order mark Excel may add.
@@ -99,32 +103,48 @@ bool readHeader(std::ifstream& file, std::string& line) {
     return true;
 }
 
-// The most specific type for one non-empty cell. Numbers use the same rule
-// as PrepLang number literals: optional '-', digits, optional '.' and digits.
+// Moves i past a run of digits; returns false if there was none.
+bool skipDigits(const std::string& text, size_t& i) {
+    const size_t start = i;
+    while (i < text.size() && isDigit(text[i])) {
+        ++i;
+    }
+    return i > start;
+}
+
+// The most specific type for one non-empty cell. Numbers are an optional '-',
+// digits, an optional '.' and digits, and an optional exponent such as e-05
+// (pandas writes small floats that way). A number with '.' or an exponent is FLOAT.
 ColumnType typeOfCell(const std::string& cell) {
-    const std::string lower = toLower(cell);
-    if (lower == "true" || lower == "false") {
+    if ((cell.size() == 4 || cell.size() == 5) && (toLower(cell) == "true" || toLower(cell) == "false")) {
         return ColumnType::Boolean;
     }
     size_t i = (cell[0] == '-') ? 1 : 0;
-    const size_t digitsStart = i;
-    while (i < cell.size() && isDigit(cell[i])) {
-        ++i;
-    }
-    if (i == digitsStart) {
+    if (!skipDigits(cell, i)) {
         return ColumnType::String;
     }
-    if (i == cell.size()) {
-        return ColumnType::Integer;
+    bool isFloat = false;
+    if (i < cell.size() && cell[i] == '.') {
+        ++i;
+        if (!skipDigits(cell, i)) {
+            return ColumnType::String;
+        }
+        isFloat = true;
     }
-    if (cell[i] != '.') {
+    if (i < cell.size() && (cell[i] == 'e' || cell[i] == 'E')) {
+        ++i;
+        if (i < cell.size() && (cell[i] == '-' || cell[i] == '+')) {
+            ++i;
+        }
+        if (!skipDigits(cell, i)) {
+            return ColumnType::String;
+        }
+        isFloat = true;
+    }
+    if (i != cell.size()) {
         return ColumnType::String;
     }
-    const size_t fractionStart = ++i;
-    while (i < cell.size() && isDigit(cell[i])) {
-        ++i;
-    }
-    return (i > fractionStart && i == cell.size()) ? ColumnType::Float : ColumnType::String;
+    return isFloat ? ColumnType::Float : ColumnType::Integer;
 }
 
 // Combines the type seen so far in a column with the type of a new cell.
@@ -267,7 +287,9 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& csvPath,
     table.name = name;
     table.file = csvPath;
     table.fingerprint = fileFingerprint(csvPath);
-    for (const std::string& columnName : splitCsvLine(line)) {
+    std::vector<std::string> cells;
+    splitCsvLine(line, cells);
+    for (const std::string& columnName : cells) {
         ColumnInfo column;
         column.name = columnName;
         table.columns.push_back(column);
@@ -281,10 +303,10 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& csvPath,
 
     while (std::getline(file, line)) {
         ++lineNumber;
-        if (trim(line).empty()) {
+        if (isBlank(line)) {
             continue;
         }
-        const std::vector<std::string> cells = splitCsvLine(line);
+        splitCsvLine(line, cells);
         if (cells.size() != table.columns.size()) {
             diagnostics_.error(Phase::Schema, location,
                                "line " + std::to_string(lineNumber) + " of '" + csvPath + "' has " +
@@ -309,7 +331,8 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& csvPath,
                 column.stringReason = "line " + std::to_string(lineNumber) + " has \"" + cells[i] + "\"";
             }
             if (isNumeric(type)) {
-                const double value = std::stod(cells[i]);
+                double value = 0;
+                std::from_chars(cells[i].data(), cells[i].data() + cells[i].size(), value);
                 column.min = column.hasRange ? std::min(column.min, value) : value;
                 column.max = column.hasRange ? std::max(column.max, value) : value;
                 column.hasRange = true;
@@ -419,16 +442,19 @@ std::vector<std::string> readColumnValues(const TableSchema& table, const std::s
     if (!readHeader(file, line)) {
         return {};
     }
-    const std::vector<std::string> header = splitCsvLine(line);
+    std::vector<std::string> header;
+    splitCsvLine(line, header);
     const auto found = std::find(header.begin(), header.end(), column);
     if (found == header.end()) {
         return {};
     }
     const size_t index = static_cast<size_t>(found - header.begin());
     std::vector<std::string> values;
+    std::vector<std::string> cells;
     while (std::getline(file, line)) {
-        if (!trim(line).empty()) {
-            values.push_back(splitCsvLine(line)[index]);
+        if (!isBlank(line)) {
+            splitCsvLine(line, cells);
+            values.push_back(cells[index]);
         }
     }
     return values;

@@ -79,10 +79,13 @@ std::string PandasCodegen::tableVariable(const std::string& dataset, const std::
 std::string PandasCodegen::helpers() {
     return R"(def read_csv_checked(path, fingerprint, columns, dtypes):
     """Reads a CSV file, but refuses if the file changed after compilation,
-    because the compiler's checks and proofs were made for the file as it was then."""
+    because the compiler's checks and proofs were made for the file as it was then.
+    The nullable dtypes are applied after parsing: that gives the same values, and
+    passing them to read_csv directly is several times slower."""
     if zlib.crc32(path.read_bytes()) != fingerprint:
         raise ContractError(f"{path} changed after compilation; compile the .prep file again")
-    return pd.read_csv(path, usecols=columns, dtype=dtypes, keep_default_na=False, na_values=[""])
+    frame = pd.read_csv(path, usecols=columns, keep_default_na=False, na_values=[""], dtype_backend="numpy_nullable")
+    return frame.astype(dtypes)
 
 
 )";

@@ -2,7 +2,7 @@
 build/
 
 # CSV files written by the unit tests when run from the project folder
-test_*_students.csv
+test_*.csv
 test_imageset_*
 test_tableset_*
 
@@ -15,3 +15,6 @@ output/*
 # Evaluation data and results that are regenerated
 eval/data/
 eval/work/
+
+# Python bytecode
+__pycache__/

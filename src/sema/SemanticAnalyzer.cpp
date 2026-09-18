@@ -541,23 +541,20 @@ void SemanticAnalyzer::visit(const SaveStmt& node) {
         saveImages(node);
         return;
     }
-    std::optional<TableResolution> resolution;
-    if (node.kind == DataKind::Table) {
-        resolution = resolver_.singleTable(node.target, "SAVE");
-    } else {
-        resolution = resolver_.tables(node.target, "SAVE_TABLES");
-        if (resolution && resolution->dataset->kind != DatasetKind::TableSet) {
-            diagnostics_.error(Phase::Type, node.location,
-                               "SAVE_TABLES expects a TABLESET, but '" + resolution->dataset->name + "' is a TABLE",
-                               "use SAVE " + resolution->dataset->name + " AS \"file.csv\";");
-            return;
-        }
-    }
+    const std::optional<TableResolution> resolution = node.kind == DataKind::Table
+                                                          ? resolver_.singleTable(node.target, "SAVE")
+                                                          : resolver_.tables(node.target, "SAVE_TABLES");
     if (!resolution) {
         return;
     }
     DatasetSymbol& dataset = *resolution->dataset;
-    dataset.saved = true;
+    dataset.saved = true;  // also when this SAVE has an error: no extra "never saved" warning
+    if (node.kind == DataKind::TableSet && dataset.kind != DatasetKind::TableSet) {
+        diagnostics_.error(Phase::Type, node.location,
+                           "SAVE_TABLES expects a TABLESET, but '" + dataset.name + "' is a TABLE",
+                           "use SAVE " + dataset.name + " AS \"file.csv\";");
+        return;
+    }
     std::vector<std::string> saved;
     for (TableState* table : resolution->tables) {
         for (const ColumnState& column : table->columns) {
@@ -797,6 +794,7 @@ void SemanticAnalyzer::saveImages(const SaveStmt& node) {
     if (!images) {
         return;
     }
+    images->saved = true;  // also when this save has an error: no extra "never saved" warning
     if (single != (images->kind == DatasetKind::Image)) {
         diagnostics_.error(Phase::Type, node.location,
                            statement + " expects " + (single ? "an IMAGE" : "an IMAGESET") + ", but '" + images->name +
@@ -842,7 +840,6 @@ void SemanticAnalyzer::saveImages(const SaveStmt& node) {
         diagnostics_.warning(Phase::Semantic, node.location,
                              "QUALITY only affects JPG files, so COMPRESS changes nothing here");
     }
-    images->saved = true;
     recordImages(*images, node.location.line, "saved to \"" + node.path + "\" as " + formatName);
     addTarget(node, {images->name, "", "", {}});
     log(node, statement + " " + images->name + " to \"" + node.path + "\" as " + formatName);

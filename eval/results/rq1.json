@@ -1,0 +1,572 @@
+[
+  {
+    "id": "C-students",
+    "class": "control",
+    "fault": "original program",
+    "preplang": {
+      "verdict": "not reported",
+      "errors": [],
+      "warnings": [],
+      "ms": 22.763700006180443,
+      "contracts": {
+        "proven": 3,
+        "violated": 0,
+        "checked at run time": 1
+      }
+    },
+    "baseline": {
+      "verdict": "completed",
+      "detail": "",
+      "ms": 17.575999998371117
+    }
+  },
+  {
+    "id": "C-company",
+    "class": "control",
+    "fault": "original program",
+    "preplang": {
+      "verdict": "not reported",
+      "errors": [],
+      "warnings": [],
+      "ms": 29.584699994302355,
+      "contracts": {
+        "proven": 7,
+        "violated": 0,
+        "checked at run time": 0
+      }
+    },
+    "baseline": {
+      "verdict": "completed",
+      "detail": "",
+      "ms": 13.054900002316572
+    }
+  },
+  {
+    "id": "C-split",
+    "class": "control",
+    "fault": "original program",
+    "preplang": {
+      "verdict": "not reported",
+      "errors": [],
+      "warnings": [],
+      "ms": 15.771099991980009,
+      "contracts": {
+        "proven": 2,
+        "violated": 0,
+        "checked at run time": 0
+      }
+    },
+    "baseline": {
+      "verdict": "completed",
+      "detail": "",
+      "ms": 6.731400004355237
+    }
+  },
+  {
+    "id": "C-images",
+    "class": "control",
+    "fault": "original program",
+    "preplang": {
+      "verdict": "not reported",
+      "errors": [],
+      "warnings": [],
+      "ms": 17.48889998998493,
+      "contracts": {
+        "proven": 2,
+        "violated": 0,
+        "checked at run time": 0
+      }
+    },
+    "baseline": {
+      "verdict": "completed",
+      "detail": "",
+      "ms": 13.320600002771243
+    }
+  },
+  {
+    "id": "C-linked",
+    "class": "control",
+    "fault": "original program",
+    "preplang": {
+      "verdict": "not reported",
+      "errors": [],
+      "warnings": [],
+      "ms": 17.862299995613284,
+      "contracts": {
+        "proven": 1,
+        "violated": 0,
+        "checked at run time": 0
+      }
+    },
+    "baseline": {
+      "verdict": "completed",
+      "detail": "",
+      "ms": 17.615399992791936
+    }
+  },
+  {
+    "id": "T1",
+    "class": "name",
+    "fault": "misspelled column",
+    "preplang": {
+      "verdict": "compile error (semantic)",
+      "errors": [
+        "column 'attendence' does not exist in 'students'"
+      ],
+      "warnings": [],
+      "ms": 19.381199992494658,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (KeyError)",
+      "detail": "'attendence'",
+      "ms": 2.408799991826527
+    }
+  },
+  {
+    "id": "T2",
+    "class": "type",
+    "fault": "NORMALIZE on a text column",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "NORMALIZE needs a numeric column, but students.name is STRING"
+      ],
+      "warnings": [],
+      "ms": 17.230099998414516,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (TypeError)",
+      "detail": "operation 'sub' not supported for dtype 'str' with object of type <class 'str'>",
+      "ms": 2.866599999833852
+    }
+  },
+  {
+    "id": "T3",
+    "class": "type",
+    "fault": "number compared with text",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "cannot compare INTEGER column 'marks' with text \"50\""
+      ],
+      "warnings": [],
+      "ms": 18.80009999149479,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (TypeError)",
+      "detail": "Invalid comparison between dtype=int64 and str",
+      "ms": 2.455500012729317
+    }
+  },
+  {
+    "id": "T4",
+    "class": "type",
+    "fault": "text filled into an INTEGER column",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "FILL_NULL with text \"UNKNOWN\" needs a matching column type, but students.age is INTEGER"
+      ],
+      "warnings": [],
+      "ms": 19.13470000727102,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "silent wrong output",
+      "detail": "",
+      "ms": 5.409100005635992
+    }
+  },
+  {
+    "id": "T5",
+    "class": "lifecycle",
+    "fault": "column used after SELECT removed it",
+    "preplang": {
+      "verdict": "compile error (semantic)",
+      "errors": [
+        "column 'passed' was removed from 'students' at line 19"
+      ],
+      "warnings": [],
+      "ms": 18.376300009549595,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (KeyError)",
+      "detail": "'passed'",
+      "ms": 4.641600011382252
+    }
+  },
+  {
+    "id": "T6",
+    "class": "contract",
+    "fault": "range contract broken by the data",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: students.marks has values from 35 to 95; row 2 of C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/students.csv has 95"
+      ],
+      "warnings": [],
+      "ms": 20.45929999439977,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "marks out of range",
+      "ms": 1.6414999990956858
+    }
+  },
+  {
+    "id": "T7",
+    "class": "contract",
+    "fault": "NOT_NULL on a column with missing values",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: students.department has 1 missing value in C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/students.csv"
+      ],
+      "warnings": [],
+      "ms": 16.518100004759617,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "department has missing values",
+      "ms": 1.6364999901270494
+    }
+  },
+  {
+    "id": "T8",
+    "class": "value",
+    "fault": "threshold on a normalized column",
+    "preplang": {
+      "verdict": "compile warning",
+      "errors": [],
+      "warnings": [
+        "FILTER removes every row: the condition is never true"
+      ],
+      "ms": 16.88809999905061,
+      "contracts": {
+        "proven": 3,
+        "violated": 0,
+        "checked at run time": 1
+      }
+    },
+    "baseline": {
+      "verdict": "silent wrong output",
+      "detail": "",
+      "ms": 5.4930999904172495
+    }
+  },
+  {
+    "id": "S1",
+    "class": "name",
+    "fault": "wildcard column missing in some tables",
+    "preplang": {
+      "verdict": "compile error (semantic)",
+      "errors": [
+        "column 'salary' is missing in company.departments, company.interns"
+      ],
+      "warnings": [
+        "missing values in company.employees.salary, company.managers.salary stay missing after NORMALIZE"
+      ],
+      "ms": 18.459099999745376,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (KeyError)",
+      "detail": "'salary'",
+      "ms": 4.636199999367818
+    }
+  },
+  {
+    "id": "S2",
+    "class": "type",
+    "fault": "NORMALIZE on text columns of every table",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "NORMALIZE needs a numeric column: 4 of 4 columns matched by 'company.*.name' break it"
+      ],
+      "warnings": [],
+      "ms": 16.259500000160187,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (TypeError)",
+      "detail": "Cannot perform reduction 'mean' with string dtype",
+      "ms": 4.689699999289587
+    }
+  },
+  {
+    "id": "S3",
+    "class": "contract",
+    "fault": "foreign key into the wrong table",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: 4 of 4 values of company.interns.department have no match in company.employees.name"
+      ],
+      "warnings": [],
+      "ms": 17.537100007757545,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "department has unknown keys",
+      "ms": 4.392099988763221
+    }
+  },
+  {
+    "id": "S4",
+    "class": "lifecycle",
+    "fault": "FILTER on a whole TABLESET",
+    "preplang": {
+      "verdict": "compile error (semantic)",
+      "errors": [
+        "FILTER works on one table at a time"
+      ],
+      "warnings": [],
+      "ms": 18.59839999815449,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (KeyError)",
+      "detail": "'age'",
+      "ms": 7.225499997730367
+    }
+  },
+  {
+    "id": "S5",
+    "class": "contract",
+    "fault": "range contract across tables",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: company.employees.age has values from 29 to 45; row 3 of C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/company\\employees.csv has 45",
+        "contract violated: company.managers.age has values from 47 to 52; row 1 of C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/company\\managers.csv has 52"
+      ],
+      "warnings": [],
+      "ms": 21.186400001170114,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "age out of range",
+      "ms": 4.256700005498715
+    }
+  },
+  {
+    "id": "M1",
+    "class": "contract",
+    "fault": "train and test schemas differ",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: train and test have different schemas"
+      ],
+      "warnings": [],
+      "ms": 15.444400007254444,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "",
+      "ms": 1.835699993534945
+    }
+  },
+  {
+    "id": "M2",
+    "class": "name",
+    "fault": "misspelled column in a contract",
+    "preplang": {
+      "verdict": "compile error (semantic)",
+      "errors": [
+        "column 'lable' does not exist in 'train'"
+      ],
+      "warnings": [],
+      "ms": 16.098199994303286,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (KeyError)",
+      "detail": "'lable'",
+      "ms": 1.9494000007398427
+    }
+  },
+  {
+    "id": "I1",
+    "class": "validity",
+    "fault": "broken file not removed",
+    "preplang": {
+      "verdict": "compile error (schema)",
+      "errors": [
+        "1 of 7 files in C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/images/dataset cannot be decoded",
+        "contract violated: 5 of 6 images in train break CHANNELS 1"
+      ],
+      "warnings": [],
+      "ms": 17.756900007952936,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AttributeError)",
+      "detail": "'NoneType' object has no attribute 'shape'",
+      "ms": 6.119500001659617
+    }
+  },
+  {
+    "id": "I2",
+    "class": "contract",
+    "fault": "channel contract broken by a gray image",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: 1 of 6 images in train break CHANNELS 3"
+      ],
+      "warnings": [],
+      "ms": 20.370099999126978,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "dogs/dog_03.png breaks CHANNELS 3",
+      "ms": 5.815900003653951
+    }
+  },
+  {
+    "id": "I3",
+    "class": "contract",
+    "fault": "minimum width broken by one image",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: 1 of 6 images in train break MIN_WIDTH 300"
+      ],
+      "warnings": [],
+      "ms": 17.954399998416193,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "dogs/dog_03.png breaks MIN_WIDTH 300",
+      "ms": 6.140800003777258
+    }
+  },
+  {
+    "id": "I4",
+    "class": "lifecycle",
+    "fault": "table operation on images",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "DROP_NULL expects a TABLE or TABLESET, but 'train' is an IMAGESET",
+        "contract violated: 5 of 6 images in train break CHANNELS 1"
+      ],
+      "warnings": [],
+      "ms": 17.440900002839044,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (TypeError)",
+      "detail": "'Images' object is not iterable",
+      "ms": 6.686300010187551
+    }
+  },
+  {
+    "id": "I5",
+    "class": "value",
+    "fault": "float pixels saved as JPG",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "cannot save FLOAT32 pixels as JPG: NORMALIZE at line 12 scaled them to [0, 1]"
+      ],
+      "warnings": [],
+      "ms": 17.292900010943413,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "silent wrong output",
+      "detail": "",
+      "ms": 13.654399997903965
+    }
+  },
+  {
+    "id": "I6",
+    "class": "type",
+    "fault": "zero width in RESIZE",
+    "preplang": {
+      "verdict": "compile error (semantic)",
+      "errors": [
+        "RESIZE needs a width and height from 1 to 65535"
+      ],
+      "warnings": [],
+      "ms": 16.10629999777302,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (error)",
+      "detail": "OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\core\\src\\copy.cpp:1230: error: (-215:Assertion failed) top",
+      "ms": 5.938900008914061
+    }
+  },
+  {
+    "id": "L1",
+    "class": "contract",
+    "fault": "labels file misses an image",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: match rate of training is 83.33%, expected at least 100%"
+      ],
+      "warnings": [],
+      "ms": 16.94580000184942,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "match rate 83.33%",
+      "ms": 7.356499991146848
+    }
+  },
+  {
+    "id": "L2",
+    "class": "value",
+    "fault": "float pixels saved as PNG",
+    "preplang": {
+      "verdict": "compile error (type)",
+      "errors": [
+        "cannot save FLOAT32 pixels as PNG: NORMALIZE at line 10 scaled them to [0, 1]"
+      ],
+      "warnings": [],
+      "ms": 17.068500004825182,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "silent wrong output",
+      "detail": "",
+      "ms": 16.29109999339562
+    }
+  },
+  {
+    "id": "L3",
+    "class": "contract",
+    "fault": "images linked on the wrong column",
+    "preplang": {
+      "verdict": "compile error (contract)",
+      "errors": [
+        "contract violated: match rate of training is 0%, expected at least 100%"
+      ],
+      "warnings": [],
+      "ms": 20.053999993251637,
+      "contracts": {}
+    },
+    "baseline": {
+      "verdict": "run-time crash (AssertionError)",
+      "detail": "match rate 0.00%",
+      "ms": 6.938299993635155
+    }
+  }
+]

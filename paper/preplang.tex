@@ -1,0 +1,590 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+
+\lstdefinelanguage{PrepLang}{
+  morekeywords={LOAD,LOAD_TABLES,LOAD_IMAGE,LOAD_IMAGES,SAVE,SAVE_TABLES,SAVE_IMAGE,SAVE_IMAGES,
+    AS,TO,WITH,ON,USING,WHERE,TYPE,EXCEPT,IF_EXISTS,RECURSIVE,DROP_NULL,FILL_NULL,NORMALIZE,
+    FILTER,SELECT,DROP,EXPECT,RESIZE,GRAYSCALE,COMPRESS,CONVERT,REMOVE_CORRUPT,LINK,
+    RANGE,MINMAX,ZSCORE,KEEP_ASPECT,QUALITY,JPG,PNG,NPY,NUMERIC,NOT_NULL,BETWEEN,UNIQUE,
+    REFERENCES,SCHEMA_SAME_AS,CHANNELS,MIN_WIDTH,MIN_HEIGHT,MATCH_RATE,AND,OR,NOT},
+  sensitive=false, comment=[l]{\#}, morestring=[b]"
+}
+\lstset{language=PrepLang, basicstyle=\ttfamily\footnotesize, keywordstyle=\bfseries,
+  commentstyle=\itshape\color{gray}, numbers=left, numberstyle=\tiny, xleftmargin=1.5em,
+  frame=tb, columns=fullflexible, breaklines=true}
+
+\begin{document}
+
+\title{PrepLang: Data-Aware Compilation of Tabular and\\Image Preprocessing Pipelines}
+
+\author{\IEEEauthorblockN{Nikhil V}
+\IEEEauthorblockA{School of Computer Science and Engineering\\
+Vellore Institute of Technology, India\\
+atnikhil06@gmail.com}}
+
+\maketitle
+
+\begin{abstract}
+Preprocessing scripts for machine learning are written with general-purpose dataframe and image
+libraries, so their mistakes---a misspelled column, text written into a numeric column, a broken
+image file, floating-point pixels saved as an 8-bit image---appear only while the script processes
+the data, or never, as a silently corrupted dataset. We present PrepLang, a small domain-specific
+language and C++ compiler that treats the input data as part of the program. At compile time it
+reads every CSV cell and every image \emph{header} and computes an \emph{abstract dataset state}:
+column types, nullability and value intervals; per-image sizes, channel counts, pixel type and file
+format; and image--label match rates. Transfer functions carry this state through the pipeline. The
+state lets the compiler type-check each operation against the real data, decide every declared data
+contract as \emph{proven}, \emph{violated} or \emph{deferred}, and remove the run-time checks of
+proven contracts, made safe by a fingerprint guard that stops the generated program if an input
+changed after compilation. The same state drives optimizations that preserve the output exactly,
+kept apart from an approximate rewrite that must be enabled explicitly. The compiler generates one
+Python program: pandas for tables and a streaming OpenCV loop for images. On a benchmark of 24
+injected mistakes, PrepLang reports all 24 before any data is processed; a script-style pipeline
+crashes part-way on 20 and silently writes wrong output on 4. On larger inputs, column pruning and
+check elimination cut the processing time of a 200,000-row table pipeline by 32\%, streaming lowers
+the peak memory for 1,000 images from 922\,MiB to 10\,MiB, and analyzing 3,000 images at compile
+time takes 0.17\,s, 25$\times$ less than decoding them.
+\end{abstract}
+
+\begin{IEEEkeywords}
+compilers, domain-specific languages, abstract interpretation, data validation, data preprocessing,
+machine learning pipelines
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Data preparation is a large part of building machine-learning systems, and errors in it propagate
+silently into models~\cite{sculley2015,polyzotis2018}. Today a preprocessing pipeline is usually a
+Python script built on pandas~\cite{mckinney2010} and OpenCV~\cite{bradski2000}. Such a script
+cannot know, until it runs, whether the column it normalizes holds numbers, whether a folder
+contains a grayscale image among color ones, or whether every image has a label. When the
+assumption is wrong, the script either raises an exception after processing part of the data or,
+worse, finishes and writes a wrong dataset: a threshold applied to an already normalized column
+removes every row, and a float image in $[0,1]$ written as PNG becomes almost black.
+
+Data validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} address the second problem by
+checking declared expectations on the data, but they run at execution time and look at a dataset,
+not at the program that transforms it. Static analyzers for data-science code~\cite{urban2019,
+subotic2022,lagouvardos2020} look at the program, but not at the data, so they cannot know a
+column's type or an image's size.
+
+Batch preprocessing has a property both approaches leave unused: \emph{the inputs exist when the
+pipeline is compiled}. PrepLang makes the data a compile-time input, much as F\# type providers
+derive types from sample data~\cite{petricek2016}, and goes further in three ways:
+
+\begin{itemize}
+\item \textbf{One abstract state for tables and images.} The compiler computes, from the real files,
+an abstract state covering column types, nullability and intervals, per-image shapes, pixel type,
+value range and format, and image--label links, and propagates it through every statement by
+transfer functions (Section~\ref{sec:state}).
+\item \textbf{Three-valued contract discharge with a fingerprint guard.} Each \texttt{EXPECT} is
+proven, violated (a compile error naming the offending rows or files) or deferred to a run-time
+check whose success refines the state. Proofs are bound to the exact inputs: the generated program
+recomputes a CRC-32 fingerprint of every input and refuses to run if one changed, which makes
+removing proven checks safe (Section~\ref{sec:contracts}).
+\item \textbf{State-driven optimization with an explicit exact/approximate boundary.} Facts from the
+state remove no-op operations, proven checks, dead stores and unread columns without changing the
+output, and image operations are fused into one streaming pass. A rewrite that changes pixels
+(fusing two resizes) is applied only on request, and its error is measured
+(Section~\ref{sec:opt}).
+\end{itemize}
+
+We evaluate PrepLang on a fault-injection benchmark and on performance benchmarks
+(Section~\ref{sec:eval}). The compiler has about 6,800 lines of C++17 and 115 unit tests.
+
+\section{A Motivating Example}\label{sec:example}
+
+Fig.~\ref{fig:linked} prepares images and their labels for training. The folder holds six images of
+different sizes, one of them grayscale, and one file (\texttt{broken.jpg}) that is not an image.
+
+\begin{figure}[t]
+\begin{lstlisting}
+LOAD_IMAGES "dataset/" AS imgs RECURSIVE;
+LOAD "labels.csv" AS labels;
+REMOVE_CORRUPT imgs;
+LINK imgs WITH labels ON filename AS training;
+EXPECT training MATCH_RATE 100%;
+RESIZE imgs TO 128 128;
+NORMALIZE imgs RANGE 0 1;   # pixels become FLOAT32
+CONVERT imgs TO NPY;
+SAVE_IMAGES imgs TO "processed/ml_ready/";
+SAVE labels AS "processed/labels.csv";
+\end{lstlisting}
+\caption{Images linked to labels (\texttt{examples/images/linked.prep}).}
+\label{fig:linked}
+\end{figure}
+
+Three small edits turn this into a typical broken pipeline. Without line~3, the equivalent script
+fails on the broken file after decoding the others; PrepLang reports at compile time that
+``1 of 7 files cannot be decoded''. With a labels file that lacks one image, the script's
+assertion fails only after every image has been decoded; PrepLang reports ``match rate of training
+is 83.33\%, expected at least 100\%''. With \texttt{CONVERT imgs TO PNG} in line~8, the script
+finishes without any error and writes black images. PrepLang instead reports:
+
+\begin{lstlisting}[language={},numbers=none]
+error[type]: cannot save FLOAT32 pixels as PNG:
+  NORMALIZE at line 7 scaled them to [0, 1]
+  = hint: image files store 8-bit pixels, so these
+    would come out almost black; add CONVERT imgs TO NPY
+\end{lstlisting}
+
+To produce this message, the compiler must know the pixel type and value range at line~9, which
+come from the file headers read at line~1 and the effect of line~7.
+
+\section{The PrepLang Language}\label{sec:lang}
+
+PrepLang programs are straight-line sequences of statements over five kinds of data: a
+\texttt{TABLE} (one CSV file), a \texttt{TABLESET} (a folder of CSV files), an \texttt{IMAGE}, an
+\texttt{IMAGESET} (a folder, optionally recursive) and a \texttt{DATASET} (images linked to a
+table by a file-name column). Table statements are \texttt{FILL\_NULL}, \texttt{DROP\_NULL},
+\texttt{NORMALIZE}, \texttt{FILTER} (with \texttt{AND}, \texttt{OR}, \texttt{NOT} and comparisons),
+\texttt{SELECT} and \texttt{DROP}; image statements are \texttt{RESIZE} (optionally
+\texttt{KEEP\_ASPECT}), \texttt{GRAYSCALE}, \texttt{NORMALIZE RANGE}, \texttt{CONVERT},
+\texttt{COMPRESS} and \texttt{REMOVE\_CORRUPT}.
+
+\emph{Selectors} address many columns at once: \texttt{company.*.salary} names the column in every
+table of a table set, \texttt{company.*.* WHERE TYPE NUMERIC EXCEPT [id]} selects by the inferred
+type, and \texttt{IF\_EXISTS} skips tables without the column. Because selectors are resolved
+against the inferred schemas at compile time, a selector that matches a text column or misses a
+table is reported once, with a note for every table it affects.
+
+\emph{Contracts} are written with \texttt{EXPECT}: \texttt{NUMBER}, \texttt{STRING},
+\texttt{BOOLEAN}, \texttt{NOT\_NULL}, \texttt{BETWEEN}, \texttt{UNIQUE} for columns;
+\texttt{REFERENCES} and \texttt{SCHEMA\_SAME\_AS} across tables; \texttt{CHANNELS},
+\texttt{MIN\_WIDTH}, \texttt{MIN\_HEIGHT} for images; and \texttt{MATCH\_RATE} for linked datasets.
+
+Every statement begins with its own keyword, so the grammar is LL(1). The front end is a
+hand-written lexer and a recursive-descent parser with panic-mode recovery that reports several
+syntax errors per run, each with a caret and a hint (and a ``did you mean'' suggestion based on
+edit distance for misspelled keywords and names).
+
+\section{The Abstract Dataset State}\label{sec:state}
+
+The semantic analyzer maintains a state $\sigma$ that maps every dataset name to an abstract value.
+Programs have no loops, so the analysis is a single forward pass in the style of abstract
+interpretation~\cite{cousot1977} and needs no widening.
+
+\textbf{Columns.} A column is abstracted as $\langle \tau, \nu, [l,u], \epsilon \rangle$: its type
+$\tau \in \{\textsc{Integer}, \textsc{Float}, \textsc{String}, \textsc{Boolean}\}$; $\nu$, whether
+values may be missing; an interval~\cite{cousot1976} containing all present values; and a flag
+$\epsilon$ that records whether the interval is \emph{exact}, i.e., both bounds are attained by
+actual values. At \texttt{LOAD} the compiler reads every cell, so the state is exact: $\tau$ is the
+most specific type consistent with all cells (if a numeric-looking column is \textsc{String}, the
+first offending line is remembered for error messages), and $[l,u]$ are the true minimum and
+maximum.
+
+\textbf{Images.} An image set is abstracted as $\langle S, \delta, [l,u], \phi, q\rangle$: a list
+$S$ of per-file shapes (width, height, channels, and whether the file is broken); the pixel type
+$\delta \in \{\textsc{Uint8}, \textsc{Uint16}, \textsc{Float32}\}$; the range of pixel values; the
+output format $\phi \in \{\textsc{Source}, \textsc{Jpg}, \textsc{Png}, \textsc{Npy}\}$; and the JPEG
+quality $q$. Shapes come from the PNG \texttt{IHDR} chunk and the JPEG start-of-frame marker, so
+the compiler reads a few hundred bytes per file and never decodes pixels. A file whose header
+cannot be parsed is marked broken.
+
+\textbf{Links.} \texttt{LINK} records the number of images, labels and matches; the match rate is
+$m/\max(|images|, |labels|)$, so both unlabeled images and labels without an image lower it.
+
+\textbf{Transfer functions.} Table~\ref{tab:transfer} lists representative transfer functions.
+\texttt{FILTER} refines intervals with the comparison (after \texttt{FILTER marks >= 50}, marks is
+in $[\max(l,50), u]$, no longer exact) and, following SQL's three-valued logic~\cite{codd1979},
+makes compared columns non-null, because a comparison with a missing value is unknown and the row
+is dropped. The generated code uses pandas' nullable types so that execution follows the same rule.
+If refinement yields an empty interval the filter removes every row, which the compiler reports.
+Using a column after \texttt{DROP} or \texttt{SELECT} removed it is reported like a use after free.
+
+\begin{table}[t]
+\caption{Representative transfer functions}
+\label{tab:transfer}
+\centering
+\footnotesize
+\begin{tabular}{@{}ll@{}}
+\toprule
+Statement & Effect on the abstract state \\
+\midrule
+\texttt{FILL\_NULL c WITH v} & $\nu \gets$ no missing; $[l,u] \gets [l,u] \sqcup [v,v]$ \\
+\texttt{DROP\_NULL t} & $\nu \gets$ no missing for every column; not exact \\
+\texttt{NORMALIZE c MINMAX} & $\tau \gets \textsc{Float}$; $[l,u] \gets [0,1]$ \\
+\texttt{FILTER t WHERE c $\ge$ k} & $[l,u] \gets [\max(l,k), u]$; $\nu_c \gets$ no missing \\
+\texttt{RESIZE i TO w h} & every shape $\gets w \times h$ \\
+\texttt{GRAYSCALE i} & every channel count $\gets 1$ \\
+\texttt{NORMALIZE i RANGE a b} & $\delta \gets \textsc{Float32}$; $[l,u] \gets [a,b]$ \\
+\texttt{CONVERT i TO f} & $\phi \gets f$ \\
+\texttt{REMOVE\_CORRUPT i} & remove broken files from $S$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Save statements check that the format can hold the pixels: \textsc{Float32} pixels cannot be saved
+as JPG or PNG, 4-channel images cannot become JPG, and \textsc{Uint16} images cannot become JPG.
+Each error names the statement that caused it (Section~\ref{sec:example}).
+
+\section{Contract Discharge}\label{sec:contracts}
+
+For a contract $\varphi$ at a program point with state $\sigma$, the compiler returns one of three
+verdicts. Writing $\gamma(\sigma)$ for the set of concrete datasets described by $\sigma$:
+\begin{itemize}
+\item \textsc{Proven} if every dataset in $\gamma(\sigma)$ satisfies $\varphi$; no check is
+generated.
+\item \textsc{Violated} if no dataset in $\gamma(\sigma)$ satisfies $\varphi$; compilation fails.
+\item \textsc{Deferred} otherwise; a run-time check is generated.
+\end{itemize}
+
+The exactness flag separates the last two cases. For \texttt{BETWEEN a AND b}, the contract is
+proven if $[l,u] \subseteq [a,b]$. If not, it is violated only when the interval is exact, since
+then a value outside $[a,b]$ really exists; the compiler rereads the column and names the first
+offending row. Otherwise the interval is an over-approximation and the contract is deferred.
+\texttt{UNIQUE}, \texttt{REFERENCES} and \texttt{MATCH\_RATE} are decided by reading the actual
+values while the column still holds the values loaded from the file, and deferred after operations
+that change them. Image contracts are decided per file, and a violation lists the offending files.
+
+A deferred contract is also an assumption: code after the check runs only if it passed, so the
+compiler refines $\sigma$ with $\varphi$ (e.g., $[l,u] \gets [l,u] \sqcap [a,b]$), which can prove
+later contracts.
+
+\textbf{Fingerprint guard.} A proof holds for the files that were read. The generated program
+therefore recomputes a CRC-32 checksum of every input CSV file and of every image folder listing
+(file names and sizes) and stops with an error if any differs from the value recorded at compile
+time. Every run that proceeds is thus a run on the inputs the proofs were made for, and removing
+the check of a proven contract cannot hide a violation. CRC-32 detects accidental changes, which is
+the concern here; a cryptographic hash could be substituted at a higher cost. The program also
+writes a manifest (inputs, fingerprints, contract verdicts, operations and outputs) for
+reproducibility.
+
+\section{State-Driven Optimization}\label{sec:opt}
+
+Analysis results are attached to a three-address intermediate representation in which wildcards
+are already expanded per table. Three optimizer passes and the code generator use them to perform
+the following transformations.
+
+\textbf{No-effect elimination} removes operations the state proves useless: \texttt{FILL\_NULL} on
+a column without missing values, a \texttt{FILTER} that is always true, \texttt{GRAYSCALE} on
+1-channel images, \texttt{CONVERT} to the current format.
+\textbf{Check elimination} removes checks of proven contracts.
+\textbf{Dead-code elimination} removes unused temporaries and image operations after the last save.
+\textbf{Dead-store elimination and column pruning} run a backward liveness analysis over columns:
+\texttt{FILL\_NULL} or \texttt{NORMALIZE} results that are never read are removed, and \texttt{LOAD}
+reads only live columns. \texttt{DROP\_NULL} counts as reading every column, since pruning a column
+before it would change which rows are removed.
+\textbf{Image streaming.} The code generator turns all image operations up to a save into one loop
+that decodes, transforms and writes one image at a time, so memory no longer grows with the
+dataset. This is exact because the operations act on each image independently.
+
+All of these preserve the output exactly. \textbf{RESIZE fusion}, which replaces two consecutive
+resizes by one, does not: interpolation makes $\mathit{resize}_{224} \circ \mathit{resize}_{512}$
+differ slightly from $\mathit{resize}_{224}$. PrepLang reports it as a suggestion and applies it
+only with \texttt{--approx}. We think this boundary matters: a preprocessing compiler should not
+change training data without saying so.
+
+\section{Implementation}
+
+The compiler is written in C++17 without external libraries: lexer, parser, AST printer (and
+Graphviz export), schema provider (CSV inference, PNG/JPEG header reading, CRC-32), semantic
+analyzer with selector resolver and contract analyzer, lineage tracker, IR builder, pass manager
+with the passes above, and an execution planner that merges the pandas and OpenCV code generators
+in program order. Flags print every phase (tokens, AST, schema, the state after every statement,
+IR before and after optimization, generated code); \texttt{--explain} prints the execution plan
+and \texttt{--dry-run} lists the files a run would read and write, both without executing
+anything. Diagnostics are sorted by position and carry a caret, a hint and per-table notes.
+
+\section{Evaluation}\label{sec:eval}
+
+We ask four questions. \textbf{RQ1:} Does compiling against the data find preprocessing mistakes
+before any data is processed? \textbf{RQ2:} How many contracts are decided at compile time?
+\textbf{RQ3:} What do the state-driven optimizations gain at run time? \textbf{RQ4:} What does
+reading the data at compile time cost?
+
+\textbf{Setup.} Intel Core i5-12450H (8 cores), 16\,GB RAM, Windows~11; the compiler is built with
+MSVC (toolset 14.44, Release); Python 3.14, pandas 3.0, NumPy 2.5, OpenCV 5.0. Times are the median
+of three runs and include starting Python, as a user experiences them. All scripts and data
+generators are in the \texttt{eval/} folder of the repository.
+
+\textbf{Baseline.} To compare with the way pipelines are written today, we built a script-style
+interpreter that executes the same PrepLang programs statement by statement with pandas and
+OpenCV: default pandas type inference, all images held in memory, and each \texttt{EXPECT} as an
+assertion at its position. It behaves like a careful hand-written script, including its checks.
+
+\subsection{RQ1: Finding mistakes}
+
+We injected 24 mistakes into the five example programs, one per mutant, in the spirit of mutation
+testing~\cite{jia2011}. They fall into six classes: \emph{name} (misspelled column, wildcard column
+missing in some tables), \emph{type} (normalizing text, comparing a number with text, filling text
+into an integer column, zero-size resize), \emph{lifecycle} (column used after removal, a table
+operation on images or on a whole table set), \emph{contract} (range, not-null, foreign key, schema
+equality, channel count, minimum width, match rate), \emph{validity} (a broken image file) and
+\emph{value} (well-typed programs whose output is silently wrong). The five unmodified programs
+serve as controls. For the silent cases we wrote oracles that detect the wrong output (no rows
+left, text in a numeric column, all-black images).
+
+\begin{table}[t]
+\caption{When each injected mistake is found (24 mutants)}
+\label{tab:rq1}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{Script-style baseline} \\
+\cmidrule(l){3-4}
+Class & Mutants & Crash while running & Silent wrong output \\
+\midrule
+name       & 3 & 3 & 0 \\
+type       & 5 & 4 & 1 \\
+lifecycle  & 3 & 3 & 0 \\
+contract   & 9 & 9 & 0 \\
+validity   & 1 & 1 & 0 \\
+value      & 3 & 0 & 3 \\
+\midrule
+total      & 24 & 20 & 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+PrepLang reports all 24 mistakes at compile time, 23 as errors and one as a warning, and raises no
+error or warning on the five controls. The baseline finds 20 only while processing the data, as an
+exception (\texttt{KeyError}, \texttt{TypeError}, \texttt{AssertionError}), and completes the other
+4 with wrong output (Table~\ref{tab:rq1}). The four silent cases are the most harmful kind: text
+filled into an integer column turns it into a text column; a threshold of 50 on a column
+normalized to $[0,1]$ removes every row, which PrepLang flags with ``FILTER removes every row: the
+condition is never true''; and two pipelines write float pixels to JPG or PNG files that come out
+black. Compiling a program took 15--30\,ms (median 18\,ms).
+
+\subsection{RQ2: Contracts decided at compile time}
+
+The five control programs declare 16 contracts. PrepLang proves 15 statically (94\%) and defers
+one: in \texttt{students.prep}, \texttt{EXPECT marks BETWEEN 60 AND 100} follows a filter that only
+guarantees $[50, 95]$, so the check stays in the generated program.
+
+\subsection{RQ3: Run-time effect of the optimizations}
+
+\textbf{Tables.} A pipeline over a 200,000-row, 40-column CSV (58\,MB) checks two contracts,
+filters on two columns and keeps four. The optimizer proves both contracts, removing their checks,
+and prunes the load to the five live columns. Table~\ref{tab:rq3} compares the generated program
+with and without the optimizer (\texttt{--O0}); both write byte-identical output.
+
+\textbf{Images.} A pipeline that resizes 1,000 images of $640\times480$ to $224\times224$, converts
+them to grayscale and saves them as JPG runs as a single streaming pass. We measure peak Python heap
+memory with \texttt{tracemalloc}, which also counts NumPy arrays. The outputs match the baseline's
+pixel for pixel on a sample of 20 images.
+
+\textbf{RESIZE fusion.} For \texttt{RESIZE 512 512; RESIZE 224 224} over the same 1,000 images,
+saved as PNG, \texttt{--approx} fuses the resizes. We compare the output with the exact output
+using PSNR~\cite{huynh2008}.
+
+\begin{table}[t]
+\caption{Run-time effect of the optimizations (median of 3 runs)}
+\label{tab:rq3}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\multicolumn{3}{@{}l}{\emph{Table pipeline, 200k rows $\times$ 40 columns}} \\
+Variant & Columns read, checks & Time (s) \\
+\midrule
+PrepLang, optimized & 5, 0 & 1.30 \\
+PrepLang, \texttt{--O0} & 40, 2 & 1.54 \\
+Script-style baseline & 40, 2 & 1.47 \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Image pipeline, 1,000 images}} \\
+Variant & Peak memory (MiB) & Time (s) \\
+\midrule
+PrepLang, streaming & 10 & 3.24 \\
+Script-style baseline & 922 & 3.54 \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{RESIZE fusion, 1,000 images}} \\
+Variant & PSNR vs.\ exact (dB) & Time (s) \\
+\midrule
+Exact (default) & -- & 5.99 \\
+\texttt{--approx} & 57.0 (min.\ 51.8) & 5.64 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For the table pipeline the optimized program is 1.19$\times$ faster end to end. Starting Python
+and importing pandas take 0.79\,s of every run; without this fixed cost the optimized program
+processes the data in 0.51\,s instead of 0.75\,s, 32\% less. The unoptimized program is 5\% slower
+than the baseline because it verifies the input fingerprint and converts the columns to pandas'
+nullable types; the optimizer more than recovers this cost. (While building the benchmark we found
+that passing nullable types to \texttt{read\_csv} directly made reading this file six times slower;
+the generated code now converts after parsing, which gives identical values.)
+
+Streaming needs 92$\times$ less memory than holding all images and is also 8\% faster. The
+baseline's memory grows with the number of images; the streaming program holds one image at a time,
+so its memory does not.
+
+RESIZE fusion saves only 6\% of the time, because decoding and PNG encoding dominate. Its output
+differs from the exact output with a mean PSNR of 57.0\,dB, which is invisible, but it is still a
+change to training data. The small gain and the nonzero change support keeping approximate rewrites
+behind an explicit flag.
+
+\subsection{RQ4: Cost of reading the data at compile time}
+
+Table~\ref{tab:rq4} shows the time to compile a program that loads and saves one input, with
+\texttt{--explain}, which performs the whole analysis but writes nothing. For comparison, it shows
+one plain read of the same data in Python: \texttt{pandas.read\_csv} for tables, and decoding every
+image with \texttt{cv2.imread}.
+
+\begin{table}[t]
+\caption{Compile time vs.\ one plain read of the data}
+\label{tab:rq4}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Input & Compile (s) & Read in Python (s) \\
+\midrule
+CSV, 10,000 rows $\times$ 10 columns & 0.03 & 0.03 \\
+CSV, 100,000 rows $\times$ 10 columns & 0.19 & 0.10 \\
+CSV, 1,000,000 rows $\times$ 10 columns & 1.75 & 0.77 \\
+100 JPG images, $640\times480$ & 0.02 & 0.16 \\
+1,000 JPG images, $640\times480$ & 0.07 & 1.44 \\
+3,000 JPG images, $640\times480$ & 0.17 & 4.31 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Compile time grows linearly with the input. For tables the compiler reads every cell, so it costs
+about as much as reading the file once: 2.3$\times$ the time of pandas' optimized C parser for a
+60\,MB file with one million rows. For images the compiler reads only headers, which is 8--25$\times$
+faster than decoding the images; 3,000 images take 0.17\,s. Contracts that need actual values
+(\texttt{UNIQUE}, a violated \texttt{BETWEEN}) reread only the columns they name.
+
+\subsection{Threats to validity}
+
+The mutants were written by the author and the example datasets are small, so RQ1 shows which
+kinds of mistakes the approach catches rather than how often they occur in practice. The baseline
+is our own interpreter, although it uses pandas and OpenCV the way scripts do. The performance
+numbers come from one machine and synthetic data. The approach needs the inputs at compile time,
+which holds for batch preprocessing but not for streaming data, and the language has no joins,
+loops or user-defined functions.
+
+\section{Related Work}
+
+\textbf{Data validation.} TensorFlow Data Validation~\cite{breck2019}, Deequ~\cite{schelter2018},
+Great Expectations~\cite{gx}, Pandera~\cite{bantilan2020} and the Data Linter~\cite{hynes2017}
+check expectations on datasets when a pipeline runs. PrepLang checks the same kinds of expectations
+at a point in the program, against the state that the preceding statements produce, and moves the
+check to compile time when the state decides it.
+
+\textbf{Static analysis of data-science code.} Urban~\cite{urban2019} argues for abstract
+interpretation of data-science software, and Subotić et al.~\cite{subotic2022} built such an
+analysis for notebooks. Lagouvardos et al.~\cite{lagouvardos2020} infer tensor shapes in TensorFlow
+programs, and mlinspect~\cite{grafberger2022} inspects pipelines by instrumenting their execution.
+These analyze code without the concrete data; PrepLang analyzes code together with the data, which
+makes its facts precise enough to reject programs and to justify optimizations.
+
+\textbf{Types from data and data-centric compilers.} F\# type providers~\cite{petricek2016} infer
+types from sample data at compile time. PrepLang infers richer facts (nullability, intervals, image
+shapes), tracks them through the pipeline, and binds them to the exact inputs with fingerprints.
+Halide~\cite{ragan2013} fuses image-processing stages under a separate schedule, and
+Weld~\cite{palkar2017} optimizes data analytics across libraries through a common IR; their
+optimizations are driven by the program, whereas PrepLang's are driven by facts about the data.
+
+\section{Conclusion}
+
+PrepLang shows that, for batch preprocessing, treating the input data as a compile-time input pays
+off: an abstract dataset state computed from CSV cells and image headers turns data mistakes into
+compile-time errors, decides almost all declared contracts statically, and justifies optimizations
+that keep the output exact, with a fingerprint guard that keeps these proofs honest. Future work
+includes joins and aggregations, incremental re-analysis when only some input files change, and
+sampling-based analysis for inputs too large to read at compile time.
+
+\begin{thebibliography}{99}
+
+\bibitem{sculley2015}
+D. Sculley, G. Holt, D. Golovin, E. Davydov, T. Phillips, D. Ebner, V. Chaudhary, M. Young, J.-F.
+Crespo, and D. Dennison, ``Hidden technical debt in machine learning systems,'' in \emph{Advances
+in Neural Information Processing Systems (NeurIPS)}, 2015, pp. 2503--2511.
+
+\bibitem{polyzotis2018}
+N. Polyzotis, S. Roy, S. E. Whang, and M. Zinkevich, ``Data lifecycle challenges in production
+machine learning: A survey,'' \emph{ACM SIGMOD Record}, vol. 47, no. 2, pp. 17--28, 2018.
+
+\bibitem{mckinney2010}
+W. McKinney, ``Data structures for statistical computing in Python,'' in \emph{Proc. 9th Python in
+Science Conf. (SciPy)}, 2010, pp. 56--61.
+
+\bibitem{bradski2000}
+G. Bradski, ``The OpenCV library,'' \emph{Dr. Dobb's Journal of Software Tools}, 2000.
+
+\bibitem{breck2019}
+E. Breck, N. Polyzotis, S. Roy, S. E. Whang, and M. Zinkevich, ``Data validation for machine
+learning,'' in \emph{Proc. Conf. on Machine Learning and Systems (MLSys)}, 2019.
+
+\bibitem{schelter2018}
+S. Schelter, D. Lange, P. Schmidt, M. Celikel, F. Biessmann, and A. Grafberger, ``Automating
+large-scale data quality verification,'' \emph{Proc. VLDB Endowment}, vol. 11, no. 12,
+pp. 1781--1794, 2018.
+
+\bibitem{bantilan2020}
+N. Bantilan, ``pandera: Statistical data validation of pandas dataframes,'' in \emph{Proc. 19th
+Python in Science Conf. (SciPy)}, 2020, pp. 116--124.
+
+\bibitem{gx}
+Great Expectations, ``Great Expectations: data quality testing,'' \url{https://greatexpectations.io}.
+
+\bibitem{hynes2017}
+N. Hynes, D. Sculley, and M. Terry, ``The Data Linter: Lightweight, automated sanity checking for
+ML data sets,'' in \emph{NIPS Workshop on Machine Learning Systems}, 2017.
+
+\bibitem{urban2019}
+C. Urban, ``Static analysis of data science software,'' in \emph{Static Analysis Symposium (SAS)},
+LNCS 11822, 2019, pp. 17--23.
+
+\bibitem{subotic2022}
+P. Suboti\'{c}, L. Miliki\'{c}, and M. Stoji\'{c}, ``A static analysis framework for data science
+notebooks,'' in \emph{Proc. 44th Int. Conf. on Software Engineering: Software Engineering in
+Practice (ICSE-SEIP)}, 2022, pp. 13--22.
+
+\bibitem{lagouvardos2020}
+S. Lagouvardos, J. Dolby, N. Grech, A. Antoniadis, and Y. Smaragdakis, ``Static analysis of shape in
+TensorFlow programs,'' in \emph{Proc. 34th European Conf. on Object-Oriented Programming (ECOOP)},
+LIPIcs vol. 166, 2020, pp. 15:1--15:29.
+
+\bibitem{grafberger2022}
+S. Grafberger, P. Groth, J. Stoyanovich, and S. Schelter, ``Data distribution debugging in machine
+learning pipelines,'' \emph{The VLDB Journal}, vol. 31, pp. 1103--1126, 2022.
+
+\bibitem{petricek2016}
+T. Petricek, G. Guerra, and D. Syme, ``Types from data: Making structured data first-class citizens
+in F\#,'' in \emph{Proc. 37th ACM SIGPLAN Conf. on Programming Language Design and Implementation
+(PLDI)}, 2016, pp. 477--490.
+
+\bibitem{cousot1977}
+P. Cousot and R. Cousot, ``Abstract interpretation: A unified lattice model for static analysis of
+programs by construction or approximation of fixpoints,'' in \emph{Proc. 4th ACM Symp. on
+Principles of Programming Languages (POPL)}, 1977, pp. 238--252.
+
+\bibitem{cousot1976}
+P. Cousot and R. Cousot, ``Static determination of dynamic properties of programs,'' in \emph{Proc.
+2nd Int. Symp. on Programming}, Paris, 1976, pp. 106--130.
+
+\bibitem{codd1979}
+E. F. Codd, ``Extending the database relational model to capture more meaning,'' \emph{ACM Trans.
+Database Systems}, vol. 4, no. 4, pp. 397--434, 1979.
+
+\bibitem{ragan2013}
+J. Ragan-Kelley, C. Barnes, A. Adams, S. Paris, F. Durand, and S. Amarasinghe, ``Halide: A language
+and compiler for optimizing parallelism, locality, and recomputation in image processing
+pipelines,'' in \emph{Proc. 34th ACM SIGPLAN Conf. on Programming Language Design and
+Implementation (PLDI)}, 2013, pp. 519--530.
+
+\bibitem{palkar2017}
+S. Palkar, J. J. Thomas, A. Shanbhag, D. Narayanan, H. Pirk, M. Schwarzkopf, S. Amarasinghe, and
+M. Zaharia, ``Weld: A common runtime for high performance data analytics,'' in \emph{Proc. Conf. on
+Innovative Data Systems Research (CIDR)}, 2017.
+
+\bibitem{jia2011}
+Y. Jia and M. Harman, ``An analysis and survey of the development of mutation testing,'' \emph{IEEE
+Trans. Software Engineering}, vol. 37, no. 5, pp. 649--678, 2011.
+
+\bibitem{huynh2008}
+Q. Huynh-Thu and M. Ghanbari, ``Scope of validity of PSNR in image/video quality assessment,''
+\emph{Electronics Letters}, vol. 44, no. 13, pp. 800--801, 2008.
+
+\end{thebibliography}
+
+\end{document}

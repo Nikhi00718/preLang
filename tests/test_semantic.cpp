@@ -186,6 +186,18 @@ void testNeverSaved() {
     check(reported(a, Severity::Warning, Phase::Semantic, "never saved"), "a dataset that is never saved warns");
 }
 
+void testScientificNotation() {
+    std::ofstream("test_semantic_floats.csv") << "x,y,z\n0.5,1e3,7\n6.4e-05,2E+2,1e\n,-3e0,8\n";
+    Diagnostics diagnostics;
+    const auto table = SchemaProvider(diagnostics).readTable("test_semantic_floats.csv", "f", {});
+    const ColumnInfo& x = table->columns[0];
+    const ColumnInfo& y = table->columns[1];
+    check(x.type == ColumnType::Float && x.min == 6.4e-05 && x.max == 0.5 && x.missingCount == 1,
+          "numbers written with an exponent (6.4e-05) are FLOAT");
+    check(y.type == ColumnType::Float && y.min == -3 && y.max == 1000, "1e3, 2E+2 and -3e0 are FLOAT with the right range");
+    check(table->columns[2].type == ColumnType::String, "an exponent without digits (1e) is text");
+}
+
 }  // namespace
 
 int main() {
@@ -207,6 +219,7 @@ int main() {
     testFilterRefines();
     testFilterAlwaysAndNever();
     testNeverSaved();
+    testScientificNotation();
 
     std::cout << (failures == 0 ? "All semantic tests passed.\n" : "Some semantic tests FAILED.\n");
     return failures == 0 ? 0 : 1;

@@ -1,0 +1,47 @@
+{
+    // Terminal > Run Task... (or Ctrl+Shift+B for the build)
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "PrepLang: configure",
+            "type": "process",
+            "command": "cmake",
+            "args": ["-S", ".", "-B", "build", "-G", "Visual Studio 17 2022"],
+            "problemMatcher": []
+        },
+        {
+            "label": "PrepLang: build",
+            "type": "process",
+            "command": "cmake",
+            "args": ["--build", "build"],
+            "dependsOn": "PrepLang: configure",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "PrepLang: compile and run the open .prep file",
+            "type": "process",
+            "command": "${workspaceFolder}/build/Debug/preplang.exe",
+            "args": ["${relativeFile}", "--run"],
+            "dependsOn": "PrepLang: build",
+            "problemMatcher": []
+        },
+        {
+            "label": "PrepLang: explain the open .prep file",
+            "type": "process",
+            "command": "${workspaceFolder}/build/Debug/preplang.exe",
+            "args": ["${relativeFile}", "--explain", "--lineage"],
+            "dependsOn": "PrepLang: build",
+            "problemMatcher": []
+        },
+        {
+            "label": "PrepLang: run all tests",
+            "type": "process",
+            "command": "ctest",
+            "args": ["--test-dir", "build", "-C", "Debug", "--output-on-failure"],
+            "dependsOn": "PrepLang: build",
+            "group": "test",
+            "problemMatcher": []
+        }
+    ]
+}

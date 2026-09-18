@@ -1,0 +1,64 @@
+{
+  "table_optimizations": {
+    "optimized_s": 1.297625599996536,
+    "O0_s": 1.5407219000044279,
+    "baseline_s": 1.4695693999965442,
+    "same_output": true,
+    "columns_read": [
+      5,
+      40
+    ],
+    "runtime_checks": [
+      0,
+      2
+    ],
+    "speedup_vs_O0": 1.18733932191885
+  },
+  "image_streaming": {
+    "images": 1000,
+    "preplang_s": 3.243545199991786,
+    "baseline_s": 3.5382288999971934,
+    "preplang_peak_mib": 10.050455093383789,
+    "baseline_peak_mib": 922.1254577636719,
+    "same_pixels_in_sample": true
+  },
+  "resize_fusion": {
+    "exact_s": 5.992481900000712,
+    "approx_s": 5.635510299995076,
+    "speedup": 1.0633432610363516,
+    "mean_psnr_db": 56.995981262688325,
+    "min_psnr_db": 51.810706103618486
+  },
+  "compile_cost": [
+    {
+      "input": "CSV, 10,000 rows x 10 columns",
+      "compile_s": 0.033268700004555285,
+      "read_all_s": 0.02761560000362806
+    },
+    {
+      "input": "CSV, 100,000 rows x 10 columns",
+      "compile_s": 0.18775850000383798,
+      "read_all_s": 0.09868779999669641
+    },
+    {
+      "input": "CSV, 1,000,000 rows x 10 columns",
+      "compile_s": 1.7478330000012647,
+      "read_all_s": 0.7689085000019986
+    },
+    {
+      "input": "100 JPG images, 640x480",
+      "compile_s": 0.020090499994694255,
+      "read_all_s": 0.15837869999813847
+    },
+    {
+      "input": "1000 JPG images, 640x480",
+      "compile_s": 0.06977750000078231,
+      "read_all_s": 1.4377327999973204
+    },
+    {
+      "input": "3000 JPG images, 640x480",
+      "compile_s": 0.1749268999992637,
+      "read_all_s": 4.308933099993737
+    }
+  ]
+}

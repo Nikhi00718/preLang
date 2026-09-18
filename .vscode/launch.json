@@ -1,0 +1,16 @@
+{
+    // Run and Debug (F5): steps through the compiler itself on the open .prep file
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug PrepLang on the open .prep file",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/preplang.exe",
+            "args": ["${relativeFile}", "--semantic", "--ir"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "preLaunchTask": "PrepLang: build"
+        }
+    ]
+}
