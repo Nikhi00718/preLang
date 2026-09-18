@@ -2,14 +2,6 @@
 
 namespace {
 
-std::string columnText(const ColumnRef& ref) {
-    return ref.dataset + "." + ref.column;
-}
-
-std::string literalText(const Literal& literal) {
-    return literal.kind == LiteralKind::String ? "\"" + literal.value + "\"" : literal.value;
-}
-
 std::string listText(const std::vector<std::string>& names) {
     std::string text = "[";
     for (size_t i = 0; i < names.size(); ++i) {
@@ -18,18 +10,59 @@ std::string listText(const std::vector<std::string>& names) {
     return text + "]";
 }
 
-std::string constraintText(const ExpectStmt& node) {
-    switch (node.constraint) {
-        case ConstraintKind::IsNumber:  return "NUMBER";
-        case ConstraintKind::IsString:  return "STRING";
-        case ConstraintKind::IsBoolean: return "BOOLEAN";
-        case ConstraintKind::NotNull:   return "NOT_NULL";
-        case ConstraintKind::Between:   return "BETWEEN " + node.low + " AND " + node.high;
+std::string methodText(const NormalizeStmt& node) {
+    switch (node.method) {
+        case NormalizeMethod::ZScore: return "ZSCORE";
+        case NormalizeMethod::MinMax: return "MINMAX";
+        case NormalizeMethod::Range:  return "RANGE " + node.low + " " + node.high;
     }
     return "";
 }
 
 }  // namespace
+
+std::string selectorText(const Selector& selector) {
+    static const char* const filters[] = {"", " WHERE TYPE NUMERIC", " WHERE TYPE STRING", " WHERE TYPE BOOLEAN",
+                                          " WHERE NULLABLE"};
+    std::string text = selector.text() + filters[static_cast<int>(selector.filter)];
+    if (!selector.except.empty()) {
+        text += " EXCEPT " + listText(selector.except);
+    }
+    return text + (selector.ifExists ? " IF_EXISTS" : "");
+}
+
+std::string dataKindName(DataKind kind) {
+    switch (kind) {
+        case DataKind::Table:    return "TABLE";
+        case DataKind::TableSet: return "TABLESET";
+        case DataKind::Image:    return "IMAGE";
+        case DataKind::ImageSet: return "IMAGESET";
+    }
+    return "";
+}
+
+std::string constraintText(const ExpectStmt& node) {
+    switch (node.constraint) {
+        case ConstraintKind::IsNumber:   return "NUMBER";
+        case ConstraintKind::IsString:   return "STRING";
+        case ConstraintKind::IsBoolean:  return "BOOLEAN";
+        case ConstraintKind::NotNull:    return "NOT_NULL";
+        case ConstraintKind::Between:    return "BETWEEN " + node.low + " AND " + node.high;
+        case ConstraintKind::Unique:     return "UNIQUE";
+        case ConstraintKind::References: return "REFERENCES " + node.other.text();
+        case ConstraintKind::SchemaSameAs:
+            return "SCHEMA_SAME_AS " + node.other.text() + (node.except.empty() ? "" : " EXCEPT " + listText(node.except));
+        case ConstraintKind::Channels:   return "CHANNELS " + node.low;
+        case ConstraintKind::MinWidth:   return "MIN_WIDTH " + node.low;
+        case ConstraintKind::MinHeight:  return "MIN_HEIGHT " + node.low;
+        case ConstraintKind::MatchRate:  return "MATCH_RATE " + node.low + "%";
+    }
+    return "";
+}
+
+std::string literalText(const Literal& literal) {
+    return literal.kind == LiteralKind::String ? "\"" + literal.value + "\"" : literal.value;
+}
 
 ASTPrinter::ASTPrinter(std::ostream& out) : out_(out) {}
 
@@ -44,27 +77,30 @@ void ASTPrinter::print(const Program& program) {
 // ---------- Statements ----------
 
 void ASTPrinter::visit(const LoadStmt& node) {
-    printNode("Load", {"file: \"" + node.path + "\"", "dataset: " + node.dataset});
+    std::vector<std::string> fields = {"file: \"" + node.path + "\"", "dataset: " + node.dataset};
+    if (node.recursive) {
+        fields.push_back("recursive: yes");
+    }
+    printNode("Load " + dataKindName(node.kind), fields);
 }
 
 void ASTPrinter::visit(const DropNullStmt& node) {
-    printNode("DropNull", {"dataset: " + node.dataset});
+    printNode("DropNull", {"target: " + selectorText(node.target)});
 }
 
 void ASTPrinter::visit(const FillNullStmt& node) {
-    printNode("FillNull", {"column: " + columnText(node.target), "value: " + literalText(node.value)});
+    printNode("FillNull", {"target: " + selectorText(node.target), "value: " + literalText(node.value)});
 }
 
 void ASTPrinter::visit(const NormalizeStmt& node) {
-    const std::string method = node.method == NormalizeMethod::ZScore ? "ZSCORE" : "MINMAX";
-    printNode("Normalize", {"column: " + columnText(node.target), "method: " + method});
+    printNode("Normalize", {"target: " + selectorText(node.target), "method: " + methodText(node)});
 }
 
 void ASTPrinter::visit(const FilterStmt& node) {
     const bool isLast = isLastChild_;
     printLine("Filter", isLast);
     printChildren(isLast, [&] {
-        printLine("dataset: " + node.dataset, false);
+        printLine("table: " + selectorText(node.target), false);
         printLine("condition", true);
         printChildren(true, [&] {
             isLastChild_ = true;
@@ -74,19 +110,46 @@ void ASTPrinter::visit(const FilterStmt& node) {
 }
 
 void ASTPrinter::visit(const SelectStmt& node) {
-    printNode("Select", {"dataset: " + node.dataset, "columns: " + listText(node.columns)});
+    printNode("Select", {"table: " + selectorText(node.target), "columns: " + listText(node.columns)});
 }
 
 void ASTPrinter::visit(const DropStmt& node) {
-    printNode("Drop", {"dataset: " + node.dataset, "columns: " + listText(node.columns)});
+    printNode("Drop", {"tables: " + selectorText(node.target), "columns: " + listText(node.columns)});
 }
 
 void ASTPrinter::visit(const SaveStmt& node) {
-    printNode("Save", {"dataset: " + node.dataset, "file: \"" + node.path + "\""});
+    printNode("Save " + dataKindName(node.kind), {"dataset: " + node.target.text(), "to: \"" + node.path + "\""});
 }
 
 void ASTPrinter::visit(const ExpectStmt& node) {
-    printNode("Expect", {"column: " + columnText(node.target), "constraint: " + constraintText(node)});
+    printNode("Expect", {"target: " + selectorText(node.target), "contract: " + constraintText(node)});
+}
+
+void ASTPrinter::visit(const ResizeStmt& node) {
+    printNode("Resize", {"images: " + node.dataset,
+                         "size: " + std::to_string(node.width) + " x " + std::to_string(node.height),
+                         std::string("keep aspect: ") + (node.keepAspect ? "yes" : "no")});
+}
+
+void ASTPrinter::visit(const GrayscaleStmt& node) {
+    printNode("Grayscale", {"images: " + node.dataset});
+}
+
+void ASTPrinter::visit(const CompressStmt& node) {
+    printNode("Compress", {"images: " + node.dataset, "quality: " + std::to_string(node.quality)});
+}
+
+void ASTPrinter::visit(const ConvertStmt& node) {
+    printNode("Convert", {"images: " + node.dataset, "format: " + node.format});
+}
+
+void ASTPrinter::visit(const RemoveCorruptStmt& node) {
+    printNode("RemoveCorrupt", {"images: " + node.dataset});
+}
+
+void ASTPrinter::visit(const LinkStmt& node) {
+    printNode("Link", {"images: " + node.images, "table: " + node.table, "on: " + node.column,
+                       "as: " + node.dataset});
 }
 
 // ---------- Conditions ----------

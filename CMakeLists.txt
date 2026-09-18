@@ -12,12 +12,25 @@ add_library(preplang_core
     src/lexer/Lexer.cpp
     src/parser/Parser.cpp
     src/ast/ASTPrinter.cpp
+    src/ast/ASTDot.cpp
     src/schema/SchemaProvider.cpp
     src/sema/SymbolTable.cpp
+    src/sema/SelectorResolver.cpp
+    src/sema/ContractAnalyzer.cpp
     src/sema/SemanticAnalyzer.cpp
+    src/dataset/LineageTracker.cpp
+    src/dataset/DatasetLinker.cpp
     src/ir/IRBuilder.cpp
-    src/optimizer/Optimizer.cpp
+    src/optimizer/PassManager.cpp
+    src/optimizer/RedundantOpPass.cpp
+    src/optimizer/DeadOpPass.cpp
+    src/optimizer/ColumnPruningPass.cpp
     src/backend/PandasCodegen.cpp
+    src/backend/OpenCVCodegen.cpp
+    src/backend/ExecutionPlanner.cpp
+    src/explain/ManifestWriter.cpp
+    src/explain/LineageReport.cpp
+    src/explain/ExplainPlan.cpp
 )
 target_include_directories(preplang_core PUBLIC src)
 
@@ -33,7 +46,7 @@ target_link_libraries(preplang PRIVATE preplang_core)
 
 # Unit tests: ctest --test-dir build -C Debug --output-on-failure
 enable_testing()
-foreach(name lexer parser semantic optimizer)
+foreach(name lexer parser semantic tableset imageset optimizer)
     add_executable(test_${name} tests/test_${name}.cpp)
     target_link_libraries(test_${name} PRIVATE preplang_core)
     add_test(NAME ${name} COMMAND test_${name})

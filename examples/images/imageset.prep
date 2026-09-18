@@ -1,0 +1,16 @@
+# Prepare a whole image dataset with one program. The compiler reads every
+# file header at compile time: sizes, channels, and which files are broken.
+LOAD_IMAGES "dataset/" AS train RECURSIVE;
+
+REMOVE_CORRUPT train;                  # broken.jpg is found while compiling
+EXPECT train MIN_WIDTH 200;            # proven from the headers
+
+RESIZE train TO 224 224 KEEP_ASPECT;
+GRAYSCALE train;
+EXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel
+
+CONVERT train TO JPG;
+COMPRESS train QUALITY 80;
+
+# Sub-folders (cats/, dogs/) are kept, so folder-based labels survive.
+SAVE_IMAGES train TO "processed/train/";

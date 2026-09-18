@@ -1,0 +1,14 @@
+# Images and their labels, checked together before any training data is written.
+LOAD_IMAGES "dataset/" AS imgs RECURSIVE;
+LOAD "labels.csv" AS labels;
+
+REMOVE_CORRUPT imgs;
+LINK imgs WITH labels ON filename AS training;
+EXPECT training MATCH_RATE 100%;       # every image has a label and every label an image
+
+RESIZE imgs TO 128 128;
+NORMALIZE imgs RANGE 0 1;              # pixels become FLOAT32 in [0, 1] ...
+CONVERT imgs TO NPY;                   # ... so they are saved as NumPy arrays, not JPG
+
+SAVE_IMAGES imgs TO "processed/ml_ready/";
+SAVE labels AS "processed/labels.csv";

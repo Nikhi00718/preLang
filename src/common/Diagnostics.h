@@ -22,14 +22,16 @@ struct Diagnostic {
     Phase phase;
     SourceLocation location;
     std::string message;
-    std::string hint;  // suggestion for fixing it; empty if there is none
+    std::string hint;                // suggestion for fixing it; empty if there is none
+    std::vector<std::string> notes;  // extra lines, e.g. one per column matched by a wildcard
 };
 
 // Collects errors and warnings from every phase so they can be printed together.
 class Diagnostics {
 public:
-    void error(Phase phase, SourceLocation location, std::string message, std::string hint = "");
-    void warning(Phase phase, SourceLocation location, std::string message, std::string hint = "");
+    // Both return the new diagnostic so notes can be added to it.
+    Diagnostic& error(Phase phase, SourceLocation location, std::string message, std::string hint = "");
+    Diagnostic& warning(Phase phase, SourceLocation location, std::string message, std::string hint = "");
 
     bool hasErrors() const { return errorCount_ > 0; }
     int errorCount() const { return errorCount_; }

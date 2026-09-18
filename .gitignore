@@ -3,3 +3,15 @@ build/
 
 # CSV files written by the unit tests when run from the project folder
 test_*_students.csv
+test_imageset_*
+test_tableset_*
+
+# Files written by running the examples (only the students.prep outputs are kept)
+output/*
+!output/generated.py
+!output/clean.csv
+!output/preplang_manifest.json
+
+# Evaluation data and results that are regenerated
+eval/data/
+eval/work/

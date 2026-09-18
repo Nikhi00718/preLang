@@ -1,24 +1,34 @@
 #pragma once
 
 #include "common/Diagnostics.h"
-#include "schema/Schema.h"
+#include "schema/ImageSchema.h"
+#include "schema/TableSchema.h"
 
 #include <optional>
 #include <ostream>
 #include <string>
+#include <vector>
 
-// Reads a CSV file at compile time and infers, for every column, its type,
-// how many values are missing, and the range of its numbers.
+// Reads the input data at compile time: CSV files (column types, missing
+// values, value ranges) and image files (width, height and channels, taken
+// from the file headers only).
 class SchemaProvider {
 public:
     explicit SchemaProvider(Diagnostics& diagnostics);
 
-    // loadLocation is the LOAD statement's position, used in error messages.
-    std::optional<Schema> infer(const std::string& csvPath, SourceLocation loadLocation);
+    // `location` is the LOAD statement's position, used in error messages.
+    std::optional<TableSchema> readTable(const std::string& csvPath, const std::string& name, SourceLocation location);
+    std::optional<TableSetSchema> readTableFolder(const std::string& folder, SourceLocation location);
+    std::optional<ImageSetSchema> readImages(const std::string& path, bool singleFile, bool recursive,
+                                             SourceLocation location);
 
 private:
     Diagnostics& diagnostics_;
 };
 
-// Prints the schema as a table with one row per column.
-void printSchema(std::ostream& out, const std::string& dataset, const Schema& schema);
+// Every cell of one column ("" when missing). Read on demand for UNIQUE,
+// REFERENCES and LINK, which need the values and not just the schema.
+std::vector<std::string> readColumnValues(const TableSchema& table, const std::string& column);
+
+void printTableSchema(std::ostream& out, const std::string& title, const TableSchema& table);
+void printImageSetSchema(std::ostream& out, const std::string& title, const ImageSetSchema& images);

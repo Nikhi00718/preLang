@@ -59,12 +59,19 @@ bool reported(const Analysis& analysis, Severity severity, Phase phase, const st
     return false;
 }
 
+// Whether analysis proved (some target of) a statement to have no effect.
 bool hasNoEffect(const Analysis& analysis, size_t statementIndex) {
-    return analysis.result.noEffect.count(analysis.program.statements.at(statementIndex).get()) != 0;
+    const Stmt* statement = analysis.program.statements.at(statementIndex).get();
+    for (const auto& [key, reason] : analysis.result.noEffect) {
+        if (key.first == statement) {
+            return true;
+        }
+    }
+    return false;
 }
 
 ColumnState* column(Analysis& analysis, const std::string& name) {
-    return analysis.symbols.lookup("s")->column(name);
+    return analysis.symbols.lookup("s")->tables.front().column(name);
 }
 
 void testSchemaFacts() {
@@ -113,7 +120,8 @@ void testComparisonTypes() {
 void testFillValueType() {
     Analysis a;
     analyze("FILL_NULL s.age WITH 2.5;", a);
-    check(reported(a, Severity::Error, Phase::Type, "cannot fill INTEGER"), "decimal cannot fill an INTEGER column");
+    check(reported(a, Severity::Error, Phase::Type, "needs a matching column type, but s.age is INTEGER"),
+          "decimal cannot fill an INTEGER column");
 }
 
 void testUseAfterDrop() {
@@ -133,7 +141,7 @@ void testContractProven() {
 void testContractViolated() {
     Analysis a;
     analyze("EXPECT s.age NOT_NULL;\nEXPECT s.marks BETWEEN 50 AND 100;\nEXPECT s.code NUMBER;", a);
-    check(reported(a, Severity::Error, Phase::Contract, "s.age has missing values"), "NOT_NULL violated by the data");
+    check(reported(a, Severity::Error, Phase::Contract, "s.age has 1 missing value"), "NOT_NULL violated by the data");
     check(reported(a, Severity::Error, Phase::Contract, "from 42 to 91"), "BETWEEN violated by the data");
     check(reported(a, Severity::Error, Phase::Contract, "x7"), "type contract violated, with the reason");
 }

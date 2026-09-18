@@ -1,0 +1,12 @@
+# A train/test split must have the same columns, apart from the label.
+LOAD "train.csv" AS train;
+LOAD "test.csv" AS test;
+
+EXPECT train SCHEMA_SAME_AS test EXCEPT [label];
+EXPECT train.label BETWEEN 0 AND 1;
+
+DROP_NULL train;
+DROP_NULL test;
+
+SAVE train AS "processed/train.csv";
+SAVE test AS "processed/test.csv";

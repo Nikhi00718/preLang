@@ -4,15 +4,20 @@
 
 #include <string>
 
-// Every kind of token in PrepLang.
-// Keywords are listed first so isKeyword() can be a simple range check.
+// Every kind of token in PrepLang. The order matters: statement keywords come
+// first, then the other keywords, so isStatementKeyword() and isKeyword() are
+// simple range checks.
 enum class TokenType {
     // Statement keywords: every statement starts with one of these
-    LOAD, DROP_NULL, FILL_NULL, NORMALIZE, FILTER, SELECT, DROP, SAVE, EXPECT,
+    LOAD, LOAD_TABLES, LOAD_IMAGE, LOAD_IMAGES,
+    DROP_NULL, FILL_NULL, NORMALIZE, FILTER, SELECT, DROP,
+    SAVE, SAVE_TABLES, SAVE_IMAGE, SAVE_IMAGES, EXPECT,
+    RESIZE, GRAYSCALE, COMPRESS, CONVERT, REMOVE_CORRUPT, LINK,
 
     // Other keywords
-    AS, WITH, USING, ZSCORE, MINMAX, WHERE,
-    NUMBER, STRING, BOOLEAN, NOT_NULL, BETWEEN,
+    AS, WITH, TO, ON, USING, ZSCORE, MINMAX, RANGE, WHERE, TYPE, EXCEPT, IF_EXISTS, RECURSIVE,
+    NUMBER, NUMERIC, STRING, BOOLEAN, NULLABLE, NOT_NULL, BETWEEN, UNIQUE, REFERENCES, SCHEMA_SAME_AS,
+    CHANNELS, MIN_WIDTH, MIN_HEIGHT, MATCH_RATE, KEEP_ASPECT, QUALITY, JPG, PNG, NPY,
     AND, OR, NOT, TRUE, FALSE,
 
     // Names and values
@@ -22,7 +27,7 @@ enum class TokenType {
     EQUAL_EQUAL, NOT_EQUAL, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
 
     // Punctuation
-    DOT, COMMA, SEMICOLON, LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, MINUS,
+    DOT, COMMA, SEMICOLON, LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, MINUS, STAR, PERCENT,
 
     END_OF_FILE
 };
@@ -34,5 +39,5 @@ struct Token {
     int length;               // characters it takes in the source, quotes included
 };
 
-inline bool isStatementKeyword(TokenType type) { return type <= TokenType::EXPECT; }
-inline bool isKeyword(TokenType type) { return type <= TokenType::FALSE; }
+inline bool isStatementKeyword(TokenType type) { return type <= TokenType::LINK; }
+inline bool isKeyword(TokenType type) { return type < TokenType::IDENTIFIER; }

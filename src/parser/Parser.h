@@ -25,15 +25,21 @@ private:
 
     // Statements
     std::unique_ptr<Stmt> statement();
-    std::unique_ptr<Stmt> loadStatement();
+    std::unique_ptr<Stmt> loadStatement(DataKind kind);
     std::unique_ptr<Stmt> dropNullStatement();
     std::unique_ptr<Stmt> fillNullStatement();
     std::unique_ptr<Stmt> normalizeStatement();
     std::unique_ptr<Stmt> filterStatement();
     std::unique_ptr<Stmt> selectStatement();
     std::unique_ptr<Stmt> dropStatement();
-    std::unique_ptr<Stmt> saveStatement();
+    std::unique_ptr<Stmt> saveStatement(DataKind kind);
     std::unique_ptr<Stmt> expectStatement();
+    std::unique_ptr<Stmt> resizeStatement();
+    std::unique_ptr<Stmt> grayscaleStatement();
+    std::unique_ptr<Stmt> compressStatement();
+    std::unique_ptr<Stmt> convertStatement();
+    std::unique_ptr<Stmt> removeCorruptStatement();
+    std::unique_ptr<Stmt> linkStatement();
 
     // FILTER conditions, from lowest to highest precedence
     std::unique_ptr<Expr> orExpression();
@@ -41,11 +47,18 @@ private:
     std::unique_ptr<Expr> notExpression();
     std::unique_ptr<Expr> primary();
 
+    // Selectors
+    Selector tableRef();
+    Selector tableSelector();
+    Selector columnSelector();
+    Selector path();
+    void optionalIfExists(Selector& selector);
+
     // Pieces shared by several statements
-    ColumnRef columnRef();
     std::vector<std::string> columnList();
     Literal literal();
     std::string number();
+    int integer(const std::string& what);
     std::string identifier(const std::string& what);
     void endStatement();
 

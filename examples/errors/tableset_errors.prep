@@ -1,0 +1,10 @@
+# Mistakes across a TABLESET, reported with every table they affect.
+LOAD_TABLES "../tabular/company/" AS company;
+
+NORMALIZE company.*.name;                      # name is text in every table
+FILL_NULL company.*.salary WITH 0;             # interns and departments have no salary
+EXPECT company.*.age BETWEEN 18 AND 40 IF_EXISTS;
+FILTER company WHERE age > 30;                 # FILTER needs one table: company.<table>
+DROP company.employees [bonus];                # no such column
+
+SAVE_TABLES company TO "processed/company/";

@@ -1,6 +1,6 @@
 # Every statement after LOAD has a semantic, type or contract error.
 # The compiler finds all of them before any data is processed.
-LOAD "students.csv" AS students;
+LOAD "../tabular/students.csv" AS students;
 
 NORMALIZE students.name;                      # type: name is STRING
 FILTER students WHERE marks > "excellent";    # type: INTEGER compared with text

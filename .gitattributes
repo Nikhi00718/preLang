@@ -1,3 +1,9 @@
 # Keep CSV bytes exactly as committed on every OS. The generated script checks
 # a hash of each input CSV, so changed line endings would look like a changed file.
 *.csv -text
+
+# Image files are binary. The image fingerprint includes file sizes, so their
+# bytes must never change either.
+*.jpg binary
+*.jpeg binary
+*.png binary

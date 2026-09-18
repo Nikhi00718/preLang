@@ -1,0 +1,19 @@
+# One program cleans every table in the company/ folder (a TABLESET).
+LOAD_TABLES "company/" AS company;
+
+# Contracts across tables, decided at compile time from the CSV files.
+EXPECT company.*.id NUMBER IF_EXISTS;
+EXPECT company.*.id UNIQUE IF_EXISTS;
+EXPECT company.interns.department REFERENCES company.departments.name;
+
+# Wildcards: every table that has the column; IF_EXISTS skips the others.
+FILL_NULL company.*.age WITH 0 IF_EXISTS;
+FILL_NULL company.*.salary WITH 0 IF_EXISTS;
+FILL_NULL company.interns.stipend WITH 0;
+
+# Type-based selector: every numeric column of every table, except the keys.
+NORMALIZE company.*.* WHERE TYPE NUMERIC EXCEPT [id, year] USING MINMAX;
+
+DROP company.* [temporary_id] IF_EXISTS;
+
+SAVE_TABLES company TO "processed/company/";

@@ -1,0 +1,6 @@
+id,name,age,salary,dept,temporary_id
+1,Anita,34,72000,Engineering,9001
+2,Bharat,,65000,Engineering,9002
+3,Chitra,45,98000,Sales,9003
+4,Dev,29,,Sales,9004
+5,Esha,38,81000,HR,9005

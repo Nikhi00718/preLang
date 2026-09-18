@@ -1,6 +1,8 @@
 #include "ir/IRBuilder.h"
 
+#include <filesystem>
 #include <iomanip>
+#include <map>
 #include <utility>
 
 namespace {
@@ -21,6 +23,15 @@ std::string listText(const std::vector<std::string>& names) {
     return text + "]";
 }
 
+Literal number(const std::string& value) {
+    return {LiteralKind::Number, value};
+}
+
+// A file inside a folder path written in the program, e.g. "company/" + "staff.csv".
+std::string inFolder(const std::string& folder, const std::string& file) {
+    return (std::filesystem::path(folder) / file).generic_string();
+}
+
 }  // namespace
 
 IRBuilder::IRBuilder(const SymbolTable& symbols, const AnalysisResult& analysis)
@@ -34,113 +45,201 @@ IRProgram IRBuilder::build(const Program& program) {
     return std::move(program_);
 }
 
-// Adds an instruction, tagged with its source line and with the analysis
-// result if its statement was proven to have no effect.
-void IRBuilder::emit(Instruction instruction) {
+const std::vector<Target>& IRBuilder::targets() const {
+    static const std::vector<Target> none;
+    const auto found = analysis_.targets.find(statement_);
+    return found == analysis_.targets.end() ? none : found->second;
+}
+
+Instruction IRBuilder::make(Opcode op, const Target& target) const {
+    Instruction instruction(op);
+    instruction.dataset = target.dataset;
+    instruction.table = target.table;
+    instruction.column = target.column;
     instruction.line = statement_->location.line;
-    const auto found = analysis_.noEffect.find(statement_);
-    if (found != analysis_.noEffect.end() && instruction.result == 0) {
+    const auto found = analysis_.noEffect.find({statement_, targetKey(target)});
+    if (found != analysis_.noEffect.end()) {
         instruction.noEffect = found->second;
     }
+    return instruction;
+}
+
+void IRBuilder::emit(Instruction instruction) {
     program_.code.push_back(std::move(instruction));
 }
 
-// ---------- Statements ----------
+// ---------- Table statements ----------
 
+// A TABLESET becomes one LOAD per CSV file; it reads every column of the file
+// until the optimizer prunes the ones that are never used.
 void IRBuilder::visit(const LoadStmt& node) {
-    const Schema& schema = symbols_.lookup(node.dataset)->schema;
-    Instruction instruction(Opcode::Load);
-    instruction.dataset = node.dataset;
-    instruction.text = node.path;
-    for (const ColumnInfo& column : schema.columns) {
-        instruction.columns.push_back(column.name);
+    const DatasetSymbol& dataset = *symbols_.lookup(node.dataset);
+    if (dataset.isImage()) {
+        Instruction instruction = make(Opcode::LoadImages, {dataset.name, "", "", {}});
+        instruction.text = node.path;
+        program_.images[dataset.name] = dataset.imageSchema;
+        emit(std::move(instruction));
+        return;
     }
-    program_.inputs[node.dataset] = schema;
-    emit(std::move(instruction));
+    for (const TableState& table : dataset.tables) {
+        const bool inSet = dataset.kind == DatasetKind::TableSet;
+        Instruction instruction = make(Opcode::Load, {dataset.name, inSet ? table.name : "", "", {}});
+        instruction.text = inSet ? inFolder(node.path, std::filesystem::path(table.schema.file).filename().u8string())
+                                 : node.path;
+        for (const ColumnInfo& column : table.schema.columns) {
+            instruction.columns.push_back(column.name);
+        }
+        program_.tables[tableKey(instruction.dataset, instruction.table)] = table.schema;
+        emit(std::move(instruction));
+    }
 }
 
-void IRBuilder::visit(const DropNullStmt& node) {
-    Instruction instruction(Opcode::DropNull);
-    instruction.dataset = node.dataset;
-    emit(std::move(instruction));
+void IRBuilder::visit(const DropNullStmt&) {
+    for (const Target& target : targets()) {
+        emit(make(Opcode::DropNull, target));
+    }
 }
 
 void IRBuilder::visit(const FillNullStmt& node) {
-    Instruction instruction(Opcode::FillNull);
-    instruction.dataset = node.target.dataset;
-    instruction.column = node.target.column;
-    instruction.values = {node.value};
-    emit(std::move(instruction));
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::FillNull, target);
+        instruction.values = {node.value};
+        emit(std::move(instruction));
+    }
 }
 
 void IRBuilder::visit(const NormalizeStmt& node) {
-    Instruction instruction(Opcode::Normalize);
-    instruction.dataset = node.target.dataset;
-    instruction.column = node.target.column;
-    instruction.text = node.method == NormalizeMethod::ZScore ? "ZSCORE" : "MINMAX";
-    emit(std::move(instruction));
+    for (const Target& target : targets()) {
+        if (node.method == NormalizeMethod::Range) {
+            Instruction instruction = make(Opcode::NormalizeImages, target);
+            instruction.values = {number(node.low), number(node.high)};
+            for (const std::string& arg : target.args) {
+                instruction.values.push_back(number(arg));
+            }
+            emit(std::move(instruction));
+        } else {
+            Instruction instruction = make(Opcode::Normalize, target);
+            instruction.text = node.method == NormalizeMethod::ZScore ? "ZSCORE" : "MINMAX";
+            emit(std::move(instruction));
+        }
+    }
 }
 
-// The condition is emitted first as three-address code; the FILTER then
-// uses the temporary holding the final result.
+// The condition is emitted first as three-address code; the FILTER then uses
+// the temporary that holds the final result.
 void IRBuilder::visit(const FilterStmt& node) {
-    filterDataset_ = node.dataset;
+    filterTarget_ = targets().front();
     node.condition->accept(*this);
-
-    Instruction instruction(Opcode::Filter);
-    instruction.dataset = node.dataset;
+    Instruction instruction = make(Opcode::Filter, filterTarget_);
     instruction.uses = {lastTemp_};
     emit(std::move(instruction));
 }
 
 void IRBuilder::visit(const SelectStmt& node) {
-    Instruction instruction(Opcode::Select);
-    instruction.dataset = node.dataset;
+    Instruction instruction = make(Opcode::Select, targets().front());
     instruction.columns = node.columns;
     emit(std::move(instruction));
 }
 
-void IRBuilder::visit(const DropStmt& node) {
-    Instruction instruction(Opcode::Drop);
-    instruction.dataset = node.dataset;
-    instruction.columns = node.columns;
-    emit(std::move(instruction));
+// Analysis gives one target per dropped column; columns of the same table
+// are grouped back into one DROP.
+void IRBuilder::visit(const DropStmt&) {
+    const size_t first = program_.code.size();
+    for (const Target& target : targets()) {
+        Instruction* last = program_.code.size() > first ? &program_.code.back() : nullptr;
+        if (last && last->dataset == target.dataset && last->table == target.table) {
+            last->columns.push_back(target.column);
+            continue;
+        }
+        Instruction instruction = make(Opcode::Drop, {target.dataset, target.table, "", {}});
+        instruction.columns = {target.column};
+        emit(std::move(instruction));
+    }
 }
 
 void IRBuilder::visit(const SaveStmt& node) {
-    Instruction instruction(Opcode::Save);
-    instruction.dataset = node.dataset;
-    instruction.text = node.path;
+    for (const Target& target : targets()) {
+        if (node.kind == DataKind::Image || node.kind == DataKind::ImageSet) {
+            Instruction instruction = make(Opcode::SaveImages, target);
+            instruction.text = node.path;
+            instruction.numbers = {node.kind == DataKind::Image ? 1 : 0};
+            emit(std::move(instruction));
+        } else {
+            Instruction instruction = make(Opcode::Save, target);
+            instruction.text = node.kind == DataKind::TableSet ? inFolder(node.path, target.table + ".csv") : node.path;
+            emit(std::move(instruction));
+        }
+    }
+}
+
+// Only contracts about values can need a run-time CHECK. Types, schemas and
+// image shapes are always decided at compile time.
+void IRBuilder::visit(const ExpectStmt& node) {
+    static const std::map<ConstraintKind, std::string> runtimeChecks = {
+        {ConstraintKind::NotNull, "NOT_NULL"},     {ConstraintKind::Between, "BETWEEN"},
+        {ConstraintKind::Unique, "UNIQUE"},        {ConstraintKind::References, "REFERENCES"},
+        {ConstraintKind::MatchRate, "MATCH_RATE"},
+    };
+    const auto check = runtimeChecks.find(node.constraint);
+    if (check == runtimeChecks.end()) {
+        return;
+    }
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::Check, target);
+        instruction.text = check->second;
+        instruction.columns = target.args;
+        if (node.constraint == ConstraintKind::Between) {
+            instruction.values = {number(node.low), number(node.high)};
+        } else if (node.constraint == ConstraintKind::MatchRate) {
+            instruction.values = {number(node.low)};
+        }
+        emit(std::move(instruction));
+    }
+}
+
+// ---------- Image statements ----------
+
+void IRBuilder::visit(const ResizeStmt& node) {
+    Instruction instruction = make(Opcode::Resize, targets().front());
+    instruction.numbers = {node.width, node.height, node.keepAspect ? 1 : 0};
     emit(std::move(instruction));
 }
 
-// Type contracts (NUMBER, STRING, BOOLEAN) were already decided by the type
-// checker, so only data contracts become run-time CHECK instructions.
-void IRBuilder::visit(const ExpectStmt& node) {
-    if (node.constraint != ConstraintKind::NotNull && node.constraint != ConstraintKind::Between) {
-        return;
-    }
-    Instruction instruction(Opcode::Check);
-    instruction.dataset = node.target.dataset;
-    instruction.column = node.target.column;
-    if (node.constraint == ConstraintKind::NotNull) {
-        instruction.text = "NOT_NULL";
-    } else {
-        instruction.text = "BETWEEN";
-        instruction.values = {{LiteralKind::Number, node.low}, {LiteralKind::Number, node.high}};
-    }
+void IRBuilder::visit(const GrayscaleStmt&) {
+    emit(make(Opcode::Grayscale, targets().front()));
+}
+
+void IRBuilder::visit(const CompressStmt& node) {
+    Instruction instruction = make(Opcode::Compress, targets().front());
+    instruction.numbers = {node.quality};
     emit(std::move(instruction));
 }
+
+void IRBuilder::visit(const ConvertStmt& node) {
+    Instruction instruction = make(Opcode::Convert, targets().front());
+    instruction.text = node.format;
+    emit(std::move(instruction));
+}
+
+void IRBuilder::visit(const RemoveCorruptStmt&) {
+    emit(make(Opcode::RemoveCorrupt, targets().front()));
+}
+
+// LINK is fully decided at compile time; only a deferred MATCH_RATE contract
+// needs run-time work, and it has its own CHECK.
+void IRBuilder::visit(const LinkStmt&) {}
 
 // ---------- Conditions ----------
 
 void IRBuilder::visit(const ComparisonExpr& node) {
     Instruction instruction(Opcode::Compare);
-    instruction.dataset = filterDataset_;
+    instruction.dataset = filterTarget_.dataset;
+    instruction.table = filterTarget_.table;
     instruction.column = node.column;
     instruction.text = node.op;
     instruction.values = {node.value};
     instruction.result = nextTemp_++;
+    instruction.line = statement_->location.line;
     lastTemp_ = instruction.result;
     emit(std::move(instruction));
 }
@@ -154,6 +253,7 @@ void IRBuilder::visit(const LogicalExpr& node) {
     Instruction instruction(node.op == LogicalOp::And ? Opcode::And : Opcode::Or);
     instruction.uses = {left, right};
     instruction.result = nextTemp_++;
+    instruction.line = statement_->location.line;
     lastTemp_ = instruction.result;
     emit(std::move(instruction));
 }
@@ -163,6 +263,7 @@ void IRBuilder::visit(const NotExpr& node) {
     Instruction instruction(Opcode::Not);
     instruction.uses = {lastTemp_};
     instruction.result = nextTemp_++;
+    instruction.line = statement_->location.line;
     lastTemp_ = instruction.result;
     emit(std::move(instruction));
 }
@@ -170,17 +271,24 @@ void IRBuilder::visit(const NotExpr& node) {
 // ---------- Printing ----------
 
 std::string instructionText(const Instruction& in) {
-    const std::string target = in.dataset + "." + in.column;
+    const std::string table = tableKey(in.dataset, in.table);
+    const std::string target = table + "." + in.column;
     switch (in.op) {
         case Opcode::Load:
-            return "LOAD " + in.dataset + " <- \"" + in.text + "\" " + listText(in.columns);
+            return "LOAD " + table + " <- \"" + in.text + "\" " + listText(in.columns);
         case Opcode::Check:
+            if (in.text == "MATCH_RATE") {
+                return "CHECK " + in.dataset + " MATCH_RATE " + in.values[0].value + "%";
+            }
+            if (in.text == "REFERENCES") {
+                return "CHECK " + target + " REFERENCES " + tableKey(in.columns[0], in.columns[1]) + "." + in.columns[2];
+            }
             return "CHECK " + target + " " + in.text +
                    (in.values.empty() ? "" : " " + in.values[0].value + " AND " + in.values[1].value);
         case Opcode::FillNull:
             return "FILL_NULL " + target + " WITH " + literalText(in.values[0]);
         case Opcode::DropNull:
-            return "DROP_NULL " + in.dataset;
+            return "DROP_NULL " + table;
         case Opcode::Normalize:
             return "NORMALIZE " + target + " " + in.text;
         case Opcode::Compare:
@@ -192,13 +300,31 @@ std::string instructionText(const Instruction& in) {
         case Opcode::Not:
             return temp(in.result) + " = NOT " + temp(in.uses[0]);
         case Opcode::Filter:
-            return "FILTER " + in.dataset + " IF " + temp(in.uses[0]);
+            return "FILTER " + table + " IF " + temp(in.uses[0]);
         case Opcode::Select:
-            return "SELECT " + in.dataset + " " + listText(in.columns);
+            return "SELECT " + table + " " + listText(in.columns);
         case Opcode::Drop:
-            return "DROP " + in.dataset + " " + listText(in.columns);
+            return "DROP " + table + " " + listText(in.columns);
         case Opcode::Save:
-            return "SAVE " + in.dataset + " -> \"" + in.text + "\"";
+            return "SAVE " + table + " -> \"" + in.text + "\"";
+        case Opcode::LoadImages:
+            return "LOAD_IMAGES " + in.dataset + " <- \"" + in.text + "\"";
+        case Opcode::Resize:
+            return "RESIZE " + in.dataset + " TO " + std::to_string(in.numbers[0]) + " " + std::to_string(in.numbers[1]) +
+                   (in.numbers[2] ? " KEEP_ASPECT" : "");
+        case Opcode::Grayscale:
+            return "GRAYSCALE " + in.dataset;
+        case Opcode::NormalizeImages:
+            return "NORMALIZE " + in.dataset + " RANGE " + in.values[0].value + " " + in.values[1].value + " (from " +
+                   in.values[2].value + ".." + in.values[3].value + ")";
+        case Opcode::Compress:
+            return "COMPRESS " + in.dataset + " QUALITY " + std::to_string(in.numbers[0]);
+        case Opcode::Convert:
+            return "CONVERT " + in.dataset + " TO " + in.text;
+        case Opcode::RemoveCorrupt:
+            return "REMOVE_CORRUPT " + in.dataset;
+        case Opcode::SaveImages:
+            return (in.numbers[0] ? "SAVE_IMAGE " : "SAVE_IMAGES ") + in.dataset + " -> \"" + in.text + "\"";
     }
     return "";
 }

@@ -4,7 +4,7 @@
 #include "common/Diagnostics.h"
 #include "ir/IRBuilder.h"
 #include "lexer/Lexer.h"
-#include "optimizer/Optimizer.h"
+#include "optimizer/PassManager.h"
 #include "parser/Parser.h"
 #include "schema/SchemaProvider.h"
 #include "sema/SemanticAnalyzer.h"
@@ -42,7 +42,7 @@ struct Compiled {
 };
 
 // Compiles `body`, placed between  LOAD "<test csv>" AS s;  and  SAVE s AS "out.csv";
-Compiled compile(const std::string& body) {
+Compiled compile(const std::string& body, OptimizerOptions options = {true, false}) {
     const std::string source =
         "LOAD \"" + std::string(csvFile) + "\" AS s;\n" + body + "\nSAVE s AS \"out.csv\";";
     Diagnostics diagnostics;
@@ -55,7 +55,7 @@ Compiled compile(const std::string& body) {
     compiled.ok = !diagnostics.hasErrors();
     if (compiled.ok) {
         compiled.ir = IRBuilder(symbols, analysis).build(program);
-        compiled.report = Optimizer().optimize(compiled.ir);
+        compiled.report = PassManager(options).run(compiled.ir);
     }
     return compiled;
 }
@@ -137,6 +137,12 @@ void testDropNullBlocksPruning() {
           "DROP_NULL reads every column, so nothing is pruned before it");
 }
 
+void testOptimizerOff() {
+    const Compiled c = compile("FILTER s WHERE marks > 0;", {false, false});
+    check(c.ok && countOf(c.ir, Opcode::Filter) == 1 && c.report.instructionsBefore == c.report.instructionsAfter,
+          "--O0 keeps every instruction");
+}
+
 }  // namespace
 
 int main() {
@@ -152,6 +158,7 @@ int main() {
     testColumnPruning();
     testFilterColumnsStayLive();
     testDropNullBlocksPruning();
+    testOptimizerOff();
 
     std::cout << (failures == 0 ? "All optimizer tests passed.\n" : "Some optimizer tests FAILED.\n");
     return failures == 0 ? 0 : 1;

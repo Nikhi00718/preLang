@@ -3,23 +3,32 @@
 #include "ir/IR.h"
 
 #include <filesystem>
+#include <set>
 #include <string>
 
-// Target code generation: turns the optimized IR into a Python script that
-// uses pandas. Column types from the schema become explicit pandas dtypes,
-// so pandas reads the data with exactly the types the compiler checked.
+// Target code for TABLE and TABLESET instructions: Python using pandas.
+// Column types from the schema become explicit pandas dtypes, so pandas reads
+// the data with exactly the types the compiler checked.
 class PandasCodegen {
 public:
-    // The script is saved in outputFolder: input CSV paths are written relative
-    // to it, and SAVE writes its files into it.
-    PandasCodegen(std::filesystem::path outputFolder, std::string sourceName);
+    // Input paths are written relative to outputFolder, where the script is saved.
+    explicit PandasCodegen(std::filesystem::path outputFolder);
 
-    std::string generate(const IRProgram& program) const;
+    // The Python statements for one table instruction.
+    std::string code(const Instruction& instruction, const IRProgram& program);
+
+    // Helper functions the generated statements call.
+    static std::string helpers();
+
+    // df_students for a TABLE, tables_company["staff"] for a table in a TABLESET
+    static std::string tableVariable(const std::string& dataset, const std::string& table);
 
 private:
     std::filesystem::path outputFolder_;
-    std::string sourceName_;
-
-    std::string code(const Instruction& instruction, const IRProgram& program) const;
-    std::string inputPath(const std::string& csvPath) const;
+    std::set<std::string> declaredSets_;  // TABLESET dictionaries already created
 };
+
+// Shared by both backends.
+std::string pythonString(const std::string& text);
+std::string pythonList(const std::vector<std::string>& items);
+std::string pathFrom(const std::filesystem::path& outputFolder, const std::string& inputPath);

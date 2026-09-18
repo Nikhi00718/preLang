@@ -1,5 +1,6 @@
 #include "parser/Parser.h"
 
+#include <cctype>
 #include <utility>
 
 namespace {
@@ -9,7 +10,9 @@ namespace {
 struct ParseError {};
 
 const std::vector<std::string> statementKeywords = {
-    "LOAD", "DROP_NULL", "FILL_NULL", "NORMALIZE", "FILTER", "SELECT", "DROP", "SAVE", "EXPECT"};
+    "LOAD", "LOAD_TABLES", "LOAD_IMAGE", "LOAD_IMAGES", "DROP_NULL", "FILL_NULL", "NORMALIZE", "FILTER",
+    "SELECT", "DROP", "SAVE", "SAVE_TABLES", "SAVE_IMAGE", "SAVE_IMAGES", "EXPECT", "RESIZE", "GRAYSCALE",
+    "COMPRESS", "CONVERT", "REMOVE_CORRUPT", "LINK"};
 
 // How a token is shown in "found ..." messages.
 std::string describe(const Token& token) {
@@ -40,64 +43,85 @@ Program Parser::parse() {
 
 // ---------- Statements ----------
 
-// statement -> load | drop_null | fill_null | normalize | filter
-//            | select | drop | save | expect
 // Every statement starts with a different keyword, so one token of lookahead
 // is enough to choose the rule. That makes the grammar LL(1).
 std::unique_ptr<Stmt> Parser::statement() {
     switch (peek().type) {
-        case TokenType::LOAD:      return loadStatement();
-        case TokenType::DROP_NULL: return dropNullStatement();
-        case TokenType::FILL_NULL: return fillNullStatement();
-        case TokenType::NORMALIZE: return normalizeStatement();
-        case TokenType::FILTER:    return filterStatement();
-        case TokenType::SELECT:    return selectStatement();
-        case TokenType::DROP:      return dropStatement();
-        case TokenType::SAVE:      return saveStatement();
-        case TokenType::EXPECT:    return expectStatement();
-        default:                   break;
+        case TokenType::LOAD:           return loadStatement(DataKind::Table);
+        case TokenType::LOAD_TABLES:    return loadStatement(DataKind::TableSet);
+        case TokenType::LOAD_IMAGE:     return loadStatement(DataKind::Image);
+        case TokenType::LOAD_IMAGES:    return loadStatement(DataKind::ImageSet);
+        case TokenType::DROP_NULL:      return dropNullStatement();
+        case TokenType::FILL_NULL:      return fillNullStatement();
+        case TokenType::NORMALIZE:      return normalizeStatement();
+        case TokenType::FILTER:         return filterStatement();
+        case TokenType::SELECT:         return selectStatement();
+        case TokenType::DROP:           return dropStatement();
+        case TokenType::SAVE:           return saveStatement(DataKind::Table);
+        case TokenType::SAVE_TABLES:    return saveStatement(DataKind::TableSet);
+        case TokenType::SAVE_IMAGE:     return saveStatement(DataKind::Image);
+        case TokenType::SAVE_IMAGES:    return saveStatement(DataKind::ImageSet);
+        case TokenType::EXPECT:         return expectStatement();
+        case TokenType::RESIZE:         return resizeStatement();
+        case TokenType::GRAYSCALE:      return grayscaleStatement();
+        case TokenType::COMPRESS:       return compressStatement();
+        case TokenType::CONVERT:        return convertStatement();
+        case TokenType::REMOVE_CORRUPT: return removeCorruptStatement();
+        case TokenType::LINK:           return linkStatement();
+        default:                        break;
     }
     const std::string hint = check(TokenType::IDENTIFIER) ? suggestClosest(peek().lexeme, statementKeywords) : "";
-    errorAt(peek().location, "expected a statement (LOAD, FILTER, SAVE, ...), found " + describe(peek()), hint);
+    errorAt(peek().location, "expected a statement (LOAD, FILTER, RESIZE, SAVE, ...), found " + describe(peek()), hint);
 }
 
-// load -> LOAD STRING_LITERAL AS IDENTIFIER ;
-std::unique_ptr<Stmt> Parser::loadStatement() {
+// load -> ( LOAD | LOAD_TABLES | LOAD_IMAGE | LOAD_IMAGES ) STRING_LITERAL AS IDENTIFIER [ RECURSIVE ] ;
+// RECURSIVE is only allowed after LOAD_IMAGES.
+std::unique_ptr<Stmt> Parser::loadStatement(DataKind kind) {
     auto node = std::make_unique<LoadStmt>();
     node->location = advance().location;
-    node->path = consume(TokenType::STRING_LITERAL, "a file name in double quotes").lexeme;
+    node->kind = kind;
+    node->path = consume(TokenType::STRING_LITERAL, "a file or folder name in double quotes").lexeme;
     consume(TokenType::AS, "'AS'");
     node->dataset = identifier("a dataset name");
+    if (kind == DataKind::ImageSet) {
+        node->recursive = match(TokenType::RECURSIVE);
+    }
     endStatement();
     return node;
 }
 
-// drop_null -> DROP_NULL IDENTIFIER ;
+// drop_null -> DROP_NULL table_selector ;
 std::unique_ptr<Stmt> Parser::dropNullStatement() {
     auto node = std::make_unique<DropNullStmt>();
     node->location = advance().location;
-    node->dataset = identifier("a dataset name");
+    node->target = tableSelector();
     endStatement();
     return node;
 }
 
-// fill_null -> FILL_NULL column_ref WITH literal ;
+// fill_null -> FILL_NULL column_selector WITH literal [ IF_EXISTS ] ;
 std::unique_ptr<Stmt> Parser::fillNullStatement() {
     auto node = std::make_unique<FillNullStmt>();
     node->location = advance().location;
-    node->target = columnRef();
+    node->target = columnSelector();
     consume(TokenType::WITH, "'WITH'");
     node->value = literal();
+    optionalIfExists(node->target);
     endStatement();
     return node;
 }
 
-// normalize -> NORMALIZE column_ref [ USING ( ZSCORE | MINMAX ) ] ;
+// normalize -> NORMALIZE column_selector ( RANGE number number | [ USING ( ZSCORE | MINMAX ) ] ) [ IF_EXISTS ] ;
+// RANGE is for images, USING for table columns.
 std::unique_ptr<Stmt> Parser::normalizeStatement() {
     auto node = std::make_unique<NormalizeStmt>();
     node->location = advance().location;
-    node->target = columnRef();
-    if (match(TokenType::USING)) {
+    node->target = columnSelector();
+    if (match(TokenType::RANGE)) {
+        node->method = NormalizeMethod::Range;
+        node->low = number();
+        node->high = number();
+    } else if (match(TokenType::USING)) {
         if (match(TokenType::ZSCORE)) {
             node->method = NormalizeMethod::ZScore;
         } else if (match(TokenType::MINMAX)) {
@@ -106,58 +130,70 @@ std::unique_ptr<Stmt> Parser::normalizeStatement() {
             errorExpected("ZSCORE or MINMAX after USING");
         }
     }
+    optionalIfExists(node->target);
     endStatement();
     return node;
 }
 
-// filter -> FILTER IDENTIFIER WHERE or_expr ;
+// filter -> FILTER table_ref WHERE or_expr ;
 std::unique_ptr<Stmt> Parser::filterStatement() {
     auto node = std::make_unique<FilterStmt>();
     node->location = advance().location;
-    node->dataset = identifier("a dataset name");
+    node->target = tableRef();
     consume(TokenType::WHERE, "'WHERE'");
     node->condition = orExpression();
     endStatement();
     return node;
 }
 
-// select -> SELECT IDENTIFIER column_list ;
+// select -> SELECT table_ref column_list ;
 std::unique_ptr<Stmt> Parser::selectStatement() {
     auto node = std::make_unique<SelectStmt>();
     node->location = advance().location;
-    node->dataset = identifier("a dataset name");
+    node->target = tableRef();
     node->columns = columnList();
     endStatement();
     return node;
 }
 
-// drop -> DROP IDENTIFIER column_list ;
+// drop -> DROP table_selector column_list [ IF_EXISTS ] ;
 std::unique_ptr<Stmt> Parser::dropStatement() {
     auto node = std::make_unique<DropStmt>();
     node->location = advance().location;
-    node->dataset = identifier("a dataset name");
+    node->target = tableSelector();
     node->columns = columnList();
+    optionalIfExists(node->target);
     endStatement();
     return node;
 }
 
-// save -> SAVE IDENTIFIER AS STRING_LITERAL ;
-std::unique_ptr<Stmt> Parser::saveStatement() {
+// save -> SAVE table_ref AS STRING_LITERAL ;          SAVE_TABLES IDENTIFIER TO STRING_LITERAL ;
+//         SAVE_IMAGE IDENTIFIER AS STRING_LITERAL ;   SAVE_IMAGES IDENTIFIER TO STRING_LITERAL ;
+std::unique_ptr<Stmt> Parser::saveStatement(DataKind kind) {
     auto node = std::make_unique<SaveStmt>();
     node->location = advance().location;
-    node->dataset = identifier("a dataset name");
-    consume(TokenType::AS, "'AS'");
-    node->path = consume(TokenType::STRING_LITERAL, "a file name in double quotes").lexeme;
+    node->kind = kind;
+    if (kind == DataKind::Table) {
+        node->target = tableRef();
+    } else {
+        node->target.location = peek().location;
+        node->target.parts.push_back(identifier("a dataset name"));
+    }
+    const bool intoFolder = kind == DataKind::TableSet || kind == DataKind::ImageSet;
+    consume(intoFolder ? TokenType::TO : TokenType::AS, intoFolder ? "'TO'" : "'AS'");
+    node->path = consume(TokenType::STRING_LITERAL, "a file or folder name in double quotes").lexeme;
     endStatement();
     return node;
 }
 
-// expect     -> EXPECT column_ref constraint ;
-// constraint -> NUMBER | STRING | BOOLEAN | NOT_NULL | BETWEEN number AND number
+// expect     -> EXPECT column_selector constraint [ IF_EXISTS ] ;
+// constraint -> NUMBER | STRING | BOOLEAN | NOT_NULL | BETWEEN number AND number | UNIQUE
+//             | REFERENCES path | SCHEMA_SAME_AS table_ref [ EXCEPT column_list ]
+//             | CHANNELS integer | MIN_WIDTH integer | MIN_HEIGHT integer | MATCH_RATE number %
 std::unique_ptr<Stmt> Parser::expectStatement() {
     auto node = std::make_unique<ExpectStmt>();
     node->location = advance().location;
-    node->target = columnRef();
+    node->target = columnSelector();
     if (match(TokenType::NUMBER)) {
         node->constraint = ConstraintKind::IsNumber;
     } else if (match(TokenType::STRING)) {
@@ -171,9 +207,109 @@ std::unique_ptr<Stmt> Parser::expectStatement() {
         node->low = number();
         consume(TokenType::AND, "'AND'");
         node->high = number();
+    } else if (match(TokenType::UNIQUE)) {
+        node->constraint = ConstraintKind::Unique;
+    } else if (match(TokenType::REFERENCES)) {
+        node->constraint = ConstraintKind::References;
+        node->other = path();
+    } else if (match(TokenType::SCHEMA_SAME_AS)) {
+        node->constraint = ConstraintKind::SchemaSameAs;
+        node->other = tableRef();
+        if (match(TokenType::EXCEPT)) {
+            node->except = columnList();
+        }
+    } else if (match(TokenType::CHANNELS)) {
+        node->constraint = ConstraintKind::Channels;
+        node->low = std::to_string(integer("the number of channels"));
+    } else if (match(TokenType::MIN_WIDTH)) {
+        node->constraint = ConstraintKind::MinWidth;
+        node->low = std::to_string(integer("a width in pixels"));
+    } else if (match(TokenType::MIN_HEIGHT)) {
+        node->constraint = ConstraintKind::MinHeight;
+        node->low = std::to_string(integer("a height in pixels"));
+    } else if (match(TokenType::MATCH_RATE)) {
+        node->constraint = ConstraintKind::MatchRate;
+        node->low = number();
+        consume(TokenType::PERCENT, "'%' after the match rate");
     } else {
-        errorExpected("NUMBER, STRING, BOOLEAN, NOT_NULL or BETWEEN");
+        errorExpected("a contract such as NUMBER, NOT_NULL, BETWEEN, UNIQUE, REFERENCES or CHANNELS");
     }
+    optionalIfExists(node->target);
+    endStatement();
+    return node;
+}
+
+// resize -> RESIZE IDENTIFIER TO integer integer [ KEEP_ASPECT ] ;
+std::unique_ptr<Stmt> Parser::resizeStatement() {
+    auto node = std::make_unique<ResizeStmt>();
+    node->location = advance().location;
+    node->dataset = identifier("an image dataset name");
+    consume(TokenType::TO, "'TO'");
+    node->width = integer("a width in pixels");
+    node->height = integer("a height in pixels");
+    node->keepAspect = match(TokenType::KEEP_ASPECT);
+    endStatement();
+    return node;
+}
+
+// grayscale -> GRAYSCALE IDENTIFIER ;
+std::unique_ptr<Stmt> Parser::grayscaleStatement() {
+    auto node = std::make_unique<GrayscaleStmt>();
+    node->location = advance().location;
+    node->dataset = identifier("an image dataset name");
+    endStatement();
+    return node;
+}
+
+// compress -> COMPRESS IDENTIFIER QUALITY integer ;
+std::unique_ptr<Stmt> Parser::compressStatement() {
+    auto node = std::make_unique<CompressStmt>();
+    node->location = advance().location;
+    node->dataset = identifier("an image dataset name");
+    consume(TokenType::QUALITY, "'QUALITY'");
+    node->quality = integer("a quality from 1 to 100");
+    endStatement();
+    return node;
+}
+
+// convert -> CONVERT IDENTIFIER TO ( JPG | PNG | NPY ) ;
+std::unique_ptr<Stmt> Parser::convertStatement() {
+    auto node = std::make_unique<ConvertStmt>();
+    node->location = advance().location;
+    node->dataset = identifier("an image dataset name");
+    consume(TokenType::TO, "'TO'");
+    if (match(TokenType::JPG) || match(TokenType::PNG) || match(TokenType::NPY)) {
+        node->format = previous().lexeme;
+        for (char& c : node->format) {
+            c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        }
+    } else {
+        errorExpected("an image format: JPG, PNG or NPY");
+    }
+    endStatement();
+    return node;
+}
+
+// remove_corrupt -> REMOVE_CORRUPT IDENTIFIER ;
+std::unique_ptr<Stmt> Parser::removeCorruptStatement() {
+    auto node = std::make_unique<RemoveCorruptStmt>();
+    node->location = advance().location;
+    node->dataset = identifier("an image dataset name");
+    endStatement();
+    return node;
+}
+
+// link -> LINK IDENTIFIER WITH IDENTIFIER ON IDENTIFIER AS IDENTIFIER ;
+std::unique_ptr<Stmt> Parser::linkStatement() {
+    auto node = std::make_unique<LinkStmt>();
+    node->location = advance().location;
+    node->images = identifier("an image dataset name");
+    consume(TokenType::WITH, "'WITH'");
+    node->table = identifier("a table name");
+    consume(TokenType::ON, "'ON'");
+    node->column = identifier("the column with the image file names");
+    consume(TokenType::AS, "'AS'");
+    node->dataset = identifier("a name for the linked dataset");
     endStatement();
     return node;
 }
@@ -245,17 +381,80 @@ std::unique_ptr<Expr> Parser::primary() {
     return node;
 }
 
-// ---------- Shared pieces ----------
+// ---------- Selectors ----------
 
-// column_ref -> IDENTIFIER . IDENTIFIER
-ColumnRef Parser::columnRef() {
-    ColumnRef ref;
-    ref.location = peek().location;
-    ref.dataset = identifier("a dataset name");
-    consume(TokenType::DOT, "'.' between dataset and column (dataset.column)");
-    ref.column = identifier("a column name");
-    return ref;
+// table_ref -> IDENTIFIER [ . IDENTIFIER ]            one table: t or ts.name
+Selector Parser::tableRef() {
+    Selector selector;
+    selector.location = peek().location;
+    selector.parts.push_back(identifier("a dataset name"));
+    if (match(TokenType::DOT)) {
+        selector.parts.push_back(identifier("a table name"));
+    }
+    return selector;
 }
+
+// table_selector -> IDENTIFIER [ . ( IDENTIFIER | * ) ]    one or more tables
+Selector Parser::tableSelector() {
+    Selector selector;
+    selector.location = peek().location;
+    selector.parts.push_back(identifier("a dataset name"));
+    if (match(TokenType::DOT)) {
+        selector.parts.push_back(match(TokenType::STAR) ? "*" : identifier("a table name or '*'"));
+    }
+    return selector;
+}
+
+// column_selector -> IDENTIFIER { . ( IDENTIFIER | * ) }
+//                    [ WHERE ( TYPE ( NUMERIC | STRING | BOOLEAN ) | NULLABLE ) ] [ EXCEPT column_list ]
+Selector Parser::columnSelector() {
+    Selector selector;
+    selector.location = peek().location;
+    selector.parts.push_back(identifier("a dataset name"));
+    while (match(TokenType::DOT)) {
+        selector.parts.push_back(match(TokenType::STAR) ? "*" : identifier("a table or column name, or '*'"));
+    }
+    if (selector.parts.size() > 3) {
+        errorAt(selector.location, "a selector has at most three parts: dataset.table.column");
+    }
+    if (match(TokenType::WHERE)) {
+        if (match(TokenType::NULLABLE)) {
+            selector.filter = SelectorFilter::Nullable;
+        } else {
+            consume(TokenType::TYPE, "TYPE or NULLABLE after WHERE");
+            if (match(TokenType::NUMERIC) || match(TokenType::NUMBER)) {
+                selector.filter = SelectorFilter::Numeric;
+            } else if (match(TokenType::STRING)) {
+                selector.filter = SelectorFilter::String;
+            } else if (match(TokenType::BOOLEAN)) {
+                selector.filter = SelectorFilter::Boolean;
+            } else {
+                errorExpected("NUMERIC, STRING or BOOLEAN after TYPE");
+            }
+        }
+    }
+    if (match(TokenType::EXCEPT)) {
+        selector.except = columnList();
+    }
+    return selector;
+}
+
+// path -> IDENTIFIER { . IDENTIFIER }       a column without wildcards
+Selector Parser::path() {
+    Selector selector;
+    selector.location = peek().location;
+    selector.parts.push_back(identifier("a dataset name"));
+    while (match(TokenType::DOT)) {
+        selector.parts.push_back(identifier("a table or column name"));
+    }
+    return selector;
+}
+
+void Parser::optionalIfExists(Selector& selector) {
+    selector.ifExists = match(TokenType::IF_EXISTS);
+}
+
+// ---------- Shared pieces ----------
 
 // column_list -> [ IDENTIFIER { , IDENTIFIER } ]
 std::vector<std::string> Parser::columnList() {
@@ -291,8 +490,17 @@ std::string Parser::number() {
     return sign + consume(TokenType::NUMBER_LITERAL, "a number").lexeme;
 }
 
-// A dataset or column name. A column called e.g. "number" clashes with the
-// keyword NUMBER, so the hint shows how to quote it.
+// A whole number such as a width, a quality or a channel count.
+int Parser::integer(const std::string& what) {
+    const Token& token = consume(TokenType::NUMBER_LITERAL, what);
+    if (token.lexeme.find('.') != std::string::npos || token.lexeme.size() > 9) {
+        errorAt(token.location, "expected " + what + " as a whole number, found '" + token.lexeme + "'");
+    }
+    return std::stoi(token.lexeme);
+}
+
+// A dataset, table or column name. A column called e.g. "number" clashes with
+// the keyword NUMBER, so the hint shows how to quote it.
 std::string Parser::identifier(const std::string& what) {
     if (check(TokenType::IDENTIFIER)) {
         return advance().lexeme;

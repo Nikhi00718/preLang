@@ -11,58 +11,53 @@ bool isDigit(char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; 
 bool isWordStart(char c) { return std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_'; }
 bool isWordPart(char c) { return isWordStart(c) || isDigit(c); }
 
+const std::unordered_map<std::string, TokenType>& keywordTable() {
+    static const std::unordered_map<std::string, TokenType> keywords = {
+        {"LOAD", TokenType::LOAD}, {"LOAD_TABLES", TokenType::LOAD_TABLES},
+        {"LOAD_IMAGE", TokenType::LOAD_IMAGE}, {"LOAD_IMAGES", TokenType::LOAD_IMAGES},
+        {"DROP_NULL", TokenType::DROP_NULL}, {"FILL_NULL", TokenType::FILL_NULL},
+        {"NORMALIZE", TokenType::NORMALIZE}, {"FILTER", TokenType::FILTER}, {"SELECT", TokenType::SELECT},
+        {"DROP", TokenType::DROP}, {"SAVE", TokenType::SAVE}, {"SAVE_TABLES", TokenType::SAVE_TABLES},
+        {"SAVE_IMAGE", TokenType::SAVE_IMAGE}, {"SAVE_IMAGES", TokenType::SAVE_IMAGES},
+        {"EXPECT", TokenType::EXPECT}, {"RESIZE", TokenType::RESIZE}, {"GRAYSCALE", TokenType::GRAYSCALE},
+        {"COMPRESS", TokenType::COMPRESS}, {"CONVERT", TokenType::CONVERT},
+        {"REMOVE_CORRUPT", TokenType::REMOVE_CORRUPT}, {"LINK", TokenType::LINK},
+        {"AS", TokenType::AS}, {"WITH", TokenType::WITH}, {"TO", TokenType::TO}, {"ON", TokenType::ON},
+        {"USING", TokenType::USING}, {"ZSCORE", TokenType::ZSCORE}, {"MINMAX", TokenType::MINMAX},
+        {"RANGE", TokenType::RANGE}, {"WHERE", TokenType::WHERE}, {"TYPE", TokenType::TYPE},
+        {"EXCEPT", TokenType::EXCEPT}, {"IF_EXISTS", TokenType::IF_EXISTS}, {"RECURSIVE", TokenType::RECURSIVE},
+        {"NUMBER", TokenType::NUMBER}, {"NUMERIC", TokenType::NUMERIC}, {"STRING", TokenType::STRING},
+        {"BOOLEAN", TokenType::BOOLEAN}, {"NULLABLE", TokenType::NULLABLE}, {"NOT_NULL", TokenType::NOT_NULL},
+        {"BETWEEN", TokenType::BETWEEN}, {"UNIQUE", TokenType::UNIQUE}, {"REFERENCES", TokenType::REFERENCES},
+        {"SCHEMA_SAME_AS", TokenType::SCHEMA_SAME_AS}, {"CHANNELS", TokenType::CHANNELS},
+        {"MIN_WIDTH", TokenType::MIN_WIDTH}, {"MIN_HEIGHT", TokenType::MIN_HEIGHT},
+        {"MATCH_RATE", TokenType::MATCH_RATE}, {"KEEP_ASPECT", TokenType::KEEP_ASPECT},
+        {"QUALITY", TokenType::QUALITY}, {"JPG", TokenType::JPG}, {"PNG", TokenType::PNG}, {"NPY", TokenType::NPY},
+        {"AND", TokenType::AND}, {"OR", TokenType::OR}, {"NOT", TokenType::NOT},
+        {"TRUE", TokenType::TRUE}, {"FALSE", TokenType::FALSE},
+    };
+    return keywords;
+}
+
 // Keywords ignore case: LOAD, load and Load are the same keyword.
 TokenType keywordOrIdentifier(const std::string& word) {
-    static const std::unordered_map<std::string, TokenType> keywords = {
-        {"LOAD", TokenType::LOAD},           {"DROP_NULL", TokenType::DROP_NULL},
-        {"FILL_NULL", TokenType::FILL_NULL}, {"NORMALIZE", TokenType::NORMALIZE},
-        {"FILTER", TokenType::FILTER},       {"SELECT", TokenType::SELECT},
-        {"DROP", TokenType::DROP},           {"SAVE", TokenType::SAVE},
-        {"EXPECT", TokenType::EXPECT},       {"AS", TokenType::AS},
-        {"WITH", TokenType::WITH},           {"USING", TokenType::USING},
-        {"ZSCORE", TokenType::ZSCORE},       {"MINMAX", TokenType::MINMAX},
-        {"WHERE", TokenType::WHERE},         {"NUMBER", TokenType::NUMBER},
-        {"STRING", TokenType::STRING},       {"BOOLEAN", TokenType::BOOLEAN},
-        {"NOT_NULL", TokenType::NOT_NULL},   {"BETWEEN", TokenType::BETWEEN},
-        {"AND", TokenType::AND},             {"OR", TokenType::OR},
-        {"NOT", TokenType::NOT},             {"TRUE", TokenType::TRUE},
-        {"FALSE", TokenType::FALSE},
-    };
     std::string upper;
     for (char c : word) {
         upper += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
     }
-    const auto found = keywords.find(upper);
-    return found == keywords.end() ? TokenType::IDENTIFIER : found->second;
+    const auto found = keywordTable().find(upper);
+    return found == keywordTable().end() ? TokenType::IDENTIFIER : found->second;
 }
 
-const char* typeName(TokenType type) {
+std::string typeName(TokenType type) {
+    if (isKeyword(type)) {  // a keyword's type name is the keyword itself
+        for (const auto& [word, keyword] : keywordTable()) {
+            if (keyword == type) {
+                return word;
+            }
+        }
+    }
     switch (type) {
-        case TokenType::LOAD:           return "LOAD";
-        case TokenType::DROP_NULL:      return "DROP_NULL";
-        case TokenType::FILL_NULL:      return "FILL_NULL";
-        case TokenType::NORMALIZE:      return "NORMALIZE";
-        case TokenType::FILTER:         return "FILTER";
-        case TokenType::SELECT:         return "SELECT";
-        case TokenType::DROP:           return "DROP";
-        case TokenType::SAVE:           return "SAVE";
-        case TokenType::EXPECT:         return "EXPECT";
-        case TokenType::AS:             return "AS";
-        case TokenType::WITH:           return "WITH";
-        case TokenType::USING:          return "USING";
-        case TokenType::ZSCORE:         return "ZSCORE";
-        case TokenType::MINMAX:         return "MINMAX";
-        case TokenType::WHERE:          return "WHERE";
-        case TokenType::NUMBER:         return "NUMBER";
-        case TokenType::STRING:         return "STRING";
-        case TokenType::BOOLEAN:        return "BOOLEAN";
-        case TokenType::NOT_NULL:       return "NOT_NULL";
-        case TokenType::BETWEEN:        return "BETWEEN";
-        case TokenType::AND:            return "AND";
-        case TokenType::OR:             return "OR";
-        case TokenType::NOT:            return "NOT";
-        case TokenType::TRUE:           return "TRUE";
-        case TokenType::FALSE:          return "FALSE";
         case TokenType::IDENTIFIER:     return "IDENTIFIER";
         case TokenType::NUMBER_LITERAL: return "NUMBER_LITERAL";
         case TokenType::STRING_LITERAL: return "STRING_LITERAL";
@@ -80,9 +75,11 @@ const char* typeName(TokenType type) {
         case TokenType::LEFT_PAREN:     return "LEFT_PAREN";
         case TokenType::RIGHT_PAREN:    return "RIGHT_PAREN";
         case TokenType::MINUS:          return "MINUS";
+        case TokenType::STAR:           return "STAR";
+        case TokenType::PERCENT:        return "PERCENT";
         case TokenType::END_OF_FILE:    return "END_OF_FILE";
+        default:                        return "";
     }
-    return "";
 }
 
 const char* categoryName(TokenType type) {
@@ -169,6 +166,8 @@ void Lexer::scanToken() {
         case '(': addToken(TokenType::LEFT_PAREN); return;
         case ')': addToken(TokenType::RIGHT_PAREN); return;
         case '-': addToken(TokenType::MINUS); return;
+        case '*': addToken(TokenType::STAR); return;
+        case '%': addToken(TokenType::PERCENT); return;
 
         // Longest match: "<=" is one token, not "<" followed by "=".
         case '<': addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS); return;

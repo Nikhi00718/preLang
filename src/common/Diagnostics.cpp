@@ -47,13 +47,15 @@ size_t editDistance(const std::string& a, const std::string& b) {
 
 }  // namespace
 
-void Diagnostics::error(Phase phase, SourceLocation location, std::string message, std::string hint) {
-    all_.push_back({Severity::Error, phase, location, std::move(message), std::move(hint)});
+Diagnostic& Diagnostics::error(Phase phase, SourceLocation location, std::string message, std::string hint) {
     ++errorCount_;
+    all_.push_back({Severity::Error, phase, location, std::move(message), std::move(hint), {}});
+    return all_.back();
 }
 
-void Diagnostics::warning(Phase phase, SourceLocation location, std::string message, std::string hint) {
-    all_.push_back({Severity::Warning, phase, location, std::move(message), std::move(hint)});
+Diagnostic& Diagnostics::warning(Phase phase, SourceLocation location, std::string message, std::string hint) {
+    all_.push_back({Severity::Warning, phase, location, std::move(message), std::move(hint), {}});
+    return all_.back();
 }
 
 // Output format:
@@ -80,6 +82,9 @@ void Diagnostics::print(std::ostream& out, const SourceManager& source) const {
         out << gutter << " |\n";
         out << lineNumber << " | " << source.line(d.location.line) << '\n';
         out << gutter << " | " << caretIndent << "^\n";
+        for (const std::string& note : d.notes) {
+            out << gutter << " = note: " << note << '\n';
+        }
         if (!d.hint.empty()) {
             out << gutter << " = hint: " << d.hint << '\n';
         }

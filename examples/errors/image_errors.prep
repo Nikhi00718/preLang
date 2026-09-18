@@ -1,0 +1,15 @@
+# Mistakes in image preprocessing that PrepLang finds before any image is touched.
+LOAD_IMAGES "../images/dataset/" AS imgs RECURSIVE;
+LOAD "../images/labels_partial.csv" AS labels;
+
+DROP_NULL imgs;                        # DROP_NULL is a table operation
+RESIZE imgs TO 224 224;                # broken.jpg cannot be decoded
+REMOVE_CORRUPT imgs;
+EXPECT imgs CHANNELS 3;                # dogs/dog_03.png is grayscale
+
+LINK imgs WITH labels ON filename AS training;
+EXPECT training MATCH_RATE 100%;       # one image has no label, one label has no image
+
+NORMALIZE imgs RANGE 0 1;
+SAVE_IMAGES imgs TO "processed/";      # FLOAT32 pixels cannot go into PNG/JPG files
+SAVE labels AS "processed/labels.csv";

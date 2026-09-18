@@ -1,0 +1,37 @@
+{
+  "source_program": "examples/tabular/students.prep",
+  "compiler": "PrepLang 1.0",
+  "inputs": [
+    {
+      "table": "students",
+      "path": "../examples/tabular/students.csv",
+      "fingerprint": "0xC4ED16D6"
+    }
+  ],
+  "contracts": {
+    "proven_at_compile_time": 3,
+    "checked_at_run_time": 1
+  },
+  "operations": [
+    "LOAD students <- \"students.csv\" [name, age, marks, attendance, passed, department]",
+    "FILL_NULL students.department WITH \"UNKNOWN\"",
+    "DROP_NULL students",
+    "NORMALIZE students.attendance MINMAX",
+    "t1 = students.marks >= 50",
+    "t2 = students.attendance > 0.5",
+    "t3 = students.passed == TRUE",
+    "t4 = t2 OR t3",
+    "t5 = t1 AND t4",
+    "FILTER students IF t5",
+    "CHECK students.marks BETWEEN 60 AND 100",
+    "DROP students [department]",
+    "SELECT students [name, age, marks]",
+    "SAVE students -> \"clean.csv\""
+  ],
+  "outputs": [
+    {
+      "file": "clean.csv",
+      "rows": 4
+    }
+  ]
+}

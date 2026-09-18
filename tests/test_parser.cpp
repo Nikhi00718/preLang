@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -75,7 +76,7 @@ void testNormalizeMethod() {
     const auto* first = statementAs<NormalizeStmt>(program, 0);
     const auto* second = statementAs<NormalizeStmt>(program, 1);
     check(first && first->method == NormalizeMethod::ZScore, "NORMALIZE uses ZSCORE by default");
-    check(second && second->method == NormalizeMethod::MinMax && second->target.column == "marks",
+    check(second && second->method == NormalizeMethod::MinMax && second->target.parts.back() == "marks",
           "NORMALIZE ... USING MINMAX");
 }
 
@@ -165,6 +166,72 @@ void testKeywordAsName() {
           "keyword used as a column name suggests backticks");
 }
 
+void testWildcardSelector() {
+    Diagnostics diagnostics;
+    const Program program =
+        parse("NORMALIZE company.*.* WHERE TYPE NUMERIC EXCEPT [id, year] USING MINMAX;"
+              "FILL_NULL company.*.age WITH 0 IF_EXISTS;", diagnostics);
+    const auto* normalize = statementAs<NormalizeStmt>(program, 0);
+    const auto* fill = statementAs<FillNullStmt>(program, 1);
+    check(normalize && normalize->target.parts == std::vector<std::string>{"company", "*", "*"} &&
+              normalize->target.filter == SelectorFilter::Numeric &&
+              normalize->target.except == std::vector<std::string>{"id", "year"} &&
+              normalize->method == NormalizeMethod::MinMax,
+          "wildcard selector with WHERE TYPE and EXCEPT");
+    check(fill && fill->target.ifExists && fill->target.text() == "company.*.age", "IF_EXISTS on a selector");
+}
+
+void testImageStatements() {
+    Diagnostics diagnostics;
+    const Program program = parse(R"(
+        LOAD_IMAGES "data/" AS imgs RECURSIVE;
+        RESIZE imgs TO 224 224 KEEP_ASPECT;
+        NORMALIZE imgs RANGE 0 1;
+        CONVERT imgs TO jpg;
+        COMPRESS imgs QUALITY 80;
+        SAVE_IMAGES imgs TO "out/";
+    )", diagnostics);
+    const auto* load = statementAs<LoadStmt>(program, 0);
+    const auto* resize = statementAs<ResizeStmt>(program, 1);
+    const auto* normalize = statementAs<NormalizeStmt>(program, 2);
+    const auto* convert = statementAs<ConvertStmt>(program, 3);
+    const auto* save = statementAs<SaveStmt>(program, 5);
+    check(!diagnostics.hasErrors() && load && load->kind == DataKind::ImageSet && load->recursive,
+          "LOAD_IMAGES ... RECURSIVE");
+    check(resize && resize->width == 224 && resize->height == 224 && resize->keepAspect, "RESIZE ... KEEP_ASPECT");
+    check(normalize && normalize->method == NormalizeMethod::Range && normalize->high == "1", "NORMALIZE ... RANGE");
+    check(convert && convert->format == "JPG", "CONVERT format is case-insensitive");
+    check(save && save->kind == DataKind::ImageSet && save->path == "out/", "SAVE_IMAGES ... TO");
+}
+
+void testDatasetContracts() {
+    Diagnostics diagnostics;
+    const Program program = parse(R"(
+        EXPECT orders.customer_id REFERENCES customers.id;
+        EXPECT train SCHEMA_SAME_AS test EXCEPT [label];
+        LINK imgs WITH labels ON filename AS training;
+        EXPECT training MATCH_RATE 99.5%;
+    )", diagnostics);
+    const auto* references = statementAs<ExpectStmt>(program, 0);
+    const auto* schema = statementAs<ExpectStmt>(program, 1);
+    const auto* link = statementAs<LinkStmt>(program, 2);
+    const auto* rate = statementAs<ExpectStmt>(program, 3);
+    check(references && references->constraint == ConstraintKind::References &&
+              references->other.text() == "customers.id",
+          "REFERENCES names the key column");
+    check(schema && schema->constraint == ConstraintKind::SchemaSameAs && schema->except.size() == 1,
+          "SCHEMA_SAME_AS ... EXCEPT");
+    check(link && link->images == "imgs" && link->column == "filename" && link->dataset == "training", "LINK");
+    check(rate && rate->constraint == ConstraintKind::MatchRate && rate->low == "99.5", "MATCH_RATE with %");
+}
+
+void testWholeNumbers() {
+    Diagnostics diagnostics;
+    parse("RESIZE imgs TO 22.5 224;", diagnostics);
+    check(diagnostics.all().size() == 1 && diagnostics.all()[0].message.find("whole number") != std::string::npos,
+          "sizes must be whole numbers");
+}
+
 }  // namespace
 
 int main() {
@@ -182,6 +249,10 @@ int main() {
     testRecovery();
     testTypoHint();
     testKeywordAsName();
+    testWildcardSelector();
+    testImageStatements();
+    testDatasetContracts();
+    testWholeNumbers();
 
     std::cout << (failures == 0 ? "All parser tests passed.\n" : "Some parser tests FAILED.\n");
     return failures == 0 ? 0 : 1;

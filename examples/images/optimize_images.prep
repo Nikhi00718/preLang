@@ -1,0 +1,15 @@
+# Image optimizations. Run with --ir to see the IR before and after,
+# and with --approx to also merge the two resizes.
+LOAD_IMAGES "dataset/" AS imgs RECURSIVE;
+REMOVE_CORRUPT imgs;
+
+RESIZE imgs TO 512 512;                # merged into the next RESIZE with --approx
+RESIZE imgs TO 224 224;
+GRAYSCALE imgs;
+GRAYSCALE imgs;                        # already 1 channel: removed
+CONVERT imgs TO PNG;
+CONVERT imgs TO PNG;                   # already PNG: removed
+
+SAVE_IMAGES imgs TO "processed/small/";
+
+RESIZE imgs TO 64 64;                  # nothing is saved after this: removed

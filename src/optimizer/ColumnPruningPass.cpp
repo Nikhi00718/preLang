@@ -1,9 +1,8 @@
-#include "optimizer/Optimizer.h"
-
-#include "ir/IRBuilder.h"
+#include "optimizer/ColumnPruningPass.h"
 
 #include <algorithm>
 #include <map>
+#include <set>
 
 namespace {
 
@@ -19,17 +18,12 @@ std::string join(const std::vector<std::string>& items) {
     return text;
 }
 
-// "`DROP_NULL s` (line 4)"
-std::string describe(const Instruction& instruction) {
-    return "`" + instructionText(instruction) + "` (line " + std::to_string(instruction.line) + ")";
-}
-
-// The columns each instruction's dataset has just before the instruction runs.
+// The columns each instruction's table has just before the instruction runs.
 std::vector<std::vector<std::string>> columnsBefore(const IRProgram& program) {
     std::map<std::string, std::vector<std::string>> current;
     std::vector<std::vector<std::string>> result;
     for (const Instruction& instruction : program.code) {
-        std::vector<std::string>& columns = current[instruction.dataset];
+        std::vector<std::string>& columns = current[tableKey(instruction.dataset, instruction.table)];
         result.push_back(columns);
         if (instruction.op == Opcode::Load || instruction.op == Opcode::Select) {
             columns = instruction.columns;
@@ -44,66 +38,15 @@ std::vector<std::vector<std::string>> columnsBefore(const IRProgram& program) {
 
 }  // namespace
 
-OptimizationReport Optimizer::optimize(IRProgram& program) {
-    report_ = OptimizationReport{};
-    report_.instructionsBefore = static_cast<int>(program.code.size());
-
-    removeNoEffectInstructions(program);
-    removeDeadTemporaries(program);
-    removeDeadStoresAndPruneColumns(program);
-    fitColumnLists(program);
-
-    report_.instructionsAfter = static_cast<int>(program.code.size());
-    return report_;
-}
-
-// Pass 1: semantic analysis already proved these instructions change nothing.
-void Optimizer::removeNoEffectInstructions(IRProgram& program) {
-    std::vector<bool> remove(program.code.size(), false);
-    for (size_t i = 0; i < program.code.size(); ++i) {
-        const Instruction& instruction = program.code[i];
-        if (instruction.noEffect.empty()) {
-            continue;
-        }
-        remove[i] = true;
-        const std::string pass =
-            instruction.op == Opcode::Check ? "contract check elimination" : "no-effect elimination";
-        report_.changes.push_back(pass + ": removed " + describe(instruction) + ", " + instruction.noEffect);
-    }
-    removeMarked(program, remove);
-}
-
-// Pass 2: walking backwards, a temporary is dead if no later kept instruction
-// reads it. Removing a FILTER in pass 1 makes its whole condition dead here.
-void Optimizer::removeDeadTemporaries(IRProgram& program) {
-    std::vector<bool> remove(program.code.size(), false);
-    std::vector<std::string> changes;  // found backwards, reported in program order
-    std::set<int> used;
-    for (size_t i = program.code.size(); i-- > 0;) {
-        const Instruction& instruction = program.code[i];
-        if (instruction.result != 0 && used.count(instruction.result) == 0) {
-            remove[i] = true;
-            changes.push_back("dead code elimination: removed " + describe(instruction) + ", t" +
-                              std::to_string(instruction.result) + " is never used");
-            continue;
-        }
-        used.insert(instruction.uses.begin(), instruction.uses.end());
-    }
-    report_.changes.insert(report_.changes.end(), changes.rbegin(), changes.rend());
-    removeMarked(program, remove);
-}
-
-// Passes 3 and 4: backward liveness analysis where the "variables" are columns.
-// A column is live if its current values may still be read or saved later.
-void Optimizer::removeDeadStoresAndPruneColumns(IRProgram& program) {
+void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
     const std::vector<std::vector<std::string>> before = columnsBefore(program);
-    std::map<std::string, std::set<std::string>> live;  // dataset -> live columns
+    std::map<std::string, std::set<std::string>> live;  // table -> live columns
     std::vector<bool> remove(program.code.size(), false);
     std::vector<std::string> changes;  // found backwards, reported in program order
 
     for (size_t i = program.code.size(); i-- > 0;) {
         Instruction& instruction = program.code[i];
-        std::set<std::string>& liveColumns = live[instruction.dataset];
+        std::set<std::string>& liveColumns = live[tableKey(instruction.dataset, instruction.table)];
 
         switch (instruction.op) {
             case Opcode::Save:
@@ -120,9 +63,19 @@ void Optimizer::removeDeadStoresAndPruneColumns(IRProgram& program) {
                 }
                 break;  // if kept, it reads the column, which is already live
 
-            case Opcode::Check:
             case Opcode::Compare:
                 liveColumns.insert(instruction.column);
+                break;
+
+            case Opcode::Check:
+                if (instruction.text == "MATCH_RATE") {  // reads the file-name column of the labels
+                    live[instruction.columns[1]].insert(instruction.columns[2]);
+                    break;
+                }
+                liveColumns.insert(instruction.column);
+                if (instruction.text == "REFERENCES") {  // also reads the key column
+                    live[tableKey(instruction.columns[0], instruction.columns[1])].insert(instruction.columns[2]);
+                }
                 break;
 
             case Opcode::Select: {  // before a SELECT, only selected columns that are live after it matter
@@ -148,28 +101,28 @@ void Optimizer::removeDeadStoresAndPruneColumns(IRProgram& program) {
                 for (const std::string& column : instruction.columns) {
                     (liveColumns.count(column) != 0 ? kept : skipped).push_back(column);
                 }
-                changes.push_back("column pruning: LOAD " + instruction.dataset + " (line " +
-                                  std::to_string(instruction.line) + ") reads " + std::to_string(kept.size()) +
-                                  " of " + std::to_string(instruction.columns.size()) + " columns" +
-                                  (skipped.empty() ? "" : ", skips " + join(skipped)));
+                if (!skipped.empty()) {
+                    changes.push_back("column pruning: LOAD " + tableKey(instruction.dataset, instruction.table) +
+                                      " (line " + std::to_string(instruction.line) + ") reads " +
+                                      std::to_string(kept.size()) + " of " +
+                                      std::to_string(instruction.columns.size()) + " columns, skips " + join(skipped));
+                }
                 instruction.columns = kept;
                 break;
             }
 
-            case Opcode::Filter:  // FILTER, AND, OR and NOT only read temporaries
-            case Opcode::And:
-            case Opcode::Or:
-            case Opcode::Not:
+            default:  // FILTER, AND, OR, NOT read only temporaries; image instructions have no columns
                 break;
         }
     }
-    report_.changes.insert(report_.changes.end(), changes.rbegin(), changes.rend());
+    report.changes.insert(report.changes.end(), changes.rbegin(), changes.rend());
     removeMarked(program, remove);
+    fitColumnLists(program, report);
 }
 
 // After pruning, SELECT and DROP may name columns that are no longer loaded.
 // Those names are removed, and a DROP left with no columns is removed too.
-void Optimizer::fitColumnLists(IRProgram& program) {
+void ColumnPruningPass::fitColumnLists(IRProgram& program, OptimizationReport& report) {
     const std::vector<std::vector<std::string>> before = columnsBefore(program);
     std::vector<bool> remove(program.code.size(), false);
 
@@ -189,27 +142,10 @@ void Optimizer::fitColumnLists(IRProgram& program) {
         }
         if (instruction.op == Opcode::Drop && columns.empty()) {
             remove[i] = true;
-            report_.changes.push_back("column pruning: removed " + original + ", its columns are never loaded");
+            report.changes.push_back("column pruning: removed " + original + ", its columns are never loaded");
         } else {
-            report_.changes.push_back("column pruning: " + original + " now lists only loaded columns");
+            report.changes.push_back("column pruning: " + original + " now lists only loaded columns");
         }
     }
     removeMarked(program, remove);
-}
-
-void Optimizer::removeMarked(IRProgram& program, const std::vector<bool>& remove) {
-    std::vector<Instruction> kept;
-    for (size_t i = 0; i < program.code.size(); ++i) {
-        if (!remove[i]) {
-            kept.push_back(std::move(program.code[i]));
-        }
-    }
-    program.code = std::move(kept);
-}
-
-void printReport(std::ostream& out, const OptimizationReport& report) {
-    for (const std::string& change : report.changes) {
-        out << "- " << change << '\n';
-    }
-    out << "Instructions: " << report.instructionsBefore << " -> " << report.instructionsAfter << '\n';
 }
