@@ -70,8 +70,11 @@ removes every row, and a float image in $[0,1]$ written as PNG becomes almost bl
 Data validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} address the second problem by
 checking declared expectations on the data, but they run at execution time and look at a dataset,
 not at the program that transforms it. Static analyzers for data-science code~\cite{urban2019,
-subotic2022,lagouvardos2020} look at the program, but not at the data, so they cannot know a
-column's type or an image's size.
+subotic2022,lagouvardos2020,zhuang2022} look at the program but mostly not at the data. A recent
+analysis of R scripts~\cite{gerstl2026} does read the datasets, but it infers only the shape of
+data frames. Compile-time data contracts~\cite{mirji2026} check the structure of declared types.
+None of these knows whether a column has missing values, what range its values have, or how large
+an image is.
 
 Batch preprocessing has a property both approaches leave unused: \emph{the inputs exist when the
 pipeline is compiled}. PrepLang makes the data a compile-time input, much as F\# type providers
@@ -471,10 +474,21 @@ check to compile time when the state decides it.
 
 \textbf{Static analysis of data-science code.} Urban~\cite{urban2019} argues for abstract
 interpretation of data-science software, and Subotić et al.~\cite{subotic2022} built such an
-analysis for notebooks. Lagouvardos et al.~\cite{lagouvardos2020} infer tensor shapes in TensorFlow
+analysis for notebooks. Zhuang and Lu~\cite{zhuang2022} type-check data-frame columns by abstract
+interpretation, Lagouvardos et al.~\cite{lagouvardos2020} infer tensor shapes in TensorFlow
 programs, and mlinspect~\cite{grafberger2022} inspects pipelines by instrumenting their execution.
-These analyze code without the concrete data; PrepLang analyzes code together with the data, which
-makes its facts precise enough to reject programs and to justify optimizations.
+Closest to our work, Gerstl et al.~\cite{gerstl2026} infer the shapes of R data frames by abstract
+interpretation and become markedly more precise when the datasets the script reads are available.
+They infer column names and dimensions, whereas PrepLang infers types, missing values and value
+intervals for tables and per-file properties for images, and uses them to decide contracts and to
+optimize. Sihler et al.~\cite{sihler2026} make the implicit assumptions of analysis scripts explicit
+so that they can be checked at run time; PrepLang tries to prove them before running.
+
+\textbf{Compile-time data contracts.} Mirji~\cite{mirji2026} proves at compile time that Spark
+pipelines written with Scala types conform to structural contracts, and keeps a run-time schema
+check at the output because the data may drift after compilation. PrepLang proves value-level
+contracts from the data itself, and handles drift by guarding the inputs with fingerprints, which
+is what makes it safe to delete the run-time checks.
 
 \textbf{Types from data and data-centric compilers.} F\# type providers~\cite{petricek2016} infer
 types from sample data at compile time. PrepLang infers richer facts (nullability, intervals, image
@@ -547,6 +561,22 @@ LIPIcs vol. 166, 2020, pp. 15:1--15:29.
 \bibitem{grafberger2022}
 S. Grafberger, P. Groth, J. Stoyanovich, and S. Schelter, ``Data distribution debugging in machine
 learning pipelines,'' \emph{The VLDB Journal}, vol. 31, pp. 1103--1126, 2022.
+
+\bibitem{zhuang2022}
+Y. Y. Zhuang and M.-Y. Lu, ``Enabling type checking on columns in data frame libraries by abstract
+interpretation,'' \emph{IEEE Access}, vol. 10, 2022.
+
+\bibitem{gerstl2026}
+O. Gerstl, F. Sihler, and M. Tichy, ``Inferring the shape of data frames in R programs using
+abstract interpretation,'' arXiv:2607.03889, 2026.
+
+\bibitem{sihler2026}
+F. Sihler, L. Pfrenger, O. Gerstl, and M. Tichy, ``Towards automatically inferring constraints to
+identify implicit assumptions in data analysis,'' arXiv:2607.03114, 2026.
+
+\bibitem{mirji2026}
+V. Mirji, ``Shift schema drift left: Policy-aware compile-time contracts for typed JVM and Spark
+pipelines,'' arXiv:2604.16986, 2026.
 
 \bibitem{petricek2016}
 T. Petricek, G. Guerra, and D. Syme, ``Types from data: Making structured data first-class citizens

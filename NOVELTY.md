@@ -1,0 +1,184 @@
+# What is new in PrepLang
+
+**Author:** Nikhil
+
+This file checks whether PrepLang is original, compares it with the closest existing work, and
+states exactly which parts are new. The literature search was done in September 2026. No search is
+complete, so the claims below say "to our knowledge".
+
+## Short answer
+
+**Yes, there is novelty, but it is in *what* the compiler knows and *how* it uses it, not in the
+general idea of catching data errors early.** Several older ideas exist separately:
+
+- reading data at compile time (F# type providers, 2016);
+- abstract interpretation of data frames (2022, 2026);
+- compile-time schema contracts (2026);
+- run-time data validation (TFDV, Deequ, Great Expectations, Pandera).
+
+To our knowledge, no existing work does the following **together**:
+
+1. It computes **value-level facts** from **every cell of the real input files and the headers of
+   every image**, in one state, and carries them through each transformation.
+2. It uses those facts to **prove, refute or defer data contracts at compile time**.
+3. It **removes run-time checks safely**, because the generated program refuses to run on inputs
+   that differ from the ones the proofs were made for (fingerprint guard).
+4. It treats **tables and images in the same analysis**, so it finds image mistakes such as
+   "float pixels saved as PNG" before any pixel is decoded.
+5. It separates **optimizations that keep the output exact** from **ones that change it**; the
+   second kind runs only with `--approx`.
+
+One-sentence version, for the paper or the viva:
+
+> PrepLang is a compiler for data-preprocessing programs that reads the real input data (every CSV
+> cell and every image header) at compile time, tracks an abstract state of types, missing values,
+> value ranges and image properties through the pipeline, and uses it to prove or refute data
+> contracts and to optimize the program. A fingerprint guard binds every proof to the exact input
+> files.
+
+## What is *not* new (and must be admitted)
+
+| Idea | Who did it first | What PrepLang adds |
+|---|---|---|
+| Inferring types from the data at compile time | F# type providers (Petricek, Guerra, Syme, PLDI 2016) | Types only, from a sample, fixed at the start. PrepLang also tracks missing values and value ranges, updates them after every statement, and uses them for contracts and optimization. |
+| Abstract interpretation of data frames | Zhuang & Lu (IEEE Access 2022): column types from code; Gerstl, Sihler & Tichy (arXiv, July 2026): shapes of R data frames, more precise when the datasets are read | These infer column names, types or shapes. They do not track missing values or value ranges, prove contracts, or handle images. |
+| Checking data contracts before the pipeline runs | Mirji (arXiv, April 2026): compile-time contracts for Scala/Spark; Bauplan: schema contracts as Python types | Both check **structure** (column names and types) from **declared types**, not from the data. PrepLang proves **value** contracts (`BETWEEN`, `NOT_NULL`, `UNIQUE`, `REFERENCES`, `MATCH_RATE`) from the data. |
+| Declarative data contracts | TFDV (Breck et al., MLSys 2019), Deequ (Schelter et al., VLDB 2018), Great Expectations, Pandera (SciPy 2020) | These check data **while the pipeline runs**, separately from the code that transforms it. PrepLang decides the contract at a specific point of the program, at compile time, and generates a check only when it cannot decide. |
+| Inferring hidden assumptions of data scripts | Sihler, Pfrenger, Gerstl & Tichy (arXiv, July 2026) | They make assumptions explicit and check them at run time. PrepLang proves them before running. |
+| Checking images for broken files and sizes | Many scripts and tools (e.g. PIL `verify()`, dataset checkers) | These are separate scripts that run on the data. They do not follow how later operations change the images, and do not check whether the output format can hold the pixels. |
+| Fusing image operations | Halide (Ragan-Kelley et al., PLDI 2013) | Halide's fusion is far more advanced. PrepLang's streaming is simple; what is new is that its optimizations are justified by facts about the data (for example, `GRAYSCALE` is removed because every image already has 1 channel). |
+
+**The closest work** is Gerstl, Sihler & Tichy (2026). Like PrepLang, it analyzes a data program
+together with the datasets it reads. But it infers only **shape** (column names, row and column
+counts) for R scripts. It does not infer types, missing values or value ranges, and it has no
+contracts, images, check removal or optimization.
+
+## Comparison with the closest work
+
+| | Reads the real data at compile time | Value facts (missing values, ranges) | Follows facts through the pipeline | Contracts proven at compile time | Images | Removes run-time checks safely | Data-driven optimization |
+|---|---|---|---|---|---|---|---|
+| F# type providers (2016) | a sample | missing values only | no | no | no | – | no |
+| Zhuang & Lu (2022) | no | no | yes (column types) | no | no | – | no |
+| Gerstl, Sihler & Tichy (2026) | optional | no (shape only) | yes | no | no | – | no |
+| Mirji (2026), Bauplan | no (declared types) | no | yes (schemas) | structure only | no | no | no |
+| TFDV, Deequ, GX, Pandera | at run time | yes | no | no (checked at run time) | TFDV: some image statistics | – | no |
+| **PrepLang** | **every cell + every image header** | **yes** | **yes** | **yes: PROVEN / VIOLATED / DEFERRED** | **yes** | **yes (fingerprint guard)** | **yes (exact vs. `--approx`)** |
+
+## The novel parts in detail
+
+### N1. One abstract state for tables and images, computed from the real data
+
+- **What:** for each column: type, whether values can be missing, and an interval of the values,
+  with a flag saying whether the interval is **exact** (both ends are real values). For each image:
+  width, height, channels, broken or not; for the whole set: pixel type, pixel range, output
+  format. For linked data: how many images and labels match.
+- **Why it is new:** existing analyses infer either names, types or shapes from code, or statistics
+  from data at run time. None keeps value ranges, missing values and image properties in one state
+  that changes statement by statement.
+- **Why the exact flag matters:** it is what allows a compile-time **VIOLATED** verdict. If the
+  interval is exact and goes outside `BETWEEN a AND b`, a bad value really exists, so the compiler
+  can name the row. If the interval is only an over-approximation (after a `FILTER`), the compiler
+  must defer instead.
+- **Code:** `src/sema/SymbolTable.h` (`ColumnState`, `ImageState`, `LinkState`),
+  `src/schema/SchemaProvider.cpp` (`readPngHeader`, `readJpegHeader`: sizes without decoding).
+
+### N2. Three-valued contract decision, with deferred contracts used as facts
+
+- **What:** every `EXPECT` becomes **PROVEN** (no check generated), **VIOLATED** (compile error
+  naming the exact rows or files) or **DEFERRED** (a check is generated). A deferred contract is
+  also added to the state, because the code after the check only runs if it passed. This can prove
+  later contracts.
+- **Why it is new:** run-time tools always check; compile-time schema tools only prove structure.
+  Deciding **value** contracts at a program point, and falling back to a generated check only when
+  needed, is not in the works we found.
+- **Code:** `src/sema/ContractAnalyzer.cpp` (`between`, `unique`, `references`, `imageContract`,
+  `matchRate`).
+- **Evidence:** 15 of the 16 contracts in the examples are decided at compile time (94%), see
+  `eval/results/rq1.md`.
+
+### N3. Fingerprint guard: proofs are tied to the exact input files
+
+- **What:** the compiler stores a CRC-32 checksum of each CSV file and of each image folder
+  listing. The generated program recomputes it and stops if an input changed after compiling.
+- **Why it matters:** without the guard, removing the check of a proven contract would be unsafe,
+  because someone could change the data after compiling. With it, every run that proceeds uses the
+  inputs the proofs were made for.
+- **Why it is new:** Mirji (2026) keeps a run-time schema check at the output for the same reason
+  (data can drift after compiling). PrepLang instead guards the **inputs**, which is what lets it
+  **delete** the checks. We did not find this in data-pipeline work.
+- **Code:** `crc32` in `src/schema/SchemaProvider.cpp`; `read_csv_checked` in
+  `src/backend/PandasCodegen.cpp`; `list_images_checked` in `src/backend/OpenCVCodegen.cpp`.
+
+### N4. Image mistakes found at compile time, before decoding any pixel
+
+- **What:** broken files, sizes and channel counts come from file headers only. The compiler then
+  follows `RESIZE`, `GRAYSCALE`, `NORMALIZE`, `CONVERT` through the pipeline and checks the save:
+  - FLOAT32 pixels cannot be saved as JPG or PNG (they come out black);
+  - 4-channel images cannot become JPG;
+  - 16-bit images cannot become JPG.
+
+  The error names the statement that caused the problem.
+- **Why it is new:** image checkers look at the input files only. They do not know what the
+  pipeline will do to the images or whether the output format fits.
+- **Code:** `saveImages` in `src/sema/SemanticAnalyzer.cpp`.
+- **Evidence:** mutants I5 and L2 (float pixels saved as JPG/PNG). A normal script finishes with
+  no error and writes black images; PrepLang stops at compile time.
+
+### N5. Optimizations justified by data facts, with an exact/approximate boundary
+
+- **What:** operations the state proves useless are removed. Examples: `FILL_NULL` on a column with
+  no missing values, `GRAYSCALE` on images that are already 1 channel, `CONVERT` to the current
+  format, the checks of proven contracts. Unread columns are not loaded, and image steps become one
+  streaming loop. These never change the output. RESIZE fusion does change pixels, so it is only
+  suggested unless `--approx` is given.
+- **Why it is new:** usual compilers optimize using facts about the **code**. Here the facts come
+  from the **data**, and the compiler says openly which rewrites are exact.
+- **Code:** `src/optimizer/RedundantOpPass.cpp`, `src/optimizer/ColumnPruningPass.cpp`,
+  `src/backend/OpenCVCodegen.cpp`.
+- **Evidence:** a 32% shorter table-processing time, and memory for 1,000 images down from 922 MiB
+  to 10 MiB. RESIZE fusion saves only 6% and changes pixels (PSNR 57 dB), which supports keeping it
+  opt-in. See `eval/results/rq3.md`.
+
+## Evidence summary (from `eval/`)
+
+| Question | Result |
+|---|---|
+| Are mistakes found before any data is processed? | 24 of 24 injected mistakes, 0 false alarms; a normal script crashes on 20 and gives silent wrong output on 4 |
+| How many contracts are decided at compile time? | 15 of 16 (94%) |
+| Do the optimizations help? | table processing 32% faster; image memory 922 MiB → 10 MiB |
+| What does reading the data cost? | 1,000,000-row CSV: 1.75 s; 3,000 image headers: 0.17 s (25× less than decoding) |
+
+## Limits a reviewer will point out
+
+- The data must exist at compile time. This fits batch preprocessing, not streaming data.
+- The language is small: no joins, loops or user-defined functions.
+- The 24 mutants were written by the author; they show *which kinds* of mistakes are caught, not
+  how often they happen.
+- CRC-32 detects accidental changes, not deliberate tampering. SHA-256 could replace it at a
+  higher cost.
+- The novelty is a new **combination** plus the value-level contracts, the fingerprint guard and
+  the image checks. It is a good fit for a workshop or a small conference, not a claim that
+  compile-time data checking was never done before.
+
+## Sources
+
+- T. Petricek, G. Guerra, D. Syme, "Types from data: Making structured data first-class citizens
+  in F#", PLDI 2016. https://ar5iv.labs.arxiv.org/html/1605.02941 and
+  https://fsprojects.github.io/FSharp.Data/library/CsvProvider.html
+- Y. Y. Zhuang, M.-Y. Lu, "Enabling type checking on columns in data frame libraries by abstract
+  interpretation", IEEE Access, 2022. https://ieeexplore.ieee.org/document/9691374/
+- O. Gerstl, F. Sihler, M. Tichy, "Inferring the shape of data frames in R programs using abstract
+  interpretation", arXiv:2607.03889, 2026. https://arxiv.org/abs/2607.03889
+- F. Sihler, L. Pfrenger, O. Gerstl, M. Tichy, "Towards automatically inferring constraints to
+  identify implicit assumptions in data analysis", arXiv:2607.03114, 2026.
+  https://arxiv.org/abs/2607.03114
+- V. Mirji, "Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark
+  pipelines", arXiv:2604.16986, 2026. https://arxiv.org/abs/2604.16986
+- Bauplan, "Data contracts as types: compile-time schema enforcement for Python data pipelines".
+  https://bauplanlabs.com/agentic-resources/data-contracts-as-types-how-bauplan-brings-compile-time-schema-enforcement-to-data-pipelines
+- E. Breck et al., "Data validation for machine learning", MLSys 2019.
+  https://mlsys.org/Conferences/2019/doc/2019/167.pdf
+- S. Schelter et al., "Automating large-scale data quality verification", PVLDB 11(12), 2018.
+- N. Bantilan, "pandera: Statistical data validation of pandas dataframes", SciPy 2020.
+- Great Expectations. https://greatexpectations.io
+- J. Ragan-Kelley et al., "Halide", PLDI 2013.

@@ -30,6 +30,10 @@ error[type]: cannot save FLOAT32 pixels as PNG: NORMALIZE at line 10 scaled them
 A hand-written pandas/OpenCV script with the same mistake runs without an error and writes black
 images.
 
+**What is new** compared with existing work (F# type providers, data-frame abstract interpretation,
+compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
+[NOVELTY.md](NOVELTY.md).
+
 ## Contents
 
 1. [Run it in VS Code (step by step)](#run-it-in-vs-code-step-by-step)
