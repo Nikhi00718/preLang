@@ -10,3 +10,5 @@
 
 # Parquet files are binary; their footer fingerprint must not change
 *.parquet binary
+*.docx binary
+*.pdf binary
