@@ -81,6 +81,8 @@ SAVE wide AS "wide_clean.csv";
                                    unoptimized / "output" / "wide_clean.csv", shallow=False),
         "columns_read": [5, 40],
         "runtime_checks": [0, 2],
+        # Starting Python and importing pandas: part of every run, whatever the program does.
+        "python_start_s": median_time([PYTHON, "-c", "import pandas"], WORK),
     }
     result["speedup_vs_O0"] = result["O0_s"] / result["optimized_s"]
     return result
@@ -104,12 +106,16 @@ SAVE_IMAGES imgs TO "small/";
     identical = all(np.array_equal(cv2.imread(str(folder / "output" / "small" / n), cv2.IMREAD_UNCHANGED),
                                    cv2.imread(str(baseline / "out" / "small" / n), cv2.IMREAD_UNCHANGED))
                     for n in names)
+    # A careful hand-written script also streams: the fair comparison for memory.
+    handwritten = [str(ROOT / "eval" / "handwritten.py"), str(DATA / "images_1000"), "out_handwritten", "jpg"]
     return {
         "images": 1000,
         "preplang_s": median_time([PYTHON, "output/generated.py"], folder),
         "baseline_s": median_time([PYTHON, *baseline_command], baseline),
+        "handwritten_s": median_time([PYTHON, *handwritten], baseline),
         "preplang_peak_mib": peak_memory(["output/generated.py"], folder),
         "baseline_peak_mib": peak_memory(baseline_command, baseline),
+        "handwritten_peak_mib": peak_memory(handwritten, baseline),
         "same_pixels_in_sample": identical,
     }
 
@@ -200,6 +206,8 @@ def write_markdown(r):
         "|---|---:|---:|",
         f"| PrepLang (streaming) | {s['preplang_s']:.2f} | {s['preplang_peak_mib']:.0f} |",
         f"| Script-style baseline (all in memory) | {s['baseline_s']:.2f} | {s['baseline_peak_mib']:.0f} |",
+        f"| Hand-written streaming script (eval/handwritten.py) | {s['handwritten_s']:.2f} | "
+        f"{s['handwritten_peak_mib']:.0f} |",
         "",
         f"Same pixels in a sample of 20 outputs: {s['same_pixels_in_sample']}",
         "",

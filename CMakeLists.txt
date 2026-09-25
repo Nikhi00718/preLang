@@ -13,6 +13,8 @@ add_library(preplang_core
     src/parser/Parser.cpp
     src/ast/ASTPrinter.cpp
     src/ast/ASTDot.cpp
+    src/schema/Checksum.cpp
+    src/schema/ParquetFooter.cpp
     src/schema/SchemaProvider.cpp
     src/sema/SymbolTable.cpp
     src/sema/SelectorResolver.cpp
@@ -46,8 +48,11 @@ target_link_libraries(preplang PRIVATE preplang_core)
 
 # Unit tests: ctest --test-dir build -C Debug --output-on-failure
 enable_testing()
-foreach(name lexer parser semantic tableset imageset optimizer)
+foreach(name lexer parser semantic tableset imageset parquet optimizer)
     add_executable(test_${name} tests/test_${name}.cpp)
     target_link_libraries(test_${name} PRIVATE preplang_core)
     add_test(NAME ${name} COMMAND test_${name})
 endforeach()
+
+# The Parquet tests read small files made by tests/data/make_parquet.py
+target_compile_definitions(test_parquet PRIVATE PREPLANG_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")

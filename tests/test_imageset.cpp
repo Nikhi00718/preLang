@@ -246,6 +246,25 @@ void testStreamingPlan() {
           "all image operations run in one streaming pass per SAVE_IMAGES");
 }
 
+// A screenshot tool saved a transparent PNG as "shot.jpg" (github.com/cocktailpeanut/fluxgym/issues/109).
+void testFormatFromContent() {
+    std::filesystem::create_directories("test_imageset_misnamed");
+    writePng("test_imageset_misnamed/shot.jpg", 30, 20, 6);
+    Diagnostics diagnostics;
+    SchemaProvider schemas(diagnostics);
+    const auto set = schemas.readImages("test_imageset_misnamed", false, false, {});
+    check(set && !set->images.front().corrupt && set->images.front().format == "PNG" &&
+              set->images.front().channels == 4,
+          "the format comes from the file's content, not its name");
+
+    Compiled c;
+    const std::string source = "LOAD_IMAGES \"test_imageset_misnamed/\" AS shots;\nSAVE_IMAGES shots TO \"out/\";";
+    c.program = Parser(Lexer(source, c.diagnostics).tokenize(), c.diagnostics).parse();
+    SemanticAnalyzer(c.symbols, schemas, ".", c.diagnostics).analyze(c.program);
+    check(reported(c, Phase::Type, "JPG cannot store transparency"),
+          "keeping the .jpg name of a transparent PNG is reported before anything runs");
+}
+
 }  // namespace
 
 int main() {
@@ -265,6 +284,7 @@ int main() {
     testResizeFusionIsOptIn();
     testLinkMatchRate();
     testStreamingPlan();
+    testFormatFromContent();
 
     std::cout << (failures == 0 ? "All IMAGESET tests passed.\n" : "Some IMAGESET tests FAILED.\n");
     return failures == 0 ? 0 : 1;

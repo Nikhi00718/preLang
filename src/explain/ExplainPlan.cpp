@@ -30,10 +30,11 @@ std::string inputDetails(const DatasetSymbol& dataset) {
         case DatasetKind::Table: {
             const TableSchema& schema = dataset.tables.front().schema;
             return schema.file + ", " + std::to_string(schema.rowCount) + " rows, " +
-                   std::to_string(schema.columns.size()) + " columns";
+                   std::to_string(schema.columns.size()) + " columns" +
+                   (schema.format == TableFormat::Parquet ? " (footer statistics only)" : "");
         }
         case DatasetKind::TableSet: {
-            int rows = 0;
+            std::int64_t rows = 0;
             for (const TableState& table : dataset.tables) {
                 rows += table.schema.rowCount;
             }

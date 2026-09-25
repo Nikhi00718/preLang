@@ -59,8 +59,13 @@ def read_image(path):
     return cv2.imdecode(data, cv2.IMREAD_UNCHANGED) if data.size else None
 
 
+created_folders = set()
+
+
 def write_image(path, img, quality):
-    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.parent not in created_folders:  # once per folder, not once per image
+        path.parent.mkdir(parents=True, exist_ok=True)
+        created_folders.add(path.parent)
     if path.suffix == ".npy":
         np.save(path, img)
         return

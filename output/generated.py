@@ -5,6 +5,9 @@ from pathlib import Path
 
 import pandas as pd
 
+if int(pd.__version__.split(".")[0]) < 3:
+    pd.options.mode.copy_on_write = True
+
 HERE = Path(__file__).resolve().parent
 
 
@@ -60,7 +63,7 @@ t4 = t2 | t3
 t5 = t1 & t4
 
 # line 12: FILTER students IF t5
-df_students = df_students[t5].copy()
+df_students = df_students[t5]
 
 # line 16: CHECK students.marks BETWEEN 60 AND 100
 if not df_students["marks"].dropna().between(60, 100).all():
@@ -70,7 +73,7 @@ if not df_students["marks"].dropna().between(60, 100).all():
 df_students = df_students.drop(columns=["department"])
 
 # line 19: SELECT students [name, age, marks]
-df_students = df_students[["name", "age", "marks"]].copy()
+df_students = df_students[["name", "age", "marks"]]
 
 # line 21: SAVE students -> "clean.csv"
 path = HERE / "clean.csv"

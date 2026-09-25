@@ -7,3 +7,6 @@
 *.jpg binary
 *.jpeg binary
 *.png binary
+
+# Parquet files are binary; their footer fingerprint must not change
+*.parquet binary

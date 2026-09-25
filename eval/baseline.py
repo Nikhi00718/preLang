@@ -17,6 +17,11 @@ import numpy as np
 import pandas as pd
 
 IMAGE_TYPES = {".png", ".jpg", ".jpeg"}
+TABLE_TYPES = {".csv", ".parquet"}
+
+
+def read_table(path):
+    return pd.read_parquet(path) if path.suffix.lower() == ".parquet" else pd.read_csv(path)
 
 
 class Images:
@@ -91,11 +96,12 @@ class Runner:
 
     def do_load(self, s):
         path, name = re.match(r'LOAD "([^"]+)" AS (\w+)', s).groups()
-        self.data[name] = pd.read_csv(self.base / path)
+        self.data[name] = read_table(self.base / path)
 
     def do_load_tables(self, s):
         path, name = re.match(r'LOAD_TABLES "([^"]+)" AS (\w+)', s).groups()
-        self.data[name] = {p.stem: pd.read_csv(p) for p in sorted((self.base / path).glob("*.csv"))}
+        files = sorted(p for p in (self.base / path).glob("*") if p.suffix.lower() in TABLE_TYPES)
+        self.data[name] = {p.stem: read_table(p) for p in files}
 
     def do_load_images(self, s):
         path, name, recursive = re.match(r'LOAD_IMAGES "([^"]+)" AS (\w+)( RECURSIVE)?', s).groups()
@@ -196,7 +202,10 @@ class Runner:
         for container, key in self.frames(path):
             target = self.out / file
             target.parent.mkdir(parents=True, exist_ok=True)
-            container[key].to_csv(target, index=False)
+            if target.suffix.lower() == ".parquet":
+                container[key].to_parquet(target, index=False)
+            else:
+                container[key].to_csv(target, index=False)
 
     def do_save_tables(self, s):
         name, folder = re.match(r'SAVE_TABLES (\w+) TO "([^"]+)"', s).groups()

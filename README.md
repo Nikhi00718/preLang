@@ -69,7 +69,7 @@ compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
    prints the execution plan and the data lineage, and writes no files.
 7. **Debug the compiler:** set a breakpoint in any `src/` file, open a `.prep` file and press `F5`
    (*Debug PrepLang on the open .prep file*).
-8. **Tests:** *Run Task... > PrepLang: run all tests* (115 unit tests in 6 executables).
+8. **Tests:** *Run Task... > PrepLang: run all tests* (141 unit tests in 7 executables).
 9. **See the errors:** open any file in `examples/errors/` and run step 5. Every error shows the
    line, a caret and a hint.
 
@@ -118,7 +118,7 @@ A program is a list of statements. Keywords are case-insensitive; `#` starts a c
 
 | Data | Load | Save |
 |---|---|---|
-| TABLE (one CSV) | `LOAD "students.csv" AS s;` | `SAVE s AS "clean.csv";` |
+| TABLE (one CSV or Parquet file) | `LOAD "students.csv" AS s;` | `SAVE s AS "clean.csv";` |
 | TABLESET (a folder of CSVs) | `LOAD_TABLES "company/" AS company;` | `SAVE_TABLES company TO "out/";` |
 | IMAGE (one file) | `LOAD_IMAGE "cat.png" AS cat;` | `SAVE_IMAGE cat AS "cat.jpg";` |
 | IMAGESET (a folder) | `LOAD_IMAGES "dataset/" AS imgs RECURSIVE;` | `SAVE_IMAGES imgs TO "out/";` |
@@ -269,24 +269,34 @@ py -3 eval/bench.py
   types, use after removal, broken contracts, broken files, silently wrong values).
 - `eval/baseline.py` runs the same programs the way a hand-written script would: statement by
   statement with pandas and OpenCV, with `EXPECT` as `assert`.
-- Results are written to `eval/results/` (`rq1.md`, `rq3.md` and JSON files).
+- `eval/scale.py` compares time-to-first-error on 16M-row Parquet tables and 3,000 images
+  (`py -3 eval/datasets.py scale` first).
+- `eval/run_realbugs.py` runs the study of real GitHub issues (`eval/realbugs_catalog.py`).
+- `eval/paper_numbers.py` writes `paper/numbers.tex`, so every number in the paper comes from
+  `eval/results/`.
 
-**RQ1 (finding mistakes):** PrepLang reports all 24 injected mistakes before any data is processed
-(23 errors, 1 warning), with no false alarms on the 5 original programs. The script-style baseline
-crashes part-way through on 20 of them and silently writes wrong output for the other 4.
+**RQ1 (injected mistakes):** all 24 reported before any data is processed, no false alarms; the
+script-style baseline crashes part-way on 20 and silently writes wrong output on 4.
 
-**RQ2 (contracts):** 15 of the 16 contracts in the example programs are proven at compile time.
+**RQ2 (contracts):** 15 of the 16 contracts in the examples are proven at compile time.
 
-**RQ3 (optimizations):** on a 200,000-row, 40-column CSV, column pruning and check elimination cut
-the processing time by 32% (1.30 s vs. 1.54 s end to end, including 0.79 s of Python start-up).
-Streaming 1,000 images needs 10 MiB of memory instead of 922 MiB. RESIZE fusion (`--approx`) saves
-only 6% and changes pixels slightly (PSNR 57 dB), which is why it is opt-in.
+**RQ3 (optimizations):** column pruning and check elimination cut table processing time by 37%;
+streaming needs 10 MiB for 1,000 images (like a careful hand-written script) instead of 922 MiB;
+RESIZE fusion gains little and changes pixels, so it is opt-in (`--approx`).
 
-**RQ4 (compile-time cost):** reading a 1,000,000-row CSV at compile time takes 1.75 s (pandas needs
-0.77 s to read it); reading the headers of 3,000 images takes 0.17 s, 25x less than decoding them.
+**RQ4 (analysis cost):** a full CSV read costs about one pandas read; a Parquet footer costs
+0.02 s for 1 or 16 million rows; image headers are 23x faster than decoding.
 
-Full tables: `eval/results/rq1.md` and `eval/results/rq3.md`. The paper draft is `paper/preplang.tex`
-(IEEE conference format; compile it with pdflatex or upload it to Overleaf).
+**RQ5 (large inputs):** mistakes in a 16M-row pipeline are reported in 0.02 s (the script fails
+after 1.8-2.8 s); a float-pixel mistake on 3,000 images is reported in 0.26 s, while the script
+runs 8.5 s and writes 3,000 black images.
+
+**RQ6 (real bugs):** of 44 data-preparation failures from GitHub issues, PrepLang reports 18 (41%)
+before any data is processed; all 21 reproductions behave as classified. Details:
+`eval/results/realbugs.md`.
+
+The paper is `paper/preplang.tex` with `paper/numbers.tex` (IEEE format; upload both to Overleaf).
+What is new compared with existing work is in [NOVELTY.md](NOVELTY.md).
 
 ## Project layout
 
@@ -302,7 +312,7 @@ src/ir          three-address IR
 src/optimizer   pass manager and the optimization passes
 src/backend     pandas code, OpenCV code, and the planner that joins them
 src/explain     --explain, --dry-run, --lineage and the run manifest
-tests/          unit tests (115)
+tests/          unit tests (141)
 examples/       example programs and data
 eval/           mutants, baseline, benchmarks and results
 paper/          conference paper draft (LaTeX)

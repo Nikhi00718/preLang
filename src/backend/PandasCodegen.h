@@ -17,8 +17,8 @@ public:
     // The Python statements for one table instruction.
     std::string code(const Instruction& instruction, const IRProgram& program);
 
-    // Helper functions the generated statements call.
-    static std::string helpers();
+    // Helper functions the generated statements call: the CSV reader, the Parquet reader, or both.
+    static std::string helpers(bool csv, bool parquet);
 
     // df_students for a TABLE, tables_company["staff"] for a table in a TABLESET
     static std::string tableVariable(const std::string& dataset, const std::string& table);

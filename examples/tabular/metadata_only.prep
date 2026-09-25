@@ -1,0 +1,13 @@
+# A Parquet file stores statistics for every column in its footer: the
+# smallest and largest value, and how many values are missing. PrepLang reads
+# only that footer, so compiling takes the same time for 8 rows or 80 million.
+LOAD "students.parquet" AS students;
+
+EXPECT students.marks BETWEEN 0 AND 100;   # proven from the footer statistics
+EXPECT students.name NOT_NULL;             # proven: the footer counts 0 missing names
+EXPECT students.name UNIQUE;               # needs the values themselves: checked at run time
+
+FILL_NULL students.department WITH "UNKNOWN";
+FILTER students WHERE marks >= 50;
+SELECT students [name, marks, department];
+SAVE students AS "students_passed.parquet";

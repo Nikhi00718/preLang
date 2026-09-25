@@ -198,6 +198,22 @@ void testScientificNotation() {
     check(table->columns[2].type == ColumnType::String, "an exponent without digits (1e) is text");
 }
 
+// Excel saved the file as Windows-1252 (github.com/Faisalhakimi22/github-issue-classifier/issues/1).
+void testNotUtf8() {
+    std::ofstream("test_semantic_cp1252.csv", std::ios::binary) << "name,city\nAsha,Chennai\nZo\xE9,Paris\n";
+    std::ofstream("test_semantic_utf8.csv", std::ios::binary) << "name,city\nZo\xC3\xA9,Paris\n";
+    Diagnostics diagnostics;
+    SchemaProvider schemas(diagnostics);
+    const bool rejected = !schemas.readTable("test_semantic_cp1252.csv", "t", {});
+    const bool accepted = schemas.readTable("test_semantic_utf8.csv", "u", {}).has_value();
+    bool named = false;
+    for (const Diagnostic& d : diagnostics.all()) {
+        named = named || d.message.find("line 3 of 'test_semantic_cp1252.csv' is not UTF-8 text (byte 0xE9)") !=
+                             std::string::npos;
+    }
+    check(rejected && named && accepted, "a CSV file that is not UTF-8 is reported with its line and byte");
+}
+
 }  // namespace
 
 int main() {
@@ -220,6 +236,7 @@ int main() {
     testFilterAlwaysAndNever();
     testNeverSaved();
     testScientificNotation();
+    testNotUtf8();
 
     std::cout << (failures == 0 ? "All semantic tests passed.\n" : "Some semantic tests FAILED.\n");
     return failures == 0 ? 0 : 1;

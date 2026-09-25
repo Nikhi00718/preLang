@@ -58,6 +58,13 @@ std::string valueHint(ColumnType type) {
     return "";
 }
 
+// For a value that does not fit a column. A column of numbers that became STRING
+// because of one stray cell needs that cell fixed, not quotes around the value.
+std::string valueHint(const ColumnState& column) {
+    return column.stringReason.empty() ? valueHint(column.type)
+                                       : "'" + column.name + "' is STRING because " + column.stringReason;
+}
+
 std::string exprText(const Expr& expr) {
     if (const auto* comparison = dynamic_cast<const ComparisonExpr*>(&expr)) {
         return comparison->column + " " + comparison->op + " " + literalText(comparison->value);
@@ -83,7 +90,11 @@ TableState makeTable(TableSchema schema) {
     TableState table;
     table.name = schema.name;
     for (const ColumnInfo& info : schema.columns) {
-        ColumnState column{info.name, info.type, info.missingCount > 0, Range{}, true, false, info.stringReason};
+        // exact promises both: the range is attained and `nullable` is certain. FILL_NULL relies
+        // on the second (the fill value really appears), so unknown missing values rule it out.
+        const bool nullable = info.missingCount > 0 || !info.missingKnown;
+        const bool exact = (info.boundsExact || !info.hasRange) && info.missingKnown;
+        ColumnState column{info.name, info.type, nullable, Range{}, exact, false, info.stringReason};
         if (isNumeric(info.type) && info.hasRange) {
             column.range = {info.min, info.max};
         }
@@ -329,7 +340,7 @@ void SemanticAnalyzer::visit(const FillNullStmt& node) {
     }
     DatasetSymbol& dataset = *resolution->dataset;
     const auto fits = [&](const ColumnState& column) { return canStore(column.type, node.value); };
-    const auto hint = [](const ColumnState& column) { return valueHint(column.type); };
+    const auto hint = [](const ColumnState& column) { return valueHint(column); };
     if (!checkTypes(node.target, dataset, resolution->matched, fits,
                     "FILL_NULL with " + describe(node.value) + " needs a matching column type", hint)) {
         return;
@@ -877,7 +888,8 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
     }
 
     LinkState link;
-    if (column->exact && !column->valuesChanged) {
+    const bool parquet = table.schema.format == TableFormat::Parquet;
+    if (!parquet && column->exact && !column->valuesChanged) {
         link = linkImages(images->images, readColumnValues(table.schema, column->name));
     }
     link.images = images->name;
@@ -891,7 +903,9 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
     dataset.link = link;
     const std::string summary = link.exact ? std::to_string(link.matched) + " of " + std::to_string(link.imageCount) +
                                                  " images match one of " + std::to_string(link.labelCount) + " labels"
-                                           : "labels changed before LINK, so matching is checked at run time";
+                                           : parquet ? "only the footer of " + table.schema.file +
+                                                           " is read at compile time, so matching is checked at run time"
+                                                     : "labels changed before LINK, so matching is checked at run time";
     result_.lineage.record(node.dataset, node.location.line,
                            "LINK " + images->name + " WITH " + labels->name + " ON " + column->name, summary);
     log(node, "LINK " + node.dataset + ": " + summary);
@@ -910,7 +924,7 @@ void SemanticAnalyzer::visit(const ComparisonExpr& node) {
     if (!sameKind(column->type, node.value)) {
         diagnostics_.error(Phase::Type, node.location,
                            "cannot compare " + type + " column '" + node.column + "' with " + describe(node.value),
-                           valueHint(column->type));
+                           valueHint(*column));
         return;
     }
     if (!isNumeric(column->type)) {

@@ -2,9 +2,11 @@
 
     py -3 eval/datasets.py examples     # rebuilds examples/images/
     py -3 eval/datasets.py benchmark    # writes eval/data/ (large, not committed)
+    py -3 eval/datasets.py scale        # Parquet tables and a broken image folder, also in eval/data/
 
 Everything is generated from fixed seeds, so the files are the same on every run.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -102,10 +104,48 @@ def make_benchmark_data():
     print("wrote", DATA)
 
 
+def make_event_tables():
+    """Parquet tables of 1M, 4M and 16M rows: id, a in [0, 1), b in [0, 1) with 1% missing,
+    k in 0..4, amount in 0..999 and a text column s."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    rng = np.random.default_rng(13)
+    for rows in (1_000_000, 4_000_000, 16_000_000):
+        table = pa.table({
+            "id": np.arange(rows, dtype=np.int64),
+            "a": rng.random(rows),
+            "b": pa.array(rng.random(rows), mask=rng.random(rows) < 0.01),
+            "k": rng.integers(0, 5, rows, dtype=np.int32),
+            "amount": rng.integers(0, 1000, rows, dtype=np.int64),
+            "s": pa.array(rng.choice(np.array(["red", "green", "blue", "gray"]), rows)),
+        })
+        pq.write_table(table, DATA / f"events_{rows}.parquet")
+
+
+def make_broken_image_folder():
+    """images_3000 plus one broken file that sorts last, so a script meets it at the very end.
+    The 3,000 good files are hard links, so they take no extra space."""
+    source, target = DATA / "images_3000", DATA / "images_3000_broken"
+    target.mkdir(exist_ok=True)
+    for path in source.glob("*.jpg"):
+        if not (target / path.name).exists():
+            os.link(path, target / path.name)
+    (target / "zz_broken.jpg").write_bytes(b"this file is not an image\n")
+
+
+def make_scale_data():
+    DATA.mkdir(parents=True, exist_ok=True)
+    make_event_tables()
+    make_broken_image_folder()
+    print("wrote", DATA)
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["examples"]:
         make_example_images()
     elif sys.argv[1:] == ["benchmark"]:
         make_benchmark_data()
+    elif sys.argv[1:] == ["scale"]:
+        make_scale_data()
     else:
-        sys.exit("usage: py -3 eval/datasets.py examples|benchmark")
+        sys.exit("usage: py -3 eval/datasets.py examples|benchmark|scale")

@@ -1,5 +1,6 @@
 #include "backend/PandasCodegen.h"
 
+#include <algorithm>
 #include <cctype>
 #include <iomanip>
 #include <sstream>
@@ -32,6 +33,13 @@ const char* pandasDtype(ColumnType type) {
         case ColumnType::String:  return "string";
     }
     return "";
+}
+
+bool isParquetPath(const std::string& path) {
+    const std::string suffix = ".parquet";
+    return path.size() >= suffix.size() &&
+           std::equal(suffix.rbegin(), suffix.rend(), path.rbegin(),
+                      [](char a, char b) { return a == std::tolower(static_cast<unsigned char>(b)); });
 }
 
 std::string hex(std::uint64_t value) {
@@ -76,8 +84,10 @@ std::string PandasCodegen::tableVariable(const std::string& dataset, const std::
                          : "tables_" + identifierPart(dataset) + "[" + pythonString(table) + "]";
 }
 
-std::string PandasCodegen::helpers() {
-    return R"(def read_csv_checked(path, fingerprint, columns, dtypes):
+std::string PandasCodegen::helpers(bool csv, bool parquet) {
+    std::string code;
+    if (csv) {
+        code += R"(def read_csv_checked(path, fingerprint, columns, dtypes):
     """Reads a CSV file, but refuses if the file changed after compilation,
     because the compiler's checks and proofs were made for the file as it was then.
     The nullable dtypes are applied after parsing: that gives the same values, and
@@ -89,6 +99,24 @@ std::string PandasCodegen::helpers() {
 
 
 )";
+    }
+    if (parquet) {
+        code += R"(def read_parquet_checked(path, fingerprint, columns, dtypes):
+    """Reads a Parquet file, but refuses if its footer changed after compilation:
+    the compiler's checks and proofs were made from the footer's statistics."""
+    with open(path, "rb") as file:
+        file.seek(-8, 2)
+        length = int.from_bytes(file.read(4), "little")
+        file.seek(-8 - length, 2)
+        footer = file.read()
+    if zlib.crc32(footer) != fingerprint:
+        raise ContractError(f"{path} changed after compilation; compile the .prep file again")
+    return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
+
+
+)";
+    }
+    return code;
 }
 
 std::string PandasCodegen::code(const Instruction& in, const IRProgram& program) {
@@ -116,7 +144,8 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
                     }
                 }
             }
-            return code + table + " = read_csv_checked(\n    HERE / " + pythonString(pathFrom(outputFolder_, schema.file)) +
+            const char* reader = schema.format == TableFormat::Parquet ? "read_parquet_checked" : "read_csv_checked";
+            return code + table + " = " + reader + "(\n    HERE / " + pythonString(pathFrom(outputFolder_, schema.file)) +
                    ",\n    " + hex(schema.fingerprint) + ",\n    " + pythonList(in.columns) + ",\n    " + dtypes +
                    "},\n)\n";
         }
@@ -156,15 +185,16 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
         case Opcode::Not:
             return temp + " = ~t" + std::to_string(in.uses[0]) + "\n";
         case Opcode::Filter:  // rows where the condition is missing (NA) are dropped, like in SQL
-            return table + " = " + table + "[t" + std::to_string(in.uses[0]) + "].copy()\n";
+            return table + " = " + table + "[t" + std::to_string(in.uses[0]) + "]\n";
         case Opcode::Select:
-            return table + " = " + table + "[" + pythonList(in.columns) + "].copy()\n";
+            return table + " = " + table + "[" + pythonList(in.columns) + "]\n";
         case Opcode::Drop:
             return table + " = " + table + ".drop(columns=" + pythonList(in.columns) + ")\n";
         case Opcode::Save:
             return "path = HERE / " + pythonString(in.text) +
                    "\npath.parent.mkdir(parents=True, exist_ok=True)\n" + table +
-                   ".to_csv(path, index=False)\noutputs.append({\"file\": " + pythonString(in.text) +
+                   (isParquetPath(in.text) ? ".to_parquet(path, index=False)" : ".to_csv(path, index=False)") +
+                   "\noutputs.append({\"file\": " + pythonString(in.text) +
                    ", \"rows\": len(" + table + ")})\nprint(\"Saved\", len(" + table + "), \"rows to\", path)\n";
         default:
             return "";  // image instructions belong to the OpenCV backend

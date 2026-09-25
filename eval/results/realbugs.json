@@ -1,0 +1,461 @@
+[
+  {
+    "signature": "S1",
+    "issue": "JayMan146/PersonalHistory#1",
+    "cause": "edited HEIC photos with transparency converted to JPEG",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input format: HEIC"
+  },
+  {
+    "signature": "S1",
+    "issue": "cocktailpeanut/fluxgym#109",
+    "cause": "screenshots named .jpg are PNG images with transparency; the dataset step saves them as JPEG",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "fluxgym",
+    "note": "before the fix the files were reported as broken, a misleading reason",
+    "reproduced": true,
+    "compiler_says": "JPG cannot store transparency, but 1 image(s) have 4 channels / hint: add CONVERT dataset TO PNG; or GRAYSCALE dataset;",
+    "before_measured": "1 of 3 files in dataset/ cannot be decoded / note: screenshot.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT dataset; before line 2"
+  },
+  {
+    "signature": "S1",
+    "issue": "JoshData/pdf-diff#44",
+    "cause": "a rendered PDF page with transparency saved as JPEG",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input format: PDF"
+  },
+  {
+    "signature": "S2",
+    "issue": "gogoczh/CoMT#1",
+    "cause": "a damaged image file in a downloaded dataset",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "comt",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "1 of 3 files in images/ cannot be decoded / note: 0003.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT images; before line 2",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S2",
+    "issue": "piotrantosz/google-arts-crawler#22",
+    "cause": "a downloaded tile is a 404 text page saved as .jpg",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "crawler",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "1 of 3 files in blobs/ cannot be decoded / note: 1354.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT tiles; before line 3",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S2",
+    "issue": "bbengfort/inigo#3",
+    "cause": "a photo folder also holds Photoshop .psd files",
+    "verdict": "design",
+    "before": "design",
+    "case": "inigo",
+    "note": "LOAD_IMAGES reads PNG and JPEG files only",
+    "reproduced": true,
+    "compiler_says": "compiled and ran; 2 output file(s)",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S3",
+    "issue": "PacktPublishing/Advanced-Deep-Learning-with-Python#2",
+    "cause": "the image file to load was never created",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "packt",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "cannot open image file 'images/dog.jpg' / hint: LOAD_IMAGE expects one file; use LOAD_IMAGES for a folder",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S3",
+    "issue": "Gogul09/image-classification-python#11",
+    "cause": "file names are built as 1..N but the files are named differently",
+    "verdict": "design",
+    "before": "design",
+    "case": "gogul",
+    "note": "LOAD_IMAGES reads the files that exist",
+    "reproduced": true,
+    "compiler_says": "compiled and ran; 3 output file(s)",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S3",
+    "issue": "HullLab/AutoMorph#11",
+    "cause": "a height map written by an external tool in the same run was never written",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input produced during the run: by an external tool"
+  },
+  {
+    "signature": "S4",
+    "issue": "xinntao/ESRGAN#145",
+    "cause": "float model output written with imwrite",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input produced during the run: by a model"
+  },
+  {
+    "signature": "S5",
+    "issue": "linjx-ustc1106/TuiGAN-PyTorch#3",
+    "cause": "one training folder has grayscale images; the model needs 3 channels",
+    "verdict": "contract",
+    "before": "contract",
+    "case": "tuigan",
+    "note": "EXPECT ... CHANNELS 3",
+    "reproduced": true,
+    "compiler_says": "contract violated: 2 of 2 images in train_a break CHANNELS 3 / note: 1 channel: 2 images / note: a1.png: 1 channel / note: a2.png: 1 channel / hint: use GRAYSCALE, or fix the files",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S5",
+    "issue": "reckdk/SkelCompletion-3D#3",
+    "cause": "3-channel NumPy volumes for a 1-channel model",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input format: NumPy volumes"
+  },
+  {
+    "signature": "S5",
+    "issue": "kevinoop0/WaveCT-AIN_base_version#1",
+    "cause": "one content image is grayscale; the model needs 3 channels",
+    "verdict": "contract",
+    "before": "contract",
+    "case": "wavect",
+    "note": "EXPECT ... CHANNELS 3",
+    "reproduced": true,
+    "compiler_says": "contract violated: 1 of 2 images in content break CHANNELS 3 / note: 1 channel: 1 image / note: 3 channels: 1 image / note: 2.png: 1 channel / hint: use GRAYSCALE, or fix the files",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S6",
+    "issue": "Suanmd/TR-MISR#7",
+    "cause": "images of different sizes (32x32 and 32x64) in one batch",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "no suitable contract: equal image sizes (a RESIZE would prevent it)"
+  },
+  {
+    "signature": "S6",
+    "issue": "bshall/hubert#3",
+    "cause": "audio files not resampled to 16 kHz",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input format: audio"
+  },
+  {
+    "signature": "S6",
+    "issue": "jingyuanli001/RFR-Inpainting#47",
+    "cause": "some training images have 4 channels (RGBA)",
+    "verdict": "contract",
+    "before": "contract",
+    "case": "rfr",
+    "note": "EXPECT ... CHANNELS 3",
+    "reproduced": true,
+    "compiler_says": "contract violated: 1 of 3 images in train break CHANNELS 3 / note: 3 channels: 2 images / note: 4 channels: 1 image / note: 2.png: 4 channels / hint: use GRAYSCALE, or fix the files",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S7",
+    "issue": "WongKinYiu/PyTorch_YOLOv4#376",
+    "cause": "image and label paths do not match",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "per-image label files: one text file per image, not a table"
+  },
+  {
+    "signature": "S7",
+    "issue": "201918010332Thomas/ANPR#1",
+    "cause": "image and label paths do not match",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "per-image label files: one text file per image, not a table"
+  },
+  {
+    "signature": "S7",
+    "issue": "MrFahad/YOLOv7-Segmentation-and-Tracking#2",
+    "cause": "860 label files are missing",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "per-image label files: one text file per image, not a table"
+  },
+  {
+    "signature": "S8",
+    "issue": "ActivitySim/populationsim#189",
+    "cause": "a crosswalk file lists zones that the group-quarters table lacks",
+    "verdict": "contract",
+    "before": "contract",
+    "case": "popsim",
+    "note": "EXPECT ... REFERENCES",
+    "reproduced": true,
+    "compiler_says": "contract violated: 3 of 6 values of crosswalk.TAZ have no match in gq.TAZ / note: row 2: 2 / note: row 4: 4 / note: row 6: 6",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S8",
+    "issue": "RoversX/umami-csv-import-script#1",
+    "cause": "a new export format dropped two columns the script selects",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "umami",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "column 'subdivision1' does not exist in 'events' / hint: columns of 'events': session_id, hostname, browser, os, country, region",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S8",
+    "issue": "PacktPublishing/Pandas-Cookbook-Second-Edition#6",
+    "cause": "a group with one row breaks index arithmetic after groupby",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "operation not in the language: groupby"
+  },
+  {
+    "signature": "S9",
+    "issue": "jyyulab/SJARACNe#40",
+    "cause": "gene symbols in a column that must hold numbers",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "sjaracne",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "NORMALIZE needs a numeric column, but expression.value_1 is STRING / hint: 'value_1' is STRING because line 4 has \"RPL10\"",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S9",
+    "issue": "NaegleLab/KSTAR#73",
+    "cause": "a text accession column is treated as a numeric weight column",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "kstar",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "NORMALIZE needs a numeric column: 1 of 3 columns matched by 'network.*' break it / note: network.accession : STRING   <-- breaks the rule / note: network.net_1 : FLOAT [0.3, 0.8]   ok / note: network.net_2 : FLOAT [0.1, 0.9]   ok / hint: narrow the selector, e.g. WHERE TYPE NUMERIC or EXCEPT [...]",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S9",
+    "issue": "CCMS-UCSD/GNPSDocumentation#431",
+    "cause": "the text 'unknonw' in a numeric column of a quantification table",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "gnps",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "cannot compare STRING column 'mz' with number 100 / hint: 'mz' is STRING because line 3 has \"unknonw\"",
+    "before_measured": "cannot compare STRING column 'mz' with number 100 / hint: put the text in double quotes"
+  },
+  {
+    "signature": "S10",
+    "issue": "MLJejuCamp2017/clothing-recommender#6",
+    "cause": "a category column holds text and is compared with a number",
+    "verdict": "compile",
+    "before": "compile",
+    "case": "clothing",
+    "note": "",
+    "reproduced": true,
+    "compiler_says": "cannot compare STRING column 'category' with number 21 / hint: 'category' is STRING because line 4 has \"category_label\"",
+    "before_measured": "cannot compare STRING column 'category' with number 21 / hint: put the text in double quotes"
+  },
+  {
+    "signature": "S10",
+    "issue": "rhiever/datacleaner#16",
+    "cause": "a column mixes numbers and text, so sorting its values fails",
+    "verdict": "design",
+    "before": "design",
+    "case": "datacleaner",
+    "note": "every column has one inferred type",
+    "reproduced": true,
+    "compiler_says": "compiled and ran; 1 output file(s)",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S12",
+    "issue": "salsiza/junction25#2",
+    "cause": "the prediction table lacks columns the model was trained on",
+    "verdict": "contract",
+    "before": "contract",
+    "case": "junction",
+    "note": "EXPECT ... SCHEMA_SAME_AS",
+    "reproduced": true,
+    "compiler_says": "contract violated: predict and train have different schemas / note: avg_order_size is in train but not in predict / note: avg_purchase_size is in train but not in predict / hint: list columns that may differ in EXCEPT [...]",
+    "before_measured": "same as now"
+  },
+  {
+    "signature": "S12",
+    "issue": "ahmed1996said/dubai-housing-prices#3",
+    "cause": "one-hot encoding gives different columns for training and test data",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "operation not in the language: one-hot encoding"
+  },
+  {
+    "signature": "S12",
+    "issue": "microsoft/FLAML#1480",
+    "cause": "a date column is handled differently at fit and predict time",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "dates"
+  },
+  {
+    "signature": "S13",
+    "issue": "quantifyearth/topogmesh#1",
+    "cause": "NaN written into an integer elevation raster",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input format: GeoTIFF"
+  },
+  {
+    "signature": "S13",
+    "issue": "geospace-code/georinex#110",
+    "cause": "a navigation file has missing week numbers",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "input format: RINEX"
+  },
+  {
+    "signature": "S14",
+    "issue": "lcmchris/thesillyhome-addon-repo#32",
+    "cause": "duplicate (time, entity) pairs make a pivot fail",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "operation not in the language: pivot, uniqueness of column pairs"
+  },
+  {
+    "signature": "S14",
+    "issue": "thepycoach/python-course-for-excel-users#4",
+    "cause": "duplicate (year, country) pairs make a pivot fail",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "operation not in the language: pivot, uniqueness of column pairs"
+  },
+  {
+    "signature": "S14",
+    "issue": "ecmwf/anemoi-datasets#760",
+    "cause": "duplicate rows for an index and pivot key",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "operation not in the language: pivot, uniqueness of column pairs"
+  },
+  {
+    "signature": "S15",
+    "issue": "ooni/data#164",
+    "cause": "a downloaded JSON dataset changed a date field to 'latest'",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "dates: the input is also JSON"
+  },
+  {
+    "signature": "S15",
+    "issue": "sandsturm/whatsapp-converter#14",
+    "cause": "a chat export uses another date format",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "dates"
+  },
+  {
+    "signature": "S15",
+    "issue": "cdump/investments#50",
+    "cause": "yearly reports without operations give empty dates",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "dates"
+  },
+  {
+    "signature": "S16",
+    "issue": "Faisalhakimi22/github-issue-classifier#1",
+    "cause": "a CSV file saved as Windows-1252",
+    "verdict": "compile",
+    "before": "none",
+    "case": "cp1252",
+    "note": "found by the UTF-8 check added during the study",
+    "reproduced": true,
+    "compiler_says": "line 3 of 'issues.csv' is not UTF-8 text (byte 0xE9) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)",
+    "before_measured": "compiled without an error"
+  },
+  {
+    "signature": "S16",
+    "issue": "austinbcomstock/buildium-to-stessa#1",
+    "cause": "an exported CSV file that is not UTF-8",
+    "verdict": "compile",
+    "before": "none",
+    "case": "buildium",
+    "note": "found by the UTF-8 check added during the study",
+    "reproduced": true,
+    "compiler_says": "line 2 of 'Rental_Owner_Statement.csv' is not UTF-8 text (byte 0x96) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)",
+    "before_measured": "compiled without an error"
+  },
+  {
+    "signature": "S16",
+    "issue": "neuniversity/ALY6140#33",
+    "cause": "a tab-separated text file in Latin-1",
+    "verdict": "compile",
+    "before": "none",
+    "case": "aly6140",
+    "note": "the encoding is reported; tab-separated files are still read as one column",
+    "reproduced": true,
+    "compiler_says": "line 2 of 'MisleInjury.txt' is not UTF-8 text (byte 0xED) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)",
+    "before_measured": "compiled without an error"
+  },
+  {
+    "signature": "S17",
+    "issue": "reiinakano/scikit-plot#94",
+    "cause": "a predictions CSV has an extra index column (8 columns for 7 classes)",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "no suitable contract: prediction columns against classes"
+  },
+  {
+    "signature": "S17",
+    "issue": "cbasemaster/lstmcorona#1",
+    "cause": "the code hard-codes a dataset size of 100; the file has 167 rows",
+    "verdict": "none",
+    "before": "none",
+    "case": null,
+    "note": "model code: a hard-coded dataset size"
+  },
+  {
+    "signature": "S17",
+    "issue": "aaassasdf/Flower_Classification#1",
+    "cause": "603 images in the folder, 210 rows in the label CSV",
+    "verdict": "contract",
+    "before": "contract",
+    "case": "flower",
+    "note": "EXPECT ... MATCH_RATE 100%",
+    "reproduced": true,
+    "compiler_says": "contract violated: match rate of flowers is 66.67%, expected at least 100% / note: images: 6, labels: 4, matched: 4 / note: images without a label: 2 (0005.png, 0006.png) / hint: fix the file names in labels.file or the image files",
+    "before_measured": "same as now"
+  }
+]

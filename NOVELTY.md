@@ -139,26 +139,40 @@ contracts, images, check removal or optimization.
   to 10 MiB. RESIZE fusion saves only 6% and changes pixels (PSNR 57 dB), which supports keeping it
   opt-in. See `eval/results/rq3.md`.
 
+## Added after a critical review (September 2026)
+
+A self-review rated the first version 4/10 as research: every mechanism had an ancestor, the
+evaluation used our own mutants, and for CSV the analysis costs as much as running the pipeline.
+These changes answer that:
+
+- **N6. Metadata-only analysis.** For Parquet files the compiler reads only the footer (schema,
+  row count, min/max, null counts, exactness flags), so compiling takes 0.02 s for 1 or 16
+  million rows. The guard fingerprints the footer, which is exactly what the proofs use. Using
+  such statistics (zone maps, Moerkotte 1998) to *prove data contracts* is, to our knowledge, new.
+- **Soundness argument.** The paper defines the concretization of the state and proves transfer
+  soundness, verdict soundness and check elimination. Writing it down found and fixed a real
+  unsound case (a Parquet float column marked exact although its missing values were unknown).
+- **Lineage stated honestly.** Proven/violated/deferred is hybrid type checking (Flanagan 2006)
+  and soft typing (Cartwright & Fagan 1991) applied to data; both are cited.
+- **Real bugs, not only our mutants.** 44 data-preparation failures from GitHub issues, selected by
+  17 error messages with a fixed protocol: 18 (41%) are reported before any data is processed,
+  21 of 21 reproductions behave as classified, and the other 23 are listed with the reason.
+- **Scale.** On 16M rows and 3,000 images, mistakes are reported in 0.02-0.26 s instead of after
+  1.8-9 s, and a silent black-image mistake is caught.
+
+**Honest rating now: about 6/10 as research** - a solid workshop or new-ideas paper, still not a
+top-venue paper (the language is small, one person classified the issues, and 44 issues are few).
+
 ## Evidence summary (from `eval/`)
 
 | Question | Result |
 |---|---|
-| Are mistakes found before any data is processed? | 24 of 24 injected mistakes, 0 false alarms; a normal script crashes on 20 and gives silent wrong output on 4 |
-| How many contracts are decided at compile time? | 15 of 16 (94%) |
-| Do the optimizations help? | table processing 32% faster; image memory 922 MiB → 10 MiB |
-| What does reading the data cost? | 1,000,000-row CSV: 1.75 s; 3,000 image headers: 0.17 s (25× less than decoding) |
-
-## Limits a reviewer will point out
-
-- The data must exist at compile time. This fits batch preprocessing, not streaming data.
-- The language is small: no joins, loops or user-defined functions.
-- The 24 mutants were written by the author; they show *which kinds* of mistakes are caught, not
-  how often they happen.
-- CRC-32 detects accidental changes, not deliberate tampering. SHA-256 could replace it at a
-  higher cost.
-- The novelty is a new **combination** plus the value-level contracts, the fingerprint guard and
-  the image checks. It is a good fit for a workshop or a small conference, not a claim that
-  compile-time data checking was never done before.
+| Injected mistakes found before processing | 24 of 24, 0 false alarms |
+| Contracts decided at compile time | 15 of 16 (94%) |
+| Optimizations | table processing 37% faster; images 922 MiB -> 10 MiB |
+| Analysis cost | CSV about one pandas read; Parquet footer 0.02 s at any size; headers 23x faster than decoding |
+| Large inputs | mistakes reported in 0.02-0.26 s vs. 1.8-9 s for the scripts |
+| Real GitHub failures | 18 of 44 (41%) reported before processing |
 
 ## Sources
 
@@ -182,3 +196,6 @@ contracts, images, check removal or optimization.
 - N. Bantilan, "pandera: Statistical data validation of pandas dataframes", SciPy 2020.
 - Great Expectations. https://greatexpectations.io
 - J. Ragan-Kelley et al., "Halide", PLDI 2013.
+- C. Flanagan, "Hybrid type checking", POPL 2006.
+- R. Cartwright, M. Fagan, "Soft typing", PLDI 1991.
+- G. Moerkotte, "Small materialized aggregates", VLDB 1998.

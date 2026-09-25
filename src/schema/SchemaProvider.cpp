@@ -1,5 +1,8 @@
 #include "schema/SchemaProvider.h"
 
+#include "schema/Checksum.h"
+#include "schema/ParquetFooter.h"
+
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -30,27 +33,6 @@ std::string toLower(std::string text) {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
     return text;
-}
-
-// CRC-32, the same checksum as Python's zlib.crc32. The generated program
-// computes it again and refuses to run when an input changed after compilation.
-std::uint32_t crc32(const std::string& bytes) {
-    static const std::vector<std::uint32_t> table = [] {
-        std::vector<std::uint32_t> entries(256);
-        for (std::uint32_t i = 0; i < 256; ++i) {
-            std::uint32_t value = i;
-            for (int bit = 0; bit < 8; ++bit) {
-                value = (value & 1) ? 0xEDB88320u ^ (value >> 1) : value >> 1;
-            }
-            entries[i] = value;
-        }
-        return entries;
-    }();
-    std::uint32_t crc = 0xFFFFFFFFu;
-    for (char c : bytes) {
-        crc = table[(crc ^ static_cast<unsigned char>(c)) & 0xFFu] ^ (crc >> 8);
-    }
-    return crc ^ 0xFFFFFFFFu;
 }
 
 std::uint64_t fileFingerprint(const std::string& path) {
@@ -90,6 +72,27 @@ void splitCsvLine(const std::string& line, std::vector<std::string>& fields) {
         }
     }
     fields.push_back(trim(field));
+}
+
+// Position of the first byte that is not part of valid UTF-8, or npos.
+// (Overlong forms are not checked; no editor writes them.)
+size_t invalidUtf8(const std::string& text) {
+    size_t i = 0;
+    while (i < text.size()) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        const size_t length = c < 0x80 ? 1 : (c >= 0xC2 && c <= 0xDF) ? 2 : (c >> 4) == 0xE ? 3
+                                             : (c >= 0xF0 && c <= 0xF4) ? 4 : 0;
+        if (length == 0 || i + length > text.size()) {
+            return i;
+        }
+        for (size_t k = 1; k < length; ++k) {
+            if ((static_cast<unsigned char>(text[i + k]) & 0xC0) != 0x80) {
+                return i;
+            }
+        }
+        i += length;
+    }
+    return std::string::npos;
 }
 
 // Reads the header line, dropping the UTF-8 byte-order mark Excel may add.
@@ -246,13 +249,24 @@ bool isImageFile(const fs::path& path) {
     return extension == ".png" || extension == ".jpg" || extension == ".jpeg";
 }
 
+// The format comes from the first bytes, not the file name, just as OpenCV
+// decides when it decodes: a PNG screenshot saved as "shot.jpg" is a PNG image,
+// possibly with transparency. A file that is neither is read by its extension,
+// so the error says what is wrong with it.
 ImageInfo readImageHeader(const fs::path& file, const std::string& relative) {
     ImageInfo info;
     info.path = relative;
-    info.format = toLower(file.extension().string()) == ".png" ? "PNG" : "JPG";
     std::error_code error;
     info.bytes = fs::file_size(file, error);
     std::ifstream in(file, std::ios::binary);
+    char first[2] = {0, 0};
+    in.read(first, 2);
+    const bool pngContent = first[0] == '\x89' && first[1] == 'P';
+    const bool jpegContent = first[0] == '\xFF' && first[1] == '\xD8';
+    const bool pngName = toLower(file.extension().string()) == ".png";
+    info.format = pngContent || (pngName && !jpegContent) ? "PNG" : "JPG";
+    in.clear();
+    in.seekg(0);
     const bool ok = in && (info.format == "PNG" ? readPngHeader(in, info) : readJpegHeader(in, info));
     if (ok && (info.width <= 0 || info.height <= 0 || info.channels <= 0)) {
         info.problem = "image has zero size";
@@ -268,18 +282,53 @@ ImageInfo readImageHeader(const fs::path& file, const std::string& relative) {
 
 SchemaProvider::SchemaProvider(Diagnostics& diagnostics) : diagnostics_(diagnostics) {}
 
-std::optional<TableSchema> SchemaProvider::readTable(const std::string& csvPath, const std::string& name,
+std::optional<TableSchema> SchemaProvider::readTable(const std::string& path, const std::string& name,
                                                      SourceLocation location) {
+    if (toLower(fs::path(path).extension().string()) != ".parquet") {
+        return readCsv(path, name, location);
+    }
+    std::string problem;
+    std::optional<TableSchema> table = readParquetFooter(path, name, problem);
+    if (!table) {
+        std::error_code error;
+        diagnostics_.error(Phase::Schema, location, problem,
+                           fs::exists(path, error) ? "" : "the path is relative to the folder of the .prep file");
+    }
+    return table;
+}
+
+std::optional<TableSchema> SchemaProvider::readCsv(const std::string& csvPath, const std::string& name,
+                                                   SourceLocation location) {
     std::ifstream file(csvPath);
     if (!file) {
         diagnostics_.error(Phase::Schema, location, "cannot open CSV file '" + csvPath + "'",
                            "the path is relative to the folder of the .prep file");
         return std::nullopt;
     }
+    // pandas reads CSV files as UTF-8, so a file saved in another encoding would
+    // stop the generated program. Every line is read here anyway, so say it now.
+    const auto notUtf8 = [&](const std::string& text, int number) {
+        const size_t at = invalidUtf8(text);
+        if (at == std::string::npos) {
+            return false;
+        }
+        const unsigned byte = static_cast<unsigned char>(text[at]);
+        const char* digits = "0123456789ABCDEF";
+        diagnostics_.error(Phase::Schema, location,
+                           "line " + std::to_string(number) + " of '" + csvPath + "' is not UTF-8 text (byte 0x" +
+                               digits[byte >> 4] + digits[byte & 15] + ")",
+                           "the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 "
+                           "(in Excel: Save As > CSV UTF-8)");
+        return true;
+    };
+
     std::string line;
     if (!readHeader(file, line)) {
         diagnostics_.error(Phase::Schema, location, "CSV file '" + csvPath + "' is empty",
                            "the first line must list the column names");
+        return std::nullopt;
+    }
+    if (notUtf8(line, 1)) {
         return std::nullopt;
     }
 
@@ -305,6 +354,9 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& csvPath,
         ++lineNumber;
         if (isBlank(line)) {
             continue;
+        }
+        if (notUtf8(line, lineNumber)) {
+            return std::nullopt;
         }
         splitCsvLine(line, cells);
         if (cells.size() != table.columns.size()) {
@@ -354,18 +406,19 @@ std::optional<TableSetSchema> SchemaProvider::readTableFolder(const std::string&
     std::error_code error;
     if (!fs::is_directory(folder, error)) {
         diagnostics_.error(Phase::Schema, location, "cannot open table folder '" + folder + "'",
-                           "LOAD_TABLES expects a folder of CSV files; use LOAD for one file");
+                           "LOAD_TABLES expects a folder of CSV or Parquet files; use LOAD for one file");
         return std::nullopt;
     }
     std::vector<fs::path> files;
     for (const fs::directory_entry& entry : fs::directory_iterator(folder, error)) {
-        if (entry.is_regular_file(error) && toLower(entry.path().extension().string()) == ".csv") {
+        const std::string extension = toLower(entry.path().extension().string());
+        if (entry.is_regular_file(error) && (extension == ".csv" || extension == ".parquet")) {
             files.push_back(entry.path());
         }
     }
     std::sort(files.begin(), files.end());
     if (files.empty()) {
-        diagnostics_.error(Phase::Schema, location, "folder '" + folder + "' has no CSV files");
+        diagnostics_.error(Phase::Schema, location, "folder '" + folder + "' has no CSV or Parquet files");
         return std::nullopt;
     }
 
@@ -437,6 +490,9 @@ std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path
 }
 
 std::vector<std::string> readColumnValues(const TableSchema& table, const std::string& column) {
+    if (table.format == TableFormat::Parquet) {
+        return {};  // only the footer of a Parquet file is read at compile time
+    }
     std::ifstream file(table.file);
     std::string line;
     if (!readHeader(file, line)) {
@@ -463,9 +519,13 @@ std::vector<std::string> readColumnValues(const TableSchema& table, const std::s
 // ---------- Printing ----------
 
 void printTableSchema(std::ostream& out, const std::string& title, const TableSchema& table) {
+    const bool parquet = table.format == TableFormat::Parquet;
     out << title << " from " << table.file << " (" << table.rowCount << " rows, " << table.columns.size()
-        << " columns, fingerprint " << std::hex << std::showbase << table.fingerprint << std::dec
-        << std::noshowbase << ")\n";
+        << " columns, " << (parquet ? "footer " : "") << "fingerprint " << std::hex << std::showbase
+        << table.fingerprint << std::dec << std::noshowbase << ")\n";
+    if (parquet) {
+        out << "  Parquet: only the footer statistics were read, not the data\n";
+    }
 
     size_t nameWidth = 8;
     for (const ColumnInfo& column : table.columns) {
@@ -475,12 +535,15 @@ void printTableSchema(std::ostream& out, const std::string& title, const TableSc
     out << std::left << "  " << std::setw(width) << "COLUMN" << std::setw(10) << "TYPE" << std::setw(10)
         << "NULLABLE" << std::setw(9) << "MISSING" << "RANGE\n";
     for (const ColumnInfo& column : table.columns) {
-        const std::string range = isNumeric(column.type) && column.hasRange
-                                      ? "[" + formatNumber(column.min) + ", " + formatNumber(column.max) + "]"
-                                      : "-";
+        std::string range = "-";
+        if (isNumeric(column.type) && column.hasRange) {
+            range = "[" + formatNumber(column.min) + ", " + formatNumber(column.max) + "]" +
+                    (column.boundsExact ? "" : " (bounds only)");
+        }
+        const std::string nullable = column.missingCount > 0 ? "yes" : column.missingKnown ? "no" : "maybe";
+        const std::string missing = (column.missingKnown ? "" : ">=") + std::to_string(column.missingCount);
         out << "  " << std::setw(width) << column.name << std::setw(10) << columnTypeName(column.type)
-            << std::setw(10) << (column.missingCount > 0 ? "yes" : "no") << std::setw(9) << column.missingCount
-            << range << '\n';
+            << std::setw(10) << nullable << std::setw(9) << missing << range << '\n';
     }
 }
 

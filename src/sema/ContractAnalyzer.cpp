@@ -11,10 +11,14 @@
 
 namespace {
 
-// The values in the file are the values at this point of the program:
-// no rows were removed and no values were changed since LOAD.
-bool valuesAreFromFile(const ColumnState& column) {
-    return column.exact && !column.valuesChanged;
+// Why the compiler cannot read a column's values at this point of the program,
+// or "" if it can: the values in the file are the values here, because no rows
+// were removed and no values were changed since LOAD.
+std::string valuesUnknown(const TableState& table, const ColumnState& column) {
+    if (table.schema.format == TableFormat::Parquet) {
+        return "only the footer of " + table.schema.file + " is read at compile time";
+    }
+    return column.exact && !column.valuesChanged ? "" : "rows or values changed after LOAD";
 }
 
 std::string rowText(size_t index) {
@@ -80,23 +84,32 @@ void ContractAnalyzer::columnContract(const ExpectStmt& node, const std::string&
             }
             return;
         }
-        case ConstraintKind::NotNull:
+        case ConstraintKind::NotNull: {
             if (!column.nullable) {
                 proven(node, contract, "no missing values", &target);
-            } else if (column.exact) {
-                int missing = 0;
-                for (const ColumnInfo& info : table.schema.columns) {
-                    missing = info.name == column.name ? info.missingCount : missing;
-                }
-                violated(node, contract,
-                         name + " has " + std::to_string(missing) + " missing value" + (missing == 1 ? "" : "s") +
-                             " in " + table.schema.file,
-                         "use FILL_NULL or DROP_NULL before this EXPECT");
-            } else {
-                column.nullable = false;  // rows only get past the run-time check if nothing is missing
-                deferred(node, contract, "missing values may remain after earlier statements");
+                return;
             }
+            std::int64_t missing = 0;
+            bool missingKnown = true;
+            for (const ColumnInfo& info : table.schema.columns) {
+                if (info.name == column.name) {
+                    missing = info.missingCount;
+                    missingKnown = info.missingKnown;
+                }
+            }
+            if (column.exact && missing > 0) {
+                violated(node, contract,
+                         name + " has " + (missingKnown ? "" : "at least ") + std::to_string(missing) +
+                             " missing value" + (missing == 1 ? "" : "s") + " in " + table.schema.file,
+                         "use FILL_NULL or DROP_NULL before this EXPECT");
+                return;
+            }
+            column.nullable = false;  // rows only get past the run-time check if nothing is missing
+            deferred(node, contract,
+                     missingKnown ? "missing values may remain after earlier statements"
+                                  : "the file's statistics do not say whether values are missing");
             return;
+        }
         case ConstraintKind::Between:
             between(node, contract, name, target, table, column);
             return;
@@ -129,7 +142,7 @@ void ContractAnalyzer::between(const ExpectStmt& node, const std::string& contra
     } else if (column.exact && column.range.isKnown()) {
         std::string message = name + " has values from " + formatNumber(column.range.min) + " to " +
                               formatNumber(column.range.max);
-        if (valuesAreFromFile(column)) {  // name the first bad row
+        if (valuesUnknown(table, column).empty()) {  // name the first bad row
             const std::vector<std::string> values = readColumnValues(table.schema, column.name);
             for (size_t i = 0; i < values.size(); ++i) {
                 if (!values[i].empty() && (std::stod(values[i]) < low || std::stod(values[i]) > high)) {
@@ -137,19 +150,23 @@ void ContractAnalyzer::between(const ExpectStmt& node, const std::string& contra
                     break;
                 }
             }
+        } else if (table.schema.format == TableFormat::Parquet && !column.valuesChanged) {
+            message += ", according to the statistics in the footer of " + table.schema.file;
         }
         violated(node, contract, message, "every value must be between " + node.low + " and " + node.high);
     } else {
         column.range.min = std::max(column.range.min, low);  // true after the run-time check passes
         column.range.max = std::min(column.range.max, high);
+        column.exact = false;                                // but low and high need not occur
         deferred(node, contract, "the exact values are not known here");
     }
 }
 
 void ContractAnalyzer::unique(const ExpectStmt& node, const std::string& contract, const std::string& name,
                               const Target& target, const TableState& table, const ColumnState& column) {
-    if (!valuesAreFromFile(column)) {
-        deferred(node, contract, "rows or values changed after LOAD");
+    const std::string unknown = valuesUnknown(table, column);
+    if (!unknown.empty()) {
+        deferred(node, contract, unknown);
         return;
     }
     const std::vector<std::string> values = readColumnValues(table.schema, column.name);
@@ -187,8 +204,10 @@ void ContractAnalyzer::references(const ExpectStmt& node, const std::string& nam
                            "both columns must hold the same kind of value");
         return;
     }
-    if (!valuesAreFromFile(column) || !valuesAreFromFile(otherColumn)) {
-        deferred(node, contract, "rows or values changed after LOAD");
+    const std::string unknown =
+        valuesUnknown(table, column).empty() ? valuesUnknown(otherTable, otherColumn) : valuesUnknown(table, column);
+    if (!unknown.empty()) {
+        deferred(node, contract, unknown);
         return;
     }
 
@@ -244,7 +263,7 @@ void ContractAnalyzer::schemaSameAs(const ExpectStmt& node, const std::string& n
             continue;
         }
         if (!partner) {
-            problems.push_back("missing from " + otherName + ": " + column.name);
+            problems.push_back(column.name + " is in " + name + " but not in " + otherName);
         } else if (column.type != partner->type && !(isNumeric(column.type) && isNumeric(partner->type))) {
             problems.push_back(column.name + " is " + columnTypeName(column.type) + " in " + name + " but " +
                                columnTypeName(partner->type) + " in " + otherName);
@@ -254,7 +273,7 @@ void ContractAnalyzer::schemaSameAs(const ExpectStmt& node, const std::string& n
         const bool known = std::any_of(table.columns.begin(), table.columns.end(),
                                        [&](const ColumnState& c) { return c.name == column.name; });
         if (!known && !excluded(column.name)) {
-            problems.push_back("unexpected in " + otherName + ": " + column.name);
+            problems.push_back(column.name + " is in " + otherName + " but not in " + name);
         }
     }
     if (problems.empty()) {

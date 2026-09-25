@@ -1,8 +1,8 @@
 {
   "table_optimizations": {
-    "optimized_s": 1.297625599996536,
-    "O0_s": 1.5407219000044279,
-    "baseline_s": 1.4695693999965442,
+    "optimized_s": 1.2856156000052579,
+    "O0_s": 1.4794858999957796,
+    "baseline_s": 1.5925392999924952,
     "same_output": true,
     "columns_read": [
       5,
@@ -12,53 +12,56 @@
       0,
       2
     ],
-    "speedup_vs_O0": 1.18733932191885
+    "python_start_s": 0.9579389999998966,
+    "speedup_vs_O0": 1.1507995858091087
   },
   "image_streaming": {
     "images": 1000,
-    "preplang_s": 3.243545199991786,
-    "baseline_s": 3.5382288999971934,
-    "preplang_peak_mib": 10.050455093383789,
-    "baseline_peak_mib": 922.1254577636719,
+    "preplang_s": 3.4778247000067495,
+    "baseline_s": 3.6822832000034396,
+    "handwritten_s": 3.0315431999915745,
+    "preplang_peak_mib": 10.047289848327637,
+    "baseline_peak_mib": 922.1292400360107,
+    "handwritten_peak_mib": 11.583172798156738,
     "same_pixels_in_sample": true
   },
   "resize_fusion": {
-    "exact_s": 5.992481900000712,
-    "approx_s": 5.635510299995076,
-    "speedup": 1.0633432610363516,
+    "exact_s": 5.63584859999537,
+    "approx_s": 5.5542452999943634,
+    "speedup": 1.014692059063558,
     "mean_psnr_db": 56.995981262688325,
     "min_psnr_db": 51.810706103618486
   },
   "compile_cost": [
     {
       "input": "CSV, 10,000 rows x 10 columns",
-      "compile_s": 0.033268700004555285,
-      "read_all_s": 0.02761560000362806
+      "compile_s": 0.03896839999652002,
+      "read_all_s": 0.03106199999456294
     },
     {
       "input": "CSV, 100,000 rows x 10 columns",
-      "compile_s": 0.18775850000383798,
-      "read_all_s": 0.09868779999669641
+      "compile_s": 0.23147190001327544,
+      "read_all_s": 0.11216869999771006
     },
     {
       "input": "CSV, 1,000,000 rows x 10 columns",
-      "compile_s": 1.7478330000012647,
-      "read_all_s": 0.7689085000019986
+      "compile_s": 2.0435426000040025,
+      "read_all_s": 0.9576628999930108
     },
     {
       "input": "100 JPG images, 640x480",
-      "compile_s": 0.020090499994694255,
-      "read_all_s": 0.15837869999813847
+      "compile_s": 0.025189500011038035,
+      "read_all_s": 0.18779980001272634
     },
     {
       "input": "1000 JPG images, 640x480",
-      "compile_s": 0.06977750000078231,
-      "read_all_s": 1.4377327999973204
+      "compile_s": 0.08574609999777749,
+      "read_all_s": 1.7695305999950506
     },
     {
       "input": "3000 JPG images, 640x480",
-      "compile_s": 0.1749268999992637,
-      "read_all_s": 4.308933099993737
+      "compile_s": 0.24242929999309126,
+      "read_all_s": 5.508246999990661
     }
   ]
 }
