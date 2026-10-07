@@ -1,0 +1,580 @@
+<title>PrepLang Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Besley:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a builder-block walkthrough in two inks. The chapters run top to bottom in the order of the
+   talk; "before" is drawn on paper with a dashed edge, "PrepLang" is a solid ink block. */
+:root {
+  --ink: #18140f;
+  --paper: #fff8e7;
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --display: "Besley", Georgia, "Times New Roman", serif;
+  --body: "Archivo", Arial, Helvetica, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  --line: 3px solid var(--fg);
+  --thin: 2px solid var(--fg);
+  --dash: 2px dashed var(--fg);
+  --shadow: 5px 5px 0 var(--fg);
+  --shadow-sm: 3px 3px 0 var(--fg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: var(--ink); --fg: var(--paper); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: var(--ink); --fg: var(--paper); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); padding-block: 0 80px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.02em; line-height: 1.02; text-wrap: balance; margin: 0; }
+p { margin: 0; max-width: 66ch; }
+code, pre, .mono { font-family: var(--mono); }
+pre { margin: 0; white-space: pre; font-size: 13px; line-height: 1.5; }
+a { color: inherit; }
+button { font: inherit; color: var(--fg); background: var(--bg); border: var(--thin); padding: 8px 14px; cursor: pointer; font-weight: 600; }
+button:hover { box-shadow: var(--shadow-sm); transform: translate(-1px, -1px); }
+button[aria-pressed="true"], button.on { background: var(--fg); color: var(--bg); }
+button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } button:hover { transform: none; } }
+
+/* top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: var(--line); }
+.bar .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 22px; }
+.toc { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.toc a { text-decoration: none; font-size: 13px; font-weight: 600; border: var(--thin); padding: 3px 8px; min-width: 2.4em; text-align: center; font-variant-numeric: tabular-nums; }
+.toc a.here { background: var(--fg); color: var(--bg); }
+.keys { font-size: 13px; }
+
+/* hero */
+.hero { padding-block: 56px 40px; display: grid; gap: 28px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: end; }
+.hero h1 { font-size: clamp(3rem, 2rem + 4.5vw, 5.6rem); line-height: 0.92; letter-spacing: -0.03em; }
+.lead { font-size: clamp(1.1rem, 1rem + 0.4vw, 1.3rem); }
+.meta { font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.block { border: var(--line); box-shadow: var(--shadow); background: var(--bg); padding: 18px; }
+.solid { background: var(--fg); color: var(--bg); border: var(--line); box-shadow: var(--shadow); padding: 18px; }
+.solid pre, .solid .mono { color: var(--bg); }
+.paper { border: var(--dash); padding: 18px; }
+.stack { display: grid; gap: 14px; }
+.row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+
+/* chapters */
+section.ch { padding-block: 64px 8px; border-top: var(--line); scroll-margin-top: 64px; }
+.chhead { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; margin-bottom: 28px; }
+.num { font-family: var(--display); font-weight: 700; font-size: 56px; line-height: 0.8; border: var(--line); padding: 10px 12px 6px; box-shadow: var(--shadow-sm); font-variant-numeric: tabular-nums; }
+.chhead h2 { font-size: clamp(2rem, 1.4rem + 2.2vw, 3.2rem); margin-bottom: 10px; }
+.say { border-left: var(--line); padding-left: 14px; font-size: 15px; margin-top: 12px; max-width: 72ch; }
+.say b { text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; display: block; margin-bottom: 2px; }
+
+.two { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.three { display: grid; gap: 22px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; margin-bottom: 8px; }
+.code { overflow-x: auto; border: var(--thin); padding: 12px 14px; min-width: 0; }
+.two > *, .three > *, .stack > *, .hero > * { min-width: 0; }
+pre.code.small, #scriptOut, #compileOut { white-space: pre-wrap; overflow-wrap: anywhere; }
+.solid .code { border-color: var(--bg); }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.time { font-family: var(--display); font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.small { font-size: 14px; }
+mark { background: var(--fg); color: var(--bg); padding: 0 2px; }
+.hl { display: inline; background: var(--fg); color: var(--bg); }
+
+/* phase strip */
+.phases { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0; border: var(--line); margin-bottom: 18px; }
+.phases button { border: 0; border-right: var(--thin); padding: 12px 8px; text-align: left; display: grid; gap: 2px; min-width: 0; }
+.phases button:last-child { border-right: 0; }
+.phases button:hover { box-shadow: none; transform: none; text-decoration: underline; }
+.phases small { font-weight: 400; font-size: 12px; }
+.phases .n { font-family: var(--display); font-size: 22px; }
+
+/* verdicts */
+.verdict { border: var(--line); padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.verdict .v { font-family: var(--display); font-size: 28px; font-weight: 700; }
+.verdict.yes { background: var(--fg); color: var(--bg); }
+.verdict.no { border-style: dashed; }
+textarea { width: 100%; min-height: 168px; font-family: var(--mono); font-size: 14px; color: var(--fg); background: var(--bg); border: var(--line); padding: 10px; resize: vertical; }
+
+/* bars */
+.bars { display: grid; gap: 10px; }
+.barrow { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 4.5rem; gap: 10px; align-items: center; font-size: 14px; }
+.track { border: var(--thin); height: 26px; position: relative; }
+.fill { height: 100%; background: var(--fg); }
+.fill.hatch { background: repeating-linear-gradient(135deg, var(--fg) 0 3px, transparent 3px 8px); }
+.val { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.stat .big { font-family: var(--display); font-size: clamp(2.2rem, 1.6rem + 2vw, 3.4rem); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+ol.bugs { margin: 0; padding-left: 1.4em; display: grid; gap: 10px; max-width: 80ch; }
+svg text { fill: var(--fg); font-family: var(--body); font-size: 12px; }
+
+@media (max-width: 860px) {
+  .hero, .two, .three { grid-template-columns: minmax(0, 1fr); }
+  .phases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .phases button:nth-child(4) { border-right: 0; }
+  .phases button:nth-child(-n+4) { border-bottom: var(--thin); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .keys { display: none; }
+}
+@media (max-width: 480px) {
+  .chhead { grid-template-columns: minmax(0, 1fr); }
+  .num { justify-self: start; font-size: 40px; }
+  .barrow { grid-template-columns: minmax(0, 1fr) 4rem; }
+  .barrow .track { grid-column: 1 / -1; grid-row: 2; }
+}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <span class="brand">PrepLang</span>
+    <nav class="toc" id="toc" aria-label="Chapters"></nav>
+    <span class="keys small">← → move between chapters</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="stack">
+      <p class="meta">Compiler Design Laboratory (BCSE307P) · V.Nikhil · 24BAI0073</p>
+      <h1>A compiler that reads your data before it runs your pipeline</h1>
+      <p class="lead">PrepLang is a small language for cleaning tables and images before machine learning. Its compiler opens the real data while it compiles, so it can stop mistakes before anything runs, prove your checks, remove work that does nothing, and now carry those proofs to next month's data.</p>
+    </div>
+    <div class="solid stack">
+      <div class="label">Everything on this page is real</div>
+      <p class="small">Each program, error message, timing and number below was produced by running the compiler, the generated programs, the Phase 2 compiler and a plain pandas/OpenCV script on this project's data (<span class="mono">demo/capture.py</span>).</p>
+      <div class="row"><button id="start" class="on">Start the demo →</button></div>
+    </div>
+  </div>
+
+  <!-- 01 -->
+  <section class="ch" id="ch1" data-title="The problem">
+    <div class="chhead"><div class="num">01</div><div>
+      <h2>Data cleaning scripts find mistakes too late</h2>
+      <p>A pandas or OpenCV script only learns its assumptions are wrong while it runs over the data. Pick a mistake: the left side is a plain script running the same steps, the right side is the PrepLang compiler.</p>
+      <p class="say"><b>Say</b>Same program, one edit. The script crashes halfway, or worse, finishes and writes wrong data. PrepLang refuses to compile and says why, with the line and a hint.</p>
+    </div></div>
+    <div class="tabs" id="mistakeTabs" role="tablist"></div>
+    <div class="code small" style="margin-bottom:18px" id="mistakeEdit"></div>
+    <div class="two">
+      <div class="paper stack">
+        <div class="label">Before: a plain script</div>
+        <div class="time" id="scriptTime"></div>
+        <pre class="code" id="scriptOut"></pre>
+      </div>
+      <div class="solid stack">
+        <div class="label">PrepLang compiler</div>
+        <div class="time" id="compileTime"></div>
+        <pre class="code" id="compileOut"></pre>
+      </div>
+    </div>
+    <p class="small" style="margin-top:18px" id="scaleNote"></p>
+  </section>
+
+  <!-- 02 -->
+  <section class="ch" id="ch2" data-title="How it works">
+    <div class="chhead"><div class="num">02</div><div>
+      <h2>Every compiler phase, written by hand in C++</h2>
+      <p>Click a phase to see what it produced for <span class="mono">students.prep</span>. Phase 4 is the twist: semantic analysis reads the CSV file itself, so the symbol table holds the real types, missing values and ranges.</p>
+      <p class="say"><b>Say</b>Lexer and LL(1) parser, AST, then semantic analysis with the data, three-address code, three optimization passes, the data certificate, and Python code generation.</p>
+    </div></div>
+    <div class="phases" id="phaseStrip"></div>
+    <div class="two">
+      <div class="stack">
+        <div class="label">students.prep</div>
+        <pre class="code" id="program"></pre>
+        <div class="label">students.csv (read at compile time)</div>
+        <pre class="code" id="csv"></pre>
+      </div>
+      <div class="solid stack">
+        <div class="label" id="phaseTitle"></div>
+        <p class="small" id="phaseText"></p>
+        <pre class="code" id="phaseOut" style="max-height:520px;overflow:auto"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="ch" id="ch3" data-title="Contracts">
+    <div class="chhead"><div class="num">03</div><div>
+      <h2>Every EXPECT gets a verdict before the program runs</h2>
+      <p>Because the compiler knows the facts about each column at each line, a contract is proven, violated, or left as a run-time check.</p>
+      <p class="say"><b>Say</b>Proven contracts cost nothing at run time. Violated ones stop compilation and name the row. Only the undecidable ones become checks, and after the check passes the compiler uses the fact.</p>
+    </div></div>
+    <div class="three" id="verdicts"></div>
+  </section>
+
+  <!-- 04 -->
+  <section class="ch" id="ch4" data-title="What Phase 3 changed">
+    <div class="chhead"><div class="num">04</div><div>
+      <h2>Phase 2 against Phase 3</h2>
+      <p>Both compilers below were built from this project's git history and run on the same inputs.</p>
+      <p class="say"><b>Say</b>Phase 2 worked, but it had two limits: reading big CSV files was slow, and a compiled program refused any new data file. Phase 3 fixes both.</p>
+    </div></div>
+    <div class="two">
+      <div class="block stack">
+        <div class="label">Compile time, one million CSV rows</div>
+        <div class="bars" id="speedBars"></div>
+        <p class="small" id="speedNote"></p>
+      </div>
+      <div class="block stack">
+        <div class="label">Same program, next week's file</div>
+        <div class="paper stack"><div class="label">Phase 2</div><pre class="code small" id="p2batch"></pre></div>
+        <div class="solid stack"><div class="label">Phase 3</div><pre class="code small" id="p3batch"></pre></div>
+      </div>
+    </div>
+    <div class="three" style="margin-top:22px" id="changes"></div>
+  </section>
+
+  <!-- 05 -->
+  <section class="ch" id="ch5" data-title="Data certificates">
+    <div class="chhead"><div class="num">05</div><div>
+      <h2>Data certificates: compile once, run safely on new data</h2>
+      <p>After optimizing, the compiler analyses the program again with weaker facts, one at a time, and keeps only the facts some proof needs. The data had marks from 35 to 95; the program only needs 0 to 100. Edit the batch below and watch three policies decide.</p>
+      <p class="say"><b>Say</b>The fingerprint refuses any change. A schema of the old file's facts refuses marks of 12 or 100. The certificate only asks for what the proofs use, and when it refuses, it names the row and the proof.</p>
+    </div></div>
+    <div class="two">
+      <div class="stack">
+        <div class="label">The certificate of students.prep</div>
+        <pre class="code" id="certText"></pre>
+      </div>
+      <div class="stack">
+        <div class="row" id="batchButtons"></div>
+        <label class="label" for="batch">New batch (CSV, edit it)</label>
+        <textarea id="batch" spellcheck="false"></textarea>
+        <div class="small" id="realRun"></div>
+      </div>
+    </div>
+    <div class="three" style="margin-top:22px">
+      <div class="verdict" id="vFinger"></div>
+      <div class="verdict" id="vFacts"></div>
+      <div class="verdict" id="vCert"></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="ch" id="ch6" data-title="Image folders">
+    <div class="chhead"><div class="num">06</div><div>
+      <h2>Certificates for image folders</h2>
+      <p>An image folder is certified as one box per file type: channel counts, width and height ranges, bit depths. The analysis checks the box through its corner images; the generated program reads only the header of each new image.</p>
+      <p class="say"><b>Say</b>The program has EXPECT MIN_WIDTH 200, so the certificate asks for width at least 200 and allows any height and channels. A new folder of different photos is admitted; one 150-pixel-wide photo is refused.</p>
+    </div></div>
+    <div class="two">
+      <div class="block"><svg id="box" viewBox="0 0 520 380" role="img" aria-label="Image sizes against the certified box"></svg></div>
+      <div class="stack">
+        <pre class="code small" id="imgCert"></pre>
+        <div class="solid"><div class="label">new_photos/</div><pre class="code small" id="imgOk"></pre></div>
+        <div class="paper"><div class="label">small_photos/</div><pre class="code small" id="imgBad"></pre></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="ch" id="ch7" data-title="pandas scripts">
+    <div class="chhead"><div class="num">07</div><div>
+      <h2>Existing pandas scripts get the same protection</h2>
+      <p>A second front end, <span class="mono">frontend/pandas2prep.py</span>, reads a pandas script with Python's own parser and translates its cleaning into PrepLang, up to the first line it cannot express exactly.</p>
+      <p class="say"><b>Say</b>This is a normal Titanic cleaning script. The front end lifts five cleaning lines and stops at the map. The compiled program then accepts Kaggle's real test file, which has no Survived column.</p>
+    </div></div>
+    <div class="three">
+      <div class="paper stack"><div class="label">titanic_clean.py</div><pre class="code small" id="pyScript"></pre></div>
+      <div class="block stack"><div class="label">Lifted PrepLang</div><pre class="code small" id="lifted"></pre><p class="small" id="liftNote"></p></div>
+      <div class="solid stack"><div class="label">Run on Kaggle's test.csv</div><pre class="code small" id="onTest"></pre></div>
+    </div>
+    <pre class="code small" style="margin-top:22px" id="pyCert"></pre>
+  </section>
+
+  <!-- 08 -->
+  <section class="ch" id="ch8" data-title="Evidence">
+    <div class="chhead"><div class="num">08</div><div>
+      <h2>The evidence</h2>
+      <p>Measured by the evaluation scripts in <span class="mono">eval/</span>. New batches are compared with compiling that batch from scratch, or with the script's own pandas code.</p>
+      <p class="say"><b>Say</b>On real monthly data and real GitHub scripts, no admitted run ever gave a different result.</p>
+    </div></div>
+    <div class="stats" id="stats"></div>
+    <div class="two" style="margin-top:28px">
+      <div class="block stack"><div class="label">Real monthly data (traffic, bike rentals, NYC taxi)</div><div class="bars" id="rq8Bars"></div></div>
+      <div class="block stack"><div class="label">Generated new batches (seven programs)</div><div class="bars" id="rq7Bars"></div></div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="ch" id="ch9" data-title="Bugs found">
+    <div class="chhead"><div class="num">09</div><div>
+      <h2>What the testing caught in my own compiler</h2>
+      <p>Comparing every run against a fresh compilation, or against the script, exposed five bugs. All are fixed and each has a regression test.</p>
+    </div></div>
+    <ol class="bugs">
+      <li>The run-time MATCH_RATE check counted broken images that REMOVE_CORRUPT had removed before the LINK.</li>
+      <li>The first certificate covered only loaded columns, so a proven NOT_NULL on a column pruned afterwards was unprotected.</li>
+      <li>Admission let whole numbers into a FLOAT column and an empty column into any type; a fresh compilation then decided differently.</li>
+      <li>A column named only by a DROP the optimizer had removed was treated as optional (found on held-out GitHub scripts).</li>
+      <li>The pandas front end translated <span class="mono">drop(columns=..., axis=1)</span>, which pandas itself rejects.</li>
+    </ol>
+  </section>
+
+  <!-- 10 -->
+  <section class="ch" id="ch10" data-title="Run it live">
+    <div class="chhead"><div class="num">10</div><div>
+      <h2>Run the demo in a terminal</h2>
+      <p>The same steps run live with <span class="mono">demo/run_demo.py</span>, which pauses after each one. Build first, then:</p>
+    </div></div>
+    <div class="two">
+      <pre class="code" id="commands"></pre>
+      <div class="solid stack">
+        <div class="label">One-line summary</div>
+        <p>PrepLang reads the data at compile time, proves or refutes the data contracts, removes useless work, and writes a certificate of the few facts its proofs need, so one compiled program can safely clean next month's data, image folders and existing pandas scripts.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DEMO = {"phases": {"program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n", "csv": "name,age,marks,attendance,passed,department\nAsha,20,85,92.5,true,CSE\nRahul,21,95,88.0,true,ECE\nMeera,19,42,61.5,false,CSE\nKarthik,,78,75.0,true,MECH\nDivya,22,67,80.25,true,\nArjun,20,35,55.0,false,ECE\nSneha,23,91,97.0,true,CSE\nVikram,21,58,70.5,false,MECH\n", "tokens": "\n... -14 more tokens", "ast": "\n...", "schema": "", "semantic": "", "symbols": "", "ir": "", "report": "", "optimized": "", "certificate": "The compiled program stays correct for any input with these facts\n(found by analysing the program 13 more times with weaker facts):\n\nstudents  (compiled with examples/tabular/students.csv)\n  name        STRING   no missing values   <- line 6: EXPECT students.name NOT_NULL\n  age         INTEGER  (any values)\n  marks       INTEGER  >= 0                <- line 5: EXPECT students.marks BETWEEN 0 AND 100\n                       <= 100              <- line 5: EXPECT students.marks BETWEEN 0 AND 100\n  attendance  FLOAT    (any values)\n  passed      BOOLEAN  (any values)\n  department  STRING   (any values)\n\nCompiled successfully: 0 error(s), 0 warning(s).", "python": "\n...", "run": "print(\"Saved\", len(df_students), \"rows to\", path)\n\n# Reproducibility manifest\nmanifest = {\n    \"source_program\": \"examples/tabular/students.prep\",\n    \"compiler\": \"PrepLang 1.0\",\n    \"inputs\": [\n        {\"table\": \"students\", \"path\": \"../examples/tabular/students.csv\", \"fingerprint\": \"0xC4ED16D6\"},\n    ],\n    \"contracts\": {\"proven_at_compile_time\": 3, \"checked_at_run_time\": 1},\n    \"operations\": [\n        \"LOAD students <- \\\"students.csv\\\" [name, age, marks, attendance, passed, department]\",\n        \"FILL_NULL students.department WITH \\\"UNKNOWN\\\"\",\n        \"DROP_NULL students\",\n        \"NORMALIZE students.attendance MINMAX\",\n        \"t1 = students.marks >= 50\",\n        \"t2 = students.attendance > 0.5\",\n        \"t3 = students.passed == TRUE\",\n        \"t4 = t2 OR t3\",\n        \"t5 = t1 AND t4\",\n        \"FILTER students IF t5\",\n        \"CHECK students.marks BETWEEN 60 AND 100\",\n        \"DROP students [department]\",\n        \"SELECT students [name, age, marks]\",\n        \"SAVE students -> \\\"clean.csv\\\"\",\n    ],\n    \"admitted_by_certificate\": [name for name, same in same_input.items() if not same],\n    \"outputs\": outputs,\n}\n(HERE / \"preplang_manifest.json\").write_text(json.dumps(manifest, indent=2), encoding=\"utf-8\")\nprint(\"Wrote\", HERE / \"preplang_manifest.json\")\n\nCompiled successfully: 0 error(s), 0 warning(s).\n\n==================== RUN (py -3 \"output\\generated.py\") ====================\nSaved 4 rows to output\\clean.csv\nWrote output\\preplang_manifest.json"}, "mistakes": [{"key": "typo", "title": "A misspelled column in the last step", "file": "students.prep", "line": 19, "before": "SELECT students [name, age, marks];", "after": "SELECT students [name, age, mark];", "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, mark];\n\nSAVE students AS \"clean.csv\";\n", "script": "KeyError: \"['mark'] not in index\"", "script_s": 0.99, "compiler": "error[semantic]: column 'mark' does not exist in 'students'\n   --> students.prep:19:1\n   |\n19 | SELECT students [name, age, mark];\n   | ^\n   = hint: did you mean 'marks'?", "compile_s": 0.02}, {"key": "text", "title": "Normalizing a text column", "file": "students.prep", "line": 10, "before": "NORMALIZE students.attendance USING MINMAX;", "after": "NORMALIZE students.department USING MINMAX;", "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.department USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n", "script": "TypeError: operation 'sub' not supported for dtype 'str' with object of type <class 'str'>", "script_s": 1.0, "compiler": "error[type]: NORMALIZE needs a numeric column, but students.department is STRING\n   --> students.prep:10:11\n   |\n10 | NORMALIZE students.department USING MINMAX;\n   |           ^", "compile_s": 0.01}, {"key": "contract", "title": "A range contract the data breaks", "file": "students.prep", "line": 5, "before": "EXPECT students.marks BETWEEN 0 AND 100;", "after": "EXPECT students.marks BETWEEN 0 AND 90;", "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 90;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n", "script": "AssertionError: marks out of range", "script_s": 0.96, "compiler": "error[contract]: contract violated: students.marks has values from 35 to 95; row 2 of students.csv has 95\n  --> students.prep:5:8\n  |\n5 | EXPECT students.marks BETWEEN 0 AND 90;\n  |        ^\n  = hint: every value must be between 0 and 90", "compile_s": 0.02}, {"key": "threshold", "title": "A threshold on an already normalized column", "file": "students.prep", "line": 12, "before": "FILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);", "after": "FILTER students WHERE marks >= 50 AND attendance > 60;", "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND attendance > 60;\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n", "script": "finished without an error and saved 0 rows: every student was removed", "script_s": 0.98, "compiler": "warning[semantic]: FILTER removes every row: the condition is never true\n   --> students.prep:12:1\n   |\n12 | FILTER students WHERE marks >= 50 AND attendance > 60;\n   | ^\n   = hint: 'attendance' is in [0, 1], so attendance > 60 is never true", "compile_s": 0.02}, {"key": "broken", "title": "A broken image file left in the folder", "file": "imageset.prep", "line": 5, "before": "REMOVE_CORRUPT train;", "after": "# REMOVE_CORRUPT train;", "program": "# Prepare a whole image dataset with one program. The compiler reads every\n# file header at compile time: sizes, channels, and which files are broken.\nLOAD_IMAGES \"dataset/\" AS train RECURSIVE;\n\n# REMOVE_CORRUPT train;                  # broken.jpg is found while compiling\nEXPECT train MIN_WIDTH 200;            # proven from the headers\n\nRESIZE train TO 224 224 KEEP_ASPECT;\nGRAYSCALE train;\nEXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel\n\nCONVERT train TO JPG;\nCOMPRESS train QUALITY 80;\n\n# Sub-folders (cats/, dogs/) are kept, so folder-based labels survive.\nSAVE_IMAGES train TO \"processed/train/\";\n", "script": "AttributeError: 'NoneType' object has no attribute 'shape'", "script_s": 1.1, "compiler": "error[schema]: 1 of 7 files in dataset/ cannot be decoded\n  --> imageset.prep:8:1\n  |\n8 | RESIZE train TO 224 224 KEEP_ASPECT;\n  | ^\n  = note: broken.jpg: not a JPEG file (bad signature)\n  = hint: add REMOVE_CORRUPT train; before line 8\n\nerror[contract]: contract violated: 5 of 6 images in train break CHANNELS 1\n   --> imageset.prep:10:8\n   |\n10 | EXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel\n   |        ^\n   = note: 1 channel: 1 image\n   = note: 3 channels: 5 images\n   = note: cats/cat_01.jpg: 3 channels\n   = note: cats/cat_02.jpg: 3 channels\n   = note: cats/cat_03.jpg: 3 channels\n   = note: dogs/dog_01.png: 3 channels\n   = note: dogs/dog_02.png: 3 channels\n   = hint: use GRAYSCALE, or fix the files", "compile_s": 0.05}, {"key": "black", "title": "Decimal pixels saved as PNG", "file": "linked.prep", "line": 11, "before": "CONVERT imgs TO NPY;", "after": "CONVERT imgs TO PNG;", "program": "# Images and their labels, checked together before any training data is written.\nLOAD_IMAGES \"dataset/\" AS imgs RECURSIVE;\nLOAD \"labels.csv\" AS labels;\n\nREMOVE_CORRUPT imgs;\nLINK imgs WITH labels ON filename AS training;\nEXPECT training MATCH_RATE 100%;       # every image has a label and every label an image\n\nRESIZE imgs TO 128 128;\nNORMALIZE imgs RANGE 0 1;              # pixels become FLOAT32 in [0, 1] ...\nCONVERT imgs TO PNG;                   # ... so they are saved as NumPy arrays, not JPG\n\nSAVE_IMAGES imgs TO \"processed/ml_ready/\";\nSAVE labels AS \"processed/labels.csv\";\n", "script": "finished without an error and wrote 6 PNG files; their mean pixel value is 0.68 of 255: every image is black", "script_s": 1.07, "compiler": "error[type]: cannot save FLOAT32 pixels as PNG: NORMALIZE at line 10 scaled them to [0, 1]\n   --> linked.prep:13:1\n   |\n13 | SAVE_IMAGES imgs TO \"processed/ml_ready/\";\n   | ^\n   = hint: image files store 8-bit pixels, so these would come out almost black; add CONVERT imgs TO NPY; to keep the float values", "compile_s": 0.02}], "speed": {"rows": 1000000, "columns": 10, "mib": 59, "phase2_s": 1.8, "phase3_s": 0.12, "pandas_s": 0.53}, "batches": {"next_week.csv": "name,age,marks,attendance,passed,department\nKavya,20,100,91.0,true,CSE\nRohan,22,12,48.5,false,EEE\nIsha,19,73,85.0,true,\nDev,,66,77.25,true,MECH\nNila,21,98,99.0,true,CSE\n", "typo_week.csv": "name,age,marks,attendance,passed,department\nKavya,20,100,91.0,true,CSE\nRohan,22,12,48.5,false,EEE\nIsha,19,730,85.0,true,\nDev,,66,77.25,true,MECH\n", "missing_name.csv": "name,age,marks,attendance,passed,department\nKavya,20,100,91.0,true,CSE\n,22,64,48.5,false,EEE\nIsha,19,73,85.0,true,\n", "phase2": "ContractError: students.csv changed after compilation; compile the .prep file again", "phase3_next_week.csv": "Admitted next_week.csv for students: it satisfies the data certificate\nSaved 3 rows to output\\clean.csv\nWrote output\\preplang_manifest.json", "phase3_typo_week.csv": "ContractError: typo_week.csv is not the input the program was compiled with, and marks is 730 in data row 3, above 100; the compiled program relies on this for line 5: EXPECT students.marks BETWEEN 0 AND 100. Compile the .prep file again for this input.", "phase3_missing_name.csv": "ContractError: missing_name.csv is not the input the program was compiled with, and name is missing in data row 2; the compiled program relies on this for line 6: EXPECT students.name NOT_NULL. Compile the .prep file again for this input.", "certificate_dict": "{\"name\": {\"type\": \"STRING\", \"not_null\": \"line 6: EXPECT students.name NOT_NULL\"},\n     \"age\": {\"type\": \"INTEGER\"},\n     \"marks\": {\"type\": \"INTEGER\", \"min\": 0, \"min_for\": \"line 5: EXPECT students.marks BETWEEN 0 AND 100\", \"max\": 100, \"max_for\": \"line 5: EXPECT students.marks BETWEEN 0 AND 100\"},\n     \"attendance\": {\"type\": \"FLOAT\"},\n     \"passed\": {\"type\": \"BOOLEAN\"},\n     \"department\": {\"type\": \"STRING\"}}"}, "certificate": {"name": {"type": "STRING", "not_null": "line 6: EXPECT students.name NOT_NULL"}, "age": {"type": "INTEGER"}, "marks": {"type": "INTEGER", "min": 0, "min_for": "line 5: EXPECT students.marks BETWEEN 0 AND 100", "max": 100, "max_for": "line 5: EXPECT students.marks BETWEEN 0 AND 100"}, "attendance": {"type": "FLOAT"}, "passed": {"type": "BOOLEAN"}, "department": {"type": "STRING"}}, "images": {"program": "# Prepare a whole image dataset with one program. The compiler reads every\n# file header at compile time: sizes, channels, and which files are broken.\nLOAD_IMAGES \"dataset/\" AS train RECURSIVE;\n\nREMOVE_CORRUPT train;                  # broken.jpg is found while compiling\nEXPECT train MIN_WIDTH 200;            # proven from the headers\n\nRESIZE train TO 224 224 KEEP_ASPECT;\nGRAYSCALE train;\nEXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel\n\nCONVERT train TO JPG;\nCOMPRESS train QUALITY 80;\n\n# Sub-folders (cats/, dogs/) are kept, so folder-based labels survive.\nSAVE_IMAGES train TO \"processed/train/\";\n", "certificate": "The compiled program stays correct for any input with these facts\n(found by analysing the program 15 more times with weaker facts):\n\ntrain  (compiled with dataset/)\n  bit depth 8 (as compiled); files that cannot be read: allowed\n  .jpg   channels 1, 3, 4    <- (any the decoder gives)\n         width >= 200        <- line 6: EXPECT train MIN_WIDTH 200\n  .png   channels 1, 3, 4    <- (any the decoder gives)\n         width >= 200        <- line 6: EXPECT train MIN_WIDTH 200", "compiled": [{"w": 320, "h": 240, "file": "cat_01.jpg"}, {"w": 400, "h": 300, "file": "cat_02.jpg"}, {"w": 640, "h": 480, "file": "cat_03.jpg"}, {"w": 300, "h": 300, "file": "dog_01.png"}, {"w": 512, "h": 384, "file": "dog_02.png"}, {"w": 256, "h": 256, "file": "dog_03.png"}], "folders": {"new_photos": [{"w": 300, "h": 260, "c": 3, "file": "photo_0.jpg"}, {"w": 640, "h": 480, "c": 1, "file": "photo_1.jpg"}, {"w": 250, "h": 900, "c": 3, "file": "photo_2.jpg"}, {"w": 400, "h": 300, "c": 4, "file": "photo_3.png"}], "small_photos": [{"w": 300, "h": 300, "c": 3, "file": "photo_0.jpg"}, {"w": 150, "h": 100, "c": 3, "file": "photo_1.jpg"}]}, "results": {"new_photos": "Admitted new_photos for train: every image header satisfies the data certificate\nSaved 4 image(s) to output\\processed\\train \nWrote output\\preplang_manifest.json", "small_photos": "ContractError: small_photos is not the input the program was compiled with, and photo_1.jpg has width 150; the compiled program relies on this for line 6: EXPECT train MIN_WIDTH 200. Compile the .prep file again for this input."}}, "pandas": {"script": "# A typical Titanic cleaning script, written the way most notebooks do it.\n# frontend/pandas2prep.py lifts its cleaning into PrepLang (the demo, step 7).\nimport pandas as pd\n\ntrain = pd.read_csv(\"train.csv\")\nprint(train.head())\n\ntrain[\"Age\"] = train[\"Age\"].fillna(train[\"Age\"].median())\ntrain[\"Embarked\"] = train[\"Embarked\"].fillna(train[\"Embarked\"].mode()[0])\ntrain.drop([\"Cabin\", \"Ticket\"], axis=1, inplace=True)\ntrain = train[train[\"Fare\"] < 500]\nassert train[\"Age\"].between(0, 100).all()\n\n# Feature engineering: this is where PrepLang stops lifting.\ntrain[\"Sex\"] = train[\"Sex\"].map({\"male\": 0, \"female\": 1})\ntrain.to_csv(\"train_clean.csv\", index=False)\n", "lifted": "LOAD \"train.csv\" AS train;\nFILL_NULL train.Age WITH MEDIAN;\nFILL_NULL train.Embarked WITH MODE;\nDROP train [Cabin, Ticket];\nFILTER train WHERE Fare < 500;\nEXPECT train.Age BETWEEN 0 AND 100;\nSAVE train AS \"train_lifted.csv\";", "notes": "# train: lifted until line 15: a new value for column 'Sex' that PrepLang cannot express", "certificate": "The compiled program stays correct for any input with these facts\n(found by analysing the program 52 more times with weaker facts):\n\ntrain  (compiled with train.csv)\n  PassengerId  INTEGER  may be missing      <- only carried to the output\n  Survived     INTEGER  may be missing      <- only carried to the output\n  Pclass       INTEGER  may be missing      <- only carried to the output\n  Name         STRING   may be missing      <- only carried to the output\n  Sex          STRING   may be missing      <- only carried to the output\n  Age          FLOAT    >= 0                <- line 6: EXPECT train.Age BETWEEN 0 AND 100\n                        <= 100              <- line 6: EXPECT train.Age BETWEEN 0 AND 100\n  SibSp        INTEGER  may be missing      <- only carried to the output\n  Parch        INTEGER  may be missing      <- only carried to the output\n  Fare         FLOAT    (any values)\n  Embarked     STRING   (any values)\n  Ticket       any type (not read)          <- loaded only to check the facts below\n                        must exist          <- line 4: column 'Ticket' does not exist in 'train' (compile error)\n  Cabin        any type (not read)          <- loaded only to check the facts below\n                        must exist          <- line 4: column 'Cabin' does not exist in 'train' (compile error)", "on_test": "Admitted test.csv for train: it satisfies the data certificate\nSaved 416 rows to output\\train_lifted.csv\nWrote output\\preplang_manifest.json"}, "results": {"mutants": 24, "mutants_caught": 24, "baseline_crash": 20, "baseline_silent": 4, "realbugs": 44, "realbugs_early": 18, "rq7": {"runs": 244, "cert": 209, "facts": 96, "fingerprint": 0}, "rq8": {"runs": 238, "cert": 205, "facts": 2, "fingerprint": 0, "unsound": 0}, "rq9": {"scripts": 272, "lifted": 124, "runs": 1364, "admitted": 1347, "same": 1347, "unsound": 0}, "scale": {"rows": 16000000, "parquet_s": 0.01811720000114292, "typo_compile": 0.016908799996599555, "typo_script": 2.813847699901089, "black_compile": 0.2554668999509886, "black_script": 8.540374299976975}, "memory": {"streaming": 10, "in_memory": 922}, "tests": 207}};
+
+const $ = (id) => document.getElementById(id);
+const text = (id, value) => { $(id).textContent = value; };
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+// ---------- chapter navigation ----------
+const chapters = [...document.querySelectorAll("section.ch")];
+chapters.forEach((ch, i) => {
+  const a = document.createElement("a");
+  a.href = "#" + ch.id; a.textContent = String(i + 1).padStart(2, "0"); a.title = ch.dataset.title;
+  $("toc").append(a);
+});
+const links = [...$("toc").children];
+let current = -1;
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e) => { if (e.isIntersecting) { current = chapters.indexOf(e.target); links.forEach((l, i) => l.classList.toggle("here", i === current)); } });
+}, { rootMargin: "-45% 0px -50% 0px" });
+chapters.forEach((ch) => observer.observe(ch));
+const go = (i) => { const c = chapters[Math.max(0, Math.min(chapters.length - 1, i))]; c.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "TEXTAREA") return;
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); go(current + 1); }
+  if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(current - 1); }
+});
+$("start").addEventListener("click", () => go(0));
+
+// ---------- 01 mistakes ----------
+const M = DEMO.mistakes;
+function showMistake(i) {
+  const m = M[i];
+  [...$("mistakeTabs").children].forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+  $("mistakeEdit").innerHTML = `<span class="label">${esc(m.file)}, line ${m.line}</span><br><span class="mono">− ${esc(m.before)}</span><br><span class="mono hl">+ ${esc(m.after)}</span>`;
+  text("scriptTime", m.script_s.toFixed(2) + " s");
+  text("scriptOut", m.script);
+  text("compileTime", m.compile_s.toFixed(2) + " s");
+  text("compileOut", m.compiler);
+}
+M.forEach((m, i) => {
+  const b = document.createElement("button"); b.textContent = m.title; b.setAttribute("role", "tab");
+  b.addEventListener("click", () => showMistake(i)); $("mistakeTabs").append(b);
+});
+showMistake(M.length - 1);
+const S = DEMO.results.scale;
+$("scaleNote").innerHTML = `At scale, the gap grows: on 16 million Parquet rows a misspelled column is reported in <b>${S.typo_compile.toFixed(2)} s</b> while the script crashes after <b>${S.typo_script.toFixed(2)} s</b>; on 3,000 images the decimal-pixel mistake is reported in <b>${S.black_compile.toFixed(2)} s</b>, while the script runs <b>${S.black_script.toFixed(2)} s</b> and writes 3,000 black images.`;
+
+// ---------- 02 phases ----------
+const P = DEMO.phases;
+text("program", P.program.trim());
+text("csv", P.csv.trim());
+const PHASES = [
+  ["Lexer", "tokens", "The lexer groups characters into tokens and remembers the line and column of each.", P.tokens],
+  ["Parser", "LL(1)", "Recursive descent: one token of look-ahead picks the rule. It builds the abstract syntax tree.", P.ast],
+  ["Schema", "reads data", "The CSV file is read once, in parallel, at compile time: types, missing values and ranges.", P.schema],
+  ["Semantic", "+ symbols", "Each statement changes the facts. Contracts get verdicts. The symbol table holds the final state.", P.semantic + "\n\n" + P.symbols],
+  ["IR", "3-address", "Statements become simple instructions; conditions become temporaries t1, t2, ...", P.ir],
+  ["Optimizer", "3 passes", "Proven checks and useless work are removed, unread columns are pruned.", P.report + "\n\n" + P.optimized],
+  ["Certificate", "new", "The facts the proofs need, found by analysing the program again with weaker facts.", P.certificate],
+  ["Code", "Python", "One Python program (pandas for tables, OpenCV for images). Running it:", P.python + "\n\n$ py -3 output/generated.py\n" + P.run],
+];
+PHASES.forEach(([name, sub], i) => {
+  const b = document.createElement("button");
+  b.innerHTML = `<span class="n">${i + 1}</span><span>${name}</span><small>${sub}</small>`;
+  b.addEventListener("click", () => showPhase(i)); $("phaseStrip").append(b);
+});
+function showPhase(i) {
+  [...$("phaseStrip").children].forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+  text("phaseTitle", `Phase ${i + 1}: ${PHASES[i][0]}`); text("phaseText", PHASES[i][2]); text("phaseOut", PHASES[i][3]);
+}
+showPhase(3);
+
+// ---------- 03 verdicts ----------
+const sem = P.semantic.split("\n");
+const proven = sem.find((l) => l.includes("PROVEN")) || "";
+const deferred = sem.find((l) => l.includes("checked at run time")) || "";
+const violated = M.find((m) => m.key === "contract").compiler.split("\n").slice(0, 2).join("\n");
+[["Proven", "The facts imply it. No check is generated.", proven, "yes"],
+ ["Violated", "The data certainly breaks it. Compilation stops and names the row.", violated, "no"],
+ ["Checked at run time", "Undecidable here (after a FILTER). A check is generated, then the fact is used.", deferred, ""]]
+  .forEach(([v, what, line, cls]) => {
+    const d = document.createElement("div"); d.className = "verdict " + cls;
+    d.innerHTML = `<span class="v">${v}</span><p class="small">${what}</p><pre class="code small"></pre>`;
+    d.querySelector("pre").textContent = line; $("verdicts").append(d);
+  });
+
+// ---------- 04 phase 2 vs 3 ----------
+function bars(id, rows, unit, max) {
+  const top = max || Math.max(...rows.map((r) => r[1]));
+  $(id).innerHTML = rows.map(([label, value, hatch]) =>
+    `<div class="barrow"><span>${label}</span><div class="track"><div class="fill${hatch ? " hatch" : ""}" style="width:${(100 * value / top).toFixed(1)}%"></div></div><span class="val">${unit(value)}</span></div>`).join("");
+}
+const SP = DEMO.speed;
+bars("speedBars", [["Phase 2 compiler", SP.phase2_s, true], ["pandas only reading it", SP.pandas_s, true], ["Phase 3 compiler", SP.phase3_s]], (v) => v.toFixed(2) + " s");
+text("speedNote", `${SP.mib} MiB, ${SP.rows.toLocaleString()} rows x ${SP.columns} columns. Phase 3 reads the file once, cuts it at line breaks into one piece per core, and looks at cells in place. It is ${(SP.phase2_s / SP.phase3_s).toFixed(0)}x faster than Phase 2 and still checks every cell.`);
+const B = DEMO.batches;
+text("p2batch", B.phase2);
+text("p3batch", "$ py -3 generated.py students=next_week.csv\n" + B["phase3_next_week.csv"]);
+[["Before: exact file only", "Phase 2 trusted its proofs only for the byte-identical file (CRC-32 fingerprint)."],
+ ["Now: tables, images, scripts", "Certificates for table columns (also unread and missing ones), image folders, and lifted pandas scripts."],
+ ["Now: real data checked", "Tested on real monthly data and 272 held-out GitHub scripts against fresh compilation."]]
+  .forEach(([h, t], i) => {
+    const d = document.createElement("div"); d.className = i === 0 ? "paper stack" : "block stack";
+    d.innerHTML = `<h3 style="font-size:24px">${h}</h3><p class="small">${t}</p>`; $("changes").append(d);
+  });
+
+// ---------- 05 certificate checker ----------
+const CERT = DEMO.certificate;
+text("certText", P.certificate);
+const ORIGINAL = P.csv.replace(/\r/g, "").trim();
+function parse(csv) {
+  const lines = csv.replace(/\r/g, "").split("\n").filter((l) => l.trim() !== "");
+  const head = lines[0].split(",").map((h) => h.trim());
+  return { head, rows: lines.slice(1).map((l) => l.split(",").map((c) => c.trim())) };
+}
+function cellType(c) {
+  if (/^(true|false)$/i.test(c)) return "BOOLEAN";
+  if (/^-?\d+$/.test(c)) return "INTEGER";
+  if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(c)) return "FLOAT";
+  return "STRING";
+}
+function facts(table) {  // what the compiler infers for each column
+  const out = {};
+  table.head.forEach((name, i) => {
+    const seen = new Set(); let missing = 0, min = Infinity, max = -Infinity, firstMissing = 0, minRow = 0, maxRow = 0;
+    table.rows.forEach((r, k) => {
+      const c = r[i] ?? "";
+      if (c === "") { missing++; if (!firstMissing) firstMissing = k + 1; return; }
+      const t = cellType(c); seen.add(t);
+      if (t === "INTEGER" || t === "FLOAT") { const v = Number(c); if (v < min) { min = v; minRow = k + 1; } if (v > max) { max = v; maxRow = k + 1; } }
+    });
+    let type = "STRING";
+    if (!seen.has("STRING") && !(seen.has("BOOLEAN") && (seen.has("INTEGER") || seen.has("FLOAT")))) {
+      type = seen.has("BOOLEAN") ? "BOOLEAN" : seen.has("FLOAT") ? "FLOAT" : seen.has("INTEGER") ? "INTEGER" : "STRING";
+    }
+    out[name] = { type, missing, min, max, firstMissing, minRow, maxRow };
+  });
+  return out;
+}
+const OLD = facts(parse(ORIGINAL));
+function verdict(id, title, ok, why) {
+  const d = $(id); d.className = "verdict " + (ok ? "yes" : "no");
+  d.innerHTML = `<span class="label">${title}</span><span class="v">${ok ? "Admitted" : "Refused"}</span><p class="small"></p>`;
+  d.querySelector("p").textContent = why;
+}
+function check() {
+  const raw = $("batch").value; let table;
+  try { table = parse(raw); } catch { return; }
+  const now = facts(table);
+  // Phase 2: CRC-32 of the file
+  const same = raw.replace(/\r/g, "").trim() === ORIGINAL;
+  verdict("vFinger", "Phase 2 fingerprint", same, same ? "Byte-identical to the compiled file." : "Any change to the file: \"changed after compilation; compile the .prep file again\".");
+  // the old file's own facts (a TFDV-style schema)
+  let problem = "";
+  for (const [name, f] of Object.entries(OLD)) {
+    const n = now[name];
+    if (!n) { problem = `no column ${name}`; break; }
+    if (n.type !== f.type) { problem = `${name} is ${n.type}, the old file had ${f.type}`; break; }
+    if (f.missing === 0 && n.missing > 0) { problem = `${name} has missing values; the old file had none`; break; }
+    if (Number.isFinite(f.min) && (n.min < f.min || n.max > f.max)) { problem = `${name} ranges ${n.min} to ${n.max}, outside the old ${f.min} to ${f.max}`; break; }
+  }
+  verdict("vFacts", "All facts of the old file", !problem, problem || "Every column looks like the compiled file.");
+  // the certificate, as the generated program checks it
+  let refuse = "";
+  for (const [name, fact] of Object.entries(CERT)) {
+    const n = now[name];
+    if (!n) { if (fact.optional) continue; refuse = `it has no column '${name}'`; break; }
+    if (fact.type && n.type !== fact.type && !(fact.type === "STRING" && n.missing === table.rows.length)) {
+      refuse = `its column '${name}' is ${n.type}, not ${fact.type}`; break;
+    }
+    if (fact.not_null && n.missing > 0) { refuse = `${name} is missing in data row ${n.firstMissing}; the compiled program relies on this for ${fact.not_null}`; break; }
+    if ("min" in fact && n.min < fact.min) { refuse = `${name} is ${n.min} in data row ${n.minRow}, below ${fact.min}; the compiled program relies on this for ${fact.min_for}`; break; }
+    if ("max" in fact && n.max > fact.max) { refuse = `${name} is ${n.max} in data row ${n.maxRow}, above ${fact.max}; the compiled program relies on this for ${fact.max_for}`; break; }
+  }
+  verdict("vCert", "PrepLang certificate", !refuse, refuse || "It has every fact the program's proofs need. The program runs unchanged.");
+}
+const PRESETS = [["Next week", "next_week.csv"], ["A typo", "typo_week.csv"], ["Missing name", "missing_name.csv"], ["The compiled file", null]];
+PRESETS.forEach(([label, file]) => {
+  const b = document.createElement("button"); b.textContent = label;
+  b.addEventListener("click", () => {
+    [...$("batchButtons").children].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    $("batch").value = file ? B[file].trim() : ORIGINAL;
+    $("realRun").innerHTML = file ? `<span class="label">The real generated program said</span><pre class="code small"></pre>` : "";
+    if (file) $("realRun").querySelector("pre").textContent = B["phase3_" + file];
+    check();
+  });
+  $("batchButtons").append(b);
+});
+$("batch").addEventListener("input", () => { $("realRun").innerHTML = ""; check(); });
+$("batchButtons").children[0].click();
+
+// ---------- 06 images ----------
+const IM = DEMO.images;
+text("imgCert", IM.certificate.split("\n").filter((l) => l.trim()).slice(-5).join("\n"));
+text("imgOk", IM.results.new_photos);
+text("imgBad", IM.results.small_photos);
+(function drawBox() {
+  const W = 520, H = 380, L = 54, R = 16, T = 16, Bm = 44, maxW = 700, maxH = 1000;
+  const x = (v) => L + (W - L - R) * v / maxW, y = (v) => H - Bm - (H - T - Bm) * v / maxH;
+  let s = `<rect x="${x(200)}" y="${T}" width="${x(maxW) - x(200)}" height="${y(0) - T}" fill="var(--fg)" fill-opacity="0.12" stroke="var(--fg)" stroke-width="3"/>`;
+  s += `<line x1="${L}" y1="${y(0)}" x2="${W - R}" y2="${y(0)}" stroke="var(--fg)" stroke-width="2"/><line x1="${L}" y1="${T}" x2="${L}" y2="${y(0)}" stroke="var(--fg)" stroke-width="2"/>`;
+  [0, 200, 400, 600].forEach((v) => { s += `<line x1="${x(v)}" y1="${y(0)}" x2="${x(v)}" y2="${y(0) + 5}" stroke="var(--fg)"/><text x="${x(v)}" y="${y(0) + 18}" text-anchor="middle">${v}</text>`; });
+  [0, 250, 500, 750, 1000].forEach((v) => { s += `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`; });
+  s += `<text x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">width (px)</text><text x="${x(205)}" y="${T + 16}">certified: width ≥ 200, any height</text>`;
+  IM.compiled.forEach((p) => { s += `<rect x="${x(p.w) - 5}" y="${y(p.h) - 5}" width="10" height="10" fill="var(--fg)"/>`; });
+  // New images: a hollow circle inside the box, a cross outside it (that one refuses its folder).
+  [...IM.folders.new_photos, ...IM.folders.small_photos].forEach((p) => {
+    const cx = x(p.w) + 7, cy = y(p.h) - 7;  // offset so a new image never hides a compiled one
+    s += p.w >= 200
+      ? `<circle cx="${cx}" cy="${cy}" r="6" fill="var(--bg)" stroke="var(--fg)" stroke-width="2.5"/>`
+      : `<path d="M${cx - 7} ${cy - 7} L${cx + 7} ${cy + 7} M${cx + 7} ${cy - 7} L${cx - 7} ${cy + 7}" stroke="var(--fg)" stroke-width="3.5" fill="none"/><text x="${cx + 12}" y="${cy + 4}">150 px wide</text>`;
+  });
+  s += `<rect x="${W - 216}" y="${y(0) - 74}" width="10" height="10" fill="var(--fg)"/><text x="${W - 200}" y="${y(0) - 65}">compiled folder</text>`;
+  s += `<circle cx="${W - 211}" cy="${y(0) - 51}" r="5" fill="var(--bg)" stroke="var(--fg)" stroke-width="2.5"/><text x="${W - 200}" y="${y(0) - 47}">new image inside the box</text>`;
+  s += `<path d="M${W - 216} ${y(0) - 38} L${W - 206} ${y(0) - 28} M${W - 206} ${y(0) - 38} L${W - 216} ${y(0) - 28}" stroke="var(--fg)" stroke-width="3" fill="none"/><text x="${W - 200}" y="${y(0) - 29}">new image outside it</text>`;
+  $("box").innerHTML = s;
+})();
+
+// ---------- 07 pandas ----------
+const PD = DEMO.pandas;
+const liftedLines = PD.script.split("\n");
+$("pyScript").innerHTML = liftedLines.map((l) => /\.map\(/.test(l) ? `<mark>${esc(l)}</mark>` : esc(l)).join("\n");
+text("lifted", PD.lifted);
+text("liftNote", PD.notes.replace(/^# /, ""));
+text("onTest", "$ py -3 generated.py train=test.csv\n" + PD.on_test);
+text("pyCert", PD.certificate);
+
+// ---------- 08 evidence ----------
+const R = DEMO.results;
+[[`${R.tests}`, "unit tests in 9 programs, all passing"],
+ [`${R.mutants_caught}/${R.mutants}`, `injected mistakes reported before any data is processed (a plain script: ${R.baseline_crash} crashes, ${R.baseline_silent} silently wrong)`],
+ [`${R.rq9.same}/${R.rq9.runs}`, `runs of ${R.rq9.lifted} held-out GitHub scripts on new batches gave exactly the script's own result`],
+ [`${R.memory.in_memory} → ${R.memory.streaming}`, "MiB of memory for 1,000 images, streamed one image at a time"]]
+  .forEach(([v, l]) => { const d = document.createElement("div"); d.className = "stat"; d.innerHTML = `<div class="big">${v}</div><p class="small"></p>`; d.querySelector("p").textContent = l; $("stats").append(d); });
+const pct = (a, b) => Math.round(100 * a / b);
+bars("rq8Bars", [["Phase 2 fingerprint", R.rq8.fingerprint, true], ["Old file's facts", pct(R.rq8.facts, R.rq8.runs), true], ["Certificate", pct(R.rq8.cert, R.rq8.runs)]], (v) => v + "%", 100);
+bars("rq7Bars", [["Phase 2 fingerprint", R.rq7.fingerprint, true], ["Old file's facts", pct(R.rq7.facts, R.rq7.runs), true], ["Certificate", pct(R.rq7.cert, R.rq7.runs)]], (v) => v + "%", 100);
+$("rq8Bars").insertAdjacentHTML("beforeend", `<p class="small">${R.rq8.runs} new months admitted by each policy. Admitted runs that differed from a fresh compilation: <b>${R.rq8.unsound}</b>.</p>`);
+$("rq7Bars").insertAdjacentHTML("beforeend", `<p class="small">${R.rq7.runs} batches: other days, drift, missing and out-of-range values.</p>`);
+
+// ---------- 10 commands ----------
+text("commands", [
+  'cmake -S . -B build -G "Visual Studio 17 2022"',
+  "cmake --build build --config Release",
+  "py -3 demo/run_demo.py prepare     # builds the Phase 2 compiler",
+  "py -3 demo/run_demo.py             # the live walkthrough",
+  "",
+  "build\\Release\\preplang.exe examples\\tabular\\students.prep --certificate",
+  "py -3 output\\generated.py students=demo\\data\\next_week.csv",
+].join("\n"));
+</script>

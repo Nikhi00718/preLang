@@ -1,0 +1,271 @@
+{
+ "phases": {
+  "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n",
+  "csv": "name,age,marks,attendance,passed,department\nAsha,20,85,92.5,true,CSE\nRahul,21,95,88.0,true,ECE\nMeera,19,42,61.5,false,CSE\nKarthik,,78,75.0,true,MECH\nDivya,22,67,80.25,true,\nArjun,20,35,55.0,false,ECE\nSneha,23,91,97.0,true,CSE\nVikram,21,58,70.5,false,MECH\n",
+  "tokens": "\n... -14 more tokens",
+  "ast": "\n...",
+  "schema": "",
+  "semantic": "",
+  "symbols": "",
+  "ir": "",
+  "report": "",
+  "optimized": "",
+  "certificate": "The compiled program stays correct for any input with these facts\n(found by analysing the program 13 more times with weaker facts):\n\nstudents  (compiled with examples/tabular/students.csv)\n  name        STRING   no missing values   <- line 6: EXPECT students.name NOT_NULL\n  age         INTEGER  (any values)\n  marks       INTEGER  >= 0                <- line 5: EXPECT students.marks BETWEEN 0 AND 100\n                       <= 100              <- line 5: EXPECT students.marks BETWEEN 0 AND 100\n  attendance  FLOAT    (any values)\n  passed      BOOLEAN  (any values)\n  department  STRING   (any values)\n\nCompiled successfully: 0 error(s), 0 warning(s).",
+  "python": "\n...",
+  "run": "print(\"Saved\", len(df_students), \"rows to\", path)\n\n# Reproducibility manifest\nmanifest = {\n    \"source_program\": \"examples/tabular/students.prep\",\n    \"compiler\": \"PrepLang 1.0\",\n    \"inputs\": [\n        {\"table\": \"students\", \"path\": \"../examples/tabular/students.csv\", \"fingerprint\": \"0xC4ED16D6\"},\n    ],\n    \"contracts\": {\"proven_at_compile_time\": 3, \"checked_at_run_time\": 1},\n    \"operations\": [\n        \"LOAD students <- \\\"students.csv\\\" [name, age, marks, attendance, passed, department]\",\n        \"FILL_NULL students.department WITH \\\"UNKNOWN\\\"\",\n        \"DROP_NULL students\",\n        \"NORMALIZE students.attendance MINMAX\",\n        \"t1 = students.marks >= 50\",\n        \"t2 = students.attendance > 0.5\",\n        \"t3 = students.passed == TRUE\",\n        \"t4 = t2 OR t3\",\n        \"t5 = t1 AND t4\",\n        \"FILTER students IF t5\",\n        \"CHECK students.marks BETWEEN 60 AND 100\",\n        \"DROP students [department]\",\n        \"SELECT students [name, age, marks]\",\n        \"SAVE students -> \\\"clean.csv\\\"\",\n    ],\n    \"admitted_by_certificate\": [name for name, same in same_input.items() if not same],\n    \"outputs\": outputs,\n}\n(HERE / \"preplang_manifest.json\").write_text(json.dumps(manifest, indent=2), encoding=\"utf-8\")\nprint(\"Wrote\", HERE / \"preplang_manifest.json\")\n\nCompiled successfully: 0 error(s), 0 warning(s).\n\n==================== RUN (py -3 \"output\\generated.py\") ====================\nSaved 4 rows to output\\clean.csv\nWrote output\\preplang_manifest.json"
+ },
+ "mistakes": [
+  {
+   "key": "typo",
+   "title": "A misspelled column in the last step",
+   "file": "students.prep",
+   "line": 19,
+   "before": "SELECT students [name, age, marks];",
+   "after": "SELECT students [name, age, mark];",
+   "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, mark];\n\nSAVE students AS \"clean.csv\";\n",
+   "script": "KeyError: \"['mark'] not in index\"",
+   "script_s": 0.99,
+   "compiler": "error[semantic]: column 'mark' does not exist in 'students'\n   --> students.prep:19:1\n   |\n19 | SELECT students [name, age, mark];\n   | ^\n   = hint: did you mean 'marks'?",
+   "compile_s": 0.02
+  },
+  {
+   "key": "text",
+   "title": "Normalizing a text column",
+   "file": "students.prep",
+   "line": 10,
+   "before": "NORMALIZE students.attendance USING MINMAX;",
+   "after": "NORMALIZE students.department USING MINMAX;",
+   "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.department USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n",
+   "script": "TypeError: operation 'sub' not supported for dtype 'str' with object of type <class 'str'>",
+   "script_s": 1.0,
+   "compiler": "error[type]: NORMALIZE needs a numeric column, but students.department is STRING\n   --> students.prep:10:11\n   |\n10 | NORMALIZE students.department USING MINMAX;\n   |           ^",
+   "compile_s": 0.01
+  },
+  {
+   "key": "contract",
+   "title": "A range contract the data breaks",
+   "file": "students.prep",
+   "line": 5,
+   "before": "EXPECT students.marks BETWEEN 0 AND 100;",
+   "after": "EXPECT students.marks BETWEEN 0 AND 90;",
+   "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 90;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n",
+   "script": "AssertionError: marks out of range",
+   "script_s": 0.96,
+   "compiler": "error[contract]: contract violated: students.marks has values from 35 to 95; row 2 of students.csv has 95\n  --> students.prep:5:8\n  |\n5 | EXPECT students.marks BETWEEN 0 AND 90;\n  |        ^\n  = hint: every value must be between 0 and 90",
+   "compile_s": 0.02
+  },
+  {
+   "key": "threshold",
+   "title": "A threshold on an already normalized column",
+   "file": "students.prep",
+   "line": 12,
+   "before": "FILTER students WHERE marks >= 50 AND (attendance > 0.5 OR passed == TRUE);",
+   "after": "FILTER students WHERE marks >= 50 AND attendance > 60;",
+   "program": "# Clean the student dataset and keep only the useful columns.\nLOAD \"students.csv\" AS students;\n\nEXPECT students.age NUMBER;\nEXPECT students.marks BETWEEN 0 AND 100;\nEXPECT students.name NOT_NULL;\n\nFILL_NULL students.department WITH \"UNKNOWN\";\nDROP_NULL students;\nNORMALIZE students.attendance USING MINMAX;\n\nFILTER students WHERE marks >= 50 AND attendance > 60;\n\n# After the FILTER the compiler only knows marks is in [50, 95],\n# so this contract cannot be proven and is checked when the program runs.\nEXPECT students.marks BETWEEN 60 AND 100;\n\nDROP students [department];\nSELECT students [name, age, marks];\n\nSAVE students AS \"clean.csv\";\n",
+   "script": "finished without an error and saved 0 rows: every student was removed",
+   "script_s": 0.98,
+   "compiler": "warning[semantic]: FILTER removes every row: the condition is never true\n   --> students.prep:12:1\n   |\n12 | FILTER students WHERE marks >= 50 AND attendance > 60;\n   | ^\n   = hint: 'attendance' is in [0, 1], so attendance > 60 is never true",
+   "compile_s": 0.02
+  },
+  {
+   "key": "broken",
+   "title": "A broken image file left in the folder",
+   "file": "imageset.prep",
+   "line": 5,
+   "before": "REMOVE_CORRUPT train;",
+   "after": "# REMOVE_CORRUPT train;",
+   "program": "# Prepare a whole image dataset with one program. The compiler reads every\n# file header at compile time: sizes, channels, and which files are broken.\nLOAD_IMAGES \"dataset/\" AS train RECURSIVE;\n\n# REMOVE_CORRUPT train;                  # broken.jpg is found while compiling\nEXPECT train MIN_WIDTH 200;            # proven from the headers\n\nRESIZE train TO 224 224 KEEP_ASPECT;\nGRAYSCALE train;\nEXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel\n\nCONVERT train TO JPG;\nCOMPRESS train QUALITY 80;\n\n# Sub-folders (cats/, dogs/) are kept, so folder-based labels survive.\nSAVE_IMAGES train TO \"processed/train/\";\n",
+   "script": "AttributeError: 'NoneType' object has no attribute 'shape'",
+   "script_s": 1.1,
+   "compiler": "error[schema]: 1 of 7 files in dataset/ cannot be decoded\n  --> imageset.prep:8:1\n  |\n8 | RESIZE train TO 224 224 KEEP_ASPECT;\n  | ^\n  = note: broken.jpg: not a JPEG file (bad signature)\n  = hint: add REMOVE_CORRUPT train; before line 8\n\nerror[contract]: contract violated: 5 of 6 images in train break CHANNELS 1\n   --> imageset.prep:10:8\n   |\n10 | EXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel\n   |        ^\n   = note: 1 channel: 1 image\n   = note: 3 channels: 5 images\n   = note: cats/cat_01.jpg: 3 channels\n   = note: cats/cat_02.jpg: 3 channels\n   = note: cats/cat_03.jpg: 3 channels\n   = note: dogs/dog_01.png: 3 channels\n   = note: dogs/dog_02.png: 3 channels\n   = hint: use GRAYSCALE, or fix the files",
+   "compile_s": 0.05
+  },
+  {
+   "key": "black",
+   "title": "Decimal pixels saved as PNG",
+   "file": "linked.prep",
+   "line": 11,
+   "before": "CONVERT imgs TO NPY;",
+   "after": "CONVERT imgs TO PNG;",
+   "program": "# Images and their labels, checked together before any training data is written.\nLOAD_IMAGES \"dataset/\" AS imgs RECURSIVE;\nLOAD \"labels.csv\" AS labels;\n\nREMOVE_CORRUPT imgs;\nLINK imgs WITH labels ON filename AS training;\nEXPECT training MATCH_RATE 100%;       # every image has a label and every label an image\n\nRESIZE imgs TO 128 128;\nNORMALIZE imgs RANGE 0 1;              # pixels become FLOAT32 in [0, 1] ...\nCONVERT imgs TO PNG;                   # ... so they are saved as NumPy arrays, not JPG\n\nSAVE_IMAGES imgs TO \"processed/ml_ready/\";\nSAVE labels AS \"processed/labels.csv\";\n",
+   "script": "finished without an error and wrote 6 PNG files; their mean pixel value is 0.68 of 255: every image is black",
+   "script_s": 1.07,
+   "compiler": "error[type]: cannot save FLOAT32 pixels as PNG: NORMALIZE at line 10 scaled them to [0, 1]\n   --> linked.prep:13:1\n   |\n13 | SAVE_IMAGES imgs TO \"processed/ml_ready/\";\n   | ^\n   = hint: image files store 8-bit pixels, so these would come out almost black; add CONVERT imgs TO NPY; to keep the float values",
+   "compile_s": 0.02
+  }
+ ],
+ "speed": {
+  "rows": 1000000,
+  "columns": 10,
+  "mib": 59,
+  "phase2_s": 1.8,
+  "phase3_s": 0.12,
+  "pandas_s": 0.53
+ },
+ "batches": {
+  "next_week.csv": "name,age,marks,attendance,passed,department\nKavya,20,100,91.0,true,CSE\nRohan,22,12,48.5,false,EEE\nIsha,19,73,85.0,true,\nDev,,66,77.25,true,MECH\nNila,21,98,99.0,true,CSE\n",
+  "typo_week.csv": "name,age,marks,attendance,passed,department\nKavya,20,100,91.0,true,CSE\nRohan,22,12,48.5,false,EEE\nIsha,19,730,85.0,true,\nDev,,66,77.25,true,MECH\n",
+  "missing_name.csv": "name,age,marks,attendance,passed,department\nKavya,20,100,91.0,true,CSE\n,22,64,48.5,false,EEE\nIsha,19,73,85.0,true,\n",
+  "phase2": "ContractError: students.csv changed after compilation; compile the .prep file again",
+  "phase3_next_week.csv": "Admitted next_week.csv for students: it satisfies the data certificate\nSaved 3 rows to output\\clean.csv\nWrote output\\preplang_manifest.json",
+  "phase3_typo_week.csv": "ContractError: typo_week.csv is not the input the program was compiled with, and marks is 730 in data row 3, above 100; the compiled program relies on this for line 5: EXPECT students.marks BETWEEN 0 AND 100. Compile the .prep file again for this input.",
+  "phase3_missing_name.csv": "ContractError: missing_name.csv is not the input the program was compiled with, and name is missing in data row 2; the compiled program relies on this for line 6: EXPECT students.name NOT_NULL. Compile the .prep file again for this input.",
+  "certificate_dict": "{\"name\": {\"type\": \"STRING\", \"not_null\": \"line 6: EXPECT students.name NOT_NULL\"},\n     \"age\": {\"type\": \"INTEGER\"},\n     \"marks\": {\"type\": \"INTEGER\", \"min\": 0, \"min_for\": \"line 5: EXPECT students.marks BETWEEN 0 AND 100\", \"max\": 100, \"max_for\": \"line 5: EXPECT students.marks BETWEEN 0 AND 100\"},\n     \"attendance\": {\"type\": \"FLOAT\"},\n     \"passed\": {\"type\": \"BOOLEAN\"},\n     \"department\": {\"type\": \"STRING\"}}"
+ },
+ "certificate": {
+  "name": {
+   "type": "STRING",
+   "not_null": "line 6: EXPECT students.name NOT_NULL"
+  },
+  "age": {
+   "type": "INTEGER"
+  },
+  "marks": {
+   "type": "INTEGER",
+   "min": 0,
+   "min_for": "line 5: EXPECT students.marks BETWEEN 0 AND 100",
+   "max": 100,
+   "max_for": "line 5: EXPECT students.marks BETWEEN 0 AND 100"
+  },
+  "attendance": {
+   "type": "FLOAT"
+  },
+  "passed": {
+   "type": "BOOLEAN"
+  },
+  "department": {
+   "type": "STRING"
+  }
+ },
+ "images": {
+  "program": "# Prepare a whole image dataset with one program. The compiler reads every\n# file header at compile time: sizes, channels, and which files are broken.\nLOAD_IMAGES \"dataset/\" AS train RECURSIVE;\n\nREMOVE_CORRUPT train;                  # broken.jpg is found while compiling\nEXPECT train MIN_WIDTH 200;            # proven from the headers\n\nRESIZE train TO 224 224 KEEP_ASPECT;\nGRAYSCALE train;\nEXPECT train CHANNELS 1;               # proven: GRAYSCALE made every image 1 channel\n\nCONVERT train TO JPG;\nCOMPRESS train QUALITY 80;\n\n# Sub-folders (cats/, dogs/) are kept, so folder-based labels survive.\nSAVE_IMAGES train TO \"processed/train/\";\n",
+  "certificate": "The compiled program stays correct for any input with these facts\n(found by analysing the program 15 more times with weaker facts):\n\ntrain  (compiled with dataset/)\n  bit depth 8 (as compiled); files that cannot be read: allowed\n  .jpg   channels 1, 3, 4    <- (any the decoder gives)\n         width >= 200        <- line 6: EXPECT train MIN_WIDTH 200\n  .png   channels 1, 3, 4    <- (any the decoder gives)\n         width >= 200        <- line 6: EXPECT train MIN_WIDTH 200",
+  "compiled": [
+   {
+    "w": 320,
+    "h": 240,
+    "file": "cat_01.jpg"
+   },
+   {
+    "w": 400,
+    "h": 300,
+    "file": "cat_02.jpg"
+   },
+   {
+    "w": 640,
+    "h": 480,
+    "file": "cat_03.jpg"
+   },
+   {
+    "w": 300,
+    "h": 300,
+    "file": "dog_01.png"
+   },
+   {
+    "w": 512,
+    "h": 384,
+    "file": "dog_02.png"
+   },
+   {
+    "w": 256,
+    "h": 256,
+    "file": "dog_03.png"
+   }
+  ],
+  "folders": {
+   "new_photos": [
+    {
+     "w": 300,
+     "h": 260,
+     "c": 3,
+     "file": "photo_0.jpg"
+    },
+    {
+     "w": 640,
+     "h": 480,
+     "c": 1,
+     "file": "photo_1.jpg"
+    },
+    {
+     "w": 250,
+     "h": 900,
+     "c": 3,
+     "file": "photo_2.jpg"
+    },
+    {
+     "w": 400,
+     "h": 300,
+     "c": 4,
+     "file": "photo_3.png"
+    }
+   ],
+   "small_photos": [
+    {
+     "w": 300,
+     "h": 300,
+     "c": 3,
+     "file": "photo_0.jpg"
+    },
+    {
+     "w": 150,
+     "h": 100,
+     "c": 3,
+     "file": "photo_1.jpg"
+    }
+   ]
+  },
+  "results": {
+   "new_photos": "Admitted new_photos for train: every image header satisfies the data certificate\nSaved 4 image(s) to output\\processed\\train \nWrote output\\preplang_manifest.json",
+   "small_photos": "ContractError: small_photos is not the input the program was compiled with, and photo_1.jpg has width 150; the compiled program relies on this for line 6: EXPECT train MIN_WIDTH 200. Compile the .prep file again for this input."
+  }
+ },
+ "pandas": {
+  "script": "# A typical Titanic cleaning script, written the way most notebooks do it.\n# frontend/pandas2prep.py lifts its cleaning into PrepLang (the demo, step 7).\nimport pandas as pd\n\ntrain = pd.read_csv(\"train.csv\")\nprint(train.head())\n\ntrain[\"Age\"] = train[\"Age\"].fillna(train[\"Age\"].median())\ntrain[\"Embarked\"] = train[\"Embarked\"].fillna(train[\"Embarked\"].mode()[0])\ntrain.drop([\"Cabin\", \"Ticket\"], axis=1, inplace=True)\ntrain = train[train[\"Fare\"] < 500]\nassert train[\"Age\"].between(0, 100).all()\n\n# Feature engineering: this is where PrepLang stops lifting.\ntrain[\"Sex\"] = train[\"Sex\"].map({\"male\": 0, \"female\": 1})\ntrain.to_csv(\"train_clean.csv\", index=False)\n",
+  "lifted": "LOAD \"train.csv\" AS train;\nFILL_NULL train.Age WITH MEDIAN;\nFILL_NULL train.Embarked WITH MODE;\nDROP train [Cabin, Ticket];\nFILTER train WHERE Fare < 500;\nEXPECT train.Age BETWEEN 0 AND 100;\nSAVE train AS \"train_lifted.csv\";",
+  "notes": "# train: lifted until line 15: a new value for column 'Sex' that PrepLang cannot express",
+  "certificate": "The compiled program stays correct for any input with these facts\n(found by analysing the program 52 more times with weaker facts):\n\ntrain  (compiled with train.csv)\n  PassengerId  INTEGER  may be missing      <- only carried to the output\n  Survived     INTEGER  may be missing      <- only carried to the output\n  Pclass       INTEGER  may be missing      <- only carried to the output\n  Name         STRING   may be missing      <- only carried to the output\n  Sex          STRING   may be missing      <- only carried to the output\n  Age          FLOAT    >= 0                <- line 6: EXPECT train.Age BETWEEN 0 AND 100\n                        <= 100              <- line 6: EXPECT train.Age BETWEEN 0 AND 100\n  SibSp        INTEGER  may be missing      <- only carried to the output\n  Parch        INTEGER  may be missing      <- only carried to the output\n  Fare         FLOAT    (any values)\n  Embarked     STRING   (any values)\n  Ticket       any type (not read)          <- loaded only to check the facts below\n                        must exist          <- line 4: column 'Ticket' does not exist in 'train' (compile error)\n  Cabin        any type (not read)          <- loaded only to check the facts below\n                        must exist          <- line 4: column 'Cabin' does not exist in 'train' (compile error)",
+  "on_test": "Admitted test.csv for train: it satisfies the data certificate\nSaved 416 rows to output\\train_lifted.csv\nWrote output\\preplang_manifest.json"
+ },
+ "results": {
+  "mutants": 24,
+  "mutants_caught": 24,
+  "baseline_crash": 20,
+  "baseline_silent": 4,
+  "realbugs": 44,
+  "realbugs_early": 18,
+  "rq7": {
+   "runs": 244,
+   "cert": 209,
+   "facts": 96,
+   "fingerprint": 0
+  },
+  "rq8": {
+   "runs": 238,
+   "cert": 205,
+   "facts": 2,
+   "fingerprint": 0,
+   "unsound": 0
+  },
+  "rq9": {
+   "scripts": 272,
+   "lifted": 124,
+   "runs": 1364,
+   "admitted": 1347,
+   "same": 1347,
+   "unsound": 0
+  },
+  "scale": {
+   "rows": 16000000,
+   "parquet_s": 0.01811720000114292,
+   "typo_compile": 0.016908799996599555,
+   "typo_script": 2.813847699901089,
+   "black_compile": 0.2554668999509886,
+   "black_script": 8.540374299976975
+  },
+  "memory": {
+   "streaming": 10,
+   "in_memory": 922
+  },
+  "tests": 207
+ }
+}

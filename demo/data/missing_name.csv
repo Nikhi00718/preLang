@@ -1,0 +1,4 @@
+name,age,marks,attendance,passed,department
+Kavya,20,100,91.0,true,CSE
+,22,64,48.5,false,EEE
+Isha,19,73,85.0,true,

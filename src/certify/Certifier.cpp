@@ -115,12 +115,19 @@ Certifier::Proofs Certifier::proofsOf(const AnalysisResult& result, const std::s
 // then the proofs it took with it (e.g. a contract proven before is now violated).
 std::vector<std::string> Certifier::lost(const Proofs& base, const Proofs& run) {
     std::vector<std::string> missing;
-    if (!run.error.empty()) {
-        missing.push_back(run.error + " (compile error)");
-    }
     for (const auto& [key, description] : base.items) {
         if (run.items.count(key) == 0) {
             missing.push_back(description);
+        }
+    }
+    // The error is worth naming only if it is not the lost proof itself (a contract
+    // proven before and violated now is already named by its line).
+    if (!run.error.empty()) {
+        const std::string line = run.error.substr(0, run.error.find(':') + 1);
+        const bool named = std::any_of(missing.begin(), missing.end(),
+                                       [&](const std::string& item) { return item.rfind(line, 0) == 0; });
+        if (!named) {
+            missing.insert(missing.begin(), run.error + " (compile error)");
         }
     }
     return missing;

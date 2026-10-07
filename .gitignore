@@ -19,3 +19,6 @@ eval/work/
 
 # Python bytecode
 __pycache__/
+
+# The demo: generated working folders
+demo/work/
