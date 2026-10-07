@@ -5,6 +5,7 @@ build/
 test_*.csv
 test_imageset_*
 test_tableset_*
+test_certificate_*
 
 # Files written by running the examples (only the students.prep outputs are kept)
 output/*

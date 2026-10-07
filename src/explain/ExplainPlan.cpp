@@ -104,8 +104,13 @@ void printExplain(std::ostream& out, const SymbolTable& symbols, const AnalysisR
     row(out, "columns read", std::to_string(columns) + " (type fixed)");
     row(out, "value facts the proofs need", std::to_string(facts) + " (see --certificate)");
     row(out, "re-checked if inputs change", std::to_string(certificate.recheckedIfChanged.size()));
-    row(out, "other inputs", certificate.tables.empty() ? "images must stay as compiled"
-                                                        : "admitted by generated.py table=file.csv");
+    int folders = 0;
+    for (const ImageCertificate& image : certificate.images) {
+        folders += !image.fixed;
+    }
+    row(out, "image folders certified", std::to_string(folders) + " of " + std::to_string(certificate.images.size()));
+    row(out, "other inputs", certificate.exactOnly ? "only the compiled files are accepted"
+                                                   : "admitted by generated.py name=file-or-folder");
 
     section(out, "BACKENDS");
     int tableInstructions = 0;

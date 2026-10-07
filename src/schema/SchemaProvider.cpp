@@ -244,7 +244,11 @@ std::optional<TableSetSchema> SchemaProvider::readTableFolder(const std::string&
 
 std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path, bool singleFile, bool recursive,
                                                          SourceLocation location) {
-    const std::string key = path + (singleFile ? "|file" : "|folder") + (recursive ? "|recursive" : "");
+    const std::string key = imageKey(path, singleFile, recursive);
+    const auto overridden = imageOverrides_.find(key);
+    if (overridden != imageOverrides_.end()) {
+        return overridden->second;
+    }
     const auto known = images_.find(key);
     if (known != images_.end()) {
         return known->second;

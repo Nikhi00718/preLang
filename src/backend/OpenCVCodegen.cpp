@@ -31,15 +31,126 @@ std::string number(double value) {
 
 }  // namespace
 
-OpenCVCodegen::OpenCVCodegen(std::filesystem::path outputFolder) : outputFolder_(std::move(outputFolder)) {}
+OpenCVCodegen::OpenCVCodegen(std::filesystem::path outputFolder, const Certificate& certificate)
+    : outputFolder_(std::move(outputFolder)), certificate_(certificate) {}
+
+// {"depths": [8], "broken_allowed": False, "broken_for": "...", "groups": {"jpg": {...}}}
+std::string OpenCVCodegen::certificateDict(const std::string& dataset) const {
+    const ImageCertificate* image = certificate_.image(dataset);
+    if (certificate_.exactOnly || !image || image->fixed) {
+        return "None";  // only the compiled folder is accepted
+    }
+    const auto join = [](const std::vector<std::string>& items) {
+        std::string text;
+        for (const std::string& item : items) {
+            text += (text.empty() ? "" : "; ") + item;
+        }
+        return pythonString(text);
+    };
+    const auto numbers = [](const std::vector<int>& values) {
+        std::string text = "[";
+        for (size_t i = 0; i < values.size(); ++i) {
+            text += (i > 0 ? ", " : "") + std::to_string(values[i]);
+        }
+        return text + "]";
+    };
+    std::string code = "{\"depths\": " + numbers(image->depths) + ", \"broken_allowed\": " +
+                       (image->brokenAllowed ? "True" : "False") + ", \"broken_for\": " + join(image->brokenFor) +
+                       ",\n     \"groups\": {";
+    for (size_t i = 0; i < image->groups.size(); ++i) {
+        const ImageGroupFacts& g = image->groups[i];
+        code += std::string(i > 0 ? ",\n                " : "") + "\"" + g.extension + "\": {\"channels\": " +
+                numbers(g.channels) + ", \"channels_for\": " + join(g.channelsFor) +
+                ", \"width\": [" + std::to_string(g.minWidth) + ", " + std::to_string(g.maxWidth) +
+                "], \"width_for\": [" + join(g.minWidthFor) + ", " + join(g.maxWidthFor) +
+                "], \"height\": [" + std::to_string(g.minHeight) + ", " + std::to_string(g.maxHeight) +
+                "], \"height_for\": [" + join(g.minHeightFor) + ", " + join(g.maxHeightFor) + "]}";
+    }
+    return code + "}}";
+}
 
 std::string OpenCVCodegen::helpers(bool letterbox, bool grayscale) {
     std::string code = R"(IMAGE_TYPES = {".png", ".jpg", ".jpeg"}
 
 
-def list_images_checked(path, recursive, single, fingerprint):
-    """Lists the image files the compiler saw, and refuses to run if any file
-    was added, removed or changed in size after compilation."""
+broken_images = {}  # image input -> files whose header cannot be read
+
+
+def read_image_header(path):
+    """(width, height, channels, bits) from the PNG or JPEG header, or None if the
+    header cannot be read. The same rules as the compiler: the format comes from
+    the first bytes, and no pixel is decoded."""
+    with open(path, "rb") as file:
+        head = file.read(26)
+        if head[:2] == b"\x89P" or (path.suffix.lower() == ".png" and head[:2] != b"\xff\xd8"):
+            if len(head) < 26 or head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
+                return None
+            width, height = int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+            channels = {0: 1, 2: 3, 3: 3, 4: 4, 6: 4}.get(head[25])
+            return (width, height, channels, head[24]) if channels and width > 0 and height > 0 else None
+        if head[:2] != b"\xff\xd8":
+            return None
+        file.seek(2)
+        while True:
+            if file.read(1) != b"\xff":
+                return None
+            marker = file.read(1)
+            while marker == b"\xff":
+                marker = file.read(1)
+            if not marker or marker[0] in (0xD9, 0xDA):
+                return None
+            if 0xD0 <= marker[0] <= 0xD7 or marker[0] == 0x01:
+                continue
+            size = file.read(2)
+            if len(size) < 2 or int.from_bytes(size, "big") < 2:
+                return None
+            if 0xC0 <= marker[0] <= 0xCF and marker[0] not in (0xC4, 0xC8, 0xCC):
+                frame = file.read(6)
+                if len(frame) < 6:
+                    return None
+                width, height = int.from_bytes(frame[3:5], "big"), int.from_bytes(frame[1:3], "big")
+                return (width, height, frame[5], frame[0]) if width > 0 and height > 0 and frame[5] > 0 else None
+            file.seek(int.from_bytes(size, "big") - 2, 1)
+
+
+def admit_images(name, path, folder, names, certificate):
+    """A folder other than the compiled one may be used only if every file's header
+    has the facts of the data certificate. Returns the files that cannot be read."""
+    if certificate is None:
+        refuse(path, "the compiled program's proofs depend on the exact files of its folder", "")
+    if not names:
+        refuse(path, "it has no PNG or JPG images", "")
+    broken, depths = [], set()
+    for file in names:
+        header = read_image_header(folder / file)
+        if header is None:
+            if not certificate["broken_allowed"]:
+                refuse(path, f"{file} cannot be read", certificate["broken_for"])
+            broken.append(file)
+            continue
+        width, height, channels, bits = header
+        depths.add(16 if bits > 8 else 8)
+        suffix = Path(file).suffix.lower()
+        group = certificate["groups"].get("png" if suffix == ".png" else "jpg")
+        if group is None:
+            refuse(path, f"{file} is a {suffix} file, which the compiled folder had none of", "")
+        if channels not in group["channels"]:
+            refuse(path, f"{file} has {channels} channels", group["channels_for"])
+        for value, (low, high), (low_for, high_for), what in ((width, group["width"], group["width_for"], "width"),
+                                                              (height, group["height"], group["height_for"], "height")):
+            if not low <= value <= high:
+                refuse(path, f"{file} has {what} {value}", low_for if value < low else high_for)
+    if depths and sorted(depths) != certificate["depths"]:
+        refuse(path, f"its bit depths {sorted(depths)} differ from the compiled {certificate['depths']}", "")
+    print(f"Admitted {path} for {name}: every image header satisfies the data certificate")
+    return broken
+
+
+def list_images_checked(name, path, recursive, single, fingerprint, broken, certificate):
+    """Lists the image files. If the names and sizes are those the compiler saw,
+    every proof holds; another folder is admitted only if it satisfies the data
+    certificate. `broken` lists the compiled folder's files that cannot be read."""
+    path = Path(INPUTS[name]).resolve() if name in INPUTS else path
     if single:
         folder, names = path.parent, [path.name]
     else:
@@ -47,9 +158,9 @@ def list_images_checked(path, recursive, single, fingerprint):
         found = folder.rglob("*") if recursive else folder.glob("*")
         names = sorted(p.relative_to(folder).as_posix() for p in found
                        if p.is_file() and p.suffix.lower() in IMAGE_TYPES)
-    listing = "".join(f"{name}|{(folder / name).stat().st_size}\n" for name in names)
-    if zlib.crc32(listing.encode("utf-8")) != fingerprint:
-        raise ContractError(f"{path} changed after compilation; compile the .prep file again")
+    listing = "".join(f"{file}|{(folder / file).stat().st_size}\n" for file in names)
+    same_input[name] = zlib.crc32(listing.encode("utf-8")) == fingerprint
+    broken_images[name] = broken if same_input[name] else admit_images(name, path, folder, names, certificate)
     return folder, names
 
 
@@ -112,10 +223,17 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program)
         case Opcode::LoadImages: {
             const ImageSetSchema& schema = program.images.at(in.dataset);
             pipeline = Pipeline{};
-            return images + "_folder, " + images + "_files = list_images_checked(\n    HERE / " +
-                   pythonString(pathFrom(outputFolder_, schema.root)) + ", recursive=" +
+            std::vector<std::string> broken;
+            for (const ImageInfo& file : schema.images) {
+                if (file.corrupt) {
+                    broken.push_back(file.path);
+                }
+            }
+            return images + "_folder, " + images + "_files = list_images_checked(\n    " + pythonString(in.dataset) +
+                   ", HERE / " + pythonString(pathFrom(outputFolder_, schema.root)) + ", recursive=" +
                    (schema.recursive ? "True" : "False") + ", single=" + (schema.singleFile ? "True" : "False") +
-                   ", fingerprint=" + hex(schema.fingerprint) + ",\n)\n";
+                   ", fingerprint=" + hex(schema.fingerprint) + ",\n    broken=" + pythonList(broken) +
+                   ",\n    certificate=" + certificateDict(in.dataset) + ",\n)\n";
         }
         case Opcode::Resize: {
             const std::string width = std::to_string(in.numbers[0]);
@@ -153,9 +271,9 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program)
         case Opcode::Check: {  // MATCH_RATE: labels and images are compared at run time
             const std::string labels = PandasCodegen::tableVariable(in.columns[1], "");
             std::string files = variable(in.columns[0]) + "_files";
-            if (in.columns.size() > 3) {  // files REMOVE_CORRUPT took out before the LINK
-                const std::vector<std::string> removed(in.columns.begin() + 3, in.columns.end());
-                files = "[name for name in " + files + " if name not in " + pythonList(removed) + "]";
+            if (in.columns.size() > 3) {  // REMOVE_CORRUPT ran before the LINK: broken files are not linked
+                files = "[name for name in " + files + " if name not in broken_images[" + pythonString(in.columns[0]) +
+                        "]]";
             }
             // Proven from the values: only needed when the labels file changed.
             const std::string indent = in.onlyIfInputChanged ? "    " : "";

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "certify/Certifier.h"
 #include "ir/IR.h"
 
 #include <filesystem>
@@ -14,7 +15,8 @@
 // Memory use therefore stays at one image, whatever the dataset size.
 class OpenCVCodegen {
 public:
-    explicit OpenCVCodegen(std::filesystem::path outputFolder);
+    // The certificate says which facts another image folder must have to be admitted.
+    OpenCVCodegen(std::filesystem::path outputFolder, const Certificate& certificate);
 
     // The Python statements for one image instruction (or a MATCH_RATE check).
     std::string code(const Instruction& instruction, const IRProgram& program);
@@ -31,7 +33,10 @@ private:
     };
 
     std::filesystem::path outputFolder_;
+    const Certificate& certificate_;
     std::map<std::string, Pipeline> pipelines_;
+
+    std::string certificateDict(const std::string& dataset) const;
 
     std::string saveLoop(const Instruction& instruction);
 };

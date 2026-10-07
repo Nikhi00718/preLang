@@ -55,7 +55,19 @@ std::string ExecutionPlanner::generate(const IRProgram& program, const std::stri
         out << "import pandas as pd\n\nif int(pd.__version__.split(\".\")[0]) < 3:\n"
             << "    pd.options.mode.copy_on_write = True\n";
     }
-    out << "\nHERE = Path(__file__).resolve().parent\n\n\nclass ContractError(Exception):\n    pass\n\n\n";
+    out << "\nHERE = Path(__file__).resolve().parent\n\n\nclass ContractError(Exception):\n    pass\n\n\n" << R"(# An input can be given another file or folder when the program is run:
+#   py -3 generated.py students=new_students.csv
+INPUTS = dict(arg.split("=", 1) for arg in sys.argv[1:] if "=" in arg)
+same_input = {}  # input -> True if it is the one the compiler analysed
+
+
+def refuse(path, problem, needed_by):
+    raise ContractError(f"{path} is not the input the program was compiled with, and {problem}"
+                        + (f"; the compiled program relies on this for {needed_by}" if needed_by else "")
+                        + ". Compile the .prep file again for this input.")
+
+
+)";
     if (tables) {
         out << PandasCodegen::helpers(loads(TableFormat::Csv), loads(TableFormat::Parquet));
     }
@@ -65,7 +77,7 @@ std::string ExecutionPlanner::generate(const IRProgram& program, const std::stri
     out << "outputs = []\n\n";
 
     PandasCodegen pandas(outputFolder_, certificate_);
-    OpenCVCodegen opencv(outputFolder_);
+    OpenCVCodegen opencv(outputFolder_, certificate_);
     for (const Instruction& instruction : program.code) {
         out << "# line " << instruction.line << ": " << instructionText(instruction) << '\n'
             << (isImageInstruction(instruction) ? opencv.code(instruction, program) : pandas.code(instruction, program))

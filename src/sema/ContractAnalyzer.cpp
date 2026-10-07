@@ -346,7 +346,7 @@ void ContractAnalyzer::matchRate(const ExpectStmt& node, const DatasetSymbol& li
     }
     const double rate = ::matchRate(link);  // the DatasetLinker function, not this member
     if (rate >= std::stod(node.low)) {
-        proven(node, contract, "match rate is " + percent(rate), &target, {link.table});
+        proven(node, contract, "match rate is " + percent(rate), &target, {link.table, link.images});
         return;
     }
     Diagnostic& error = violated(node, contract,

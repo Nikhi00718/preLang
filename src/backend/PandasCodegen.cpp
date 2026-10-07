@@ -133,23 +133,12 @@ std::string PandasCodegen::tableVariable(const std::string& dataset, const std::
 }
 
 std::string PandasCodegen::helpers(bool csv, bool parquet) {
-    std::string code = R"(# A table can be given another input file when the program is run:
-#   py -3 generated.py students=new_students.csv
-INPUTS = dict(arg.split("=", 1) for arg in sys.argv[1:] if "=" in arg)
-same_input = {}  # table -> True if its file is the one the compiler analysed
-
-KINDS = {
+    std::string code = R"(KINDS = {
     "INTEGER": pd.api.types.is_integer_dtype,
     "FLOAT": lambda dtype: pd.api.types.is_numeric_dtype(dtype) and not pd.api.types.is_bool_dtype(dtype),
     "BOOLEAN": pd.api.types.is_bool_dtype,
     "STRING": lambda dtype: True,
 }
-
-
-def refuse(path, problem, needed_by):
-    raise ContractError(f"{path} is not the file the program was compiled with, and {problem}"
-                        + (f"; the compiled program relies on this for {needed_by}" if needed_by else "")
-                        + ". Compile the .prep file again for this input.")
 
 
 def first_row(mask):
@@ -162,7 +151,7 @@ def admit(table, path, frame, certificate):
     the program's data certificate: the facts the compiler's proofs and removed
     operations rely on. Contracts proven from the values are checked again later."""
     if certificate is None:
-        refuse(path, "the compiled program's proofs depend on the exact values of that file", "")
+        refuse(path, "the compiled program's proofs depend on the exact values of its file", "")
     for column, fact in certificate.items():
         if column not in frame.columns:
             refuse(path, f"it has no column {column!r}", "")

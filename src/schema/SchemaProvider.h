@@ -34,13 +34,19 @@ public:
     static std::string overrideKey(const std::string& path, const std::string& tableName) {
         return path + "|" + tableName;
     }
+    // The same for image inputs, keyed by imageKey.
+    void setImageOverrides(std::map<std::string, ImageSetSchema> overrides) { imageOverrides_ = std::move(overrides); }
+    static std::string imageKey(const std::string& path, bool singleFile, bool recursive) {
+        return path + (singleFile ? "|file" : "|folder") + (recursive ? "|recursive" : "");
+    }
 
 private:
     std::optional<TableSchema> readCsv(const std::string& csvPath, const std::string& name, SourceLocation location);
 
     Diagnostics& diagnostics_;
     std::map<std::string, TableSchema> overrides_;
-    std::map<std::string, ImageSetSchema> images_;  // image headers already read, by path and options
+    std::map<std::string, ImageSetSchema> imageOverrides_;
+    std::map<std::string, ImageSetSchema> images_;  // image headers already read, by imageKey
 };
 
 // Every cell of one column ("" when missing). Read on demand for UNIQUE,

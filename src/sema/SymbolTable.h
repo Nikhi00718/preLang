@@ -66,6 +66,7 @@ struct ImageState {
     std::string format = "SOURCE";   // output encoding: SOURCE (keep each file's format), JPG, PNG or NPY
     int quality = 0;                 // JPG quality; 0 means the library default
     int normalizedLine = 0;          // line of the NORMALIZE ... RANGE that made the pixels FLOAT32
+    bool brokenRemoved = false;      // REMOVE_CORRUPT ran: files that fail to decode are skipped
 
     int corruptCount() const;
     std::string summary() const;     // e.g. "12 images, 224x224, 3 channels, UINT8 [0, 255]"
@@ -82,7 +83,7 @@ struct LinkState {
     int matched = 0;
     std::vector<std::string> imagesWithoutLabel;
     std::vector<std::string> labelsWithoutImage;
-    std::vector<std::string> removedImages;  // files REMOVE_CORRUPT took out before LINK: not linked
+    bool skipsBroken = false;  // REMOVE_CORRUPT ran before LINK, so broken files are not linked
 };
 
 enum class DatasetKind { Table, TableSet, Image, ImageSet, Dataset };

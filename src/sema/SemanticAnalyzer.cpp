@@ -601,10 +601,11 @@ void SemanticAnalyzer::visit(const ExpectStmt& node) {
             }
             if (linked) {
                 // The run-time check must match the same images LINK matched, so it is
-                // also told which files REMOVE_CORRUPT took out before the LINK.
+                // told whether broken files were removed before the LINK.
                 Target target{linked->name, "", "", {linked->link.images, linked->link.table, linked->link.column}};
-                target.args.insert(target.args.end(), linked->link.removedImages.begin(),
-                                   linked->link.removedImages.end());
+                if (linked->link.skipsBroken) {
+                    target.args.push_back("SKIP_BROKEN");
+                }
                 contracts_.matchRate(node, *linked, target);
                 addTarget(node, target);
             }
@@ -795,6 +796,7 @@ void SemanticAnalyzer::visit(const RemoveCorruptStmt& node) {
     const int corrupt = images->images.corruptCount();
     shapes.erase(std::remove_if(shapes.begin(), shapes.end(), [](const ImageShape& shape) { return shape.corrupt; }),
                  shapes.end());
+    images->images.brokenRemoved = true;
     recordImages(*images, node.location.line,
                  "REMOVE_CORRUPT (" + std::to_string(corrupt) + " broken file" + (corrupt == 1 ? "" : "s") + ")");
     addTarget(node, {images->name, "", "", {}});
@@ -893,19 +895,13 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
 
     LinkState link;
     const bool parquet = table.schema.format == TableFormat::Parquet;
-    if (!parquet && column->exact && !column->valuesChanged) {
+    if (!parquet && column->exact && !column->valuesChanged && images->imageSchema.namesKnown) {
         link = linkImages(images->images, readColumnValues(table.schema, column->name));
     }
     link.images = images->name;
     link.table = labels->name;
     link.column = column->name;
-    for (const ImageInfo& file : images->imageSchema.images) {
-        const bool kept = std::any_of(images->images.shapes.begin(), images->images.shapes.end(),
-                                      [&](const ImageShape& shape) { return shape.path == file.path; });
-        if (!kept) {
-            link.removedImages.push_back(file.path);
-        }
-    }
+    link.skipsBroken = images->images.brokenRemoved;
 
     DatasetSymbol dataset;
     dataset.name = node.dataset;

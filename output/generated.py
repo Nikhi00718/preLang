@@ -17,10 +17,17 @@ class ContractError(Exception):
     pass
 
 
-# A table can be given another input file when the program is run:
+# An input can be given another file or folder when the program is run:
 #   py -3 generated.py students=new_students.csv
 INPUTS = dict(arg.split("=", 1) for arg in sys.argv[1:] if "=" in arg)
-same_input = {}  # table -> True if its file is the one the compiler analysed
+same_input = {}  # input -> True if it is the one the compiler analysed
+
+
+def refuse(path, problem, needed_by):
+    raise ContractError(f"{path} is not the input the program was compiled with, and {problem}"
+                        + (f"; the compiled program relies on this for {needed_by}" if needed_by else "")
+                        + ". Compile the .prep file again for this input.")
+
 
 KINDS = {
     "INTEGER": pd.api.types.is_integer_dtype,
@@ -28,12 +35,6 @@ KINDS = {
     "BOOLEAN": pd.api.types.is_bool_dtype,
     "STRING": lambda dtype: True,
 }
-
-
-def refuse(path, problem, needed_by):
-    raise ContractError(f"{path} is not the file the program was compiled with, and {problem}"
-                        + (f"; the compiled program relies on this for {needed_by}" if needed_by else "")
-                        + ". Compile the .prep file again for this input.")
 
 
 def first_row(mask):
@@ -46,7 +47,7 @@ def admit(table, path, frame, certificate):
     the program's data certificate: the facts the compiler's proofs and removed
     operations rely on. Contracts proven from the values are checked again later."""
     if certificate is None:
-        refuse(path, "the compiled program's proofs depend on the exact values of that file", "")
+        refuse(path, "the compiled program's proofs depend on the exact values of its file", "")
     for column, fact in certificate.items():
         if column not in frame.columns:
             refuse(path, f"it has no column {column!r}", "")
@@ -170,7 +171,7 @@ manifest = {
         "SELECT students [name, age, marks]",
         "SAVE students -> \"clean.csv\"",
     ],
-    "admitted_by_certificate": [table for table, same in same_input.items() if not same],
+    "admitted_by_certificate": [name for name, same in same_input.items() if not same],
     "outputs": outputs,
 }
 (HERE / "preplang_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

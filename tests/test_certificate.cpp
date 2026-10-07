@@ -15,8 +15,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <random>
 #include <set>
 #include <string>
@@ -41,11 +43,14 @@ struct Compiled {
     Certificate certificate;
 };
 
-void compile(const std::string& source, Compiled& c) {
+// With `images`, image folders are replaced by these files (by SchemaProvider::imageKey)
+// and only the analysis runs.
+void compile(const std::string& source, Compiled& c, const std::map<std::string, ImageSetSchema>& images = {}) {
     c.program = Parser(Lexer(source, c.diagnostics).tokenize(), c.diagnostics).parse();
     SchemaProvider schemas(c.diagnostics);
+    schemas.setImageOverrides(images);
     c.analysis = SemanticAnalyzer(c.symbols, schemas, ".", c.diagnostics).analyze(c.program);
-    if (c.diagnostics.hasErrors()) {
+    if (c.diagnostics.hasErrors() || !images.empty()) {
         return;
     }
     c.ir = IRBuilder(c.symbols, c.analysis).build(c.program);
@@ -210,6 +215,144 @@ void testSoundness() {
     check(unsound == 0, "every admitted input keeps every proof (" + std::to_string(unsound) + " did not)");
 }
 
+// ---------- Image folders ----------
+
+std::string bigEndian(unsigned value, int bytes) {
+    std::string text;
+    for (int i = bytes - 1; i >= 0; --i) {
+        text += static_cast<char>((value >> (8 * i)) & 0xFF);
+    }
+    return text;
+}
+
+// Only the header is read at compile time: PNG signature + IHDR (color type 0 gray, 2 RGB).
+void writePng(const std::string& path, unsigned width, unsigned height, char colorType) {
+    std::string bytes = "\x89PNG\r\n\x1A";
+    bytes += "\n" + bigEndian(13, 4) + "IHDR" + bigEndian(width, 4) + bigEndian(height, 4);
+    bytes += std::string{8, colorType, 0, 0, 0} + bigEndian(0, 4);
+    writeFile(path, bytes);
+}
+
+void writeJpeg(const std::string& path, unsigned width, unsigned height) {
+    writeFile(path, "\xFF\xD8\xFF\xC0" + bigEndian(17, 2) + std::string(1, 8) + bigEndian(height, 2) +
+                        bigEndian(width, 2) + std::string(1, 3) + std::string(9, '\x01') + "\xFF\xD9");
+}
+
+// Color images; the contract needs width >= 100, GRAYSCALE needs readable files.
+const std::string colorProgram = "LOAD_IMAGES \"test_certificate_color/\" AS imgs;\n"  // line 1
+                                 "EXPECT imgs MIN_WIDTH 100;\n"                         // line 2
+                                 "GRAYSCALE imgs;\n"                                    // line 3
+                                 "EXPECT imgs CHANNELS 1;\n"                            // line 4
+                                 "RESIZE imgs TO 64 64;\n"                              // line 5
+                                 "RESIZE imgs TO 64 64;\n"                              // line 6: removed
+                                 "CONVERT imgs TO JPG;\n"
+                                 "SAVE_IMAGES imgs TO \"out/\";\n";
+
+// Gray 64x64 images: GRAYSCALE and RESIZE are removed, so the shapes matter.
+const std::string grayProgram = "LOAD_IMAGES \"test_certificate_gray/\" AS g;\n"  // line 1
+                                "GRAYSCALE g;\n"                                   // line 2: removed
+                                "RESIZE g TO 64 64;\n"                             // line 3: removed
+                                "CONVERT g TO PNG;\n"
+                                "SAVE_IMAGES g TO \"out2/\";\n";
+
+void writeImageFolders() {
+    std::filesystem::create_directories("test_certificate_color");
+    writePng("test_certificate_color/a.png", 120, 90, 2);
+    writePng("test_certificate_color/b.png", 200, 150, 2);
+    writeJpeg("test_certificate_color/c.jpg", 160, 120);
+    std::filesystem::create_directories("test_certificate_gray");
+    writePng("test_certificate_gray/a.png", 64, 64, 0);
+    writePng("test_certificate_gray/b.png", 64, 64, 0);
+}
+
+bool mentions(const std::vector<std::string>& proofs, const std::string& text) {
+    return std::any_of(proofs.begin(), proofs.end(),
+                       [&](const std::string& proof) { return proof.find(text) != std::string::npos; });
+}
+
+void testImageFacts() {
+    std::cout << "Certified facts of image folders\n";
+    writeImageFolders();
+    Compiled color;
+    compile(colorProgram, color);
+    const ImageCertificate* imgs = color.certificate.image("imgs");
+    check(!color.diagnostics.hasErrors() && imgs && !imgs->fixed && imgs->groups.size() == 2,
+          "the color folder is certified with one box per extension (jpg, png)");
+    check(imgs && !imgs->brokenAllowed && mentions(imgs->brokenFor, "line 3"),
+          "broken files are not allowed: GRAYSCALE at line 3 must decode every file");
+    check(imgs && std::all_of(imgs->groups.begin(), imgs->groups.end(), [](const ImageGroupFacts& g) {
+              return g.channels == std::vector<int>{1, 3, 4} && g.minWidth == 100 && mentions(g.minWidthFor, "line 2") &&
+                     g.maxWidth == 65535 && g.minHeight == 1 && g.maxHeight == 65535;
+          }),
+          "any channels and heights; width >= 100 for MIN_WIDTH 100 at line 2 (the data had 120 to 200)");
+
+    Compiled gray;
+    compile(grayProgram, gray);
+    const ImageCertificate* g = gray.certificate.image("g");
+    check(g && g->groups.size() == 1 && g->groups[0].channels == std::vector<int>{1} &&
+              mentions(g->groups[0].channelsFor, "line 2"),
+          "gray folder: only 1-channel images, because the removed GRAYSCALE at line 2 needs it");
+    check(g && g->groups[0].minWidth == 64 && g->groups[0].maxWidth == 64 && g->groups[0].minHeight == 64 &&
+              g->groups[0].maxHeight == 64 && mentions(g->groups[0].maxWidthFor, "line 3"),
+          "gray folder: exactly 64x64, because the removed RESIZE at line 3 needs it");
+
+    std::vector<ImageInfo> files(2);
+    files[0] = {"x.png", "PNG", 64, 64, 1, 8, false, "", 0};
+    files[1] = {"y.png", "PNG", 64, 64, 3, 8, false, "", 0};
+    ImageSetSchema input;
+    input.images = files;
+    check(g && admissionProblems(*g, input).size() == 1, "a 3-channel image is refused for the gray program");
+    input.images.pop_back();
+    check(g && admissionProblems(*g, input).empty(), "another 1-channel 64x64 folder is admitted");
+}
+
+// The image soundness property: any folder the box admits keeps every proof.
+// This also checks that the corner images stand for every folder in the box.
+void testImageSoundness() {
+    std::cout << "Soundness on 600 random image folders\n";
+    writeImageFolders();
+    std::mt19937 random(7);
+    for (const std::string& source : {colorProgram, grayProgram}) {
+        const bool gray = source == grayProgram;  // gray folders need 1-channel 64x64 PNG files
+        Compiled base;
+        compile(source, base);
+        const std::set<std::string> baseProofs = proofs(base);
+        const ImageCertificate& certificate = base.certificate.images.front();
+        const ImageSetSchema& compiled = base.ir.images.begin()->second;
+        const std::string key = SchemaProvider::imageKey(compiled.root, false, false);
+        const int sizes[] = {16, 63, 64, 65, 99, 100, 150, 400};
+        int admitted = 0, unsound = 0;
+        for (int round = 0; round < 300; ++round) {
+            ImageSetSchema folder = compiled;
+            folder.namesKnown = false;
+            folder.images.clear();
+            const int count = 1 + static_cast<int>(random() % 5);
+            for (int i = 0; i < count; ++i) {
+                ImageInfo file;
+                const bool png = gray || random() % 2 == 0;
+                file.path = "f" + std::to_string(i) + (png ? ".png" : ".jpg");
+                file.format = png ? "PNG" : "JPG";
+                file.width = gray && random() % 4 ? 64 : sizes[random() % 8];
+                file.height = gray && random() % 4 ? 64 : sizes[random() % 8];
+                file.channels = gray && random() % 4 ? 1 : std::vector<int>{1, 3, 4}[random() % 3];
+                file.corrupt = random() % 12 == 0;
+                folder.images.push_back(file);
+            }
+            if (!admissionProblems(certificate, folder).empty()) {
+                continue;
+            }
+            ++admitted;
+            Compiled again;
+            compile(source, again, {{key, folder}});
+            const std::set<std::string> found = proofs(again);
+            unsound += again.diagnostics.hasErrors() ||
+                       !std::includes(found.begin(), found.end(), baseProofs.begin(), baseProofs.end());
+        }
+        check(admitted >= 20 && unsound == 0, std::to_string(admitted) + " of 300 admitted folders keep every proof (" +
+                                                  std::to_string(unsound) + " did not)");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -218,6 +361,8 @@ int main() {
     testAdmission();
     testValueProofs();
     testSoundness();
+    testImageFacts();
+    testImageSoundness();
     std::cout << (failures == 0 ? "All certificate tests passed\n"
                                 : std::to_string(failures) + " certificate test(s) FAILED\n");
     return failures == 0 ? 0 : 1;

@@ -25,7 +25,7 @@ enum class Opcode {
 //   CHECK         dataset, table, column, text = NOT_NULL | BETWEEN | UNIQUE | REFERENCES | MATCH_RATE,
 //                 values = [low, high] (BETWEEN) or [percent] (MATCH_RATE),
 //                 columns = [dataset, table, column] of the key (REFERENCES)
-//                           or [images, labels, column, files removed before LINK...] (MATCH_RATE)
+//                           or [images, labels, column, (SKIP_BROKEN)] (MATCH_RATE)
 //   FILL_NULL     dataset, table, column, values = [fill value]
 //   DROP_NULL     dataset, table
 //   NORMALIZE     dataset, table, column, text = ZSCORE | MINMAX

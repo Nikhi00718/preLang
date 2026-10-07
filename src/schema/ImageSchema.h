@@ -25,4 +25,6 @@ struct ImageSetSchema {
     bool recursive = false;
     std::vector<ImageInfo> images;  // sorted by path
     std::uint64_t fingerprint = 0;  // CRC-32 of every path and file size, checked again at run time
+    bool namesKnown = true;         // false when the files stand for every folder a data certificate
+                                    // admits: their shapes are bounds, their names are not real
 };
