@@ -192,6 +192,13 @@ top-venue paper (the language is small, one person classified the issues, and 44
   schema inferred from old data. To our knowledge none derives, for a compiled data pipeline, the
   minimal input facts its *correctness proofs and removed operations* depend on, by re-running the
   abstract interpreter, and uses them as an admission check that explains every refusal.
+- **Extended after real data (October 2026).** The certificate now covers every column of an input,
+  also columns the optimized program never loads (a proven check on a column that pruning removes,
+  or a removed `DROP` that names a column); columns that are only carried to the output may be
+  missing (the Kaggle test file has no `Survived`); strict comparisons give strict bounds; and image
+  folders are certified as one box per file extension (channels, size ranges, bit depths, broken
+  files allowed or not), which the analysis checks through the box's corner images (paper, Lemma
+  "Corners"). The generated program reads the header of every file of a new folder.
 - **Code:** `src/certify/Certifier.cpp` (`certify`, `admissionProblems`),
   `src/schema/SchemaProvider.h` (`setOverrides`), `admit` in `src/backend/PandasCodegen.cpp`,
   `onlyIfInputChanged` in `src/optimizer/RedundantOpPass.cpp`.
@@ -209,10 +216,52 @@ One million rows now take 0.13 s (2.04 s before): 4.7 times faster than `pandas.
 `std::from_chars`) and by a differential test against the old reader (60 random files, 0
 differences). Code: `src/schema/CsvScanner.cpp`, `src/schema/Checksum.cpp`.
 
-**Honest rating after Phase 3: about 7/10 as research.** N7 is a genuinely new mechanism with a
-soundness argument and an evaluation against fresh compilation. The limits remain: a small
-language, synthetic or example data for RQ7, one machine, and certificates that are 1-minimal
-(greedy), not the smallest possible.
+### N9. Certificates for existing pandas scripts
+
+`frontend/pandas2prep.py` lifts the longest prefix of a pandas script's cleaning that PrepLang
+expresses exactly (fillna with constants or statistics, dropna, drop, selection, filters,
+normalization written as arithmetic, asserts, to_csv), so that the script can be compiled against
+its data and certified for new data. This is an engineering contribution that makes N7 apply to real
+code; the lifting itself is a syntax-directed translation, not a new technique.
+
+### Evidence on real data and real code
+
+- **RQ8, real monthly data** (UCI traffic 2012-2018, UCI bike rentals 2011-2012, NYC green taxi
+  Parquet files 2022-2024): 238 runs; certificates admit 205 (86%), the compiled month's own facts 2
+  (1%), the fingerprint 0. All 205 admitted runs end exactly like a fresh compilation of that month;
+  0 unsound. Refusals name real events: 0 K temperatures (sensor fault), a 9,831 mm rain reading
+  and a 0% humidity day that the removed cleaning filter would have dropped, the NYC TLC schema
+  change of February 2023 (`passenger_count` double -> int64), and one fare of $2,020 (a known
+  limit: certificates bound input columns, not rows after a filter).
+- **RQ9, real pandas scripts**: 372 Titanic scripts from GitHub code search; the first 100 were the
+  development set, the other 272 were held out. 130 held-out scripts lift, 124 compile; on 1,364 runs
+  over real new batches (the Kaggle test file, resamples, extra missing values) 1,347 are admitted and
+  all 1,347 reproduce the script's own pandas result exactly; 0 differ. 7 refused batches also make
+  the script fail; 10 are conservative (the compiler removed a `fillna` on `Fare` because the training
+  file has no missing `Fare`).
+- **Bugs the evaluation found in our own implementation** (all fixed, all with regression tests):
+  the run-time MATCH_RATE check; pruned columns not covered; type relaxations that were unsound
+  against fresh compilation; columns named only by a removed `DROP`; and a lifter that translated a
+  `drop` pandas rejects. The last two were found on the held-out set; the first run's results are kept
+  in `eval/results/pandas_corpus_firstrun.*`.
+
+### Strict rating (October 2026)
+
+Rated as a submission to a top venue (PLDI, OOPSLA, SIGMOD, VLDB, ICSE main track):
+
+| Criterion | Score | Why |
+|---|---:|---|
+| Novelty of the idea | 6.5/10 | Certificates for a compiled data pipeline's proofs, found by counterfactual re-analysis and used as an explained admission check, are new to our knowledge. But each ingredient has a clear ancestor (abstract interpretation, sufficient/necessary precondition inference, proof-carrying code, guards with validity ranges), and the search is a simple greedy enumeration over a small lattice. |
+| Technical depth | 5/10 | The soundness argument is a monotonicity argument written as proof sketches, not mechanized; the language is small (no joins, loops or functions); certificates are column-level intervals and nullability, not relational facts. |
+| Evaluation | 6.5/10 | Real data (three public monthly datasets) and real code (272 held-out GitHub scripts) with ground truth and 0 unsound runs is solid. Weaknesses: one task for RQ9 (Titanic), short lifted prefixes (189 of 328 cleaning statements, 30 scripts lifted completely), a TFDV-style emulation rather than the real tools as baselines, one machine, one author. |
+| Honesty and artifact | 8/10 | Every number is generated from the results; five bugs found by the evaluation are reported; dev/test split for the corpus. |
+
+**Overall: about 6/10 as research.** Realistic outcome at a top venue's main track: weak reject or,
+at best, borderline (reviewers would ask for a mechanized or more formal soundness proof, lifting of
+real pipelines beyond short prefixes, more datasets and tasks, and comparison with the actual TFDV,
+Great Expectations and Deequ constraint-suggestion tools). Realistic outcome at a good workshop or a
+short-paper/demo track (e.g. SIGMOD DEEM, VLDB workshops, SOAP): likely accept. As a Compiler Design
+course project, the innovation is far beyond what the rubric expects.
 
 ## Evidence summary (from `eval/`)
 
@@ -224,6 +273,8 @@ language, synthetic or example data for RQ7, one machine, and certificates that 
 | Analysis cost | CSV 4.7x faster than one pandas read; Parquet footer 0.02 s at any size; headers about 17x faster than decoding |
 | Large inputs | mistakes reported in 0.02-0.26 s vs. 1.8-9 s for the scripts |
 | Real GitHub failures | 18 of 44 (41%) reported before processing |
+| Real monthly batches (RQ8) | certificate admits 205 of 238 (86%), file facts 2 (1%); 0 unsound |
+| Real pandas scripts (RQ9, held out) | 1,347 of 1,364 runs admitted, all identical to the script; 0 unsound |
 | New batches (RQ7) | certificate admits 209 of 244 (86%), file facts 96 (39%), fingerprint 0; 0 unsound, 0 needless refusals |
 | CSV analysis, 1M rows | 0.13 s (was 2.04 s); pandas reads it in 0.62 s, pyarrow in 0.11 s |
 

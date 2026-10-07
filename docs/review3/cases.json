@@ -93,7 +93,7 @@
   "kind": "run time",
   "what": "The compiled program given a batch with marks 130",
   "expected": "refused, naming the row and the proof",
-  "actual": "ContractError: bad.csv is not the file the program was compiled with, and marks is 130 in data row 2, above 100; the compiled program relies on this for line 2: EXPECT s.marks BETWEEN 0 AND 100. Compile the .prep file again for this input."
+  "actual": "ContractError: bad.csv is not the input the program was compiled with, and marks is 130 in data row 2, above 100; the compiled program relies on this for line 2: EXPECT s.marks BETWEEN 0 AND 100. Compile the .prep file again for this input."
  },
  {
   "kind": "run time",

@@ -70,7 +70,7 @@ compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
    prints the execution plan and the data lineage, and writes no files.
 7. **Debug the compiler:** set a breakpoint in any `src/` file, open a `.prep` file and press `F5`
    (*Debug PrepLang on the open .prep file*).
-8. **Tests:** *Run Task... > PrepLang: run all tests* (181 unit tests in 9 executables).
+8. **Tests:** *Run Task... > PrepLang: run all tests* (207 unit tests in 9 executables).
 9. **See the errors:** open any file in `examples/errors/` and run step 5. Every error shows the
    line, a caret and a hint.
 
@@ -403,7 +403,7 @@ src/certify     data certificates: counterfactual re-analysis and admission (tab
 frontend/       pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
 src/backend     pandas code, OpenCV code, and the planner that joins them
 src/explain     --explain, --dry-run, --lineage and the run manifest
-tests/          unit tests (181)
+tests/          unit tests (207)
 examples/       example programs and data
 eval/           mutants, baseline, benchmarks and results
 paper/          conference paper draft (LaTeX)

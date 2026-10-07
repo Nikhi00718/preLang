@@ -20,6 +20,16 @@ const tab = rq3.table_optimizations;
 const scale = json("eval/results/scale.json");
 const bugs = json("eval/results/realbugs.json");
 const early = bugs.filter((b) => b.verdict === "compile" || b.verdict === "contract").length;
+const real = json("eval/results/realbatches.json").filter((r) => r.fresh !== null);
+const realAdmitted = real.filter((r) => r.compiled_once !== "refused").length;
+const realFacts = real.filter((r) => r.file_facts_admit).length;
+const realUnsound = real.filter((r) => r.compiled_once === "finished" && !(r.fresh === "finished" && r.same_outputs)).length;
+const corpusAll = json("eval/results/pandas_corpus.json");
+const corpus = corpusAll.slice(100);  // held-out test set
+const corpusRuns = corpus.flatMap((r) => r.batches || []);
+const corpusSame = corpusRuns.filter((b) => b.prep === "finished" && b.same).length;
+const corpusUnsound = corpusRuns.filter((b) => b.prep === "finished" && !b.same).length;
+const corpusLifted = corpus.filter((r) => r.outcome === "lifted").length;
 
 // Ink and paper, with amber for what the compiler proves and teal for data.
 const INK = "1B2430", PAPER = "FFFFFF", MIST = "EEF1F4", AMBER = "E8A33D", TEAL = "23867A", GREY = "5B6573";
@@ -176,6 +186,21 @@ stat(s, 6.5, 1.3, 3.0, String(cert.length), "new batches for 7 compiled programs
 stat(s, 6.5, 2.6, 3.0, "0", "admitted runs that differ from a fresh compilation", TEAL);
 stat(s, 6.5, 3.9, 3.0, "0", "refused batches that a fresh compilation accepts");
 
+// 9b. Real data and real code
+s = content("New in Phase 3", "Real data, real scripts: no unsound run");
+card(s, 0.5, 1.2, 4.4, 3.6);
+text(s, "Real monthly data", { x: 0.75, y: 1.35, w: 4.0, h: 0.4, fontSize: 16, bold: true, color: TEAL });
+text(s, "Traffic sensors and bike rentals (UCI), New York green taxi Parquet files 2022-2024",
+  { x: 0.75, y: 1.75, w: 4.0, h: 0.6, fontSize: 12, color: GREY });
+stat(s, 0.75, 2.4, 4.0, `${pct(realAdmitted, real.length)}%`, `of ${real.length} new months admitted; the month's own facts: ${pct(realFacts, real.length)}%`);
+text(s, `${realUnsound} admitted runs differ from a fresh compilation`, { x: 0.75, y: 3.9, w: 4.0, h: 0.6, fontSize: 13, bold: true });
+card(s, 5.1, 1.2, 4.4, 3.6);
+text(s, "Real pandas scripts", { x: 5.35, y: 1.35, w: 4.0, h: 0.4, fontSize: 16, bold: true, color: TEAL });
+text(s, `${corpusAll.length} Titanic scripts from GitHub; ${corpusLifted} held-out scripts lifted into PrepLang by a new front end`,
+  { x: 5.35, y: 1.75, w: 4.0, h: 0.6, fontSize: 12, color: GREY });
+stat(s, 5.35, 2.4, 4.0, `${corpusSame}`, `of ${corpusRuns.length} runs on new batches give exactly the script's own result`);
+text(s, `${corpusUnsound} admitted runs differ from the script`, { x: 5.35, y: 3.9, w: 4.0, h: 0.6, fontSize: 13, bold: true });
+
 // 10. Scanner (native chart)
 s = content("New in Phase 3", "New: checking every cell beats a pandas read");
 s.addChart(pres.charts.BAR, [{ name: "seconds", labels: ["PrepLang compile (all checks)", "pandas read, pyarrow engine", "pandas read, C engine", "PrepLang, Phase 2"],
@@ -196,7 +221,7 @@ text(s, [
 // 11. Testing
 pres.addSection({ title: "Results" });
 s = content("Results", "Testing and evaluation");
-[["181", "unit tests in 9 programs, all passing"], ["17", "recorded test cases: valid, invalid, boundary, run time"],
+[["207", "unit tests in 9 programs, all passing"], ["17", "recorded test cases: valid, invalid, boundary, run time"],
  ["24 / 24", "injected mistakes reported before processing"], [`${early} / ${bugs.length}`, "real GitHub failures reported before processing"]]
   .forEach(([value, label], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 1.2 + Math.floor(i / 2) * 1.85;

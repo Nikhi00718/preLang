@@ -31,9 +31,10 @@ def refuse(path, problem, needed_by):
 
 KINDS = {
     "INTEGER": pd.api.types.is_integer_dtype,
-    "FLOAT": lambda dtype: pd.api.types.is_numeric_dtype(dtype) and not pd.api.types.is_bool_dtype(dtype),
+    "FLOAT": pd.api.types.is_float_dtype,
     "BOOLEAN": pd.api.types.is_bool_dtype,
     "STRING": lambda dtype: True,
+    "DATETIME": pd.api.types.is_datetime64_any_dtype,
 }
 
 
@@ -42,26 +43,38 @@ def first_row(mask):
     return int(mask.fillna(False).to_numpy().argmax()) + 1
 
 
-def admit(table, path, frame, certificate):
+def admit(table, path, frame, certificate, empty_is_text):
     """A file other than the compiled one may be used only if it has every fact of
     the program's data certificate: the facts the compiler's proofs and removed
-    operations rely on. Contracts proven from the values are checked again later."""
+    operations rely on. Contracts proven from the values are checked again later.
+    Types must be the ones the compiler infers; in a CSV file a column without any
+    value is STRING (empty_is_text)."""
     if certificate is None:
         refuse(path, "the compiled program's proofs depend on the exact values of its file", "")
     for column, fact in certificate.items():
         if column not in frame.columns:
+            if fact.get("optional"):
+                continue  # only carried to the output, which then lacks it
             refuse(path, f"it has no column {column!r}", "")
         values = frame[column]
-        if not values.isna().all() and not KINDS[fact["type"]](values.dtype):  # no values fit any type
-            refuse(path, f"its column {column!r} is read as {values.dtype}, not {fact['type']}", "")
+        empty = empty_is_text and values.isna().all()
+        if fact["type"] and not (fact["type"] == "STRING" if empty else KINDS[fact["type"]](values.dtype)):
+            kind = "a column without values, so STRING" if empty else values.dtype
+            refuse(path, f"its column {column!r} is {kind}, not {fact['type']}", "")
         if "not_null" in fact and values.isna().any():
             refuse(path, f"{column} is missing in data row {first_row(values.isna())}", fact["not_null"])
-        if "min" in fact and (values < fact["min"]).any():
-            row = first_row(values < fact["min"])
-            refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, below {fact['min']}", fact["min_for"])
-        if "max" in fact and (values > fact["max"]).any():
-            row = first_row(values > fact["max"])
-            refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, above {fact['max']}", fact["max_for"])
+        if "min" in fact:
+            low = values <= fact["min"] if fact.get("min_strict") else values < fact["min"]
+            if low.any():
+                row = first_row(low)
+                limit = ("at or below " if fact.get("min_strict") else "below ") + str(fact["min"])
+                refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, {limit}", fact["min_for"])
+        if "max" in fact:
+            high = values >= fact["max"] if fact.get("max_strict") else values > fact["max"]
+            if high.any():
+                row = first_row(high)
+                limit = ("at or above " if fact.get("max_strict") else "above ") + str(fact["max"])
+                refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, {limit}", fact["max_for"])
     print(f"Admitted {path} for {table}: it satisfies the data certificate")
 
 
@@ -77,11 +90,13 @@ def read_csv_checked(table, path, fingerprint, columns, dtypes, certificate):
         frame = pd.read_csv(io.BytesIO(data), usecols=columns, keep_default_na=False, na_values=[""],
                             dtype_backend="numpy_nullable")
         return frame.astype(dtypes)
+    # Also the columns the program does not use but its proofs depend on.
     text = {column: "string" for column, kind in dtypes.items() if kind == "string"}
-    frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns, keep_default_na=False,
-                        na_values=[""], dtype=text, dtype_backend="numpy_nullable")
-    admit(table, path, frame, certificate)
-    return frame[columns].astype(dtypes)
+    frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns or column in (certificate or {}),
+                        keep_default_na=False, na_values=[""], dtype=text, dtype_backend="numpy_nullable")
+    admit(table, path, frame, certificate, True)
+    present = [column for column in columns if column in frame.columns]
+    return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
 
 
 outputs = []

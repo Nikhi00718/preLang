@@ -33,6 +33,18 @@ const bugs = json("eval/results/realbugs.json");
 const early = bugs.filter((b) => b.verdict === "compile" || b.verdict === "contract").length;
 const scale = json("eval/results/scale.json");
 const cases = json("docs/review3/cases.json");
+const real = json("eval/results/realbatches.json").filter((r) => r.fresh !== null);
+const realAdmitted = real.filter((r) => r.compiled_once !== "refused");
+const realAgree = (r) => (r.compiled_once === "finished" ? r.fresh === "finished" && r.same_outputs
+  : r.compiled_once === "contract error" && ["contract error", "compile error"].includes(r.fresh));
+const realFacts = real.filter((r) => r.file_facts_admit).length;
+const corpusAll = json("eval/results/pandas_corpus.json");
+const corpus = corpusAll.slice(100);  // the held-out test set
+const corpusLifted = corpus.filter((r) => r.outcome === "lifted" || r.outcome === "compile error");
+const corpusRuns = corpus.flatMap((r) => r.batches || []);
+const corpusSame = corpusRuns.filter((b) => b.prep === "finished" && b.same).length;
+const corpusUnsound = corpusRuns.filter((b) => b.prep === "finished" && !b.same).length;
+const corpusAdmitted = corpusRuns.filter((b) => b.prep !== "refused").length;
 const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8").split(String.fromCharCode(13)).join("");
 const grammarStart = readme.indexOf("```ebnf\n") + "```ebnf\n".length;
 const grammar = readme.slice(grammarStart, readme.indexOf("\n```", grammarStart)).split("\n");
@@ -203,7 +215,7 @@ const body = [
   bullet("C++17 with Visual Studio 2022 Build Tools (MSVC) and CMake; no external C++ libraries."),
   bullet("Python 3 with pandas, NumPy, OpenCV and pyarrow for the generated programs and the evaluation."),
   bullet("Visual Studio Code tasks for building, running, explaining and testing; Git and GitHub for version history."),
-  bullet(`About 8,500 lines of C++ in src, 181 unit tests in 9 test programs, 8 example programs and 5 error examples.`),
+  bullet(`About 9,200 lines of C++ in src, a 400-line Python front end for pandas scripts, 207 unit tests in 9 test programs, 8 example programs and 5 error examples.`),
   h2("8.2 The Parallel CSV Scanner"),
   p(`In Phase 2 the compiler read a CSV file line by line, copying every cell into a new string, and one million rows took 2.04 seconds, about three times longer than pandas needs to read the file. I rewrote this part as a parallel scanner, shown in Figure 3. The file is read once into memory. Its rows are cut into one piece per processor core, always at a line break, and each piece is analysed by its own thread. Cells are looked at in place with std::string_view instead of being copied, and the type of a cell and the value of a number are found in one pass. For numbers I used Clinger's fast path: when the digits fit exactly in a double and the power of ten is at most 10^22, one multiplication or division gives the correctly rounded result, and every other number is handed to std::from_chars. The CRC-32 fingerprint is computed on its own thread at the same time, eight bytes per step.`),
   p("The pieces are merged in file order. The first problem in the file wins, and the line where a column first turns into text is found from the first text cell and the first boolean and number cells of each piece, so the messages name exactly the same lines as a single pass would."),
@@ -224,22 +236,32 @@ const body = [
   p("The file had marks between 35 and 95, but the only proof about marks needs 0 to 100, so a new file with a mark of 100 is accepted. The run can be given a new file on the command line, for example py -3 output/generated.py students=new_students.csv. Figure 4 shows what the generated program does with each input. Contracts proven by reading the values themselves (UNIQUE, REFERENCES and MATCH_RATE) keep their check, but it runs only when an input is not the compiled file."),
   ...figure("flow_admission.png", 440, "What the generated program does with an input file"),
   p("Why this is safe: every transfer function is monotone once exactness is cleared, and every proof or removal is a test of the form \"the state lies inside a fixed condition\". A file that satisfies the certificate has a state inside the certified state, so the analysis of that file would prove at least everything the compiled program relies on. I wrote this argument as a theorem in the paper and also check it with a test: 400 random files are tried, and every file the certificate accepts, when compiled on its own, keeps every proof."),
-  h2("8.4 A Bug Found by the Certificate Experiment"),
-  p("While evaluating certificates I found a bug from an earlier phase. The run-time MATCH_RATE check compared the labels with every image file, including a broken image that REMOVE_CORRUPT had removed before the LINK, while the compile-time proof had left it out. Before Phase 3 this check was always removed as proven, so it never ran. Now it runs when the labels change, and it failed where it should pass. The LINK now records the files removed before it and the generated check skips the same files. I added a regression test for it."),
+  h2("8.4 Certificates for Image Folders, Missing Columns and Columns Not Read"),
+  p("A folder of images is certified as one box per file type (.jpg and .png): the channel counts, the width and height ranges and the bit depths its images may have, and whether files that cannot be read are allowed. The analysis works on a list of files, so it is given the corner images of the box: one image for every combination of the smallest and largest width and height, every allowed channel count and every bit depth. Every image decision of the compiler is a test of the form \"all images ...\" or \"some image ...\" over single properties, so the corners decide it exactly as any folder inside the box would. The generated program reads only the header of each image of a new folder and admits the folder if every header fits its box."),
+  p("Two cases from real data changed the certificate for tables. First, a proof can depend on a column the optimized program never loads: after EXPECT t.id NOT_NULL is proven, its check is removed and column pruning drops id. Such a column now stays in the certificate and is loaded only to be checked. Second, new batches often lack a column: the Kaggle Titanic test file has no Survived column. A column that no instruction names and that is only carried to the output is made optional when the analysis without it keeps every proof."),
+  h2("8.5 Language Additions"),
+  bullet(b("FILL_NULL c WITH MEAN, MEDIAN or MODE"), " computes the fill value from the data when the program runs. MEAN and MEDIAN always make an INTEGER column FLOAT, so the type never depends on the data, which keeps the analysis monotone."),
+  bullet(b("DROP_NULL t [a, b]"), " removes only the rows that miss one of the listed columns."),
+  bullet(b("DATETIME"), " columns come from the dates and timestamps of Parquet files. They can be kept, dropped, saved and checked with NOT_NULL; comparing or filling them is a type error."),
+  h2("8.6 A Front End for pandas Scripts"),
+  p("frontend/pandas2prep.py reads a pandas script with Python's own parser and translates the part of its cleaning that PrepLang can express: fillna (with constants or mean, median and mode), dropna, drop, column selection, filters, normalization written as arithmetic, assert checks and to_csv. It stops at the first statement it cannot express exactly, such as a new column made with map. This lets certificates protect existing scripts."),
+  h2("8.7 Bugs Found by the Experiments"),
+  p("While evaluating certificates I found a bug from an earlier phase. The run-time MATCH_RATE check compared the labels with every image file, including a broken image that REMOVE_CORRUPT had removed before the LINK, while the compile-time proof had left it out. Before Phase 3 this check was always removed as proven, so it never ran. Now it runs when the labels change, and it failed where it should pass. The generated check now skips the same broken files as the proof. I added a regression test for it."),
+  p("The experiments found two more mistakes in my first certificate. It covered only the columns the optimized program loads, so a proven NOT_NULL on a column that was pruned afterwards was not protected; I noticed this while writing the taxi pipeline. And it let whole numbers into a FLOAT column and an empty column into any type; the random soundness test found files where a fresh compilation then decided differently. Both are fixed, and the random tests now also make files with missing and pruned columns."),
 
   // 9
   h1("Chapter 9: Testing and Results"),
   h2("9.1 Unit Tests"),
-  p("All 181 unit tests in 9 test programs pass with ctest (Figure 5):"),
+  p("All 207 unit tests in 9 test programs pass with ctest (Figure 5):"),
   bullet(b("test_lexer"), " 15 tests: tokens, keywords, numbers, strings and lexical errors."),
-  bullet(b("test_parser"), " 29 tests: every statement, operator precedence, error recovery and suggestions."),
-  bullet(b("test_semantic"), " 29 tests: types, names, missing values, ranges and contracts."),
+  bullet(b("test_parser"), " 31 tests: every statement, operator precedence, error recovery and suggestions."),
+  bullet(b("test_semantic"), " 33 tests: types, names, missing values, ranges, contracts, MEAN/MEDIAN/MODE fills and DROP_NULL with columns."),
   bullet(b("test_tableset"), " 13 tests: folders of tables, wildcards and contracts across tables."),
   bullet(b("test_imageset"), " 21 tests: image headers, sizes, channels, image errors and MATCH_RATE."),
-  bullet(b("test_parquet"), " 23 tests: Parquet footers, statistics and contracts."),
+  bullet(b("test_parquet"), " 25 tests: Parquet footers, statistics, contracts and DATETIME columns."),
   bullet(b("test_optimizer"), " 12 tests: every optimization."),
   bullet(b("test_scanner"), " 22 tests: the parallel scanner gives the same facts with 1 to 16 pieces, reports the first problem of the file, and parses 20,000 random numbers exactly like std::from_chars."),
-  bullet(b("test_certificate"), " 17 tests: which facts are certified and why, admission and refusal, conditional checks, and the soundness property on 400 random files."),
+  bullet(b("test_certificate"), " 35 tests: which facts are certified and why, columns not read and columns that may be missing, image folders, admission and refusal, and soundness properties on 1,200 random tables and 600 random image folders."),
   ...figure("evidence_tests.png", 520, "All test programs pass"),
   h2("9.2 Test Cases"),
   p("Each case below was run by docs/review3/cases.py, which records the real output, so the actual results are copied from the program and not typed by hand. All of them behave as expected."),
@@ -257,6 +279,8 @@ const body = [
   bullet(b("Compile time: "), `one million CSV rows in ${f2(million.compile_s)} s (Section 8.2); a Parquet file with 16 million rows in ${scale.parquet_compile_cost[2].compile_s.toFixed(2)} s, because only its footer is read.`),
   bullet(b("Large inputs: "), `on 3,000 images, saving decimal pixels as PNG is reported in ${f2(scale.image_cases[2].preplang_compile_s)} s, while the equivalent script runs for ${f2(scale.image_cases[2].script_s)} s and writes 3,000 black images.`),
   bullet(b("Real failures: "), `of ${bugs.length} data preparation failures collected from GitHub issues, PrepLang reports ${early} (${pct(early, bugs.length)}%) before any data is processed.`),
+  bullet(b("Real monthly data: "), `three public datasets that come in monthly batches (traffic on a US interstate, bike rentals, and New York green taxi trips as published Parquet files) were cleaned by pipelines compiled on one month and run on the others: ${real.length} runs. Certificates admitted ${realAdmitted.length} (${pct(realAdmitted.length, real.length)}%), the compiled month's own facts only ${realFacts}, and every admitted run gave exactly the result of compiling that month fresh (${realAdmitted.filter(realAgree).length} of ${realAdmitted.length}). Refusals named real problems, for example temperatures of 0 Kelvin from a broken sensor, and the change of passenger_count from decimal to integer in the taxi files of February 2023.`),
+  bullet(b("Real pandas scripts: "), `${corpusAll.length} Titanic cleaning scripts were collected from GitHub. The first 100 were used to develop the front end; of the other ${corpus.length}, ${corpusLifted.length} were lifted and compiled against the Kaggle training file, then given ${corpusRuns.length} new batches (the real Kaggle test file, resampled rows and extra missing values). Certificates admitted ${corpusAdmitted}; ${corpusSame} runs gave exactly the result of the script's own pandas code, and ${corpusUnsound} gave a different result.`),
   bullet(b("Data certificates: "), `seven compiled programs were given ${cert.length} new batches of data (other days of a sensor process, resampled rows, values that drift, missing values and values out of range), and every batch was also compiled from scratch as the ground truth. The certificate admitted ${certAdmitted.length} batches (${pct(certAdmitted.length, cert.length)}%); taking all facts of the compiled file, as a schema inferred by TFDV would, admits only ${factsAdmit} (${pct(factsAdmit, cert.length)}%), and the plain fingerprint admits none. ${certAdmitted.filter(agrees).length} of the ${certAdmitted.length} admitted runs ended exactly like the fresh compilation (the same output files, or stopped by the same contract), and ${falseRefusals === 0 ? "every refused batch also failed to compile from scratch, so nothing was refused that could have run" : falseRefusals + " refused batches could have run"}.`),
 
   // 10
