@@ -30,6 +30,8 @@ struct TableSchema {
     std::uint64_t fingerprint = 0;  // CRC-32 of the file (Parquet: of its footer), checked again at run time
     std::int64_t rowCount = 0;
     std::vector<ColumnInfo> columns;
+    bool valuesKnown = true;        // false when these facts describe every file a data certificate
+                                    // admits, not the values of one file
 };
 
 // LOAD_TABLES reads every CSV and Parquet file of a folder.

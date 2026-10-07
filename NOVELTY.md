@@ -27,6 +27,10 @@ To our knowledge, no existing work does the following **together**:
    "float pixels saved as PNG" before any pixel is decoded.
 5. It separates **optimizations that keep the output exact** from **ones that change it**; the
    second kind runs only with `--approx`.
+6. It finds, for each compiled program, the **data certificate**: the few facts about the inputs
+   that its proofs and removed operations really need, by analysing the program again under weaker
+   facts. The generated program then accepts **new batches of data** that satisfy the certificate,
+   without compiling again, and names the proof that a refused batch would break.
 
 One-sentence version, for the paper or the viva:
 
@@ -163,6 +167,53 @@ These changes answer that:
 **Honest rating now: about 6/10 as research** - a solid workshop or new-ideas paper, still not a
 top-venue paper (the language is small, one person classified the issues, and 44 issues are few).
 
+## Added in Phase 3 (October 2026)
+
+### N7. Data certificates by counterfactual re-analysis
+
+- **Problem.** The fingerprint guard (N3) makes proofs safe, but only for the exact file. A real
+  pipeline runs again tomorrow on a new file with the same layout, and the guard refuses it.
+- **What.** After optimizing, the compiler analyses the program again many times. Each time it
+  weakens one fact about one input column: missing values allowed, or a lower/upper bound moved to
+  the loosest program constant that still works, or removed. A weaker fact is kept if every proven
+  contract and every removed operation survives. The facts that cannot be weakened form the
+  certificate, and each one records the proofs that need it (the proofs lost when it was dropped).
+  Contracts proven by reading the values themselves (`UNIQUE`, `REFERENCES`, `MATCH_RATE`) keep
+  their check in the generated code, guarded so it runs only when an input changed.
+- **Why it is sound.** All transfer functions are monotone once exactness is cleared, and every
+  decision is "the state is inside a fixed predicate". So an input whose facts are inside the
+  certificate gets at least the compiled proofs (paper, section "Data Certificates"). Before widening,
+  the compiler checks that the facts without exactness still give exactly the compiled proofs;
+  if not, it accepts only the exact files.
+- **Why it is new.** Proof-carrying code (Necula 1997) ships proofs with code; JIT compilers guard
+  speculative code and deoptimize (Hölzle et al. 1992); progressive query optimization keeps
+  validity ranges for a plan (Markl et al. 2004); precondition inference (Cousot et al. 2013) and
+  DeepInfer (Ahmed et al. 2024) infer conditions on inputs; TFDV validates new batches against a
+  schema inferred from old data. To our knowledge none derives, for a compiled data pipeline, the
+  minimal input facts its *correctness proofs and removed operations* depend on, by re-running the
+  abstract interpreter, and uses them as an admission check that explains every refusal.
+- **Code:** `src/certify/Certifier.cpp` (`certify`, `admissionProblems`),
+  `src/schema/SchemaProvider.h` (`setOverrides`), `admit` in `src/backend/PandasCodegen.cpp`,
+  `onlyIfInputChanged` in `src/optimizer/RedundantOpPass.cpp`.
+- **Evidence.** `tests/test_certificate.cpp`: 400 random inputs; every admitted one, compiled on
+  its own, keeps every proof. `eval/certificates.py` (RQ7): seven compiled programs were given 244 new batches (other days and a warmer season of a sensor process; resampled rows, drifting values, missing values and out-of-range values for the examples). The certificate admits 209 (86%); all facts of the compiled file, as a TFDV-style schema, admit 96 (39%); the fingerprint admits 0. All 209 admitted runs end exactly like a fresh compilation of that batch, and every refused batch also fails a fresh compilation. See `eval/results/certificates.md`.
+
+### N8. A compile-time CSV analysis faster than reading the file with pandas
+
+Not a new idea, but it removes the main cost argument against reading the data at compile time.
+The file is read once and cut into one piece per core at line breaks; each thread splits cells in
+place (`std::string_view`), types them and parses numbers in one pass (Clinger's exact fast path,
+falling back to `std::from_chars`); the CRC-32 (slicing-by-8) runs on its own thread; pieces are
+merged in file order, so the facts and the reported line numbers equal a sequential pass.
+One million rows now take 0.13 s (2.04 s before): 4.7 times faster than `pandas.read_csv` reads the file, and about as fast as pandas with the multi-threaded pyarrow reader, while also inferring every type, range and missing value. Checked by `tests/test_scanner.cpp` (1 to 16 pieces, 20,000 random numbers against
+`std::from_chars`) and by a differential test against the old reader (60 random files, 0
+differences). Code: `src/schema/CsvScanner.cpp`, `src/schema/Checksum.cpp`.
+
+**Honest rating after Phase 3: about 7/10 as research.** N7 is a genuinely new mechanism with a
+soundness argument and an evaluation against fresh compilation. The limits remain: a small
+language, synthetic or example data for RQ7, one machine, and certificates that are 1-minimal
+(greedy), not the smallest possible.
+
 ## Evidence summary (from `eval/`)
 
 | Question | Result |
@@ -170,9 +221,11 @@ top-venue paper (the language is small, one person classified the issues, and 44
 | Injected mistakes found before processing | 24 of 24, 0 false alarms |
 | Contracts decided at compile time | 15 of 16 (94%) |
 | Optimizations | table processing 37% faster; images 922 MiB -> 10 MiB |
-| Analysis cost | CSV about one pandas read; Parquet footer 0.02 s at any size; headers 23x faster than decoding |
+| Analysis cost | CSV 4.7x faster than one pandas read; Parquet footer 0.02 s at any size; headers about 17x faster than decoding |
 | Large inputs | mistakes reported in 0.02-0.26 s vs. 1.8-9 s for the scripts |
 | Real GitHub failures | 18 of 44 (41%) reported before processing |
+| New batches (RQ7) | certificate admits 209 of 244 (86%), file facts 96 (39%), fingerprint 0; 0 unsound, 0 needless refusals |
+| CSV analysis, 1M rows | 0.13 s (was 2.04 s); pandas reads it in 0.62 s, pyarrow in 0.11 s |
 
 ## Sources
 
@@ -199,3 +252,11 @@ top-venue paper (the language is small, one person classified the issues, and 44
 - C. Flanagan, "Hybrid type checking", POPL 2006.
 - R. Cartwright, M. Fagan, "Soft typing", PLDI 1991.
 - G. Moerkotte, "Small materialized aggregates", VLDB 1998.
+- G. C. Necula, "Proof-carrying code", POPL 1997.
+- U. Hölzle, C. Chambers, D. Ungar, "Debugging optimized code with dynamic deoptimization", PLDI 1992.
+- V. Markl et al., "Robust query processing through progressive optimization", SIGMOD 2004.
+- P. Cousot, R. Cousot, M. Fähndrich, F. Logozzo, "Automatic inference of necessary preconditions",
+  VMCAI 2013. https://cs.nyu.edu/~pcousot/publications.www/CousotCousotFahndrichLogozzo-VMCAI-LNCS-7737-pp128-148-Jan-2013.pdf
+- S. Ahmed, H. Gao, H. Rajan, "Inferring data preconditions from deep learning models for
+  trustworthy prediction in deployment", ICSE 2024. https://arxiv.org/abs/2401.14628
+- W. D. Clinger, "How to read floating point numbers accurately", PLDI 1990.

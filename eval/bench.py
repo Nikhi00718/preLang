@@ -154,7 +154,11 @@ def compile_cost():
         start = time.perf_counter()
         pd.read_csv(csv)
         read = time.perf_counter() - start
-        rows.append({"input": f"CSV, {count:,} rows x 10 columns", "compile_s": seconds, "read_all_s": read})
+        start = time.perf_counter()
+        pd.read_csv(csv, engine="pyarrow")  # pandas with the multi-threaded pyarrow reader
+        arrow = time.perf_counter() - start
+        rows.append({"input": f"CSV, {count:,} rows x 10 columns", "compile_s": seconds, "read_all_s": read,
+                     "read_arrow_s": arrow})
     for count in (100, 1000, 3000):
         images = DATA / f"images_{count}"
         program = f'LOAD_IMAGES "{images.as_posix()}/" AS i;\nSAVE_IMAGES i TO "o/";\n'

@@ -1,0 +1,2442 @@
+[
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another day",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another season",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another day",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another season",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another day",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another season",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another day",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "daily",
+  "table": "day",
+  "edit": "another season",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "students",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "optimize",
+  "table": "top+complete",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "train",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "ml_split",
+  "table": "test",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.departments",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.employees",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.interns",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "tableset",
+  "table": "company.managers",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 0,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 1,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 2,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "contract error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": true,
+  "same_outputs": true
+ },
+ {
+  "workload": "parquet",
+  "table": "students",
+  "edit": "out of range",
+  "seed": 3,
+  "compiled_once": "refused",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "resampled",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift small",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift medium",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift large",
+  "seed": 0,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "missing values",
+  "seed": 0,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "resampled",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift small",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift medium",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift large",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "missing values",
+  "seed": 1,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": false,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "resampled",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift small",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift medium",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift large",
+  "seed": 2,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "missing values",
+  "seed": 2,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "resampled",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift small",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift medium",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "drift large",
+  "seed": 3,
+  "compiled_once": "contract error",
+  "fresh": "compile error",
+  "file_facts_admit": true,
+  "same_outputs": null
+ },
+ {
+  "workload": "linked_images",
+  "table": "labels",
+  "edit": "missing values",
+  "seed": 3,
+  "compiled_once": "finished",
+  "fresh": "finished",
+  "file_facts_admit": false,
+  "same_outputs": true
+ }
+]

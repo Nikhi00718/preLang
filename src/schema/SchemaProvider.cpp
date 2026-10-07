@@ -1,11 +1,11 @@
 #include "schema/SchemaProvider.h"
 
 #include "schema/Checksum.h"
+#include "schema/CsvScanner.h"
 #include "schema/ParquetFooter.h"
 
 #include <algorithm>
 #include <cctype>
-#include <charconv>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -15,148 +15,11 @@ namespace fs = std::filesystem;
 
 namespace {
 
-bool isDigit(char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; }
-
-std::string trim(const std::string& text) {
-    const size_t first = text.find_first_not_of(" \t\r");
-    if (first == std::string::npos) {
-        return "";
-    }
-    const size_t last = text.find_last_not_of(" \t\r");
-    return text.substr(first, last - first + 1);
-}
-
-bool isBlank(const std::string& text) { return text.find_first_not_of(" \t\r") == std::string::npos; }
-
 std::string toLower(std::string text) {
     for (char& c : text) {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
     return text;
-}
-
-std::uint64_t fileFingerprint(const std::string& path) {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    std::string bytes(static_cast<size_t>(file.tellg()), ' ');
-    file.seekg(0);
-    file.read(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-    return crc32(bytes);
-}
-
-// ---------- CSV ----------
-
-// Splits one CSV line into trimmed fields, reusing `fields`. A field inside double
-// quotes may contain commas, and "" inside quotes stands for a single quote character.
-void splitCsvLine(const std::string& line, std::vector<std::string>& fields) {
-    fields.clear();
-    std::string field;
-    bool inQuotes = false;
-    for (size_t i = 0; i < line.size(); ++i) {
-        const char c = line[i];
-        if (inQuotes) {
-            if (c == '"' && i + 1 < line.size() && line[i + 1] == '"') {
-                field += '"';
-                ++i;
-            } else if (c == '"') {
-                inQuotes = false;
-            } else {
-                field += c;
-            }
-        } else if (c == '"') {
-            inQuotes = true;
-        } else if (c == ',') {
-            fields.push_back(trim(field));
-            field.clear();
-        } else {
-            field += c;
-        }
-    }
-    fields.push_back(trim(field));
-}
-
-// Position of the first byte that is not part of valid UTF-8, or npos.
-// (Overlong forms are not checked; no editor writes them.)
-size_t invalidUtf8(const std::string& text) {
-    size_t i = 0;
-    while (i < text.size()) {
-        const unsigned char c = static_cast<unsigned char>(text[i]);
-        const size_t length = c < 0x80 ? 1 : (c >= 0xC2 && c <= 0xDF) ? 2 : (c >> 4) == 0xE ? 3
-                                             : (c >= 0xF0 && c <= 0xF4) ? 4 : 0;
-        if (length == 0 || i + length > text.size()) {
-            return i;
-        }
-        for (size_t k = 1; k < length; ++k) {
-            if ((static_cast<unsigned char>(text[i + k]) & 0xC0) != 0x80) {
-                return i;
-            }
-        }
-        i += length;
-    }
-    return std::string::npos;
-}
-
-// Reads the header line, dropping the UTF-8 byte-order mark Excel may add.
-bool readHeader(std::ifstream& file, std::string& line) {
-    if (!std::getline(file, line)) {
-        return false;
-    }
-    if (line.compare(0, 3, "\xEF\xBB\xBF") == 0) {
-        line.erase(0, 3);
-    }
-    return true;
-}
-
-// Moves i past a run of digits; returns false if there was none.
-bool skipDigits(const std::string& text, size_t& i) {
-    const size_t start = i;
-    while (i < text.size() && isDigit(text[i])) {
-        ++i;
-    }
-    return i > start;
-}
-
-// The most specific type for one non-empty cell. Numbers are an optional '-',
-// digits, an optional '.' and digits, and an optional exponent such as e-05
-// (pandas writes small floats that way). A number with '.' or an exponent is FLOAT.
-ColumnType typeOfCell(const std::string& cell) {
-    if ((cell.size() == 4 || cell.size() == 5) && (toLower(cell) == "true" || toLower(cell) == "false")) {
-        return ColumnType::Boolean;
-    }
-    size_t i = (cell[0] == '-') ? 1 : 0;
-    if (!skipDigits(cell, i)) {
-        return ColumnType::String;
-    }
-    bool isFloat = false;
-    if (i < cell.size() && cell[i] == '.') {
-        ++i;
-        if (!skipDigits(cell, i)) {
-            return ColumnType::String;
-        }
-        isFloat = true;
-    }
-    if (i < cell.size() && (cell[i] == 'e' || cell[i] == 'E')) {
-        ++i;
-        if (i < cell.size() && (cell[i] == '-' || cell[i] == '+')) {
-            ++i;
-        }
-        if (!skipDigits(cell, i)) {
-            return ColumnType::String;
-        }
-        isFloat = true;
-    }
-    if (i != cell.size()) {
-        return ColumnType::String;
-    }
-    return isFloat ? ColumnType::Float : ColumnType::Integer;
-}
-
-// Combines the type seen so far in a column with the type of a new cell.
-// INTEGER and FLOAT give FLOAT; any other mix can only be STRING.
-ColumnType combine(ColumnType current, ColumnType next) {
-    if (current == next) {
-        return current;
-    }
-    return isNumeric(current) && isNumeric(next) ? ColumnType::Float : ColumnType::String;
 }
 
 // ---------- Image headers ----------
@@ -284,6 +147,12 @@ SchemaProvider::SchemaProvider(Diagnostics& diagnostics) : diagnostics_(diagnost
 
 std::optional<TableSchema> SchemaProvider::readTable(const std::string& path, const std::string& name,
                                                      SourceLocation location) {
+    const auto overridden = overrides_.find(overrideKey(path, name));
+    if (overridden != overrides_.end()) {
+        TableSchema table = overridden->second;
+        table.name = name;
+        return table;
+    }
     if (toLower(fs::path(path).extension().string()) != ".parquet") {
         return readCsv(path, name, location);
     }
@@ -299,106 +168,46 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& path, co
 
 std::optional<TableSchema> SchemaProvider::readCsv(const std::string& csvPath, const std::string& name,
                                                    SourceLocation location) {
-    std::ifstream file(csvPath);
-    if (!file) {
+    std::string bytes;
+    if (!readFileBytes(csvPath, bytes)) {
         diagnostics_.error(Phase::Schema, location, "cannot open CSV file '" + csvPath + "'",
                            "the path is relative to the folder of the .prep file");
         return std::nullopt;
     }
-    // pandas reads CSV files as UTF-8, so a file saved in another encoding would
-    // stop the generated program. Every line is read here anyway, so say it now.
-    const auto notUtf8 = [&](const std::string& text, int number) {
-        const size_t at = invalidUtf8(text);
-        if (at == std::string::npos) {
-            return false;
+    CsvScan scan = scanCsv(bytes);
+    const CsvProblem& problem = scan.problem;
+    const std::string line = "line " + std::to_string(problem.line) + " of '" + csvPath + "'";
+    switch (problem.kind) {
+        case CsvProblem::Kind::None:
+            break;
+        case CsvProblem::Kind::Empty:
+            diagnostics_.error(Phase::Schema, location, "CSV file '" + csvPath + "' is empty",
+                               "the first line must list the column names");
+            return std::nullopt;
+        case CsvProblem::Kind::NotUtf8: {
+            // pandas reads CSV files as UTF-8, so a file saved in another encoding
+            // would stop the generated program. Every line is read here anyway, so say it now.
+            const char* digits = "0123456789ABCDEF";
+            diagnostics_.error(Phase::Schema, location,
+                               line + " is not UTF-8 text (byte 0x" + digits[problem.byte >> 4] +
+                                   digits[problem.byte & 15] + ")",
+                               "the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 "
+                               "(in Excel: Save As > CSV UTF-8)");
+            return std::nullopt;
         }
-        const unsigned byte = static_cast<unsigned char>(text[at]);
-        const char* digits = "0123456789ABCDEF";
-        diagnostics_.error(Phase::Schema, location,
-                           "line " + std::to_string(number) + " of '" + csvPath + "' is not UTF-8 text (byte 0x" +
-                               digits[byte >> 4] + digits[byte & 15] + ")",
-                           "the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 "
-                           "(in Excel: Save As > CSV UTF-8)");
-        return true;
-    };
-
-    std::string line;
-    if (!readHeader(file, line)) {
-        diagnostics_.error(Phase::Schema, location, "CSV file '" + csvPath + "' is empty",
-                           "the first line must list the column names");
-        return std::nullopt;
-    }
-    if (notUtf8(line, 1)) {
-        return std::nullopt;
+        case CsvProblem::Kind::FieldCount:
+            diagnostics_.error(Phase::Schema, location,
+                               line + " has " + std::to_string(problem.fields) + " values but the header has " +
+                                   std::to_string(scan.columns.size()) + " columns");
+            return std::nullopt;
     }
 
     TableSchema table;
     table.name = name;
     table.file = csvPath;
-    table.fingerprint = fileFingerprint(csvPath);
-    std::vector<std::string> cells;
-    splitCsvLine(line, cells);
-    for (const std::string& columnName : cells) {
-        ColumnInfo column;
-        column.name = columnName;
-        table.columns.push_back(column);
-    }
-
-    // Type of each column so far; empty until the column's first value.
-    std::vector<std::optional<ColumnType>> inferred(table.columns.size());
-    // Whether the column has a value that is not plain text (a number or boolean).
-    std::vector<bool> hasNonText(table.columns.size(), false);
-    int lineNumber = 1;
-
-    while (std::getline(file, line)) {
-        ++lineNumber;
-        if (isBlank(line)) {
-            continue;
-        }
-        if (notUtf8(line, lineNumber)) {
-            return std::nullopt;
-        }
-        splitCsvLine(line, cells);
-        if (cells.size() != table.columns.size()) {
-            diagnostics_.error(Phase::Schema, location,
-                               "line " + std::to_string(lineNumber) + " of '" + csvPath + "' has " +
-                                   std::to_string(cells.size()) + " values but the header has " +
-                                   std::to_string(table.columns.size()) + " columns");
-            return std::nullopt;
-        }
-        ++table.rowCount;
-
-        for (size_t i = 0; i < cells.size(); ++i) {
-            ColumnInfo& column = table.columns[i];
-            if (cells[i].empty()) {
-                ++column.missingCount;
-                continue;
-            }
-            const ColumnType type = typeOfCell(cells[i]);
-            inferred[i] = inferred[i] ? combine(*inferred[i], type) : type;
-            if (type != ColumnType::String) {
-                hasNonText[i] = true;
-            }
-            if (*inferred[i] == ColumnType::String && column.stringReason.empty()) {
-                column.stringReason = "line " + std::to_string(lineNumber) + " has \"" + cells[i] + "\"";
-            }
-            if (isNumeric(type)) {
-                double value = 0;
-                std::from_chars(cells[i].data(), cells[i].data() + cells[i].size(), value);
-                column.min = column.hasRange ? std::min(column.min, value) : value;
-                column.max = column.hasRange ? std::max(column.max, value) : value;
-                column.hasRange = true;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < table.columns.size(); ++i) {
-        ColumnInfo& column = table.columns[i];
-        column.type = inferred[i].value_or(ColumnType::String);  // no values at all: STRING
-        if (!hasNonText[i]) {
-            column.stringReason.clear();  // an ordinary text column needs no explanation
-        }
-    }
+    table.fingerprint = scan.fingerprint;
+    table.rowCount = scan.rowCount;
+    table.columns = std::move(scan.columns);
     return table;
 }
 
@@ -435,6 +244,11 @@ std::optional<TableSetSchema> SchemaProvider::readTableFolder(const std::string&
 
 std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path, bool singleFile, bool recursive,
                                                          SourceLocation location) {
+    const std::string key = path + (singleFile ? "|file" : "|folder") + (recursive ? "|recursive" : "");
+    const auto known = images_.find(key);
+    if (known != images_.end()) {
+        return known->second;
+    }
     ImageSetSchema set;
     set.root = path;
     set.singleFile = singleFile;
@@ -486,6 +300,7 @@ std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path
         listing += image.path + "|" + std::to_string(image.bytes) + "\n";
     }
     set.fingerprint = crc32(listing);
+    images_[key] = set;
     return set;
 }
 
@@ -493,27 +308,8 @@ std::vector<std::string> readColumnValues(const TableSchema& table, const std::s
     if (table.format == TableFormat::Parquet) {
         return {};  // only the footer of a Parquet file is read at compile time
     }
-    std::ifstream file(table.file);
-    std::string line;
-    if (!readHeader(file, line)) {
-        return {};
-    }
-    std::vector<std::string> header;
-    splitCsvLine(line, header);
-    const auto found = std::find(header.begin(), header.end(), column);
-    if (found == header.end()) {
-        return {};
-    }
-    const size_t index = static_cast<size_t>(found - header.begin());
-    std::vector<std::string> values;
-    std::vector<std::string> cells;
-    while (std::getline(file, line)) {
-        if (!isBlank(line)) {
-            splitCsvLine(line, cells);
-            values.push_back(cells[index]);
-        }
-    }
-    return values;
+    std::string bytes;
+    return readFileBytes(table.file, bytes) ? csvColumnValues(bytes, column) : std::vector<std::string>{};
 }
 
 // ---------- Printing ----------

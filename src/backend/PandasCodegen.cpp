@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <utility>
@@ -77,7 +79,53 @@ std::string pathFrom(const std::filesystem::path& outputFolder, const std::strin
     return (relative.empty() ? file : relative).generic_u8string();
 }
 
-PandasCodegen::PandasCodegen(std::filesystem::path outputFolder) : outputFolder_(std::move(outputFolder)) {}
+std::string exactNumber(double value) {
+    char text[32];
+    const auto end = std::to_chars(text, text + sizeof text, value).ptr;  // shortest text that reads back exactly
+    return std::string(text, end);
+}
+
+PandasCodegen::PandasCodegen(std::filesystem::path outputFolder, const Certificate& certificate)
+    : outputFolder_(std::move(outputFolder)), certificate_(certificate) {}
+
+// {"marks": {"type": "INTEGER", "max": 100, "max_for": "line 5: ..."}, ...}
+std::string PandasCodegen::certificateDict(const std::string& key) const {
+    const TableCertificate* table = certificate_.table(key);
+    if (certificate_.exactOnly || !table) {
+        return "None";  // only the compiled file is accepted
+    }
+    const auto join = [](const std::vector<std::string>& items) {
+        std::string text;
+        for (const std::string& item : items) {
+            text += (text.empty() ? "" : "; ") + item;
+        }
+        return pythonString(text);
+    };
+    std::string code = "{";
+    for (const ColumnFacts& column : table->columns) {
+        code += std::string(code.size() > 1 ? ",\n     " : "") + pythonString(column.name) + ": {\"type\": \"" +
+                columnTypeName(column.type) + "\"";
+        if (column.notNull) {
+            code += ", \"not_null\": " + join(column.notNullFor);
+        }
+        if (!std::isinf(column.min)) {
+            code += ", \"min\": " + exactNumber(column.min) + ", \"min_for\": " + join(column.minFor);
+        }
+        if (!std::isinf(column.max)) {
+            code += ", \"max\": " + exactNumber(column.max) + ", \"max_for\": " + join(column.maxFor);
+        }
+        code += "}";
+    }
+    return code + "}";
+}
+
+std::string PandasCodegen::inputChanged(const Instruction& in) {
+    std::string same;
+    for (const std::string& table : in.provenFromValuesOf) {
+        same += (same.empty() ? "" : " and ") + std::string("same_input[") + pythonString(table) + "]";
+    }
+    return "not (" + same + ")";
+}
 
 std::string PandasCodegen::tableVariable(const std::string& dataset, const std::string& table) {
     return table.empty() ? "df_" + identifierPart(dataset)
@@ -85,33 +133,95 @@ std::string PandasCodegen::tableVariable(const std::string& dataset, const std::
 }
 
 std::string PandasCodegen::helpers(bool csv, bool parquet) {
-    std::string code;
+    std::string code = R"(# A table can be given another input file when the program is run:
+#   py -3 generated.py students=new_students.csv
+INPUTS = dict(arg.split("=", 1) for arg in sys.argv[1:] if "=" in arg)
+same_input = {}  # table -> True if its file is the one the compiler analysed
+
+KINDS = {
+    "INTEGER": pd.api.types.is_integer_dtype,
+    "FLOAT": lambda dtype: pd.api.types.is_numeric_dtype(dtype) and not pd.api.types.is_bool_dtype(dtype),
+    "BOOLEAN": pd.api.types.is_bool_dtype,
+    "STRING": lambda dtype: True,
+}
+
+
+def refuse(path, problem, needed_by):
+    raise ContractError(f"{path} is not the file the program was compiled with, and {problem}"
+                        + (f"; the compiled program relies on this for {needed_by}" if needed_by else "")
+                        + ". Compile the .prep file again for this input.")
+
+
+def first_row(mask):
+    """1-based number of the first data row where mask is true."""
+    return int(mask.fillna(False).to_numpy().argmax()) + 1
+
+
+def admit(table, path, frame, certificate):
+    """A file other than the compiled one may be used only if it has every fact of
+    the program's data certificate: the facts the compiler's proofs and removed
+    operations rely on. Contracts proven from the values are checked again later."""
+    if certificate is None:
+        refuse(path, "the compiled program's proofs depend on the exact values of that file", "")
+    for column, fact in certificate.items():
+        if column not in frame.columns:
+            refuse(path, f"it has no column {column!r}", "")
+        values = frame[column]
+        if not values.isna().all() and not KINDS[fact["type"]](values.dtype):  # no values fit any type
+            refuse(path, f"its column {column!r} is read as {values.dtype}, not {fact['type']}", "")
+        if "not_null" in fact and values.isna().any():
+            refuse(path, f"{column} is missing in data row {first_row(values.isna())}", fact["not_null"])
+        if "min" in fact and (values < fact["min"]).any():
+            row = first_row(values < fact["min"])
+            refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, below {fact['min']}", fact["min_for"])
+        if "max" in fact and (values > fact["max"]).any():
+            row = first_row(values > fact["max"])
+            refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, above {fact['max']}", fact["max_for"])
+    print(f"Admitted {path} for {table}: it satisfies the data certificate")
+
+
+)";
     if (csv) {
-        code += R"(def read_csv_checked(path, fingerprint, columns, dtypes):
-    """Reads a CSV file, but refuses if the file changed after compilation,
-    because the compiler's checks and proofs were made for the file as it was then.
-    The nullable dtypes are applied after parsing: that gives the same values, and
-    passing them to read_csv directly is several times slower."""
-    if zlib.crc32(path.read_bytes()) != fingerprint:
-        raise ContractError(f"{path} changed after compilation; compile the .prep file again")
-    frame = pd.read_csv(path, usecols=columns, keep_default_na=False, na_values=[""], dtype_backend="numpy_nullable")
-    return frame.astype(dtypes)
+        code += R"(def read_csv_checked(table, path, fingerprint, columns, dtypes, certificate):
+    """Reads a CSV file. The compiler's proofs were made for the file with this
+    CRC-32 checksum; any other file is admitted only if it satisfies the data
+    certificate. The nullable dtypes are applied after parsing: that gives the
+    same values, and passing them to read_csv directly is several times slower."""
+    path = Path(INPUTS[table]).resolve() if table in INPUTS else path
+    data = path.read_bytes()
+    same_input[table] = zlib.crc32(data) == fingerprint
+    if same_input[table]:
+        frame = pd.read_csv(io.BytesIO(data), usecols=columns, keep_default_na=False, na_values=[""],
+                            dtype_backend="numpy_nullable")
+        return frame.astype(dtypes)
+    text = {column: "string" for column, kind in dtypes.items() if kind == "string"}
+    frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns, keep_default_na=False,
+                        na_values=[""], dtype=text, dtype_backend="numpy_nullable")
+    admit(table, path, frame, certificate)
+    return frame[columns].astype(dtypes)
 
 
 )";
     }
     if (parquet) {
-        code += R"(def read_parquet_checked(path, fingerprint, columns, dtypes):
-    """Reads a Parquet file, but refuses if its footer changed after compilation:
-    the compiler's checks and proofs were made from the footer's statistics."""
+        code += R"(def read_parquet_checked(table, path, fingerprint, columns, dtypes, certificate):
+    """Reads a Parquet file. The compiler's proofs were made from the statistics in
+    the footer with this CRC-32 checksum; any other file is admitted only if it
+    satisfies the data certificate."""
+    path = Path(INPUTS[table]).resolve() if table in INPUTS else path
     with open(path, "rb") as file:
         file.seek(-8, 2)
         length = int.from_bytes(file.read(4), "little")
         file.seek(-8 - length, 2)
         footer = file.read()
-    if zlib.crc32(footer) != fingerprint:
-        raise ContractError(f"{path} changed after compilation; compile the .prep file again")
-    return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
+    same_input[table] = zlib.crc32(footer) == fingerprint
+    if same_input[table]:
+        return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
+    import pyarrow.parquet
+    present = [column for column in columns if column in pyarrow.parquet.read_schema(path).names]
+    frame = pd.read_parquet(path, columns=present, dtype_backend="numpy_nullable")
+    admit(table, path, frame, certificate)
+    return frame[columns].astype(dtypes)
 
 
 )";
@@ -145,25 +255,30 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
                 }
             }
             const char* reader = schema.format == TableFormat::Parquet ? "read_parquet_checked" : "read_csv_checked";
-            return code + table + " = " + reader + "(\n    HERE / " + pythonString(pathFrom(outputFolder_, schema.file)) +
-                   ",\n    " + hex(schema.fingerprint) + ",\n    " + pythonList(in.columns) + ",\n    " + dtypes +
-                   "},\n)\n";
+            const std::string key = tableKey(in.dataset, in.table);
+            return code + table + " = " + reader + "(\n    " + pythonString(key) + ",\n    HERE / " +
+                   pythonString(pathFrom(outputFolder_, schema.file)) + ",\n    " + hex(schema.fingerprint) +
+                   ",\n    " + pythonList(in.columns) + ",\n    " + dtypes + "},\n    " + certificateDict(key) +
+                   ",\n)\n";
         }
-        case Opcode::Check:
+        case Opcode::Check: {
+            // A check proven from the values runs only when an input changed.
+            const std::string when = in.onlyIfInputChanged ? "if " + inputChanged(in) + " and " : "if ";
             if (in.text == "NOT_NULL") {
-                return "if " + column + ".isna().any():\n" + fail("has missing values");
+                return when + column + ".isna().any():\n" + fail("has missing values");
             }
             if (in.text == "BETWEEN") {
-                return "if not " + column + ".dropna().between(" + in.values[0].value + ", " + in.values[1].value +
+                return when + "not " + column + ".dropna().between(" + in.values[0].value + ", " + in.values[1].value +
                        ").all():\n" + fail("has values outside " + in.values[0].value + " to " + in.values[1].value);
             }
             if (in.text == "UNIQUE") {
-                return "if " + column + ".dropna().duplicated().any():\n" + fail("has repeated values");
+                return when + column + ".dropna().duplicated().any():\n" + fail("has repeated values");
             }
             // REFERENCES
-            return "if not " + column + ".dropna().isin(" + tableVariable(in.columns[0], in.columns[1]) + "[" +
+            return when + "not " + column + ".dropna().isin(" + tableVariable(in.columns[0], in.columns[1]) + "[" +
                    pythonString(in.columns[2]) + "].dropna()).all():\n" +
                    fail("has values missing from " + tableKey(in.columns[0], in.columns[1]) + "." + in.columns[2]);
+        }
         case Opcode::FillNull:
             return column + " = " + column + ".fillna(" + pythonValue(in.values[0]) + ")\n";
         case Opcode::DropNull:

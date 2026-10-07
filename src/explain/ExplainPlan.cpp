@@ -2,6 +2,7 @@
 
 #include "backend/ExecutionPlanner.h"
 
+#include <cmath>
 #include <iomanip>
 #include <map>
 #include <set>
@@ -54,7 +55,8 @@ std::string inputDetails(const DatasetSymbol& dataset) {
 }  // namespace
 
 void printExplain(std::ostream& out, const SymbolTable& symbols, const AnalysisResult& analysis,
-                  const OptimizationReport& report, const IRProgram& program, int warnings) {
+                  const OptimizationReport& report, const IRProgram& program, const Certificate& certificate,
+                  int warnings) {
     out << "PREPLANG EXECUTION PLAN\n";
 
     section(out, "INPUTS");
@@ -90,6 +92,20 @@ void printExplain(std::ostream& out, const SymbolTable& symbols, const AnalysisR
     if (!report.suggestions.empty()) {
         row(out, "approximate rewrites skipped", std::to_string(report.suggestions.size()) + " (use --approx)");
     }
+
+    section(out, "DATA CERTIFICATE");
+    int columns = 0, facts = 0;
+    for (const TableCertificate& table : certificate.tables) {
+        for (const ColumnFacts& column : table.columns) {
+            ++columns;
+            facts += column.notNull + !std::isinf(column.min) + !std::isinf(column.max);
+        }
+    }
+    row(out, "columns read", std::to_string(columns) + " (type fixed)");
+    row(out, "value facts the proofs need", std::to_string(facts) + " (see --certificate)");
+    row(out, "re-checked if inputs change", std::to_string(certificate.recheckedIfChanged.size()));
+    row(out, "other inputs", certificate.tables.empty() ? "images must stay as compiled"
+                                                        : "admitted by generated.py table=file.csv");
 
     section(out, "BACKENDS");
     int tableInstructions = 0;

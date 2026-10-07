@@ -3,6 +3,7 @@
 #include "ast/AST.h"
 #include "schema/ImageSchema.h"
 #include "schema/TableSchema.h"
+#include "sema/AnalysisResult.h"
 
 #include <map>
 #include <string>
@@ -24,7 +25,7 @@ enum class Opcode {
 //   CHECK         dataset, table, column, text = NOT_NULL | BETWEEN | UNIQUE | REFERENCES | MATCH_RATE,
 //                 values = [low, high] (BETWEEN) or [percent] (MATCH_RATE),
 //                 columns = [dataset, table, column] of the key (REFERENCES)
-//                           or [images, labels, column] (MATCH_RATE)
+//                           or [images, labels, column, files removed before LINK...] (MATCH_RATE)
 //   FILL_NULL     dataset, table, column, values = [fill value]
 //   DROP_NULL     dataset, table
 //   NORMALIZE     dataset, table, column, text = ZSCORE | MINMAX
@@ -57,12 +58,11 @@ struct Instruction {
     std::vector<int> uses;  // temporaries this instruction reads
     int line = 0;           // source line it was generated from
     std::string noEffect;   // why analysis proved it changes nothing; empty if it may change data
+    // A CHECK proven from the values of these tables. The optimizer keeps it, but it
+    // runs only if one of them is not the file the compiler read (see certify/).
+    std::vector<std::string> provenFromValuesOf;
+    bool onlyIfInputChanged = false;
 };
-
-// "dataset" for a TABLE, "dataset.table" for a table in a TABLESET
-inline std::string tableKey(const std::string& dataset, const std::string& table) {
-    return table.empty() ? dataset : dataset + "." + table;
-}
 
 struct IRProgram {
     std::vector<Instruction> code;

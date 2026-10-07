@@ -176,7 +176,7 @@ void testContracts() {
 void testGeneratedReader() {
     Compiled c;
     compile("students.parquet", "SELECT s [name, marks];\nSAVE s AS \"o.parquet\";", c);
-    const std::string python = ExecutionPlanner("output", "test.prep").generate(c.ir, "");
+    const std::string python = ExecutionPlanner("output", "test.prep", Certificate{}).generate(c.ir, "");
     check(python.find("read_parquet_checked(") != std::string::npos &&
               python.find("def read_csv_checked") == std::string::npos,
           "the generated program reads Parquet, and has no unused CSV reader");

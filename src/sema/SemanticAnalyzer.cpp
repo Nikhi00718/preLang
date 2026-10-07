@@ -93,7 +93,7 @@ TableState makeTable(TableSchema schema) {
         // exact promises both: the range is attained and `nullable` is certain. FILL_NULL relies
         // on the second (the fill value really appears), so unknown missing values rule it out.
         const bool nullable = info.missingCount > 0 || !info.missingKnown;
-        const bool exact = (info.boundsExact || !info.hasRange) && info.missingKnown;
+        const bool exact = schema.valuesKnown && (info.boundsExact || !info.hasRange) && info.missingKnown;
         ColumnState column{info.name, info.type, nullable, Range{}, exact, false, info.stringReason};
         if (isNumeric(info.type) && info.hasRange) {
             column.range = {info.min, info.max};
@@ -600,7 +600,11 @@ void SemanticAnalyzer::visit(const ExpectStmt& node) {
                 return;
             }
             if (linked) {
-                const Target target{linked->name, "", "", {linked->link.images, linked->link.table, linked->link.column}};
+                // The run-time check must match the same images LINK matched, so it is
+                // also told which files REMOVE_CORRUPT took out before the LINK.
+                Target target{linked->name, "", "", {linked->link.images, linked->link.table, linked->link.column}};
+                target.args.insert(target.args.end(), linked->link.removedImages.begin(),
+                                   linked->link.removedImages.end());
                 contracts_.matchRate(node, *linked, target);
                 addTarget(node, target);
             }
@@ -895,6 +899,13 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
     link.images = images->name;
     link.table = labels->name;
     link.column = column->name;
+    for (const ImageInfo& file : images->imageSchema.images) {
+        const bool kept = std::any_of(images->images.shapes.begin(), images->images.shapes.end(),
+                                      [&](const ImageShape& shape) { return shape.path == file.path; });
+        if (!kept) {
+            link.removedImages.push_back(file.path);
+        }
+    }
 
     DatasetSymbol dataset;
     dataset.name = node.dataset;

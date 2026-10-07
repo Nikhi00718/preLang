@@ -1,5 +1,6 @@
 #pragma once
 
+#include "certify/Certifier.h"
 #include "ir/IR.h"
 
 #include <filesystem>
@@ -12,7 +13,7 @@
 // needs are included.
 class ExecutionPlanner {
 public:
-    ExecutionPlanner(std::filesystem::path outputFolder, std::string sourceName);
+    ExecutionPlanner(std::filesystem::path outputFolder, std::string sourceName, const Certificate& certificate);
 
     // The complete generated program; `manifestCode` is appended at the end.
     std::string generate(const IRProgram& program, const std::string& manifestCode) const;
@@ -24,6 +25,7 @@ public:
 private:
     std::filesystem::path outputFolder_;
     std::string sourceName_;
+    const Certificate& certificate_;
 };
 
 // Whether the OpenCV backend handles this instruction.

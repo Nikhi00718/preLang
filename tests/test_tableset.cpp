@@ -128,8 +128,13 @@ void testCrossTableContracts() {
     Compiled c;
     compile("EXPECT company.*.id UNIQUE IF_EXISTS;\n"
             "EXPECT company.interns.team REFERENCES company.teams.name;" + save, c);
-    check(!c.diagnostics.hasErrors() && proven(c) == 3 && countOf(c.ir, Opcode::Check) == 0,
-          "UNIQUE and REFERENCES are proven from the files, so no run-time checks remain");
+    // The proofs read the values, so they hold for these files only: the checks
+    // stay, but run only if the program is given other files.
+    const bool allConditional = std::all_of(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) {
+        return in.op != Opcode::Check || in.onlyIfInputChanged;
+    });
+    check(!c.diagnostics.hasErrors() && proven(c) == 3 && countOf(c.ir, Opcode::Check) == 3 && allConditional,
+          "UNIQUE and REFERENCES are proven from the files; their checks run only if an input changes");
 
     Compiled bad;
     compile("EXPECT company.staff.name REFERENCES company.teams.name;" + save, bad);

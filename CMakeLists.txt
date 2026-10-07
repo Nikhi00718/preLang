@@ -14,6 +14,7 @@ add_library(preplang_core
     src/ast/ASTPrinter.cpp
     src/ast/ASTDot.cpp
     src/schema/Checksum.cpp
+    src/schema/CsvScanner.cpp
     src/schema/ParquetFooter.cpp
     src/schema/SchemaProvider.cpp
     src/sema/SymbolTable.cpp
@@ -23,6 +24,7 @@ add_library(preplang_core
     src/dataset/LineageTracker.cpp
     src/dataset/DatasetLinker.cpp
     src/ir/IRBuilder.cpp
+    src/certify/Certifier.cpp
     src/optimizer/PassManager.cpp
     src/optimizer/RedundantOpPass.cpp
     src/optimizer/DeadOpPass.cpp
@@ -38,6 +40,8 @@ target_include_directories(preplang_core PUBLIC src)
 
 if(MSVC)
     target_compile_options(preplang_core PUBLIC /W4 /permissive-)
+    # fopen is the portable C function; MSVC would rather have fopen_s
+    target_compile_definitions(preplang_core PUBLIC _CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(preplang_core PUBLIC -Wall -Wextra -pedantic)
 endif()
@@ -48,7 +52,7 @@ target_link_libraries(preplang PRIVATE preplang_core)
 
 # Unit tests: ctest --test-dir build -C Debug --output-on-failure
 enable_testing()
-foreach(name lexer parser semantic tableset imageset parquet optimizer)
+foreach(name lexer parser semantic tableset imageset parquet optimizer scanner certificate)
     add_executable(test_${name} tests/test_${name}.cpp)
     target_link_libraries(test_${name} PRIVATE preplang_core)
     add_test(NAME ${name} COMMAND test_${name})

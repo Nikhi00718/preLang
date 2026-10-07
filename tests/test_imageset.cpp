@@ -228,6 +228,13 @@ void testLinkMatchRate() {
             c);
     check(!c.diagnostics.hasErrors() && c.analysis.contracts.front().verdict == Verdict::Proven,
           "every image has a label: MATCH_RATE 100% is proven");
+    // The check stays for other label files; it must leave out the broken file
+    // REMOVE_CORRUPT removed before the LINK, as the compile-time proof did.
+    const auto matchRate = std::find_if(c.ir.code.begin(), c.ir.code.end(),
+                                        [](const Instruction& in) { return in.text == "MATCH_RATE"; });
+    check(matchRate != c.ir.code.end() && matchRate->onlyIfInputChanged && matchRate->columns.size() == 4 &&
+              matchRate->columns[3] == "bad.jpg",
+          "the run-time MATCH_RATE check skips bad.jpg, which REMOVE_CORRUPT removed before LINK");
 
     Compiled bad;
     compile("LOAD \"test_imageset_partial.csv\" AS labels;\nREMOVE_CORRUPT imgs;\n"

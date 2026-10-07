@@ -46,16 +46,20 @@ values and value intervals, per-image sizes, channels, pixel type and format, an
 match rates---from the data itself (every CSV cell) or from metadata alone (Parquet footer
 statistics, image headers), carries it through the pipeline with transfer functions, and uses it
 to type-check every operation, to decide every declared data contract as proven, violated or
-deferred to a run-time check, and to optimize. A fingerprint guard binds each proof to the exact
-inputs, which makes deleting the checks of proven contracts sound; we state the soundness argument
-formally. On \RbTotal{} data-preparation failures from GitHub issues, selected by error message,
+deferred to a run-time check, and to optimize. Proofs are bound to the inputs in two ways: a
+fingerprint guard accepts the exact files, and a \emph{data certificate}---the facts the proofs
+need, found by analysing the program again under weaker facts---lets the compiled program accept
+new batches of data without recompiling. We state both soundness arguments. On \RbTotal{} data-preparation failures from GitHub issues, selected by error message,
 PrepLang reports \RbEarly{} (\RbEarlyPct\%) before any data is processed; all \RbCases{} of our
 reproductions behave as classified. On a 16-million-row Parquet file, compilation takes
 \PqSixteen\,s whatever the file size, and reports injected mistakes in \ScTabNamePl\,s where the
 equivalent script fails after \ScTabNameScript\,s; on 3,000 images a float-pixel mistake that the
 script turns into 3,000 black images is reported in \ScImgFloatPl\,s. On 24 injected mistakes,
 PrepLang reports all 24 before processing, while a script-style pipeline crashes part-way on 20 and
-silently writes wrong output on 4.
+silently writes wrong output on 4. Of \CertBatches{} new batches for seven workloads, the
+certificate admits \CertAdmitPct\% where the compiled file's own facts would admit
+\FactsAdmitPct\%, and no admitted run differs from a fresh compilation. A parallel scanner analyses
+one million CSV rows in \CsvMillion\,s, \CsvSpeedup$\times$ faster than pandas' default reader.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -95,13 +99,17 @@ checking~\cite{flanagan2006}, each \texttt{EXPECT} is proven, violated (naming t
 or files) or deferred to a run-time check. An exactness flag makes refutation sound, and a
 fingerprint guard binds proofs to the exact inputs, so the checks of proven contracts can be
 deleted. We give the soundness argument (Section~\ref{sec:contracts}).
+\item \textbf{Data certificates.} The program is analysed again with weaker facts about its
+inputs; the facts every proof survives without are dropped. The rest is a certificate, with the
+proofs that need each fact, that the generated program checks to accept a new input. Monotone
+transfer functions make this sound (Section~\ref{sec:cert}).
 \item \textbf{State-driven optimization with an explicit exact/approximate boundary}
 (Section~\ref{sec:opt}).
 \item \textbf{An evaluation} with injected mistakes, performance and scale experiments, and a study
 of \RbTotal{} real failures from GitHub issues with checked reproductions (Section~\ref{sec:eval}).
 \end{itemize}
 
-The compiler has about 7,500 lines of C++17 and 141 unit tests; the artifact includes all
+The compiler has about 8,500 lines of C++17 and 181 unit tests; the artifact includes all
 evaluation scripts.
 
 \section{A Motivating Example}\label{sec:example}
@@ -334,6 +342,71 @@ that \texttt{FILL\_NULL} followed by \texttt{BETWEEN} could be reported as viola
 value never occurs. The case is now excluded by the definition of $\epsilon$ and covered by a unit
 test. CRC-32 detects accidental changes, not deliberate ones; a cryptographic hash can replace it.
 
+\section{Data Certificates}\label{sec:cert}
+
+The fingerprint guard is sound but strict: a preparation pipeline usually runs again on tomorrow's
+file, which has the same layout and different values, and the guard refuses it. Most facts of the
+compiled file are not needed by any proof, though. In the running example the data has marks in
+$[35,95]$, but the only proof about marks is \texttt{BETWEEN 0 AND 100}, which needs $[0,100]$.
+
+\textbf{Certificate.} A certificate is an input state $\sigma_C$ in which every column is inexact
+($\epsilon$ false, Section~\ref{sec:state}): a set of tables, not one table. An input $T$ is
+\emph{admitted} if $T \in \gamma(\sigma_C)$: every column read keeps its type (\textsc{Integer}
+values may fill a \textsc{Float} column, and a column without values fits any type), has no missing
+values where $\sigma_C$ says \textit{none}, and stays inside the certified interval. Let
+$\Pi(\sigma)$ be the proven contracts and removed operations the analysis derives from input state
+$\sigma$, leaving out contracts proven by reading the values (\texttt{UNIQUE},
+\texttt{REFERENCES}, \texttt{MATCH\_RATE}).
+
+\begin{lemma}[Monotonicity]\label{lem:mono}
+Order states pointwise ($\textit{none} \sqsubseteq \textit{maybe}$, interval inclusion, $\epsilon$
+false). For every statement, $\sigma' \sqsubseteq \sigma$ implies $f_s(\sigma') \sqsubseteq
+f_s(\sigma)$, and every proof and removal decided in $\sigma$ is also decided in $\sigma'$.
+\end{lemma}
+\begin{IEEEproof}[Proof sketch]
+The decisions are inclusions of the state in a fixed predicate ($[l,u] \subseteq [a,b]$,
+$\nu = \textit{none}$, a comparison true on all of $[l,u]$ without missing values), which a smaller
+state keeps. Transfer functions are joins and meets with constants, except where a decision changes
+the path: a \texttt{FILTER} that is always true in $\sigma'$ leaves $\sigma'$ unchanged, and
+$\sigma' \sqsubseteq \sigma \sqcap \textit{cond} = f_s(\sigma)$ because $\sigma'$ already satisfies
+the condition; a contract proven in $\sigma'$ but deferred in $\sigma$ leaves $\sigma'$, and
+$\sigma' \sqsubseteq \sigma \sqcap \varphi$ likewise. \texttt{FILL\_NULL} adds $v$ only when
+$\nu = \textit{maybe}$, which is monotone because $[l,u] \subseteq [l,u] \sqcup [v,v]$.
+\end{IEEEproof}
+
+\begin{theorem}[Certificate soundness]\label{thm:cert}
+If $\Pi(\sigma_C) \supseteq \Pi(\sigma_0)$ and an input $T$ is admitted, every removal and every
+proof the compiled program relies on is valid for $T$.
+\end{theorem}
+\begin{IEEEproof}
+Let $\alpha(T)$ be the inexact state of $T$; admission means $\alpha(T) \sqsubseteq \sigma_C$. By
+Lemma~\ref{lem:mono}, $\Pi(\alpha(T)) \supseteq \Pi(\sigma_C) \supseteq \Pi(\sigma_0)$, and by
+Lemma~\ref{lem:init}, Theorem~\ref{thm:transfer} and Theorem~\ref{thm:verdict} applied to
+$\alpha(T)$, each of these proofs holds for $T$ and each removed operation does nothing on $T$.
+Checks of contracts proven from the values are kept in the generated program and run whenever an
+input differs from the compiled one.
+\end{IEEEproof}
+
+\textbf{Finding the certificate.} The compiler starts from $\sigma_0$ with every $\epsilon$
+cleared and first checks that this still gives $\Pi(\sigma_0)$; otherwise only the exact files are
+accepted. Then, for every column the optimized program reads, it tries to weaken one fact at a time
+and analyses the whole program again: missing values are allowed; a lower bound is replaced by
+$-\infty$, or else by the loosest program constant below it that works; likewise for the upper
+bound. A weakening is kept when $\Pi$ is unchanged. The analysis compares intervals only with the
+program's constants (contract bounds, comparison values, fill values), so no other bound can keep
+more proofs; the result is 1-minimal: no remaining fact can be weakened on its own. A rejected
+weakening tells which proofs need the fact, and the certificate lists them, so a refused input is
+explained by the row and the proof:
+
+\begin{lstlisting}
+marks is 104 in data row 4, above 100; the compiled
+program relies on this for line 5: EXPECT
+students.marks BETWEEN 0 AND 100
+\end{lstlisting}
+
+A column costs at most $1 + 2(k+1)$ analyses for $k$ constants. The analyses read no data: tables
+are replaced by their facts, and image headers are cached. Image folders keep the exact fingerprint.
+
 \section{State-Driven Optimization}\label{sec:opt}
 
 Analysis results are attached to a three-address intermediate representation in which wildcards
@@ -341,7 +414,9 @@ are already expanded per table. Three passes and the code generator use them.
 \textbf{No-effect elimination} removes operations the state proves useless: \texttt{FILL\_NULL} on
 a column without missing values, a \texttt{FILTER} that is always true, \texttt{GRAYSCALE} on
 1-channel images, \texttt{CONVERT} to the current format.
-\textbf{Check elimination} removes checks of proven contracts (Corollary~\ref{cor:checks}).
+\textbf{Check elimination} removes checks of proven contracts (Corollary~\ref{cor:checks}); the
+check of a contract proven from the values stays, guarded so that it runs only when an input is not
+the compiled file (Section~\ref{sec:cert}).
 \textbf{Dead-code elimination} removes unused temporaries and image operations after the last save.
 \textbf{Dead-store elimination and column pruning} run a backward liveness analysis over columns;
 \texttt{LOAD} reads only live columns, and \texttt{DROP\_NULL} counts as reading every column,
@@ -366,13 +441,23 @@ prints the execution plan and \texttt{--dry-run} the files a run would read and 
 running anything. The generated program writes a manifest with inputs, fingerprints, contract
 verdicts, operations and outputs.
 
+The CSV reader reads a file once and cuts it at line breaks into one piece per core. Each thread
+splits its lines in place (\texttt{std::string\_view}), infers cell types and parses numbers in one
+pass, using Clinger's exact fast path~\cite{clinger1990} when the digits and the power of ten are
+exact doubles; the CRC-32 (slicing-by-8) runs on its own thread. Pieces are merged in file order,
+keeping the first problem and the first cell that makes a column \textsc{String}, so the result
+equals a sequential pass; a test compares both on files cut into 1 to 16 pieces, and a
+differential test against the earlier sequential reader found no difference on 60 random files of
+up to 250,000 rows with injected errors.
+
 \section{Evaluation}\label{sec:eval}
 
-We ask six questions. \textbf{RQ1:} Does compiling against the data find injected mistakes before
+We ask seven questions. \textbf{RQ1:} Does compiling against the data find injected mistakes before
 any data is processed? \textbf{RQ2:} How many contracts are decided at compile time?
 \textbf{RQ3:} What do the optimizations gain at run time? \textbf{RQ4:} What does analyzing the
 data at compile time cost? \textbf{RQ5:} How early are mistakes reported on large inputs?
 \textbf{RQ6:} How many real data-preparation failures would PrepLang report?
+\textbf{RQ7:} Can a compiled program be reused on new data?
 
 \textbf{Setup.} Intel Core i5-12450H (8 cores), 16\,GB RAM, Windows~11; MSVC (toolset 14.44,
 Release); Python 3.14, pandas 3.0, NumPy 2.5, OpenCV 5.0, pyarrow 25. Times are medians of three
@@ -504,9 +589,10 @@ Parquet, 16M rows (\PqSixteenSize\,MiB) & \PqSixteen & \PqSixteenRead \\
 \end{tabular}
 \end{table}
 
-Reading every CSV cell costs about as much as reading the file once (\CsvRatio$\times$ pandas'
-C parser for one million rows), so for CSV the analysis is not cheaper than running the pipeline;
-its value is the diagnosis, not the time. Metadata-only analysis changes this: Parquet compile time
+With the parallel scanner, analysing every CSV cell of one million rows takes \CsvMillion\,s,
+\CsvSpeedup$\times$ faster than pandas' default reader reads the same file and about as fast as
+pandas with the multi-threaded pyarrow reader (\CsvArrowRead\,s, measured inside a running Python
+process, so without process start); the earlier sequential reader took 2.04\,s. Metadata-only analysis goes further: Parquet compile time
 stays at \PqSixteen\,s from one to 16 million rows, and reading image headers is \HdrRatio$\times$
 faster than decoding 3,000 images.
 
@@ -595,6 +681,34 @@ file) and checked CSV encodings; before these fixes the rate was \RbBefore{} of 
 The uncovered failures point to extensions: more input formats, dates, per-image label files, and
 set-valued operations such as pivots.
 
+\subsection{RQ7: Reusing a compiled program on new data}
+
+Seven workloads are compiled once: the four table examples, the same program twice on one file
+(\texttt{optimize}), the Parquet example, the images linked to labels, and a sensor pipeline of
+20,000 rows per day. Each input table then gets new batches: other days and another season of the
+sensor process, and, for the examples, rows resampled with replacement, values moved by noise of
+0.1, 0.5 and 1.5 standard deviations, 20\% missing values in one column, and one value far out of
+range. Each batch is run by the compiled program (\texttt{table=batch.csv}) and, as ground truth,
+compiled and run fresh. We compare three admission policies: the fingerprint, the compiled file's
+own facts (type, no missing values, and $[\min,\max]$ of every column read, as a schema inferred by
+TFDV~\cite{breck2019} would require), and the certificate.
+
+\input{certtable}
+
+The certificate admits \CertAdmit{} of \CertBatches{} batches (\CertAdmitPct\%), the file's own
+facts \FactsAdmit{} (\FactsAdmitPct\%) and the fingerprint none. Every admitted run ends like the
+fresh compilation (\CertAgree{} of \CertAdmit{}: the same output files, or both stopped by the
+same contract), and no admitted run finished where the fresh compilation failed. Every refused
+batch also fails to compile fresh (\CertFalse{} refused batches would have compiled), so on these
+workloads the certificate is not only sound but loses nothing to its 1-minimal search. The sensor
+workload shows the intended use: other days and a season 12 degrees warmer are all admitted, while
+the file's own facts admit none of them.
+
+During this experiment, the run-time \texttt{MATCH\_RATE} check, which had always been eliminated
+before, ran for the first time on changed labels and failed where the compile-time proof held: it
+counted a broken image that \texttt{REMOVE\_CORRUPT} had removed before the \texttt{LINK}. The
+generated check now skips the same files the proof skipped, with a regression test.
+
 \subsection{Threats to validity}
 
 The error messages were chosen by the author, and one person classified the issues; the
@@ -603,7 +717,9 @@ text, not from the original data. GitHub's ranking favors some repositories, and
 The mutants of RQ1 are our own, the baseline interpreter is ours, and performance numbers come from
 one machine and synthetic data. Metadata-only soundness assumes truthful Parquet statistics. The
 approach needs the inputs at compile time, which holds for batch preparation, and the language has
-no joins, loops or user-defined functions.
+no joins, loops or user-defined functions. Certificates are 1-minimal, not minimum, and cover types,
+missing values and intervals of tables; image inputs must stay exactly as compiled. The new batches
+of RQ7 are generated edits of small example files and one synthetic process.
 
 \section{Related Work}
 
@@ -631,6 +747,21 @@ proves structural contracts for typed Spark pipelines at compile time and keeps 
 check at the output, since data may drift after compilation; PrepLang proves value-level contracts
 from the data and handles drift by guarding the inputs, which is what allows deleting the checks.
 
+\textbf{Reusing proofs on new inputs.} Proof-carrying code~\cite{necula1997} ships a proof with a
+program so that a consumer can check it cheaply; PrepLang ships the facts its proofs depend on, and
+the generated program checks the input against them. Dynamic compilers specialize code to observed
+values behind guards and deoptimize when a guard fails~\cite{holzle1992}; progressive query
+optimization attaches validity ranges to a plan and re-optimizes outside them~\cite{markl2004},
+and parametric query optimization precomputes plans per parameter range~\cite{ioannidis1992}.
+These guards protect performance and fall back to a slower path; a certificate protects proofs of
+correctness and is derived by re-analysis rather than by cost estimates. Precondition
+inference~\cite{cousot2013} computes conditions on a program's inputs that are necessary for its
+assertions, and DeepInfer~\cite{ahmed2024} infers data preconditions of trained neural networks;
+we infer sufficient conditions on input data for a compiled pipeline's proofs and removals, by
+counterfactual re-analysis over the abstract state. TFDV~\cite{breck2019} validates new batches
+against a schema inferred from earlier data; RQ7 shows that taking all facts of the data, rather
+than the ones the program needs, refuses most new batches.
+
 \textbf{Types from data, metadata and data-centric compilers.} F\# type
 providers~\cite{petricek2016} infer types from sample data at compile time. Min/max statistics per
 block are used by databases to skip data~\cite{moerkotte1998} and are stored in Parquet
@@ -644,7 +775,9 @@ PrepLang's are driven by facts about the data.
 For batch data preparation, treating the input data as a compile-time input pays off: an abstract
 dataset state computed from the data, or from its metadata alone, turns many data mistakes into
 compile-time errors, decides almost all declared contracts statically, and justifies optimizations
-that keep the output exact, with a fingerprint guard that keeps the proofs sound. On real failures
+that keep the output exact, with a fingerprint guard that keeps the proofs sound. Data
+certificates carry those proofs to new batches: the compiled program accepts any input that has
+the few facts its proofs use, and names the proof when it refuses one. On real failures
 reported on GitHub, it catches about two in five before any data is processed; the rest outline
 the next steps: more input formats, dates, per-image label files and set-valued operations.
 
@@ -786,6 +919,38 @@ faults in deep learning systems,'' in \emph{Proc. 42nd Int. Conf. on Software En
 \bibitem{huynh2008}
 Q. Huynh-Thu and M. Ghanbari, ``Scope of validity of PSNR in image/video quality assessment,''
 \emph{Electronics Letters}, vol. 44, no. 13, pp. 800--801, 2008.
+
+\bibitem{necula1997}
+G. C. Necula, ``Proof-carrying code,'' in \emph{Proc. 24th ACM SIGPLAN-SIGACT Symp. on Principles of
+Programming Languages (POPL)}, 1997, pp. 106--119.
+
+\bibitem{holzle1992}
+U. H\"olzle, C. Chambers, and D. Ungar, ``Debugging optimized code with dynamic deoptimization,'' in
+\emph{Proc. ACM SIGPLAN Conf. on Programming Language Design and Implementation (PLDI)}, 1992,
+pp. 32--43.
+
+\bibitem{markl2004}
+V. Markl, V. Raman, D. Simmen, G. Lohman, H. Pirahesh, and M. Cilimdzic, ``Robust query processing
+through progressive optimization,'' in \emph{Proc. ACM SIGMOD Int. Conf. on Management of Data},
+2004, pp. 659--670.
+
+\bibitem{ioannidis1992}
+Y. E. Ioannidis, R. T. Ng, K. Shim, and T. K. Sellis, ``Parametric query optimization,'' in
+\emph{Proc. 18th Int. Conf. on Very Large Data Bases (VLDB)}, 1992, pp. 103--114.
+
+\bibitem{cousot2013}
+P. Cousot, R. Cousot, M. F\"ahndrich, and F. Logozzo, ``Automatic inference of necessary
+preconditions,'' in \emph{Proc. 14th Int. Conf. on Verification, Model Checking, and Abstract
+Interpretation (VMCAI)}, LNCS 7737, 2013, pp. 128--148.
+
+\bibitem{ahmed2024}
+S. Ahmed, H. Gao, and H. Rajan, ``Inferring data preconditions from deep learning models for
+trustworthy prediction in deployment,'' in \emph{Proc. 46th Int. Conf. on Software Engineering
+(ICSE)}, 2024.
+
+\bibitem{clinger1990}
+W. D. Clinger, ``How to read floating point numbers accurately,'' in \emph{Proc. ACM SIGPLAN Conf.
+on Programming Language Design and Implementation (PLDI)}, 1990, pp. 92--101.
 
 \end{thebibliography}
 

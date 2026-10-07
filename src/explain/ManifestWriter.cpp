@@ -43,7 +43,11 @@ std::string manifestCode(const IRProgram& program, const AnalysisResult& analysi
     for (const Instruction& instruction : program.code) {
         code << "        " << pythonString(instructionText(instruction)) << ",\n";
     }
-    code << "    ],\n    \"outputs\": outputs,\n}\n"
+    code << "    ],\n";
+    if (!program.tables.empty()) {
+        code << "    \"admitted_by_certificate\": [table for table, same in same_input.items() if not same],\n";
+    }
+    code << "    \"outputs\": outputs,\n}\n"
          << "(HERE / \"preplang_manifest.json\").write_text(json.dumps(manifest, indent=2), encoding=\"utf-8\")\n"
          << "print(\"Wrote\", HERE / \"preplang_manifest.json\")\n";
     return code.str();

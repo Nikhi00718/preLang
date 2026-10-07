@@ -23,6 +23,18 @@ std::string listText(const std::vector<std::string>& names) {
     return text + "]";
 }
 
+// " IF CHANGED students" for a check that runs only when an input changed
+std::string changedText(const Instruction& in) {
+    if (!in.onlyIfInputChanged) {
+        return "";
+    }
+    std::string text = " IF CHANGED";
+    for (const std::string& table : in.provenFromValuesOf) {
+        text += " " + table;
+    }
+    return text;
+}
+
 Literal number(const std::string& value) {
     return {LiteralKind::Number, value};
 }
@@ -60,6 +72,10 @@ Instruction IRBuilder::make(Opcode op, const Target& target) const {
     const auto found = analysis_.noEffect.find({statement_, targetKey(target)});
     if (found != analysis_.noEffect.end()) {
         instruction.noEffect = found->second;
+    }
+    const auto values = analysis_.valueProofs.find({statement_, targetKey(target)});
+    if (values != analysis_.valueProofs.end()) {
+        instruction.provenFromValuesOf = values->second;
     }
     return instruction;
 }
@@ -278,13 +294,14 @@ std::string instructionText(const Instruction& in) {
             return "LOAD " + table + " <- \"" + in.text + "\" " + listText(in.columns);
         case Opcode::Check:
             if (in.text == "MATCH_RATE") {
-                return "CHECK " + in.dataset + " MATCH_RATE " + in.values[0].value + "%";
+                return "CHECK " + in.dataset + " MATCH_RATE " + in.values[0].value + "%" + changedText(in);
             }
             if (in.text == "REFERENCES") {
-                return "CHECK " + target + " REFERENCES " + tableKey(in.columns[0], in.columns[1]) + "." + in.columns[2];
+                return "CHECK " + target + " REFERENCES " + tableKey(in.columns[0], in.columns[1]) + "." + in.columns[2] +
+                       changedText(in);
             }
             return "CHECK " + target + " " + in.text +
-                   (in.values.empty() ? "" : " " + in.values[0].value + " AND " + in.values[1].value);
+                   (in.values.empty() ? "" : " " + in.values[0].value + " AND " + in.values[1].value) + changedText(in);
         case Opcode::FillNull:
             return "FILL_NULL " + target + " WITH " + literalText(in.values[0]);
         case Opcode::DropNull:

@@ -82,6 +82,7 @@ struct LinkState {
     int matched = 0;
     std::vector<std::string> imagesWithoutLabel;
     std::vector<std::string> labelsWithoutImage;
+    std::vector<std::string> removedImages;  // files REMOVE_CORRUPT took out before LINK: not linked
 };
 
 enum class DatasetKind { Table, TableSet, Image, ImageSet, Dataset };

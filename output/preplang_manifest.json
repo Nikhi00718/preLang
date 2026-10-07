@@ -28,6 +28,7 @@
     "SELECT students [name, age, marks]",
     "SAVE students -> \"clean.csv\""
   ],
+  "admitted_by_certificate": [],
   "outputs": [
     {
       "file": "clean.csv",

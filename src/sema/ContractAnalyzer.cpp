@@ -37,11 +37,14 @@ ContractAnalyzer::ContractAnalyzer(Diagnostics& diagnostics, AnalysisResult& res
 // ---------- Recording verdicts ----------
 
 void ContractAnalyzer::proven(const ExpectStmt& node, const std::string& contract, const std::string& reason,
-                              const Target* runtimeTarget) {
-    result_.contracts.push_back({node.location.line, contract, Verdict::Proven, reason});
+                              const Target* runtimeTarget, const std::vector<std::string>& valueTables) {
+    result_.contracts.push_back({node.location.line, contract, Verdict::Proven, reason, !valueTables.empty()});
     result_.log.push_back("line " + std::to_string(node.location.line) + ": EXPECT " + contract + ": PROVEN, " + reason);
     if (runtimeTarget) {
         result_.noEffect[{&node, targetKey(*runtimeTarget)}] = "contract proven at compile time: " + reason;
+        if (!valueTables.empty()) {
+            result_.valueProofs[{&node, targetKey(*runtimeTarget)}] = valueTables;
+        }
     }
 }
 
@@ -187,7 +190,8 @@ void ContractAnalyzer::unique(const ExpectStmt& node, const std::string& contrac
             return;
         }
     }
-    proven(node, contract, "all " + std::to_string(rows.size()) + " values are different", &target);
+    proven(node, contract, "all " + std::to_string(rows.size()) + " values are different", &target,
+           {tableKey(target.dataset, target.table)});
 }
 
 // ---------- Cross-table contracts ----------
@@ -235,7 +239,8 @@ void ContractAnalyzer::references(const ExpectStmt& node, const std::string& nam
         }
     }
     if (missing.empty()) {
-        proven(node, contract, "all " + std::to_string(checked) + " values appear in " + otherName, &target);
+        proven(node, contract, "all " + std::to_string(checked) + " values appear in " + otherName, &target,
+               {tableKey(target.dataset, target.table), tableKey(target.args[0], target.args[1])});
         return;
     }
     Diagnostic& error = violated(node, contract,
@@ -341,7 +346,7 @@ void ContractAnalyzer::matchRate(const ExpectStmt& node, const DatasetSymbol& li
     }
     const double rate = ::matchRate(link);  // the DatasetLinker function, not this member
     if (rate >= std::stod(node.low)) {
-        proven(node, contract, "match rate is " + percent(rate), &target);
+        proven(node, contract, "match rate is " + percent(rate), &target, {link.table});
         return;
     }
     Diagnostic& error = violated(node, contract,

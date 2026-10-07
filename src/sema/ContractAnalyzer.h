@@ -40,8 +40,10 @@ private:
                 const TableState& table, const ColumnState& column);
 
     // `runtimeTarget` is set for contracts that would otherwise need a run-time CHECK.
+    // `valueTables` lists the tables whose values were read to prove it (empty if
+    // the proof uses only the abstract state).
     void proven(const ExpectStmt& node, const std::string& contract, const std::string& reason,
-                const Target* runtimeTarget);
+                const Target* runtimeTarget, const std::vector<std::string>& valueTables = {});
     Diagnostic& violated(const ExpectStmt& node, const std::string& contract, const std::string& message,
                          const std::string& hint);
     void deferred(const ExpectStmt& node, const std::string& contract, const std::string& reason);

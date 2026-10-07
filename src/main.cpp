@@ -2,7 +2,7 @@
 //
 // usage: preplang <file.prep> [options]
 //
-// Stage output:  --source --tokens --ast --schema --semantic --lineage --ir --python
+// Stage output:  --source --tokens --ast --schema --semantic --lineage --ir --certificate --python
 //                (with none of these, every stage except --lineage is printed)
 // Modes:         --explain   print the execution plan; write nothing
 //                --dry-run   print what running would change and write; write nothing
@@ -15,6 +15,7 @@
 #include "ast/ASTDot.h"
 #include "ast/ASTPrinter.h"
 #include "backend/ExecutionPlanner.h"
+#include "certify/Certifier.h"
 #include "common/Diagnostics.h"
 #include "common/SourceManager.h"
 #include "explain/ExplainPlan.h"
@@ -43,7 +44,7 @@ const std::filesystem::path outputFolder = "output";
 struct Options {
     std::string file;
     bool source = false, tokens = false, ast = false, schema = false, semantic = false, lineage = false;
-    bool ir = false, python = false;
+    bool ir = false, certificate = false, python = false;
     bool explain = false, dryRun = false, run = false, dot = false, noOptimize = false, approximate = false;
 };
 
@@ -51,7 +52,8 @@ bool parseArguments(int argc, char* argv[], Options& options) {
     const std::vector<std::pair<std::string, bool*>> stageFlags = {
         {"--source", &options.source},     {"--tokens", &options.tokens}, {"--ast", &options.ast},
         {"--schema", &options.schema},     {"--semantic", &options.semantic}, {"--lineage", &options.lineage},
-        {"--ir", &options.ir},             {"--python", &options.python},
+        {"--ir", &options.ir},             {"--certificate", &options.certificate},
+        {"--python", &options.python},
     };
     const std::vector<std::pair<std::string, bool*>> otherFlags = {
         {"--explain", &options.explain}, {"--dry-run", &options.dryRun}, {"--run", &options.run},
@@ -79,7 +81,7 @@ bool parseArguments(int argc, char* argv[], Options& options) {
     }
     if (!anyStage && !options.explain && !options.dryRun) {
         options.source = options.tokens = options.ast = options.schema = options.semantic = true;
-        options.ir = options.python = true;
+        options.ir = options.certificate = options.python = true;
     }
     return !options.file.empty();
 }
@@ -117,8 +119,8 @@ int main(int argc, char* argv[]) {
     Options options;
     if (!parseArguments(argc, argv, options)) {
         std::cerr << "usage: preplang <file.prep> [--source] [--tokens] [--ast] [--schema] [--semantic]\n"
-                  << "                            [--lineage] [--ir] [--python] [--explain] [--dry-run]\n"
-                  << "                            [--run] [--dot] [--O0] [--approx]\n";
+                  << "                            [--lineage] [--ir] [--certificate] [--python] [--explain]\n"
+                  << "                            [--dry-run] [--run] [--dot] [--O0] [--approx]\n";
         return 2;
     }
 
@@ -203,6 +205,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Phase 5: optimization
+    const std::vector<double> constants = programConstants(ir);  // before the optimizer removes instructions
     const OptimizationReport report = PassManager({!options.noOptimize, options.approximate}).run(ir);
     if (options.ir) {
         printHeader("OPTIMIZATION REPORT (PassManager)");
@@ -211,11 +214,20 @@ int main(int argc, char* argv[]) {
         printIR(std::cout, ir);
     }
 
+    // Phase 6: data certificate. The program is analysed again with weaker facts
+    // to find the facts its proofs really need; another input with those facts
+    // can then be given to the generated program without compiling again.
+    const Certificate certificate = Certifier(program, schemas, programFolder).certify(ir, analysis, constants);
+    if (options.certificate) {
+        printHeader("DATA CERTIFICATE (Certifier)");
+        printCertificate(std::cout, certificate);
+    }
+
     // --explain and --dry-run describe the program without writing anything.
     if (options.explain || options.dryRun) {
         if (options.explain) {
             printHeader("EXPLAIN (ExplainPlan)");
-            printExplain(std::cout, symbols, analysis, report, ir, diagnostics.warningCount());
+            printExplain(std::cout, symbols, analysis, report, ir, certificate, diagnostics.warningCount());
         }
         if (options.dryRun) {
             printHeader("DRY RUN (ExplainPlan)");
@@ -224,8 +236,8 @@ int main(int argc, char* argv[]) {
         return finish(diagnostics, source);
     }
 
-    // Phase 6: target code generation
-    const std::string python = ExecutionPlanner(outputFolder, source.path())
+    // Phase 7: target code generation
+    const std::string python = ExecutionPlanner(outputFolder, source.path(), certificate)
                                    .generate(ir, manifestCode(ir, analysis, source.path(), outputFolder));
     std::filesystem::create_directories(outputFolder);
     const std::filesystem::path script = outputFolder / "generated.py";

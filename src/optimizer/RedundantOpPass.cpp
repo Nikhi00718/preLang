@@ -5,8 +5,16 @@ RedundantOpPass::RedundantOpPass(bool approximate) : approximate_(approximate) {
 void RedundantOpPass::run(IRProgram& program, OptimizationReport& report) {
     std::vector<bool> remove(program.code.size(), false);
     for (size_t i = 0; i < program.code.size(); ++i) {
-        const Instruction& instruction = program.code[i];
+        Instruction& instruction = program.code[i];
         if (instruction.noEffect.empty()) {
+            continue;
+        }
+        // A proof that read the values holds only for those files. The check stays,
+        // and runs only if the program is given a different file (data certificate).
+        if (!instruction.provenFromValuesOf.empty()) {
+            report.changes.push_back("contract check made conditional: " + describe(instruction) + " runs only if " +
+                                     "an input differs from the file it was proven on, " + instruction.noEffect);
+            instruction.onlyIfInputChanged = true;
             continue;
         }
         remove[i] = true;

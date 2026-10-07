@@ -12,7 +12,8 @@ tables and OpenCV for images.
 ```text
 .prep -> Lexer -> Parser -> AST -> Semantic analysis over the abstract dataset state -> IR -> Optimizer
          (tokens)  (LL(1))          (CSV cells + image headers read here)                 (3 passes)
-      -> Execution planner -> pandas code + OpenCV code -> output/generated.py (+ run manifest)
+      -> Data certificate -> Execution planner -> pandas code + OpenCV code -> output/generated.py
+         (facts the proofs need)                                                (+ run manifest)
 ```
 
 For example, change `CONVERT imgs TO NPY;` to `CONVERT imgs TO PNG;` in
@@ -69,7 +70,7 @@ compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
    prints the execution plan and the data lineage, and writes no files.
 7. **Debug the compiler:** set a breakpoint in any `src/` file, open a `.prep` file and press `F5`
    (*Debug PrepLang on the open .prep file*).
-8. **Tests:** *Run Task... > PrepLang: run all tests* (141 unit tests in 7 executables).
+8. **Tests:** *Run Task... > PrepLang: run all tests* (181 unit tests in 9 executables).
 9. **See the errors:** open any file in `examples/errors/` and run step 5. Every error shows the
    line, a caret and a hint.
 
@@ -102,6 +103,7 @@ The generated program is always `output/generated.py`, and `SAVE` paths are rela
 | `--semantic` | the dataset state after every statement and the symbol table (`sema/`) |
 | `--lineage` | where every output file comes from (`dataset/LineageTracker`) |
 | `--ir` | IR, optimization report, optimized IR (`ir/`, `optimizer/`) |
+| `--certificate` | the data certificate: the facts about the inputs the proofs need, and which proof needs each one (`certify/`) |
 | `--python` | the generated program (`backend/`) |
 | `--explain` | execution plan: inputs, contract verdicts, optimizations, backends; writes nothing |
 | `--dry-run` | every file running would read and write; writes nothing |
@@ -207,23 +209,61 @@ in [0, 1], and `DROP` makes a later use an error, like use-after-free.
 generated), **VIOLATED** (compilation fails, naming the exact rows or files), or **DEFERRED** (a
 check is generated, and the compiler then assumes the contract holds for the rest of the program).
 
-**3. Proofs are tied to the exact input files.** The generated program recomputes a CRC-32
-fingerprint of every CSV file and of every image folder listing, and refuses to run if any input
-changed after compiling. Without this guard, removing a proven check would be unsafe.
+**3. Proofs are tied to the facts they use, not to one file.** The generated program recomputes a
+CRC-32 fingerprint of every input. If it is the file the compiler analysed, every proof holds as it
+is. Any other file (tomorrow's batch, a resampled split) is accepted only if it satisfies the
+program's **data certificate**, described next. Image folders must stay exactly as compiled.
 
-**4. Batch errors.** One mistake in a wildcard is reported once, with a note for each table or
+**4. Data certificates: compile once, run on new data.** After optimizing, the compiler analyses
+the program again many times with weaker facts about the inputs: missing values allowed, a lower or
+upper bound moved to one of the program's own constants or removed. A weaker fact is kept when every
+proof and every removed operation survives it. What remains is the certificate: the smallest set of
+facts (found greedily) that the compiled program relies on, each with the proofs that need it.
+
+```text
+students  (compiled with examples/tabular/students.csv)
+  name        STRING   no missing values   <- line 6: EXPECT students.name NOT_NULL
+  age         INTEGER  (any values)
+  marks       INTEGER  >= 0                <- line 5: EXPECT students.marks BETWEEN 0 AND 100
+                       <= 100              <- line 5: EXPECT students.marks BETWEEN 0 AND 100
+```
+
+The data had marks in [35, 95]; the certificate needs only [0, 100]. Give the program another file
+when you run it:
+
+```bash
+py -3 output/generated.py students=new_students.csv
+```
+
+A file that breaks the certificate is refused before anything is written, with the row and the
+proof: `marks is 104 in data row 4, above 100; the compiled program relies on this for line 5:
+EXPECT students.marks BETWEEN 0 AND 100`. Contracts that were proven by reading the values
+(`UNIQUE`, `REFERENCES`, `MATCH_RATE`) keep their check, which runs only when an input changed.
+Because every transfer function is monotone, an input inside the certificate gets at least the
+compiled proofs; `tests/test_certificate.cpp` checks this on 400 random inputs, and
+`eval/certificates.py` on 244 new batches against a fresh compilation of each.
+
+**5. Batch errors.** One mistake in a wildcard is reported once, with a note for each table or
 image it affects.
 
-**5. SQL-style missing values.** The generated code uses pandas nullable types (`Int64`, `Float64`,
+**6. SQL-style missing values.** The generated code uses pandas nullable types (`Int64`, `Float64`,
 `boolean`, `string`): a comparison with a missing value is unknown and `FILTER` drops the row. The
 analyzer reasons with the same rule.
+
+**7. Fast analysis of large CSV files.** The compile-time CSV reader reads the file once, cuts it
+into one piece per core at line breaks, and analyses the pieces in parallel without copying cells
+(`std::string_view`); numbers are parsed in one pass with an exact fast path. The pieces are merged
+in file order, so the facts and error lines are the same as for one sequential pass (checked by
+`tests/test_scanner.cpp`). One million rows take 0.13 s to analyse (2.04 s before), 4.7 times less
+than pandas needs just to read them with its default parser, and about as long as pandas with the
+multi-threaded pyarrow reader.
 
 ## Optimizations
 
 | Pass | What it removes or changes | Exact? |
 |---|---|---|
 | no-effect elimination | operations the state proves do nothing (`FILL_NULL` on a column without missing values, `GRAYSCALE` on 1-channel images, `CONVERT` to the current format) | yes |
-| contract check elimination | run-time checks of PROVEN contracts | yes (fingerprint guard) |
+| contract check elimination | run-time checks of PROVEN contracts; a contract proven from the values keeps its check, which runs only if an input changed | yes (fingerprint guard and certificate) |
 | dead code elimination | unused temporaries; image operations after the last `SAVE_IMAGES` | yes |
 | dead store elimination + column pruning | `FILL_NULL`/`NORMALIZE` whose result is never used; `LOAD` reads only live columns | yes |
 | image streaming | all image operations up to a save become one loop that decodes, transforms and writes one image at a time | yes |
@@ -272,6 +312,8 @@ py -3 eval/bench.py
 - `eval/scale.py` compares time-to-first-error on 16M-row Parquet tables and 3,000 images
   (`py -3 eval/datasets.py scale` first).
 - `eval/run_realbugs.py` runs the study of real GitHub issues (`eval/realbugs_catalog.py`).
+- `eval/certificates.py` gives compiled programs new batches of data and compares each run with a
+  fresh compilation for that batch (RQ7).
 - `eval/paper_numbers.py` writes `paper/numbers.tex`, so every number in the paper comes from
   `eval/results/`.
 
@@ -280,12 +322,13 @@ script-style baseline crashes part-way on 20 and silently writes wrong output on
 
 **RQ2 (contracts):** 15 of the 16 contracts in the examples are proven at compile time.
 
-**RQ3 (optimizations):** column pruning and check elimination cut table processing time by 37%;
+**RQ3 (optimizations):** column pruning and check elimination cut table processing time by 40%;
 streaming needs 10 MiB for 1,000 images (like a careful hand-written script) instead of 922 MiB;
 RESIZE fusion gains little and changes pixels, so it is opt-in (`--approx`).
 
-**RQ4 (analysis cost):** a full CSV read costs about one pandas read; a Parquet footer costs
-0.02 s for 1 or 16 million rows; image headers are 23x faster than decoding.
+**RQ4 (analysis cost):** analysing every cell of a 1M-row CSV takes 0.13 s, 4.7x faster than
+`pandas.read_csv` reads it and about as fast as its pyarrow engine; a Parquet footer costs 0.02 s for
+1 or 16 million rows; image headers are about 17x faster than decoding.
 
 **RQ5 (large inputs):** mistakes in a 16M-row pipeline are reported in 0.02 s (the script fails
 after 1.8-2.8 s); a float-pixel mistake on 3,000 images is reported in 0.26 s, while the script
@@ -294,6 +337,12 @@ runs 8.5 s and writes 3,000 black images.
 **RQ6 (real bugs):** of 44 data-preparation failures from GitHub issues, PrepLang reports 18 (41%)
 before any data is processed; all 21 reproductions behave as classified. Details:
 `eval/results/realbugs.md`.
+
+**RQ7 (data certificates):** seven compiled programs get 244 new batches, and each batch is also
+compiled fresh as the ground truth. The certificate admits 209 (86%), the compiled file's own facts
+(a TFDV-style schema) 96 (39%), the fingerprint none. All 209 admitted runs end exactly like the
+fresh compilation, and every refused batch also fails a fresh compilation. Details:
+`eval/results/certificates.md`.
 
 The paper is `paper/preplang.tex` with `paper/numbers.tex` (IEEE format; upload both to Overleaf).
 What is new compared with existing work is in [NOVELTY.md](NOVELTY.md).
@@ -305,14 +354,15 @@ src/common      source text, diagnostics (line, caret, hint, notes), did-you-mea
 src/lexer       tokens and the DFA-style lexer
 src/parser      recursive-descent parser with error recovery
 src/ast         AST, tree printer, Graphviz export
-src/schema      CSV schema inference, PNG/JPEG header reading, CRC-32 fingerprints
+src/schema      parallel CSV scanner, Parquet footers, PNG/JPEG headers, CRC-32 fingerprints
 src/sema        abstract dataset state, selectors, contracts, the semantic analyzer
 src/dataset     lineage and image-label linking
 src/ir          three-address IR
 src/optimizer   pass manager and the optimization passes
+src/certify     data certificates: counterfactual re-analysis and admission
 src/backend     pandas code, OpenCV code, and the planner that joins them
 src/explain     --explain, --dry-run, --lineage and the run manifest
-tests/          unit tests (141)
+tests/          unit tests (181)
 examples/       example programs and data
 eval/           mutants, baseline, benchmarks and results
 paper/          conference paper draft (LaTeX)

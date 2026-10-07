@@ -152,10 +152,18 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program)
             return saveLoop(in);
         case Opcode::Check: {  // MATCH_RATE: labels and images are compared at run time
             const std::string labels = PandasCodegen::tableVariable(in.columns[1], "");
-            const std::string files = variable(in.columns[0]) + "_files";
-            return "names = set(" + labels + "[" + pythonString(in.columns[2]) + "].dropna())\n" +
-                   "matched = len(names & set(" + files + "))\n" + "rate = 100 * matched / max(len(names), len(" +
-                   files + "), 1)\n" + "if rate < " + in.values[0].value + ":\n    raise ContractError(" +
+            std::string files = variable(in.columns[0]) + "_files";
+            if (in.columns.size() > 3) {  // files REMOVE_CORRUPT took out before the LINK
+                const std::vector<std::string> removed(in.columns.begin() + 3, in.columns.end());
+                files = "[name for name in " + files + " if name not in " + pythonList(removed) + "]";
+            }
+            // Proven from the values: only needed when the labels file changed.
+            const std::string indent = in.onlyIfInputChanged ? "    " : "";
+            return (in.onlyIfInputChanged ? "if " + PandasCodegen::inputChanged(in) + ":\n" : "") + indent +
+                   "names = set(" + labels + "[" + pythonString(in.columns[2]) + "].dropna())\n" + indent +
+                   "matched = len(names & set(" + files + "))\n" + indent +
+                   "rate = 100 * matched / max(len(names), len(" + files + "), 1)\n" + indent + "if rate < " +
+                   in.values[0].value + ":\n" + indent + "    raise ContractError(" +
                    pythonString("line " + std::to_string(in.line) + ": " + in.dataset + " match rate is ") +
                    " + f\"{rate:.2f}%\")\n";
         }

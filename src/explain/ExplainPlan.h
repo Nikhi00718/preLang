@@ -1,5 +1,6 @@
 #pragma once
 
+#include "certify/Certifier.h"
 #include "ir/IR.h"
 #include "optimizer/PassManager.h"
 #include "sema/AnalysisResult.h"
@@ -11,7 +12,8 @@
 // --explain: what the compiler understood (inputs, contracts, optimizations,
 // backends) without writing or running anything.
 void printExplain(std::ostream& out, const SymbolTable& symbols, const AnalysisResult& analysis,
-                  const OptimizationReport& report, const IRProgram& program, int warnings);
+                  const OptimizationReport& report, const IRProgram& program, const Certificate& certificate,
+                  int warnings);
 
 // --dry-run: which tables, columns and images running the program would
 // change, and which files it would write.

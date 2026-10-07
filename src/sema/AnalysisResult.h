@@ -18,6 +18,11 @@ struct Target {
                                     // contract points to, or the pixel range before NORMALIZE
 };
 
+// "dataset" for a TABLE, "dataset.table" for a table in a TABLESET
+inline std::string tableKey(const std::string& dataset, const std::string& table) {
+    return table.empty() ? dataset : dataset + "." + table;
+}
+
 inline std::string targetKey(const Target& target) {
     return target.dataset + "." + target.table + "." + target.column;
 }
@@ -29,6 +34,8 @@ struct ContractRecord {
     std::string contract;  // e.g. "students.marks BETWEEN 0 AND 100"
     Verdict verdict;
     std::string reason;
+    bool fromValues = false;  // proven by reading the values (UNIQUE, REFERENCES, MATCH_RATE),
+                              // so the proof holds for those exact files only
 };
 
 // Everything semantic analysis hands to the later phases.
@@ -37,6 +44,9 @@ struct AnalysisResult {
     std::map<const Stmt*, std::vector<Target>> targets;
     // (statement, target key) -> why that part provably changes nothing.
     std::map<std::pair<const Stmt*, std::string>, std::string> noEffect;
+    // The noEffect entries of contracts proven from the values -> the tables whose values
+    // the proof read. If one of those files changes, the check must run after all.
+    std::map<std::pair<const Stmt*, std::string>, std::vector<std::string>> valueProofs;
     std::vector<ContractRecord> contracts;
     std::vector<std::string> log;  // what the compiler learned at each statement
     LineageTracker lineage;

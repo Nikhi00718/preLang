@@ -1,8 +1,8 @@
 {
   "table_optimizations": {
-    "optimized_s": 1.2856156000052579,
-    "O0_s": 1.4794858999957796,
-    "baseline_s": 1.5925392999924952,
+    "optimized_s": 1.4890753999352455,
+    "O0_s": 1.8078922999557108,
+    "baseline_s": 1.8246009999420494,
     "same_output": true,
     "columns_read": [
       5,
@@ -12,56 +12,59 @@
       0,
       2
     ],
-    "python_start_s": 0.9579389999998966,
-    "speedup_vs_O0": 1.1507995858091087
+    "python_start_s": 1.019520099973306,
+    "speedup_vs_O0": 1.2141039332422854
   },
   "image_streaming": {
     "images": 1000,
-    "preplang_s": 3.4778247000067495,
-    "baseline_s": 3.6822832000034396,
-    "handwritten_s": 3.0315431999915745,
-    "preplang_peak_mib": 10.047289848327637,
-    "baseline_peak_mib": 922.1292400360107,
-    "handwritten_peak_mib": 11.583172798156738,
+    "preplang_s": 3.5183315000031143,
+    "baseline_s": 4.013305000029504,
+    "handwritten_s": 3.5381769000086933,
+    "preplang_peak_mib": 10.033805847167969,
+    "baseline_peak_mib": 922.1283655166626,
+    "handwritten_peak_mib": 11.582572937011719,
     "same_pixels_in_sample": true
   },
   "resize_fusion": {
-    "exact_s": 5.63584859999537,
-    "approx_s": 5.5542452999943634,
-    "speedup": 1.014692059063558,
+    "exact_s": 5.555934899952263,
+    "approx_s": 5.255079299909994,
+    "speedup": 1.0572504395980136,
     "mean_psnr_db": 56.995981262688325,
     "min_psnr_db": 51.810706103618486
   },
   "compile_cost": [
     {
       "input": "CSV, 10,000 rows x 10 columns",
-      "compile_s": 0.03896839999652002,
-      "read_all_s": 0.03106199999456294
+      "compile_s": 0.014491100097075105,
+      "read_all_s": 0.05940250004641712,
+      "read_arrow_s": 0.03909209999255836
     },
     {
       "input": "CSV, 100,000 rows x 10 columns",
-      "compile_s": 0.23147190001327544,
-      "read_all_s": 0.11216869999771006
+      "compile_s": 0.02513980004005134,
+      "read_all_s": 0.07628340017981827,
+      "read_arrow_s": 0.014742800034582615
     },
     {
       "input": "CSV, 1,000,000 rows x 10 columns",
-      "compile_s": 2.0435426000040025,
-      "read_all_s": 0.9576628999930108
+      "compile_s": 0.13197450013831258,
+      "read_all_s": 0.6233069999143481,
+      "read_arrow_s": 0.10793669987469912
     },
     {
       "input": "100 JPG images, 640x480",
-      "compile_s": 0.025189500011038035,
-      "read_all_s": 0.18779980001272634
+      "compile_s": 0.015479799825698137,
+      "read_all_s": 0.1370778998825699
     },
     {
       "input": "1000 JPG images, 640x480",
-      "compile_s": 0.08574609999777749,
-      "read_all_s": 1.7695305999950506
+      "compile_s": 0.08036890020594001,
+      "read_all_s": 1.4762679000850767
     },
     {
       "input": "3000 JPG images, 640x480",
-      "compile_s": 0.24242929999309126,
-      "read_all_s": 5.508246999990661
+      "compile_s": 0.33442529989406466,
+      "read_all_s": 5.733431299915537
     }
   ]
 }

@@ -1,0 +1,104 @@
+[
+ {
+  "kind": "valid",
+  "what": "Compile and run examples/tabular/students.prep",
+  "expected": "the cleaned file is written",
+  "actual": "Saved 4 rows to output\\clean.csv"
+ },
+ {
+  "kind": "valid",
+  "what": "Compile examples/tabular/tableset.prep (a folder of four tables)",
+  "expected": "compiles without errors",
+  "actual": "Compiled successfully: 0 error(s), 0 warning(s)."
+ },
+ {
+  "kind": "valid",
+  "what": "Compile examples/tabular/metadata_only.prep (Parquet, footer only)",
+  "expected": "contracts proven from the footer statistics",
+  "actual": "contracts proven              2"
+ },
+ {
+  "kind": "valid",
+  "what": "Compile examples/images/linked.prep (images linked to labels)",
+  "expected": "compiles without errors",
+  "actual": "Compiled successfully: 0 error(s), 0 warning(s)."
+ },
+ {
+  "kind": "invalid",
+  "what": "A character the language does not have ($)",
+  "expected": "lexical error",
+  "actual": "error[lexical]: unexpected character '$'"
+ },
+ {
+  "kind": "invalid",
+  "what": "A misspelled keyword (NORMALISE)",
+  "expected": "syntax error with a suggestion",
+  "actual": "= hint: did you mean 'NORMALIZE'?"
+ },
+ {
+  "kind": "invalid",
+  "what": "NORMALIZE on a text column",
+  "expected": "type error",
+  "actual": "error[type]: NORMALIZE needs a numeric column, but s.name is STRING"
+ },
+ {
+  "kind": "invalid",
+  "what": "A column used after DROP removed it",
+  "expected": "semantic error naming the DROP",
+  "actual": "error[semantic]: column 'marks' was removed from 's' at line 2"
+ },
+ {
+  "kind": "invalid",
+  "what": "A contract the data breaks (marks BETWEEN 0 AND 90)",
+  "expected": "compile error naming the row",
+  "actual": "error[contract]: contract violated: s.marks has values from 0 to 100; row 2 of s.csv has 100"
+ },
+ {
+  "kind": "boundary",
+  "what": "An empty CSV file",
+  "expected": "schema error",
+  "actual": "error[schema]: CSV file 'e.csv' is empty"
+ },
+ {
+  "kind": "boundary",
+  "what": "A CSV row with one value too many",
+  "expected": "schema error with the line number",
+  "actual": "error[schema]: line 3 of 'x.csv' has 3 values but the header has 2 columns"
+ },
+ {
+  "kind": "boundary",
+  "what": "A CSV file saved as Windows-1252, not UTF-8",
+  "expected": "schema error with line and byte",
+  "actual": "error[schema]: line 2 of 'w.csv' is not UTF-8 text (byte 0xE9)"
+ },
+ {
+  "kind": "boundary",
+  "what": "BETWEEN 0 AND 100 when the data has exactly 0 and 100",
+  "expected": "PROVEN (both ends included)",
+  "actual": "line 2: EXPECT s.marks BETWEEN 0 AND 100: PROVEN, values are in [0, 100]"
+ },
+ {
+  "kind": "boundary",
+  "what": "FILTER marks > 100 when the largest mark is 100",
+  "expected": "warning: removes every row",
+  "actual": "warning[semantic]: FILTER removes every row: the condition is never true"
+ },
+ {
+  "kind": "run time",
+  "what": "The compiled program given a new batch inside the certificate",
+  "expected": "admitted and run",
+  "actual": "Admitted next.csv for s: it satisfies the data certificate"
+ },
+ {
+  "kind": "run time",
+  "what": "The compiled program given a batch with marks 130",
+  "expected": "refused, naming the row and the proof",
+  "actual": "ContractError: bad.csv is not the file the program was compiled with, and marks is 130 in data row 2, above 100; the compiled program relies on this for line 2: EXPECT s.marks BETWEEN 0 AND 100. Compile the .prep file again for this input."
+ },
+ {
+  "kind": "run time",
+  "what": "A deferred contract that fails when the program runs",
+  "expected": "ContractError naming the line",
+  "actual": "ContractError: line 3: s.marks has values outside 50 to 100"
+ }
+]

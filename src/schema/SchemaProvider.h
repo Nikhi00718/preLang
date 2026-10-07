@@ -4,9 +4,11 @@
 #include "schema/ImageSchema.h"
 #include "schema/TableSchema.h"
 
+#include <map>
 #include <optional>
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Reads the input data at compile time: CSV files (column types, missing
@@ -24,10 +26,21 @@ public:
     std::optional<ImageSetSchema> readImages(const std::string& path, bool singleFile, bool recursive,
                                              SourceLocation location);
 
+    // From now on, a table whose overrideKey is in the map is not read: the given
+    // facts are used instead. The certifier analyses the program again this way,
+    // with weaker facts than the real file has, without touching the data.
+    void setOverrides(std::map<std::string, TableSchema> overrides) { overrides_ = std::move(overrides); }
+    // One key per LOAD, so two LOADs of the same file can be given different facts.
+    static std::string overrideKey(const std::string& path, const std::string& tableName) {
+        return path + "|" + tableName;
+    }
+
 private:
     std::optional<TableSchema> readCsv(const std::string& csvPath, const std::string& name, SourceLocation location);
 
     Diagnostics& diagnostics_;
+    std::map<std::string, TableSchema> overrides_;
+    std::map<std::string, ImageSetSchema> images_;  // image headers already read, by path and options
 };
 
 // Every cell of one column ("" when missing). Read on demand for UNIQUE,
