@@ -90,22 +90,33 @@ std::unique_ptr<Stmt> Parser::loadStatement(DataKind kind) {
     return node;
 }
 
-// drop_null -> DROP_NULL table_selector ;
+// drop_null -> DROP_NULL table_selector [ column_list ] ;
 std::unique_ptr<Stmt> Parser::dropNullStatement() {
     auto node = std::make_unique<DropNullStmt>();
     node->location = advance().location;
     node->target = tableSelector();
+    if (check(TokenType::LEFT_BRACKET)) {
+        node->columns = columnList();
+    }
     endStatement();
     return node;
 }
 
-// fill_null -> FILL_NULL column_selector WITH literal [ IF_EXISTS ] ;
+// fill_null -> FILL_NULL column_selector WITH ( literal | MEAN | MEDIAN | MODE ) [ IF_EXISTS ] ;
 std::unique_ptr<Stmt> Parser::fillNullStatement() {
     auto node = std::make_unique<FillNullStmt>();
     node->location = advance().location;
     node->target = columnSelector();
     consume(TokenType::WITH, "'WITH'");
-    node->value = literal();
+    if (match(TokenType::MEAN)) {
+        node->method = FillMethod::Mean;
+    } else if (match(TokenType::MEDIAN)) {
+        node->method = FillMethod::Median;
+    } else if (match(TokenType::MODE)) {
+        node->method = FillMethod::Mode;
+    } else {
+        node->value = literal();
+    }
     optionalIfExists(node->target);
     endStatement();
     return node;

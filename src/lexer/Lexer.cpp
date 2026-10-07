@@ -24,6 +24,7 @@ const std::unordered_map<std::string, TokenType>& keywordTable() {
         {"REMOVE_CORRUPT", TokenType::REMOVE_CORRUPT}, {"LINK", TokenType::LINK},
         {"AS", TokenType::AS}, {"WITH", TokenType::WITH}, {"TO", TokenType::TO}, {"ON", TokenType::ON},
         {"USING", TokenType::USING}, {"ZSCORE", TokenType::ZSCORE}, {"MINMAX", TokenType::MINMAX},
+        {"MEAN", TokenType::MEAN}, {"MEDIAN", TokenType::MEDIAN}, {"MODE", TokenType::MODE},
         {"RANGE", TokenType::RANGE}, {"WHERE", TokenType::WHERE}, {"TYPE", TokenType::TYPE},
         {"EXCEPT", TokenType::EXCEPT}, {"IF_EXISTS", TokenType::IF_EXISTS}, {"RECURSIVE", TokenType::RECURSIVE},
         {"NUMBER", TokenType::NUMBER}, {"NUMERIC", TokenType::NUMERIC}, {"STRING", TokenType::STRING},

@@ -34,10 +34,18 @@
 
 struct ColumnFacts {
     std::string name;
-    ColumnType type = ColumnType::String;  // always required: the generated code reads the column with this type
+    bool read = true;                      // the optimized program loads it; otherwise it is loaded only to
+                                           // check it, because a proof depends on it (e.g. a removed check)
+    ColumnType type = ColumnType::String;
+    bool typeFixed = true;                 // the type is required: always for a column the program reads
+    std::vector<std::string> typeFor;      // for a column it does not read: the proofs that need the type
+    bool required = true;                  // the column must exist; a column no instruction names, which is
+    std::vector<std::string> requiredFor;  // only carried to the output, may be missing if no proof needs it
     bool notNull = false;
     double min = -std::numeric_limits<double>::infinity();
     double max = std::numeric_limits<double>::infinity();
+    bool minStrict = false;  // values must be > min (for FILTER c > k), not >= min
+    bool maxStrict = false;  // values must be < max
     // The proofs that need each fact, e.g. "line 5: EXPECT students.marks BETWEEN 0 AND 100"
     std::vector<std::string> notNullFor, minFor, maxFor;
 };
@@ -45,7 +53,7 @@ struct ColumnFacts {
 struct TableCertificate {
     std::string key;   // table key: "students", or "company.staff" in a TABLESET
     std::string file;  // the file it was compiled with
-    std::vector<ColumnFacts> columns;  // every column the program reads
+    std::vector<ColumnFacts> columns;  // every column the program reads, and every other one a proof needs
 };
 
 // What every image with one file extension must be. A folder is described by a

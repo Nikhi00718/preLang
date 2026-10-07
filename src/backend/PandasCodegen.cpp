@@ -33,6 +33,7 @@ const char* pandasDtype(ColumnType type) {
         case ColumnType::Integer: return "Int64";
         case ColumnType::Float:   return "Float64";
         case ColumnType::String:  return "string";
+        case ColumnType::DateTime: return "";  // kept as pandas reads it (datetime64)
     }
     return "";
 }
@@ -103,16 +104,19 @@ std::string PandasCodegen::certificateDict(const std::string& key) const {
     };
     std::string code = "{";
     for (const ColumnFacts& column : table->columns) {
-        code += std::string(code.size() > 1 ? ",\n     " : "") + pythonString(column.name) + ": {\"type\": \"" +
-                columnTypeName(column.type) + "\"";
+        code += std::string(code.size() > 1 ? ",\n     " : "") + pythonString(column.name) + ": {\"type\": " +
+                (column.typeFixed ? "\"" + std::string(columnTypeName(column.type)) + "\"" : std::string("None")) +
+                (column.required ? "" : ", \"optional\": True");
         if (column.notNull) {
             code += ", \"not_null\": " + join(column.notNullFor);
         }
         if (!std::isinf(column.min)) {
-            code += ", \"min\": " + exactNumber(column.min) + ", \"min_for\": " + join(column.minFor);
+            code += ", \"min\": " + exactNumber(column.min) + (column.minStrict ? ", \"min_strict\": True" : "") +
+                    ", \"min_for\": " + join(column.minFor);
         }
         if (!std::isinf(column.max)) {
-            code += ", \"max\": " + exactNumber(column.max) + ", \"max_for\": " + join(column.maxFor);
+            code += ", \"max\": " + exactNumber(column.max) + (column.maxStrict ? ", \"max_strict\": True" : "") +
+                    ", \"max_for\": " + join(column.maxFor);
         }
         code += "}";
     }
@@ -135,9 +139,10 @@ std::string PandasCodegen::tableVariable(const std::string& dataset, const std::
 std::string PandasCodegen::helpers(bool csv, bool parquet) {
     std::string code = R"(KINDS = {
     "INTEGER": pd.api.types.is_integer_dtype,
-    "FLOAT": lambda dtype: pd.api.types.is_numeric_dtype(dtype) and not pd.api.types.is_bool_dtype(dtype),
+    "FLOAT": pd.api.types.is_float_dtype,
     "BOOLEAN": pd.api.types.is_bool_dtype,
     "STRING": lambda dtype: True,
+    "DATETIME": pd.api.types.is_datetime64_any_dtype,
 }
 
 
@@ -146,26 +151,38 @@ def first_row(mask):
     return int(mask.fillna(False).to_numpy().argmax()) + 1
 
 
-def admit(table, path, frame, certificate):
+def admit(table, path, frame, certificate, empty_is_text):
     """A file other than the compiled one may be used only if it has every fact of
     the program's data certificate: the facts the compiler's proofs and removed
-    operations rely on. Contracts proven from the values are checked again later."""
+    operations rely on. Contracts proven from the values are checked again later.
+    Types must be the ones the compiler infers; in a CSV file a column without any
+    value is STRING (empty_is_text)."""
     if certificate is None:
         refuse(path, "the compiled program's proofs depend on the exact values of its file", "")
     for column, fact in certificate.items():
         if column not in frame.columns:
+            if fact.get("optional"):
+                continue  # only carried to the output, which then lacks it
             refuse(path, f"it has no column {column!r}", "")
         values = frame[column]
-        if not values.isna().all() and not KINDS[fact["type"]](values.dtype):  # no values fit any type
-            refuse(path, f"its column {column!r} is read as {values.dtype}, not {fact['type']}", "")
+        empty = empty_is_text and values.isna().all()
+        if fact["type"] and not (fact["type"] == "STRING" if empty else KINDS[fact["type"]](values.dtype)):
+            kind = "a column without values, so STRING" if empty else values.dtype
+            refuse(path, f"its column {column!r} is {kind}, not {fact['type']}", "")
         if "not_null" in fact and values.isna().any():
             refuse(path, f"{column} is missing in data row {first_row(values.isna())}", fact["not_null"])
-        if "min" in fact and (values < fact["min"]).any():
-            row = first_row(values < fact["min"])
-            refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, below {fact['min']}", fact["min_for"])
-        if "max" in fact and (values > fact["max"]).any():
-            row = first_row(values > fact["max"])
-            refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, above {fact['max']}", fact["max_for"])
+        if "min" in fact:
+            low = values <= fact["min"] if fact.get("min_strict") else values < fact["min"]
+            if low.any():
+                row = first_row(low)
+                limit = ("at or below " if fact.get("min_strict") else "below ") + str(fact["min"])
+                refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, {limit}", fact["min_for"])
+        if "max" in fact:
+            high = values >= fact["max"] if fact.get("max_strict") else values > fact["max"]
+            if high.any():
+                row = first_row(high)
+                limit = ("at or above " if fact.get("max_strict") else "above ") + str(fact["max"])
+                refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, {limit}", fact["max_for"])
     print(f"Admitted {path} for {table}: it satisfies the data certificate")
 
 
@@ -183,11 +200,13 @@ def admit(table, path, frame, certificate):
         frame = pd.read_csv(io.BytesIO(data), usecols=columns, keep_default_na=False, na_values=[""],
                             dtype_backend="numpy_nullable")
         return frame.astype(dtypes)
+    # Also the columns the program does not use but its proofs depend on.
     text = {column: "string" for column, kind in dtypes.items() if kind == "string"}
-    frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns, keep_default_na=False,
-                        na_values=[""], dtype=text, dtype_backend="numpy_nullable")
-    admit(table, path, frame, certificate)
-    return frame[columns].astype(dtypes)
+    frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns or column in (certificate or {}),
+                        keep_default_na=False, na_values=[""], dtype=text, dtype_backend="numpy_nullable")
+    admit(table, path, frame, certificate, True)
+    present = [column for column in columns if column in frame.columns]
+    return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
 
 
 )";
@@ -207,10 +226,12 @@ def admit(table, path, frame, certificate):
     if same_input[table]:
         return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
     import pyarrow.parquet
-    present = [column for column in columns if column in pyarrow.parquet.read_schema(path).names]
+    wanted = columns + [column for column in certificate or {} if column not in columns]
+    present = [column for column in wanted if column in pyarrow.parquet.read_schema(path).names]
     frame = pd.read_parquet(path, columns=present, dtype_backend="numpy_nullable")
-    admit(table, path, frame, certificate)
-    return frame[columns].astype(dtypes)
+    admit(table, path, frame, certificate, False)
+    present = [column for column in columns if column in frame.columns]
+    return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
 
 
 )";
@@ -237,7 +258,7 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             std::string dtypes = "{";
             for (const ColumnInfo& info : schema.columns) {
                 for (const std::string& name : in.columns) {
-                    if (name == info.name) {
+                    if (name == info.name && info.type != ColumnType::DateTime) {
                         dtypes += (dtypes.size() > 1 ? ", " : "") + pythonString(name) + ": " +
                                   pythonString(pandasDtype(info.type));
                     }
@@ -268,10 +289,22 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
                    pythonString(in.columns[2]) + "].dropna()).all():\n" +
                    fail("has values missing from " + tableKey(in.columns[0], in.columns[1]) + "." + in.columns[2]);
         }
-        case Opcode::FillNull:
-            return column + " = " + column + ".fillna(" + pythonValue(in.values[0]) + ")\n";
+        case Opcode::FillNull: {
+            if (!in.values.empty()) {
+                return column + " = " + column + ".fillna(" + pythonValue(in.values[0]) + ")\n";
+            }
+            // The statistic is computed from the data; MEAN and MEDIAN make the column FLOAT.
+            // With missing values but no value to compute it from, the fill would do nothing.
+            const std::string statistic = in.text == "MEAN"     ? "column.mean()"
+                                          : in.text == "MEDIAN" ? "column.median()"
+                                                                : "column.mode().iloc[0] if column.notna().any() else pd.NA";
+            return "column = " + column + (in.text == "MODE" ? "" : ".astype(\"Float64\")") + "\nvalue = " +
+                   statistic + "\nif column.isna().any() and pd.isna(value):\n" +
+                   fail("has no values to compute the " + in.text + " from") + column + " = column.fillna(value)\n";
+        }
         case Opcode::DropNull:
-            return table + " = " + table + ".dropna()\n";
+            return table + " = " + table + ".dropna(" +
+                   (in.columns.empty() ? std::string() : "subset=" + pythonList(in.columns)) + ")\n";
         case Opcode::Normalize: {
             // A constant column (spread 0) or one with too few values becomes 0.0
             // instead of dividing by zero; missing values stay missing.

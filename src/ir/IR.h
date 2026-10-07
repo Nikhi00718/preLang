@@ -26,8 +26,8 @@ enum class Opcode {
 //                 values = [low, high] (BETWEEN) or [percent] (MATCH_RATE),
 //                 columns = [dataset, table, column] of the key (REFERENCES)
 //                           or [images, labels, column, (SKIP_BROKEN)] (MATCH_RATE)
-//   FILL_NULL     dataset, table, column, values = [fill value]
-//   DROP_NULL     dataset, table
+//   FILL_NULL     dataset, table, column, values = [fill value], or text = MEAN | MEDIAN | MODE
+//   DROP_NULL     dataset, table, columns = the columns to look at (empty: all)
 //   NORMALIZE     dataset, table, column, text = ZSCORE | MINMAX
 //   COMPARE       dataset, table, column, text = operator, values = [value], result
 //   AND, OR       result, uses = [left, right]

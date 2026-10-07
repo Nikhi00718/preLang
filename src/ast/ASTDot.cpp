@@ -58,7 +58,9 @@ void ASTDot::visit(const DropNullStmt& node) {
 }
 
 void ASTDot::visit(const FillNullStmt& node) {
-    addStatement("FillNull", {selectorText(node.target), literalText(node.value)});
+    addStatement("FillNull", {selectorText(node.target), node.method == FillMethod::Value
+                                                             ? literalText(node.value)
+                                                             : std::string(fillMethodName(node.method))});
 }
 
 void ASTDot::visit(const NormalizeStmt& node) {

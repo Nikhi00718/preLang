@@ -126,8 +126,15 @@ A program is a list of statements. Keywords are case-insensitive; `#` starts a c
 | IMAGESET (a folder) | `LOAD_IMAGES "dataset/" AS imgs RECURSIVE;` | `SAVE_IMAGES imgs TO "out/";` |
 | DATASET (images + labels) | `LINK imgs WITH labels ON filename AS training;` | |
 
-**Table operations:** `DROP_NULL`, `FILL_NULL ... WITH value`, `NORMALIZE ... USING ZSCORE|MINMAX`,
+**Table operations:** `DROP_NULL t` or `DROP_NULL t [columns]` (only rows missing one of these),
+`FILL_NULL ... WITH value|MEAN|MEDIAN|MODE` (the statistic is computed from the data when the program
+runs; MEAN and MEDIAN make an INTEGER column FLOAT), `NORMALIZE ... USING ZSCORE|MINMAX`,
 `FILTER t WHERE condition`, `SELECT t [columns]`, `DROP t [columns]`.
+
+**Column types** are BOOLEAN, INTEGER, FLOAT and STRING, inferred from the CSV cells, plus DATETIME
+for the date and timestamp columns of Parquet files. A DATETIME column can be kept, dropped, saved
+and checked with `NOT_NULL`; comparing or filling it is a type error, as the language has no date
+values.
 
 **Image operations:** `RESIZE i TO w h [KEEP_ASPECT]`, `GRAYSCALE i`, `NORMALIZE i RANGE low high`,
 `CONVERT i TO JPG|PNG|NPY`, `COMPRESS i QUALITY q`, `REMOVE_CORRUPT i`.
@@ -157,8 +164,8 @@ statement      = load | drop_null | fill_null | normalize | filter | select | dr
 load           = ( "LOAD" | "LOAD_TABLES" | "LOAD_IMAGE" | "LOAD_IMAGES" ) STRING "AS" IDENT [ "RECURSIVE" ] ";" ;
 save           = "SAVE" table_ref "AS" STRING ";"  | "SAVE_TABLES" IDENT "TO" STRING ";"
                | "SAVE_IMAGE" IDENT "AS" STRING ";" | "SAVE_IMAGES" IDENT "TO" STRING ";" ;
-drop_null      = "DROP_NULL" table_selector ";" ;
-fill_null      = "FILL_NULL" column_selector "WITH" literal [ "IF_EXISTS" ] ";" ;
+drop_null      = "DROP_NULL" table_selector [ column_list ] ";" ;
+fill_null      = "FILL_NULL" column_selector "WITH" ( literal | "MEAN" | "MEDIAN" | "MODE" ) [ "IF_EXISTS" ] ";" ;
 normalize      = "NORMALIZE" column_selector ( "RANGE" number number
                                              | [ "USING" ( "ZSCORE" | "MINMAX" ) ] ) [ "IF_EXISTS" ] ";" ;
 filter         = "FILTER" table_ref "WHERE" or_expr ";" ;
@@ -212,7 +219,7 @@ check is generated, and the compiler then assumes the contract holds for the res
 **3. Proofs are tied to the facts they use, not to one file.** The generated program recomputes a
 CRC-32 fingerprint of every input. If it is the file the compiler analysed, every proof holds as it
 is. Any other file (tomorrow's batch, a resampled split) is accepted only if it satisfies the
-program's **data certificate**, described next. Image folders must stay exactly as compiled.
+program's **data certificate**, described next; another image folder is admitted the same way.
 
 **4. Data certificates: compile once, run on new data.** After optimizing, the compiler analyses
 the program again many times with weaker facts about the inputs: missing values allowed, a lower or
@@ -234,6 +241,21 @@ when you run it:
 ```bash
 py -3 output/generated.py students=new_students.csv
 ```
+
+What the certificate covers:
+
+- **every column of the file**, not only the ones the program reads: a proven `NOT_NULL` on a column
+  that column pruning then removes still needs that column without missing values, so the generated
+  program loads it only to check it;
+- **which columns may be missing**: a column no instruction names, which is only carried to the
+  output, may be absent from a new input if the analysis without it keeps every proof (the Kaggle
+  Titanic test file has no `Survived`);
+- **strict bounds** for strict comparisons (`FILTER t WHERE rain < 100` needs `rain < 100`, not
+  `<= 100`);
+- **image folders**, as one box per file extension (channel counts, width and height ranges, bit
+  depths, whether unreadable files are allowed). The analysis checks the box through its corner
+  images, and the generated program reads the header of every file of a new folder (no pixel is
+  decoded) and admits the folder if every header fits.
 
 A file that breaks the certificate is refused before anything is written, with the row and the
 proof: `marks is 104 in data row 4, above 100; the compiled program relies on this for line 5:
@@ -257,6 +279,16 @@ in file order, so the facts and error lines are the same as for one sequential p
 `tests/test_scanner.cpp`). One million rows take 0.13 s to analyse (2.04 s before), 4.7 times less
 than pandas needs just to read them with its default parser, and about as long as pandas with the
 multi-threaded pyarrow reader.
+
+**8. Certificates for existing pandas scripts.** `frontend/pandas2prep.py` lifts the cleaning
+part of a pandas script into PrepLang: it follows each DataFrame read with `pd.read_csv(path)` and
+translates `fillna` (constants, dictionaries, `mean()`, `median()`, `mode()[0]`), `dropna`,
+`drop`, column selection, boolean-mask filters, min-max and z-score normalization, `assert`s and
+`to_csv`, until the first statement it cannot express exactly:
+
+```bash
+py -3 frontend/pandas2prep.py my_script.py > lifted.prep
+```
 
 ## Optimizations
 
@@ -314,6 +346,11 @@ py -3 eval/bench.py
 - `eval/run_realbugs.py` runs the study of real GitHub issues (`eval/realbugs_catalog.py`).
 - `eval/certificates.py` gives compiled programs new batches of data and compares each run with a
   fresh compilation for that batch (RQ7).
+- `eval/realbatches.py` does the same with real monthly data: UCI traffic and bike-sharing data and
+  NYC green-taxi Parquet files (RQ8; `py -3 eval/realbatches.py download` first).
+- `eval/pandas_corpus.py` lifts real Titanic scripts from GitHub, compiles them, and compares the
+  compiled program with the script's own pandas statements on new batches (RQ9;
+  `py -3 eval/pandas_corpus.py collect` first, which needs `gh` signed in).
 - `eval/paper_numbers.py` writes `paper/numbers.tex`, so every number in the paper comes from
   `eval/results/`.
 
@@ -338,6 +375,9 @@ runs 8.5 s and writes 3,000 black images.
 before any data is processed; all 21 reproductions behave as classified. Details:
 `eval/results/realbugs.md`.
 
+**RQ8 (real monthly batches)** and **RQ9 (real pandas scripts):** see
+`eval/results/realbatches.md` and `eval/results/pandas_corpus.md`.
+
 **RQ7 (data certificates):** seven compiled programs get 244 new batches, and each batch is also
 compiled fresh as the ground truth. The certificate admits 209 (86%), the compiled file's own facts
 (a TFDV-style schema) 96 (39%), the fingerprint none. All 209 admitted runs end exactly like the
@@ -359,7 +399,8 @@ src/sema        abstract dataset state, selectors, contracts, the semantic analy
 src/dataset     lineage and image-label linking
 src/ir          three-address IR
 src/optimizer   pass manager and the optimization passes
-src/certify     data certificates: counterfactual re-analysis and admission
+src/certify     data certificates: counterfactual re-analysis and admission (tables and image folders)
+frontend/       pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
 src/backend     pandas code, OpenCV code, and the planner that joins them
 src/explain     --explain, --dry-run, --lineage and the run manifest
 tests/          unit tests (181)

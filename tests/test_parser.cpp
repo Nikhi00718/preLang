@@ -96,6 +96,15 @@ void testFillNullString() {
           "FILL_NULL with a string value");
 }
 
+void testFillNullStatistic() {
+    Diagnostics diagnostics;
+    const Program program = parse("FILL_NULL s.age WITH MEDIAN;\nDROP_NULL s [age, city];", diagnostics);
+    const auto* fill = statementAs<FillNullStmt>(program, 0);
+    const auto* drop = statementAs<DropNullStmt>(program, 1);
+    check(fill && fill->method == FillMethod::Median, "FILL_NULL ... WITH MEDIAN");
+    check(drop && drop->columns == std::vector<std::string>{"age", "city"}, "DROP_NULL with a column list");
+}
+
 void testPrecedence() {
     Diagnostics diagnostics;
     const Program program = parse("FILTER s WHERE a > 1 OR b > 2 AND c > 3;", diagnostics);
@@ -241,6 +250,7 @@ int main() {
     testNormalizeMethod();
     testExpectBetween();
     testFillNullString();
+    testFillNullStatistic();
     testPrecedence();
     testParentheses();
     testNot();

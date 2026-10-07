@@ -85,11 +85,14 @@ void ASTPrinter::visit(const LoadStmt& node) {
 }
 
 void ASTPrinter::visit(const DropNullStmt& node) {
-    printNode("DropNull", {"target: " + selectorText(node.target)});
+    printNode("DropNull", {"target: " + selectorText(node.target) +
+                               (node.columns.empty() ? "" : " " + listText(node.columns))});
 }
 
 void ASTPrinter::visit(const FillNullStmt& node) {
-    printNode("FillNull", {"target: " + selectorText(node.target), "value: " + literalText(node.value)});
+    printNode("FillNull", {"target: " + selectorText(node.target),
+                           "value: " + (node.method == FillMethod::Value ? literalText(node.value)
+                                                                         : std::string(fillMethodName(node.method)))});
 }
 
 void ASTPrinter::visit(const NormalizeStmt& node) {

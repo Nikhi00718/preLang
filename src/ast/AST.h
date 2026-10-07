@@ -139,15 +139,32 @@ struct LoadStmt : Stmt {
 };
 
 // DROP_NULL students;   DROP_NULL company.*;
+// DROP_NULL students;   DROP_NULL students [age, city];  (only rows missing one of these)
 struct DropNullStmt : Stmt {
     Selector target;
+    std::vector<std::string> columns;  // empty: rows with a missing value in any column
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
 
-// FILL_NULL company.*.age WITH 0 IF_EXISTS;
+// How FILL_NULL finds the fill value: a literal, or a statistic of the column
+// computed when the program runs (pandas' mean(), median(), mode()).
+enum class FillMethod { Value, Mean, Median, Mode };
+
+inline const char* fillMethodName(FillMethod method) {
+    switch (method) {
+        case FillMethod::Mean:   return "MEAN";
+        case FillMethod::Median: return "MEDIAN";
+        case FillMethod::Mode:   return "MODE";
+        case FillMethod::Value:  break;
+    }
+    return "";
+}
+
+// FILL_NULL company.*.age WITH 0 IF_EXISTS;   FILL_NULL titanic.Age WITH MEDIAN;
 struct FillNullStmt : Stmt {
     Selector target;
-    Literal value;
+    FillMethod method = FillMethod::Value;
+    Literal value;  // for FillMethod::Value
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
 

@@ -74,6 +74,8 @@ std::set<std::string> proofs(const Compiled& c) {
     return items;
 }
 
+bool mentions(const std::vector<std::string>& proofs, const std::string& text);
+
 void writeFile(const std::string& name, const std::string& text) {
     std::ofstream(name, std::ios::binary) << text;
 }
@@ -145,13 +147,38 @@ void testAdmission() {
         writeFile("test_certificate_batch.csv", text);
         return admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {}));
     };
-    check(problems("name,age,marks,city\nZoe,,100,\nLi,,10,Goa\n").empty(),
-          "new rows with marks 10 and 100 and missing ages and cities are admitted");
+    check(problems("name,age,marks,city\nZoe,,100,\nLi,19,10,Goa\n").empty(),
+          "new rows with marks 10 and 100 and a missing age and city are admitted");
+    check(problems("name,age,marks,city\nZoe,,100,\nLi,,10,Goa\n").size() == 1,
+          "a batch without any age is refused: the compiler would type that column STRING");
     const std::vector<std::string> high = problems("name,age,marks,city\nZoe,30,101,Goa\n");
     check(high.size() == 1 && high[0].find("line 2") != std::string::npos, "marks 101 is refused, naming line 2");
     check(problems("name,age,marks,city\n,30,50,Goa\n").size() == 1, "a missing name is refused");
     check(problems("name,age,marks,city\nZoe,30,50.5,Goa\n").size() == 1, "FLOAT marks are refused (INTEGER certified)");
     check(problems("name,age,city\nZoe,30,Goa\n").size() == 1, "a missing column is refused");
+}
+
+// A proof can depend on a column the optimized program never loads: the check of
+// a proven contract is removed, and then column pruning drops the column.
+void testUnreadColumns() {
+    std::cout << "Columns the program does not read\n";
+    writeFile("test_certificate_students.csv", students);
+    Compiled c;
+    compile("LOAD \"test_certificate_students.csv\" AS s;\nEXPECT s.name NOT_NULL;\nEXPECT s.marks NUMBER;\n"
+            "SELECT s [age];\nSAVE s AS \"out.csv\";\n",
+            c);
+    const ColumnFacts* name = fact(c.certificate, "s", "name");
+    const ColumnFacts* marks = fact(c.certificate, "s", "marks");
+    check(name && !name->read && name->notNull && !name->typeFixed,
+          "name is not read, but must have no missing values (line 2); its type does not matter");
+    check(marks && !marks->read && marks->typeFixed && mentions(marks->typeFor, "line 3"),
+          "marks is not read, but must stay INTEGER for EXPECT s.marks NUMBER at line 3");
+    check(fact(c.certificate, "s", "city") == nullptr, "city is neither read nor needed: not in the certificate");
+    Diagnostics diagnostics;
+    SchemaProvider schemas(diagnostics);
+    writeFile("test_certificate_batch.csv", "name,age,marks,city\n,30,50,Goa\n");
+    check(admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {})).size() == 1,
+          "a batch with a missing name is refused although the program never reads name");
 }
 
 void testValueProofs() {
@@ -169,14 +196,14 @@ void testValueProofs() {
 
 // The soundness property, on random inputs: if the certificate admits an input,
 // compiling the same program for that input proves at least as much.
-void testSoundness() {
-    std::cout << "Soundness on 400 random inputs\n";
+void testSoundness(const std::string& source, const std::string& title) {
+    std::cout << title << '\n';
     writeFile("test_certificate_students.csv", students);
     Compiled base;
-    compile(program, base);
+    compile(source, base);
     const std::set<std::string> baseProofs = proofs(base);
-    const std::string batchProgram = [] {
-        std::string text = program;
+    const std::string batchProgram = [&] {
+        std::string text = source;
         const std::string from = "test_certificate_students.csv";
         text.replace(text.find(from), from.size(), "test_certificate_random.csv");
         return text;
@@ -185,13 +212,15 @@ void testSoundness() {
     std::mt19937 random(2026);
     int admitted = 0, unsound = 0, outsideData = 0;
     for (int round = 0; round < 400; ++round) {
-        std::string text = "name,age,marks,city\n";
+        // Some batches have no city column at all (a column the program only carries).
+        const bool city = random() % 4 != 0;
+        std::string text = city ? "name,age,marks,city\n" : "name,age,marks\n";
         const int rows = 1 + static_cast<int>(random() % 6);
         for (int i = 0; i < rows; ++i) {
             const bool noName = random() % 25 == 0;
             const bool noMarks = random() % 25 == 0;
             text += (noName ? "" : "N" + std::to_string(i)) + "," + (random() % 3 ? std::to_string(18 + random() % 10) : "") +
-                    "," + (noMarks ? "" : std::to_string(static_cast<int>(random() % 115) - 5)) + ",C\n";
+                    "," + (noMarks ? "" : std::to_string(static_cast<int>(random() % 115) - 5)) + (city ? ",C\n" : "\n");
         }
         writeFile("test_certificate_random.csv", text);
         Diagnostics diagnostics;
@@ -211,7 +240,9 @@ void testSoundness() {
         unsound += !keepsAll;
     }
     check(admitted >= 40, std::to_string(admitted) + " of 400 random inputs admitted");
-    check(outsideData > 0, std::to_string(outsideData) + " admitted inputs lie outside the compiled file's own ranges");
+    if (source == program) {
+        check(outsideData > 0, std::to_string(outsideData) + " admitted inputs lie outside the compiled file's own ranges");
+    }
     check(unsound == 0, "every admitted input keeps every proof (" + std::to_string(unsound) + " did not)");
 }
 
@@ -359,8 +390,17 @@ int main() {
     std::cout << std::unitbuf;  // keep the output if a test crashes
     testFacts();
     testAdmission();
+    testUnreadColumns();
     testValueProofs();
-    testSoundness();
+    testSoundness(program, "Soundness on 400 random inputs");
+    // name and marks are not read after the SELECT, but proofs depend on them.
+    testSoundness("LOAD \"test_certificate_students.csv\" AS s;\nEXPECT s.name NOT_NULL;\n"
+                  "EXPECT s.marks BETWEEN 0 AND 100;\nSELECT s [age];\nSAVE s AS \"out.csv\";\n",
+                  "Soundness on 400 random inputs, with proofs about columns that are not read");
+    // DROP of a column that is never used is removed by the optimizer, but a file
+    // without that column would not compile: it must exist.
+    testSoundness("LOAD \"test_certificate_students.csv\" AS s;\nDROP s [city];\nSAVE s AS \"out.csv\";\n",
+                  "Soundness on 400 random inputs, with a dropped column that some inputs lack");
     testImageFacts();
     testImageSoundness();
     std::cout << (failures == 0 ? "All certificate tests passed\n"

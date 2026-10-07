@@ -28,6 +28,7 @@ bool sameKind(ColumnType type, const Literal& value) {
         case ColumnType::Float:   return value.kind == LiteralKind::Number;
         case ColumnType::String:  return value.kind == LiteralKind::String;
         case ColumnType::Boolean: return value.kind == LiteralKind::Boolean;
+        case ColumnType::DateTime: return false;  // there are no date literals
     }
     return false;
 }
@@ -54,6 +55,7 @@ std::string valueHint(ColumnType type) {
         case ColumnType::Float:   return "use a number, e.g. 0.5";
         case ColumnType::String:  return "put the text in double quotes";
         case ColumnType::Boolean: return "use TRUE or FALSE";
+        case ColumnType::DateTime: return "DATETIME columns can be kept, dropped, saved or checked with NOT_NULL";
     }
     return "";
 }
@@ -302,13 +304,26 @@ void SemanticAnalyzer::visit(const DropNullStmt& node) {
         return;
     }
     DatasetSymbol& dataset = *resolution->dataset;
+    // DROP_NULL t [a, b] looks only at these columns; they must exist in every table.
+    const int errorsBefore = diagnostics_.errorCount();
+    for (TableState* table : resolution->tables) {
+        for (const std::string& name : node.columns) {
+            resolver_.column(dataset, *table, name, node.location);
+        }
+    }
+    if (diagnostics_.errorCount() > errorsBefore) {
+        return;
+    }
+    const auto looksAt = [&](const ColumnState& column) {
+        return node.columns.empty() || contains(node.columns, column.name);
+    };
     std::vector<std::string> changed;
     std::vector<std::string> idle;
     for (TableState* table : resolution->tables) {
         const std::string tableName = columnDisplayName(dataset, *table, "");
         std::vector<std::string> nullable;
         for (const ColumnState& column : table->columns) {
-            if (column.nullable) {
+            if (column.nullable && looksAt(column)) {
                 nullable.push_back(column.name);
             }
         }
@@ -318,8 +333,8 @@ void SemanticAnalyzer::visit(const DropNullStmt& node) {
             continue;
         }
         for (ColumnState& column : table->columns) {
-            column.nullable = false;
-            column.exact = false;
+            column.nullable = column.nullable && !looksAt(column);
+            column.exact = false;  // rows are removed from every column
             recordColumn(dataset, *table, column, node.location.line, "DROP_NULL");
         }
         addTarget(node, tableTarget(dataset, *table));
@@ -339,10 +354,19 @@ void SemanticAnalyzer::visit(const FillNullStmt& node) {
         return;
     }
     DatasetSymbol& dataset = *resolution->dataset;
-    const auto fits = [&](const ColumnState& column) { return canStore(column.type, node.value); };
-    const auto hint = [](const ColumnState& column) { return valueHint(column); };
-    if (!checkTypes(node.target, dataset, resolution->matched, fits,
-                    "FILL_NULL with " + describe(node.value) + " needs a matching column type", hint)) {
+    const bool literal = node.method == FillMethod::Value;
+    const bool average = node.method == FillMethod::Mean || node.method == FillMethod::Median;
+    const std::string method = literal ? literalText(node.value) : fillMethodName(node.method);
+    const auto fits = [&](const ColumnState& column) {
+        return literal ? canStore(column.type, node.value) : !average || isNumeric(column.type);
+    };
+    const auto hint = [&](const ColumnState& column) {
+        return literal ? valueHint(column) : "use MODE (the most frequent value) for a " +
+                                                 std::string(columnTypeName(column.type)) + " column";
+    };
+    const std::string rule = literal ? "FILL_NULL with " + describe(node.value) + " needs a matching column type"
+                                     : "FILL_NULL with " + method + " needs a numeric column";
+    if (!checkTypes(node.target, dataset, resolution->matched, fits, rule, hint)) {
         return;
     }
 
@@ -352,19 +376,26 @@ void SemanticAnalyzer::visit(const FillNullStmt& node) {
         ColumnState& column = *match.column;
         const std::string name = columnDisplayName(dataset, *match.table, column.name);
         const Target target = tableTarget(dataset, *match.table, column.name);
-        if (!column.nullable) {
+        // MEAN and MEDIAN make an INTEGER column FLOAT whether or not values are
+        // missing, so the type never depends on the data (that keeps the analysis
+        // monotone, which data certificates rely on).
+        const bool converts = average && column.type == ColumnType::Integer;
+        if (!column.nullable && !converts) {
             addTarget(node, target, name + " has no missing values here");
             idle.push_back(name);
             continue;
         }
-        column.nullable = false;
+        column.nullable = false;  // the generated code stops if there is no value to fill with
         column.valuesChanged = true;
-        if (node.value.kind == LiteralKind::Number) {
+        if (converts) {
+            column.type = ColumnType::Float;
+        }
+        if (literal && node.value.kind == LiteralKind::Number) {
             const double value = std::stod(node.value.value);
             column.range.min = std::min(column.range.min, value);
             column.range.max = std::max(column.range.max, value);
-        }
-        recordColumn(dataset, *match.table, column, node.location.line, "FILL_NULL " + literalText(node.value));
+        }  // a mean, median or mode lies within the values, so the range does not change
+        recordColumn(dataset, *match.table, column, node.location.line, "FILL_NULL " + method);
         addTarget(node, target);
         changed.push_back(name);
     }

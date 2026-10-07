@@ -342,7 +342,11 @@ bool columnType(const SchemaElement& element, ColumnType& type, std::string& pro
             return true;
         case Int32:
         case Int64:
-            if (!dateOrTime && !decimal) {
+            if (dateOrTime) {
+                type = ColumnType::DateTime;
+                return true;
+            }
+            if (!decimal) {
                 type = ColumnType::Integer;
                 return true;
             }
@@ -363,8 +367,9 @@ bool columnType(const SchemaElement& element, ColumnType& type, std::string& pro
         default:
             break;
     }
-    problem = dateOrTime ? "a date or time" : decimal ? "a decimal" : "a binary or other special";
-    problem = "column '" + element.name + "' is " + problem + " column; PrepLang reads numbers, text and booleans";
+    problem = decimal ? "a decimal" : "a binary or other special";
+    problem = "column '" + element.name + "' is " + problem +
+              " column; PrepLang reads numbers, text, booleans, dates and timestamps";
     return false;
 }
 

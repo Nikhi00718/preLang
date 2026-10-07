@@ -110,16 +110,22 @@ void IRBuilder::visit(const LoadStmt& node) {
     }
 }
 
-void IRBuilder::visit(const DropNullStmt&) {
+void IRBuilder::visit(const DropNullStmt& node) {
     for (const Target& target : targets()) {
-        emit(make(Opcode::DropNull, target));
+        Instruction instruction = make(Opcode::DropNull, target);
+        instruction.columns = node.columns;
+        emit(std::move(instruction));
     }
 }
 
 void IRBuilder::visit(const FillNullStmt& node) {
     for (const Target& target : targets()) {
         Instruction instruction = make(Opcode::FillNull, target);
-        instruction.values = {node.value};
+        if (node.method == FillMethod::Value) {
+            instruction.values = {node.value};
+        } else {
+            instruction.text = fillMethodName(node.method);
+        }
         emit(std::move(instruction));
     }
 }
@@ -303,9 +309,9 @@ std::string instructionText(const Instruction& in) {
             return "CHECK " + target + " " + in.text +
                    (in.values.empty() ? "" : " " + in.values[0].value + " AND " + in.values[1].value) + changedText(in);
         case Opcode::FillNull:
-            return "FILL_NULL " + target + " WITH " + literalText(in.values[0]);
+            return "FILL_NULL " + target + " WITH " + (in.values.empty() ? in.text : literalText(in.values[0]));
         case Opcode::DropNull:
-            return "DROP_NULL " + table;
+            return "DROP_NULL " + table + (in.columns.empty() ? "" : " " + listText(in.columns));
         case Opcode::Normalize:
             return "NORMALIZE " + target + " " + in.text;
         case Opcode::Compare:

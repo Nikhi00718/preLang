@@ -5,8 +5,11 @@
 #include <sstream>
 #include <string>
 
-// Column types the compiler can infer from the text in a CSV file.
-enum class ColumnType { Boolean, Integer, Float, String };
+// Column types the compiler can infer from the text in a CSV file, plus
+// DATETIME, which only Parquet files declare (dates and timestamps). A DATETIME
+// column can be loaded, kept, dropped, saved and checked for missing values,
+// but not compared or filled: the language has no date values.
+enum class ColumnType { Boolean, Integer, Float, String, DateTime };
 
 inline const char* columnTypeName(ColumnType type) {
     switch (type) {
@@ -14,6 +17,7 @@ inline const char* columnTypeName(ColumnType type) {
         case ColumnType::Integer: return "INTEGER";
         case ColumnType::Float:   return "FLOAT";
         case ColumnType::String:  return "STRING";
+        case ColumnType::DateTime: return "DATETIME";
     }
     return "";
 }

@@ -50,8 +50,14 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
 
         switch (instruction.op) {
             case Opcode::Save:
-            case Opcode::DropNull:  // DROP_NULL checks every column to decide which rows to remove
                 liveColumns.insert(before[i].begin(), before[i].end());
+                break;
+            case Opcode::DropNull:  // DROP_NULL checks its columns (all, by default) to decide which rows to remove
+                if (instruction.columns.empty()) {
+                    liveColumns.insert(before[i].begin(), before[i].end());
+                } else {
+                    liveColumns.insert(instruction.columns.begin(), instruction.columns.end());
+                }
                 break;
 
             case Opcode::FillNull:

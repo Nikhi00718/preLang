@@ -124,6 +124,30 @@ void testFillValueType() {
           "decimal cannot fill an INTEGER column");
 }
 
+void testFillStatistics() {
+    Analysis a;
+    analyze("FILL_NULL s.age WITH MEDIAN;\nFILL_NULL s.city WITH MODE;\nSAVE s AS \"o.csv\";", a);
+    const ColumnState* age = column(a, "age");
+    const ColumnState* city = column(a, "city");
+    check(!a.diagnostics.hasErrors() && age && age->type == ColumnType::Float && !age->nullable &&
+              age->range.min == 20 && age->range.max == 22,
+          "MEDIAN fills an INTEGER column: FLOAT, no missing values, same range");
+    check(city && city->type == ColumnType::String && !city->nullable, "MODE fills a STRING column");
+    Analysis text;
+    analyze("FILL_NULL s.city WITH MEAN;", text);
+    check(reported(text, Severity::Error, Phase::Type, "FILL_NULL with MEAN needs a numeric column"),
+          "MEAN of a STRING column is a type error");
+}
+
+void testDropNullColumns() {
+    Analysis a;
+    analyze("DROP_NULL s [age];\nSAVE s AS \"o.csv\";", a);
+    const ColumnState* age = column(a, "age");
+    const ColumnState* city = column(a, "city");
+    check(!a.diagnostics.hasErrors() && age && !age->nullable && city && city->nullable && !city->exact,
+          "DROP_NULL s [age]: age has no missing values, city still may, and rows changed");
+}
+
 void testUseAfterDrop() {
     Analysis a;
     analyze("DROP s [city];\nFILL_NULL s.city WITH \"none\";", a);
@@ -227,6 +251,8 @@ int main() {
     testNormalizeNeedsNumber();
     testComparisonTypes();
     testFillValueType();
+    testFillStatistics();
+    testDropNullColumns();
     testUseAfterDrop();
     testContractProven();
     testContractViolated();

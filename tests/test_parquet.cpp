@@ -121,11 +121,23 @@ void testRequiredUnsigned() {
     check(n && n->hasRange && n->max == 4000000000.0, "unsigned statistics are decoded as unsigned");
 }
 
+// A date or timestamp column is DATETIME: it can be kept, saved and checked for
+// missing values, but there are no date values to compare it with or fill it with.
+void testDates() {
+    std::string problem;
+    const auto table = readParquetFooter(dataFile("dates.parquet"), "s", problem);
+    const ColumnInfo* day = table ? column(*table, "day") : nullptr;
+    check(day && day->type == ColumnType::DateTime && !day->hasRange, "a date column is DATETIME, without a range");
+    Compiled ok;
+    compile("dates.parquet", "EXPECT s.day NOT_NULL;\nSAVE s AS \"o.parquet\";\n", ok);
+    check(!ok.diagnostics.hasErrors() && verdictIs(ok, Verdict::Proven), "NOT_NULL on a DATETIME column is proven");
+    Compiled compare;
+    compile("dates.parquet", "FILTER s WHERE day > 3;\nSAVE s AS \"o.parquet\";\n", compare);
+    check(errorContains(compare, "cannot compare DATETIME column"), "comparing a DATETIME column is a type error");
+}
+
 void testUnsupported() {
     std::string problem;
-    check(!readParquetFooter(dataFile("dates.parquet"), "s", problem) && problem.find("date or time") != std::string::npos,
-          "a date column is reported as unsupported");
-    problem.clear();
     check(!readParquetFooter(dataFile("nested.parquet"), "s", problem) && problem.find("nested") != std::string::npos,
           "a list column is reported as nested");
     problem.clear();
@@ -192,6 +204,7 @@ int main() {
     testFloatNaN();
     testNoStatistics();
     testRequiredUnsigned();
+    testDates();
     testUnsupported();
     testContracts();
     testGeneratedReader();

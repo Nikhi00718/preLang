@@ -183,7 +183,7 @@ def run_compiled(folder, keys, batch_path):
     text = done.stdout + done.stderr
     if done.returncode == 0:
         return "finished", outputs(output)
-    if "is not the file the program was compiled with" in text:
+    if "is not the input the program was compiled with" in text:
         return "refused", {}
     return "contract error", {}
 

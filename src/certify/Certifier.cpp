@@ -183,12 +183,31 @@ void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized
     const TableSchema& schema = optimized.tables.at(table.key);
     table.file = schema.file;
     TableSchema& facts = facts_[SchemaProvider::overrideKey(schema.file, schema.name)];
-    for (const std::string& name : load.columns) {
-        ColumnInfo& info = *std::find_if(facts.columns.begin(), facts.columns.end(),
-                                         [&](const ColumnInfo& column) { return column.name == name; });
+    // Every column of the file, not only the ones the optimized program reads:
+    // a proof may depend on a column whose check was removed and which is then
+    // not loaded at all (EXPECT t.id NOT_NULL, and id is never used again).
+    for (ColumnInfo& info : facts.columns) {
         ColumnFacts column;
-        column.name = name;
+        column.name = info.name;
         column.type = info.type;
+        column.read = std::find(load.columns.begin(), load.columns.end(), info.name) != load.columns.end();
+
+        // The type of a column the program reads is always required (it is read with
+        // that type). Another column's type is required only if some proof needs it.
+        if (!column.read) {
+            const ColumnInfo original = info;
+            for (ColumnType other : {ColumnType::Boolean, ColumnType::Integer, ColumnType::Float, ColumnType::String,
+                                     ColumnType::DateTime}) {
+                if (other == original.type) {
+                    continue;
+                }
+                info.type = other;
+                info.hasRange = isNumeric(other) && original.hasRange;
+                addAll(column.typeFor, lost(base, analyse()));
+                info = original;
+            }
+            column.typeFixed = !column.typeFor.empty();
+        }
 
         // Missing values: allow them, and keep "no missing values" only if a proof needs it.
         if (info.missingCount == 0 && info.missingKnown) {
@@ -201,40 +220,55 @@ void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized
         column.notNull = info.missingCount == 0 && info.missingKnown;
 
         // A bound is widened to the loosest value that keeps every proof: first
-        // no bound at all, then the program's constants from the loosest one on.
+        // no bound at all, then each program constant from the loosest one on,
+        // as a closed bound (>= k) and then as an open one (> k, for FILTER c > k).
         // The analysis compares ranges only with these constants, so no other
-        // value could do better. `neededBy` gets what dropping the bound breaks.
-        const auto widen = [&](double& bound, std::vector<double> looser, std::vector<std::string>& neededBy) {
+        // value could do better. An open bound is given to the analysis as the
+        // next double past k. `neededBy` gets what dropping the bound breaks.
+        struct Candidate {
+            double value;  // what the analysis is given
+            double shown;  // the constant
+            bool strict;
+        };
+        const auto widen = [&](double& bound, const std::vector<Candidate>& looser, double& shown, bool& strict,
+                               std::vector<std::string>& neededBy) {
             const double original = bound;
             for (size_t k = 0; k < looser.size(); ++k) {
-                bound = looser[k];
+                bound = looser[k].value;
                 const std::vector<std::string> broken = lost(base, analyse());
                 if (k == 0) {
                     neededBy = broken;
                 }
                 if (broken.empty()) {
+                    shown = looser[k].shown;
+                    strict = looser[k].strict;
                     return;
                 }
             }
-            bound = original;
+            bound = shown = original;
         };
         if (isNumeric(info.type) && info.hasRange) {
-            std::vector<double> lower = {-std::numeric_limits<double>::infinity()};
-            std::vector<double> upper = {std::numeric_limits<double>::infinity()};
+            const double infinity = std::numeric_limits<double>::infinity();
+            std::vector<Candidate> lower = {{-infinity, -infinity, false}};
+            std::vector<Candidate> upper = {{infinity, infinity, false}};
             for (double constant : constants) {  // constants are sorted
                 if (constant < info.min) {
-                    lower.push_back(constant);
+                    lower.push_back({constant, constant, false});
+                    if (std::nextafter(constant, infinity) <= info.min) {
+                        lower.push_back({std::nextafter(constant, infinity), constant, true});
+                    }
                 }
             }
             for (auto it = constants.rbegin(); it != constants.rend(); ++it) {
                 if (*it > info.max) {
-                    upper.push_back(*it);
+                    upper.push_back({*it, *it, false});
+                    if (std::nextafter(*it, -infinity) >= info.max) {
+                        upper.push_back({std::nextafter(*it, -infinity), *it, true});
+                    }
                 }
             }
-            widen(info.min, lower, column.minFor);
-            widen(info.max, upper, column.maxFor);
-            column.min = info.min;
-            column.max = info.max;
+            widen(info.min, lower, column.min, column.minStrict, column.minFor);
+            widen(info.max, upper, column.max, column.maxStrict, column.maxFor);
             if (std::isinf(column.min)) {
                 column.minFor.clear();
             }
@@ -245,8 +279,78 @@ void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized
         if (!column.notNull) {
             column.notNullFor.clear();
         }
-        table.columns.push_back(column);
+        const bool needed = column.typeFixed || column.notNull || !std::isinf(column.min) || !std::isinf(column.max);
+        if (column.read || needed) {
+            table.columns.push_back(column);
+        }
     }
+
+    // A column no instruction names, which the program only carries to the output
+    // (a target column in a test file, say), may be missing from another input if
+    // the analysis without it keeps every proof: alone, and together with the
+    // columns already found optional. The output then simply lacks it.
+    std::set<std::string> named;
+    for (const Instruction& in : optimized.code) {
+        if (in.op == Opcode::Load) {
+            continue;
+        }
+        if (tableKey(in.dataset, in.table) == table.key) {
+            named.insert(in.column);
+            named.insert(in.columns.begin(), in.columns.end());
+        }
+        if (in.op == Opcode::Check && in.columns.size() >= 3 && tableKey(in.columns[0], in.columns[1]) == table.key) {
+            named.insert(in.columns[2]);  // the key column of a REFERENCES
+        }
+        if (in.op == Opcode::Check && in.text == "MATCH_RATE" && in.columns[1] == table.key) {
+            named.insert(in.columns[2]);
+        }
+    }
+    const std::vector<ColumnInfo> all = facts.columns;
+    std::set<std::string> absent;
+    const auto without = [&](const std::set<std::string>& names) {
+        facts.columns.clear();
+        for (const ColumnInfo& info : all) {
+            if (names.count(info.name) == 0) {
+                facts.columns.push_back(info);
+            }
+        }
+        return lost(base, analyse());
+    };
+    // Every column of the file is tested, also the ones without other facts: a
+    // statement the optimizer removed can still name it (DROP t [c] before c is
+    // ever used), and a fresh compilation of a file without it would fail.
+    for (const ColumnInfo& info : all) {
+        auto found = std::find_if(table.columns.begin(), table.columns.end(),
+                                  [&](const ColumnFacts& column) { return column.name == info.name; });
+        if (named.count(info.name) != 0) {
+            continue;  // the generated code uses it: required (and read, so certified)
+        }
+        std::set<std::string> together = absent;
+        together.insert(info.name);
+        std::vector<std::string> neededBy = without({info.name});
+        if (neededBy.empty()) {
+            neededBy = without(together);
+        }
+        if (neededBy.empty()) {
+            absent = together;
+            if (found != table.columns.end()) {
+                found->required = false;
+            }
+            continue;
+        }
+        if (found == table.columns.end()) {  // only its presence is needed
+            ColumnFacts column;
+            column.name = info.name;
+            column.type = info.type;
+            column.read = false;
+            column.typeFixed = false;
+            table.columns.push_back(column);
+            found = table.columns.end() - 1;
+        }
+        found->required = true;
+        found->requiredFor = neededBy;
+    }
+    facts.columns = all;  // later runs see every column again
     certificate.tables.push_back(table);
 }
 
@@ -458,14 +562,17 @@ std::vector<std::string> admissionProblems(const TableCertificate& certificate, 
         const auto found = std::find_if(input.columns.begin(), input.columns.end(),
                                         [&](const ColumnInfo& info) { return info.name == column.name; });
         if (found == input.columns.end()) {
-            problems.push_back(column.name + " is missing");
+            if (column.required) {
+                problems.push_back(column.name + " is missing");
+            }
             continue;
         }
         const ColumnInfo& info = *found;
-        // INTEGER values fit a FLOAT column, and a column with no values at all fits any type.
-        const bool widens = column.type == ColumnType::Float && info.type == ColumnType::Integer;
-        const bool empty = info.missingKnown && info.missingCount == input.rowCount;
-        if (info.type != column.type && !widens && !empty) {
+        // The type must be the one the compiler infers for the new file: a column
+        // of whole numbers is INTEGER, and one without any value is STRING. (Letting
+        // INTEGER data into a FLOAT column, or an empty column into any type, can
+        // change what the analysis of that file decides.)
+        if (column.typeFixed && info.type != column.type) {
             problems.push_back(column.name + " is " + columnTypeName(info.type) + ", not " +
                                columnTypeName(column.type));
             continue;
@@ -473,13 +580,15 @@ std::vector<std::string> admissionProblems(const TableCertificate& certificate, 
         if (column.notNull && (info.missingCount > 0 || !info.missingKnown)) {
             problems.push_back(column.name + " has missing values; needed by " + join(column.notNullFor));
         }
-        if (info.hasRange && info.min < column.min) {
-            problems.push_back(column.name + " has " + formatNumber(info.min) + " < " + formatNumber(column.min) +
-                               "; needed by " + join(column.minFor));
+        if (info.hasRange && (column.minStrict ? info.min <= column.min : info.min < column.min)) {
+            problems.push_back(column.name + " has " + formatNumber(info.min) + ", below " +
+                               (column.minStrict ? "or at " : "") + formatNumber(column.min) + "; needed by " +
+                               join(column.minFor));
         }
-        if (info.hasRange && info.max > column.max) {
-            problems.push_back(column.name + " has " + formatNumber(info.max) + " > " + formatNumber(column.max) +
-                               "; needed by " + join(column.maxFor));
+        if (info.hasRange && (column.maxStrict ? info.max >= column.max : info.max > column.max)) {
+            problems.push_back(column.name + " has " + formatNumber(info.max) + ", above " +
+                               (column.maxStrict ? "or at " : "") + formatNumber(column.max) + "; needed by " +
+                               join(column.maxFor));
         }
     }
     return problems;
@@ -557,13 +666,29 @@ void printCertificate(std::ostream& out, const Certificate& certificate) {
                 facts.emplace_back("no missing values", join(column.notNullFor));
             }
             if (!std::isinf(column.min)) {
-                facts.emplace_back(">= " + formatNumber(column.min), join(column.minFor));
+                facts.emplace_back((column.minStrict ? "> " : ">= ") + formatNumber(column.min), join(column.minFor));
             }
             if (!std::isinf(column.max)) {
-                facts.emplace_back("<= " + formatNumber(column.max), join(column.maxFor));
+                facts.emplace_back((column.maxStrict ? "< " : "<= ") + formatNumber(column.max), join(column.maxFor));
             }
-            out << "  " << std::left << std::setw(static_cast<int>(width)) << column.name << std::setw(9)
-                << columnTypeName(column.type);
+            if (!column.typeFixed) {
+                out << "  " << std::left << std::setw(static_cast<int>(width)) << column.name << std::setw(9)
+                    << "any type";
+            } else {
+                out << "  " << std::left << std::setw(static_cast<int>(width)) << column.name << std::setw(9)
+                    << columnTypeName(column.type);
+            }
+            if (!column.read) {
+                facts.insert(facts.begin(), {"(not read)", "loaded only to check the facts below"});
+            }
+            if (!column.required) {
+                facts.emplace_back("may be missing", "only carried to the output");
+            } else if (!column.read && !column.requiredFor.empty()) {
+                facts.emplace_back("must exist", join(column.requiredFor));
+            }
+            if (!column.read && column.typeFixed && !column.typeFor.empty()) {
+                facts.emplace_back("its type", join(column.typeFor));
+            }
             if (facts.empty()) {
                 out << "(any values)\n";
             }
