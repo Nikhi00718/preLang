@@ -7,182 +7,207 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Besley:wght@500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
-/* Two inks only: ink on paper, inverted for what the compiler decided. */
+/* Nikhil's portfolio palette: primary-colour blocks, 3px ink borders, hard block shadows.
+   Yellow = primary action and current state, blue = panel headers, red = errors and the brand mark,
+   green = success, orange = run-time and "before", sky and cream = surfaces. */
 :root {
-  --ink: #18140f;
-  --paper: #fff8e7;
-  --bg: var(--paper);
-  --fg: var(--ink);
+  --ink: #18140f; --paper: #fff8e7; --cream: #f4e8c1; --muted: #4a443a;
+  --red: #dc0c2e; --yellow: #ffc915; --blue: #2f6ea5; --blue-deep: #25557e; --sky: #dbe8f2;
+  --green: #4ea65a; --green-deep: #2d6a38; --orange: #f47c20; --orange-deep: #9c4a0c; --purple: #7b5cd6;
+  --purple-tint: #e6def8; --orange-tint: #ffe0c8; --green-tint: #e7f2d9;
+  --bg: var(--paper); --panel: var(--cream); --text: var(--ink); --soft: var(--muted); --edge: var(--ink);
+  --code-bg: var(--paper);
   --display: "Besley", Georgia, "Times New Roman", serif;
   --body: "Archivo", Arial, Helvetica, sans-serif;
   --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
-  --line: 3px solid var(--fg);
-  --thin: 2px solid var(--fg);
-  --hair: 1px solid var(--fg);
-  --dash: 2px dashed var(--fg);
-  --shadow: 5px 5px 0 var(--fg);
-  --shadow-sm: 3px 3px 0 var(--fg);
+  --line: 3px solid var(--edge);
+  --thin: 2px solid var(--edge);
+  --hair: 1px solid var(--edge);
+  --shadow: 5px 5px 0 var(--edge);
+  --shadow-sm: 3px 3px 0 var(--edge);
   --code: 14px;
   --lh: 22px;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: var(--ink); --fg: var(--paper); color-scheme: dark; }
+:root[data-theme="dark"] {
+  --bg: #18140f; --panel: #241e17; --text: #fff8e7; --soft: #e9dcc0; --edge: #fff8e7; --code-bg: #1f1a14;
+  --sky: #22303c; --green-tint: #1f2d1f; --orange-tint: #33241a; --purple-tint: #2a2438;
+  --green-deep: #8fd19a; --orange-deep: #ffad6b; --blue-deep: #9cc3e6;
+  color-scheme: dark;
 }
-:root[data-theme="dark"] { --bg: var(--ink); --fg: var(--paper); color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45; overflow: hidden; }
-button, select, input { font: inherit; color: var(--fg); background: var(--bg); }
-button { border: var(--thin); padding: 6px 12px; cursor: pointer; font-weight: 600; white-space: nowrap; }
-button:hover:not(:disabled) { box-shadow: var(--shadow-sm); transform: translate(-1px, -1px); }
-button:active:not(:disabled) { box-shadow: none; transform: none; }
-button:disabled { cursor: default; border-style: dashed; }
-button.solid, button.on { background: var(--fg); color: var(--bg); }
-button.flat { border: none; padding: 4px 6px; }
-button.flat:hover { box-shadow: none; transform: none; text-decoration: underline; }
-select, input[type=number], input[type=text] { border: var(--thin); padding: 5px 8px; min-width: 0; }
-:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); font-size: 15px; line-height: 1.5; overflow: hidden; }
+button, select, input { font: inherit; color: var(--text); background: var(--bg); }
+button { border: var(--thin); border-radius: 2px; padding: 6px 12px; cursor: pointer; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: .06em; font-size: 12.5px; background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm); transition: transform .08s, box-shadow .08s; }
+button:hover:not(:disabled) { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--edge); }
+button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
+button:disabled { cursor: default; opacity: .7; }
+button.solid, button.on { background: var(--yellow); color: var(--ink); }
+button.flat { border: none; padding: 4px 6px; box-shadow: none; background: transparent; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 14px; }
+button.flat:hover:not(:disabled) { transform: none; box-shadow: none; text-decoration: underline; text-decoration-color: var(--red); text-decoration-thickness: 2px; }
+select, input[type=number], input[type=text] { border: var(--thin); border-radius: 2px; padding: 5px 8px; min-width: 0; background: var(--paper); color: var(--ink); }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 .mono { font-family: var(--mono); }
-.kicker { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.kicker { font-family: var(--body); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.01em; margin: 0; line-height: 1.1; }
-kbd { font-family: var(--mono); font-size: 11px; border: var(--hair); padding: 0 4px; }
+kbd { font-family: var(--mono); font-size: 12px; border: var(--hair); padding: 0 4px; background: var(--paper); color: var(--ink); }
 
 /* ---------- frame ---------- */
 .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
-.top { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-bottom: var(--line); }
+.top { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-bottom: var(--line); background: var(--panel); }
 .brand { font-family: var(--display); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-.brand .mark { width: 26px; height: 26px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-family: var(--mono); font-size: 13px; }
-.top .where { font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.brand .mark { width: 28px; height: 28px; background: var(--red); color: var(--paper); border: var(--thin); display: grid; place-items: center; font-family: var(--mono); font-size: 13px; font-weight: 600; box-shadow: 2px 2px 0 var(--edge); }
+.top .where { font-family: var(--mono); font-size: 12px; color: var(--soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .body { display: grid; grid-template-columns: 250px 1fr; min-height: 0; }
-.side { border-right: var(--line); overflow-y: auto; padding: 14px 12px 24px; }
-.side h4 { margin: 18px 4px 6px; display: flex; justify-content: space-between; align-items: center; }
+.side { border-right: var(--line); overflow-y: auto; padding: 14px 12px 24px; background: var(--panel); }
+.side h4 { margin: 18px 4px 6px; display: flex; gap: 8px; align-items: center; color: var(--soft); }
+.side h4::before { content: ""; width: 10px; height: 10px; border: var(--thin); background: var(--tone, var(--yellow)); }
+.side h4.t-programs { --tone: var(--blue); }
+.side h4.t-csv { --tone: var(--orange); }
+.side h4.t-images { --tone: var(--purple); }
+.side h4.t-studio { --tone: var(--red); }
 .side h4:first-child { margin-top: 4px; }
-.item { display: flex; width: 100%; text-align: left; border: 2px solid transparent; padding: 5px 8px; font-weight: 400; gap: 8px; align-items: baseline; }
-.item:hover { border: var(--thin); box-shadow: none; transform: none; }
-.item.on { background: var(--fg); color: var(--bg); border: var(--thin); }
+.item { display: flex; width: 100%; text-align: left; border: 2px solid transparent; padding: 5px 8px; font-weight: 400; gap: 8px; align-items: baseline; box-shadow: none; background: transparent; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 14px; }
+.item:hover:not(:disabled) { border: var(--thin); box-shadow: none; transform: none; background: var(--paper); color: var(--ink); }
+.item.on, .item.on:hover:not(:disabled) { background: var(--yellow); color: var(--ink); border: var(--thin); box-shadow: var(--shadow-sm); }
 .item .t { font-family: var(--mono); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-.item .n { font-family: var(--mono); font-size: 11px; }
+.item .n { font-family: var(--mono); font-size: 12px; border: 1.5px solid currentColor; padding: 0 5px; }
 .main { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 
 /* ---------- welcome ---------- */
 .welcome { overflow-y: auto; padding: 34px 40px; }
-.welcome h1 { font-size: 46px; max-width: 18ch; }
+.welcome h1 { font-size: 50px; max-width: 18ch; }
+.welcome h1 em { color: var(--red); font-style: italic; font-weight: 500; }
+.welcome .meta { color: var(--soft); font-size: 14px; margin-top: 10px; }
 .welcome p.lead { font-size: 18px; max-width: 62ch; margin: 14px 0 26px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; max-width: 1100px; }
-.card { border: var(--line); box-shadow: var(--shadow); padding: 16px 18px; background: var(--bg); }
-.card.ink { background: var(--fg); color: var(--bg); }
-.card h3 { font-size: 21px; margin: 6px 0 8px; }
-.card p { margin: 0 0 12px; }
-.card.ink button { border-color: var(--bg); color: var(--bg); background: var(--fg); }
-.steps { counter-reset: s; list-style: none; padding: 0; margin: 28px 0 0; max-width: 1100px; display: grid; gap: 8px; }
-.steps li { counter-increment: s; display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: var(--hair); }
-.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; max-width: 1100px; }
+.card { border: var(--line); box-shadow: var(--shadow); padding: 0 18px 16px; background: var(--paper); color: var(--ink); border-radius: 2px; }
+.card > .kicker:first-child { margin: 0 -18px 12px; padding: 9px 18px; background: var(--tone); color: var(--tone-ink, var(--paper)); border-bottom: var(--line); display: flex; align-items: center; gap: 8px; }
+.card > .kicker:first-child::before { content: ""; width: 10px; height: 10px; border: 2px solid currentColor; }
+.t-blue { --tone: var(--blue); --tone-ink: var(--paper); }
+.t-orange { --tone: var(--orange); --tone-ink: var(--ink); }
+.t-purple { --tone: var(--purple); --tone-ink: var(--paper); }
+.card h3 { font-size: 23px; margin: 6px 0 8px; }
+.card p { margin: 0 0 14px; }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 30px 0 0; max-width: 1100px; display: grid; gap: 4px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: var(--hair); }
+.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-weight: 600; background: var(--red); color: var(--paper); text-align: center; border: var(--thin); padding: 0 4px; }
 
 /* ---------- program view ---------- */
 .prog { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); flex: 1; min-height: 0; }
-.ed { display: flex; flex-direction: column; min-height: 0; border-right: var(--line); }
-.bar { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: var(--thin); flex-wrap: wrap; }
+.ed { display: flex; flex-direction: column; min-height: 0; border-right: var(--line); background: var(--code-bg); }
+.bar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: var(--thin); flex-wrap: wrap; background: var(--panel); }
 .bar .name { font-family: var(--mono); font-weight: 600; font-size: 14px; margin-right: auto; display: flex; gap: 8px; align-items: center; min-width: 0; }
-.dot { width: 9px; height: 9px; border: var(--thin); border-radius: 50%; display: inline-block; }
-.dot.dirty { background: var(--fg); }
+.dot { width: 11px; height: 11px; border: var(--thin); display: inline-block; background: var(--green); }
+.dot.dirty { background: var(--orange); }
 .code { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: 52px 1fr; overflow: hidden; }
-.gutter { overflow: hidden; border-right: var(--hair); position: relative; }
-.gutter .nums { position: absolute; top: 0; left: 0; right: 0; padding: 12px 0; font-family: var(--mono); font-size: 12px; line-height: var(--lh); text-align: right; }
+.gutter { overflow: hidden; border-right: var(--thin); position: relative; background: var(--panel); }
+.gutter .nums { position: absolute; top: 0; left: 0; right: 0; padding: 12px 0; font-family: var(--mono); font-size: 12px; line-height: var(--lh); text-align: right; color: var(--soft); }
 .gutter .nums div { padding-right: 9px; height: var(--lh); }
-.gutter .nums div.err { background: var(--fg); color: var(--bg); font-weight: 600; }
-.gutter .nums div.warn { text-decoration: underline dashed; font-weight: 600; }
+.gutter .nums div.err { background: var(--red); color: var(--paper); font-weight: 600; }
+.gutter .nums div.warn { background: var(--yellow); color: var(--ink); font-weight: 600; }
 .layer { position: relative; overflow: hidden; }
 .layer pre, .layer textarea { position: absolute; inset: 0; margin: 0; padding: 12px 14px; font-family: var(--mono); font-size: var(--code); line-height: var(--lh); white-space: pre; tab-size: 4; border: 0; }
-.layer pre { pointer-events: none; overflow: hidden; }
-.layer textarea { resize: none; background: transparent; color: transparent; caret-color: var(--fg); overflow: auto; outline: none; }
-.layer textarea::selection { background: var(--fg); color: var(--bg); }
-.hl .k { font-weight: 600; }
-.hl .c { font-style: italic; }
-.hl .s { text-decoration: underline dotted; text-underline-offset: 3px; }
-.hl .eline { background: var(--fg); color: var(--bg); box-shadow: -14px 0 0 var(--fg), 600px 0 0 var(--fg); }
-.hl .wline { text-decoration: underline wavy; text-underline-offset: 4px; }
-.status { border-top: var(--thin); padding: 7px 14px; font-family: var(--mono); font-size: 12px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-.status .verdict { font-weight: 600; padding: 2px 8px; border: var(--thin); }
-.status .verdict.bad { background: var(--fg); color: var(--bg); }
+.layer pre { pointer-events: none; overflow: hidden; color: var(--text); }
+.layer textarea { resize: none; background: transparent; color: transparent; caret-color: var(--red); overflow: auto; outline: none; }
+.layer textarea::selection { background: rgba(255, 201, 21, .55); color: transparent; }
+.hl .k { font-weight: 600; color: var(--blue-deep); }
+.hl .n { color: var(--orange-deep); }
+.hl .c { font-style: italic; color: var(--soft); }
+.hl .s { color: var(--green-deep); }
+.hl .eline { background: var(--red); color: var(--paper); box-shadow: -14px 0 0 var(--red), 600px 0 0 var(--red); }
+.hl .eline span { color: var(--paper); }
+.hl .wline { background: var(--yellow); color: var(--ink); box-shadow: -14px 0 0 var(--yellow), 600px 0 0 var(--yellow); }
+.hl .wline span { color: var(--ink); }
+.status { border-top: var(--thin); padding: 7px 14px; font-family: var(--mono); font-size: 12px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: var(--panel); }
+.status .verdict { font-weight: 600; padding: 2px 8px; border: var(--thin); background: var(--green); color: var(--ink); }
+.status .verdict.bad { background: var(--red); color: var(--paper); }
 .status .keys { margin-left: auto; white-space: nowrap; }
 
 .panel { display: flex; flex-direction: column; min-height: 0; }
-.tabs { display: flex; border-bottom: var(--thin); overflow-x: auto; }
-.tabs button { border: 0; border-right: var(--thin); padding: 10px 16px; }
-.tabs button:hover { box-shadow: none; transform: none; text-decoration: underline; }
-.tabs button.on { background: var(--fg); color: var(--bg); }
-.tabs button .count { font-family: var(--mono); font-size: 11px; margin-left: 6px; border: 1.5px solid currentColor; padding: 0 5px; }
+.tabs { display: flex; border-bottom: var(--line); overflow-x: auto; background: var(--blue); }
+.tabs button { border: 0; border-right: 2px solid var(--ink); padding: 11px 16px; background: transparent; color: var(--paper); box-shadow: none; }
+.tabs button:hover:not(:disabled) { box-shadow: none; transform: none; background: var(--blue-deep); }
+.tabs button.on, .tabs button.on:hover:not(:disabled) { background: var(--yellow); color: var(--ink); }
+.tabs button .count { font-family: var(--mono); font-size: 12px; margin-left: 6px; background: var(--red); color: var(--paper); border: 1.5px solid var(--ink); padding: 0 5px; }
 .pane { flex: 1; overflow: auto; padding: 18px; min-height: 0; }
 .pane pre { font-family: var(--mono); font-size: 13px; line-height: 1.5; margin: 0; white-space: pre; }
-.pane .block { border: var(--line); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 18px; background: var(--bg); overflow-x: auto; }
-.pane .block.ink { background: var(--fg); color: var(--bg); }
-.pane .block.dashed { border-style: dashed; box-shadow: none; }
+.pane .block { border: var(--line); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 18px; background: var(--paper); color: var(--ink); overflow-x: auto; border-radius: 2px; }
+.pane .block.ok { background: var(--green); color: var(--ink); }
+.pane .block.bad { background: var(--red); color: var(--paper); }
+.pane .block.sky { background: var(--sky); color: var(--text); }
+.pane .block.before { background: var(--orange-tint); color: var(--text); }
+.pane .block.dashed { border-style: dashed; box-shadow: none; background: var(--panel); color: var(--text); }
 .pane .explain { margin: 0 0 14px; max-width: 70ch; }
-.diag { border: var(--thin); margin-bottom: 14px; }
-.diag header { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-bottom: var(--thin); }
-.diag.error header { background: var(--fg); color: var(--bg); }
-.diag header .msg { font-weight: 600; flex: 1; min-width: 0; }
+.diag { border: var(--line); margin-bottom: 16px; box-shadow: var(--shadow-sm); background: var(--paper); color: var(--ink); }
+.diag header { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-bottom: var(--thin); background: var(--yellow); color: var(--ink); }
+.diag.error header { background: var(--red); color: var(--paper); }
+.diag header .msg { font-weight: 700; flex: 1; min-width: 0; }
 .diag header button { padding: 2px 8px; font-size: 12px; }
-.diag.error header button { border-color: var(--bg); color: var(--bg); background: var(--fg); }
 .diag pre { padding: 10px; overflow-x: auto; font-size: 12.5px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.chips button { padding: 4px 10px; font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.chips button { padding: 4px 10px; font-size: 12px; }
 .big { font-family: var(--display); font-size: 34px; font-weight: 700; line-height: 1.05; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 14px 0; }
-.stat { border: var(--thin); padding: 8px 10px; }
-.stat b { font-family: var(--display); font-size: 26px; display: block; }
-.stat span { font-size: 12px; }
-.inputs { display: grid; gap: 10px; margin: 6px 0 14px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin: 16px 0; }
+.stat { border: var(--line); padding: 10px 12px; background: var(--tone, var(--paper)); color: var(--tone-ink, var(--ink)); box-shadow: var(--shadow-sm); }
+.stat.t-green { --tone: var(--green); --tone-ink: var(--ink); }
+.stat.t-yellow { --tone: var(--yellow); --tone-ink: var(--ink); }
+.stat.t-blue { --tone: var(--blue); --tone-ink: var(--paper); }
+.stat.t-orange { --tone: var(--orange); --tone-ink: var(--ink); }
+.stat b { font-family: var(--display); font-size: 28px; display: block; }
+.stat span { font-size: 13px; }
+.inputs { display: grid; gap: 12px; margin: 6px 0 16px; }
 .inputs label { display: grid; grid-template-columns: 1fr; gap: 4px; }
 .inputs label .kicker { display: flex; justify-content: space-between; gap: 8px; }
-.verdict-block { border: var(--line); box-shadow: var(--shadow); padding: 16px 18px; margin: 16px 0; }
-.verdict-block.admitted, .verdict-block.finished { background: var(--fg); color: var(--bg); }
-.verdict-block.refused, .verdict-block.failed, .verdict-block.not { border-style: solid; border-width: 4px; }
-.verdict-block .big { font-size: 30px; }
+.verdict-block { border: var(--line); box-shadow: var(--shadow); padding: 16px 18px; margin: 18px 0; border-radius: 2px; background: var(--paper); color: var(--ink); }
+.verdict-block.admitted, .verdict-block.finished { background: var(--green); color: var(--ink); }
+.verdict-block.refused { background: var(--red); color: var(--paper); }
+.verdict-block.failed, .verdict-block.not { background: var(--orange); color: var(--ink); }
+.verdict-block .big { font-size: 32px; }
 .verdict-block pre { white-space: pre-wrap; margin-top: 10px; font-size: 13px; }
-table.preview { border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
-table.preview td, table.preview th { border: var(--hair); padding: 3px 8px; text-align: left; white-space: nowrap; }
-table.preview th { background: var(--fg); color: var(--bg); }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.cert-need { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+table.preview { border-collapse: collapse; font-family: var(--mono); font-size: 12px; background: var(--paper); color: var(--ink); border: var(--thin); }
+table.preview td, table.preview th { border: 1px solid var(--ink); padding: 3px 8px; text-align: left; white-space: nowrap; }
+table.preview th { background: var(--blue); color: var(--paper); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.cert-need { font-weight: 600; background: var(--yellow); color: var(--ink); }
 
 /* ---------- csv view ---------- */
-.grid-wrap { flex: 1; overflow: auto; min-height: 0; }
+.grid-wrap { flex: 1; overflow: auto; min-height: 0; background: var(--bg); }
 table.sheet { border-collapse: separate; border-spacing: 0; font-family: var(--mono); font-size: 13px; }
 table.sheet th, table.sheet td { border-right: var(--hair); border-bottom: var(--hair); padding: 0; height: 30px; }
-table.sheet thead th { position: sticky; top: 0; background: var(--fg); color: var(--bg); z-index: 2; border-color: var(--bg); }
-table.sheet .rn { position: sticky; left: 0; background: var(--bg); text-align: right; padding: 0 8px; font-size: 11px; z-index: 1; border-right: var(--thin); min-width: 46px; }
-table.sheet thead .rn { background: var(--fg); color: var(--bg); z-index: 3; }
+table.sheet thead th { position: sticky; top: 0; background: var(--blue); color: var(--paper); z-index: 2; border-color: var(--ink); text-align: left; }
+table.sheet .rn { position: sticky; left: 0; background: var(--panel); text-align: right; padding: 0 8px; font-size: 12px; z-index: 1; border-right: var(--thin); min-width: 46px; color: var(--soft); }
+table.sheet thead .rn { background: var(--blue-deep); color: var(--paper); z-index: 3; }
 table.sheet [contenteditable] { padding: 4px 10px; outline: none; min-width: 70px; white-space: nowrap; }
-table.sheet td[contenteditable]:focus { box-shadow: inset 0 0 0 2px var(--fg); }
-table.sheet td.empty { background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--fg) 6px 7px); background-size: 10px 10px; background-blend-mode: normal; }
+table.sheet td[contenteditable]:focus { box-shadow: inset 0 0 0 2px var(--blue); background: var(--sky); }
+table.sheet td.empty { background: var(--orange-tint); background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--orange) 6px 7px); }
 table.sheet td.empty:focus { background-image: none; }
-table.sheet td.changed { font-weight: 600; text-decoration: underline; }
-table.sheet .del { border: 0; padding: 0 6px; font-size: 12px; visibility: hidden; }
+table.sheet td.changed { background: var(--yellow); color: var(--ink); font-weight: 600; }
+table.sheet .del { border: 0; padding: 0 6px; font-size: 13px; visibility: hidden; box-shadow: none; background: transparent; color: var(--red); }
 table.sheet tr:hover .del { visibility: visible; }
-.colstats { font-size: 10.5px; font-weight: 400; display: block; letter-spacing: 0; text-transform: none; opacity: 1; }
+.colstats { font-size: 11px; font-weight: 400; display: block; letter-spacing: 0; text-transform: none; color: var(--sky); }
 
 /* ---------- images view ---------- */
-.gallery { flex: 1; overflow: auto; padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; align-content: start; }
-.shot { border: var(--line); box-shadow: var(--shadow-sm); background: var(--bg); display: flex; flex-direction: column; }
-.shot .img { aspect-ratio: 4 / 3; display: grid; place-items: center; border-bottom: var(--thin); overflow: hidden; }
+.gallery { flex: 1; overflow: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; align-content: start; }
+.shot { border: var(--line); box-shadow: var(--shadow); background: var(--paper); color: var(--ink); display: flex; flex-direction: column; border-radius: 2px; }
+.shot .img { aspect-ratio: 4 / 3; display: grid; place-items: center; border-bottom: var(--thin); overflow: hidden; background: var(--sky); }
 .shot img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-.shot.broken .img { background: var(--fg); color: var(--bg); font-family: var(--mono); font-weight: 600; letter-spacing: .1em; }
+.shot.broken .img { background: var(--red); color: var(--paper); font-family: var(--mono); font-weight: 600; letter-spacing: .1em; }
 .shot .meta { padding: 8px 10px; font-family: var(--mono); font-size: 12px; }
 .shot .meta b { font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .maker { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .maker input[type=number] { width: 80px; }
-.summary { display: flex; gap: 18px; flex-wrap: wrap; padding: 10px 18px; border-bottom: var(--thin); font-family: var(--mono); font-size: 12.5px; }
+.summary { display: flex; gap: 18px; flex-wrap: wrap; padding: 10px 18px; border-bottom: var(--thin); font-family: var(--mono); font-size: 12.5px; background: var(--sky); color: var(--text); align-items: center; }
 .summary b { font-weight: 600; }
 
 /* ---------- toast ---------- */
-.toast { position: fixed; bottom: 18px; right: 18px; background: var(--fg); color: var(--bg); padding: 10px 16px; font-weight: 600; box-shadow: 4px 4px 0 var(--bg), 4px 4px 0 2px var(--fg); transform: translateY(200%); visibility: hidden; transition: transform .2s, visibility .2s; z-index: 50; max-width: 420px; }
+.toast { position: fixed; bottom: 18px; right: 18px; background: var(--yellow); color: var(--ink); border: var(--line); padding: 10px 16px; font-weight: 700; box-shadow: var(--shadow); transform: translateY(200%); visibility: hidden; transition: transform .2s, visibility .2s; z-index: 50; max-width: 420px; }
 .toast.show { transform: none; visibility: visible; }
 .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: r .7s linear infinite; vertical-align: -1px; }
 @keyframes r { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spin { animation: none; } .toast { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } .toast, button { transition: none; } }
 
 @media (max-width: 900px) {
   body { overflow: auto; }
@@ -255,16 +280,16 @@ const base = (p) => p.split("/").pop();
 /* ---------------- theme ---------------- */
 function applyTheme(t) {
   if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
-  const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = t === "dark";
   $("#theme").textContent = dark ? "Light" : "Dark";
 }
 $("#theme").onclick = () => {
-  const now = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const now = document.documentElement.getAttribute("data-theme") || "light";
   const next = now === "dark" ? "light" : "dark";
   store.set("theme", next);
   applyTheme(next);
 };
-applyTheme(store.get("theme", null));
+applyTheme(store.get("theme", "light"));
 
 /* ---------------- sidebar ---------------- */
 async function loadTree() {
@@ -279,13 +304,13 @@ function renderSide() {
     class: "item" + (S.sel && S.sel.path === path ? " on" : ""), title: path,
     onclick: () => select(kind, path),
   }, h("span", { class: "t" }, label), n != null ? h("span", { class: "n" }, n) : null);
-  side.append(h("h4", { class: "kicker" }, "Programs"));
+  side.append(h("h4", { class: "kicker t-programs" }, "Programs"));
   t.programs.forEach((p) => side.append(item("program", p, base(p), p.endsWith(".py") ? "pandas" : null)));
-  side.append(h("h4", { class: "kicker" }, "CSV files"));
+  side.append(h("h4", { class: "kicker t-csv" }, "CSV files"));
   t.tables.forEach((p) => side.append(item("table", p, p.replace(/^csv\//, ""))));
-  side.append(h("h4", { class: "kicker" }, "Image folders"));
+  side.append(h("h4", { class: "kicker t-images" }, "Image folders"));
   t.folders.forEach((f) => side.append(item("images", f.path, f.name + "/", f.count)));
-  side.append(h("h4", { class: "kicker" }, "Studio"));
+  side.append(h("h4", { class: "kicker t-studio" }, "Studio"));
   side.append(h("button", { class: "item" + (!S.sel ? " on" : ""), onclick: () => select(null) }, h("span", { class: "t" }, "How to demo")));
 }
 async function select(kind, path) {
@@ -308,21 +333,21 @@ function renderWelcome(main) {
   const w = h("div", { class: "welcome" });
   const first = (k, p) => () => select(k, p);
   w.append(
-    h("div", { class: "kicker" }, "Compiler Design Lab · V.Nikhil · 24BAI0073"),
-    h("h1", {}, "Change the data. Watch the compiler react."),
+    h("h1", { html: "Change the data.<br><em>Watch the compiler react.</em>" }),
+    h("div", { class: "meta" }, "PrepLang · Compiler Design Lab (BCSE307P) · V.Nikhil · 24BAI0073"),
     h("p", { class: "lead" }, "PrepLang reads your CSV files and image folders while it compiles. Edit a program, a table or an image folder here, and every check runs the real compiler and the real generated program."),
     h("div", { class: "cards" },
-      h("div", { class: "card ink" }, h("div", { class: "kicker" }, "01 · program"), h("h3", {}, "Edit a program"),
+      h("div", { class: "card t-blue" }, h("div", { class: "kicker" }, "Program"), h("h3", {}, "Edit a program"),
         h("p", {}, "Problems appear while you type: wrong column, wrong type, broken contract, with the line."),
         h("button", { onclick: first("program", "programs/students.prep") }, "Open students.prep")),
-      h("div", { class: "card" }, h("div", { class: "kicker" }, "02 · data"), h("h3", {}, "Edit a CSV file"),
+      h("div", { class: "card t-orange" }, h("div", { class: "kicker" }, "Data"), h("h3", {}, "Edit a CSV file"),
         h("p", {}, "Change a mark to 730 or empty a name, save as a new batch, and run the compiled program on it."),
         h("button", { onclick: first("table", "csv/next_week.csv") }, "Open next_week.csv")),
-      h("div", { class: "card" }, h("div", { class: "kicker" }, "03 · images"), h("h3", {}, "Change an image folder"),
+      h("div", { class: "card t-purple" }, h("div", { class: "kicker" }, "Images"), h("h3", {}, "Change an image folder"),
         h("p", {}, "Add a 150 px photo or a broken file, then run the image program on that folder."),
         h("button", { onclick: first("images", "images/new_photos") }, "Open new_photos/"))),
     h("ol", { class: "steps" },
-      h("li", {}, h("span", { html: "<b>Problems.</b> Open <span class=mono>students.prep</span>, change <span class=mono>marks</span> to <span class=mono>mark</span> on line 19. The line turns black and the hint says <i>did you mean 'marks'?</i>" })),
+      h("li", {}, h("span", { html: "<b>Problems.</b> Open <span class=mono>students.prep</span>, change <span class=mono>marks</span> to <span class=mono>mark</span> on line 19. The line turns red and the hint says <i>did you mean 'marks'?</i>" })),
       h("li", {}, h("span", { html: "<b>Phases.</b> Undo, then open the Phases tab: tokens, syntax tree, the data read at compile time, the proven contracts, the three-address code." })),
       h("li", {}, h("span", { html: "<b>Certificate.</b> The facts the proofs need: marks 0 to 100 for line 5, no missing names for line 6." })),
       h("li", {}, h("span", { html: "<b>Run.</b> Pick <span class=mono>next_week.csv</span>: admitted without compiling again. Pick <span class=mono>typo_week.csv</span>: refused with the row and the line." })),
@@ -336,14 +361,14 @@ function renderWelcome(main) {
 }
 
 /* ---------------- program view ---------------- */
-const KEYWORDS = /\b[A-Z][A-Z0-9_]+\b/g;
+const KEYWORDS = /\b([A-Z][A-Z0-9_]+)\b|\b(\d+(?:\.\d+)?)\b/g;
 function highlight(src, marks) {
   return src.split("\n").map((line, i) => {
     let out = "", rest = line, comment = "";
     const ci = indexOutsideString(line, "#");
     if (ci >= 0) { rest = line.slice(0, ci); comment = line.slice(ci); }
     out = rest.split(/("(?:[^"\\]|\\.)*"?)/).map((part, j) =>
-      j % 2 ? `<span class="s">${esc(part)}</span>` : esc(part).replace(KEYWORDS, (k) => `<span class="k">${k}</span>`)).join("");
+      j % 2 ? `<span class="s">${esc(part)}</span>` : esc(part).replace(KEYWORDS, (m, k) => k ? `<span class="k">${k}</span>` : `<span class="n">${m}</span>`)).join("");
     if (comment) out += `<span class="c">${esc(comment)}</span>`;
     const m = marks[i + 1];
     if (m === "error") return `<span class="eline">${out || " "}</span>`;
@@ -485,13 +510,13 @@ function renderPanel(panel) {
 function paneProblems(pane, r) {
   if (!r.diagnostics.length) {
     const st = explainStats(r.sections.EXPLAIN || "");
-    pane.append(h("div", { class: "block ink" }, h("div", { class: "kicker" }, "no problems"),
+    pane.append(h("div", { class: "block ok" }, h("div", { class: "kicker" }, "no problems"),
       h("div", { class: "big", style: "margin-top:6px" }, "Compiles in " + (r.seconds * 1000).toFixed(0) + " ms"),
       h("p", { style: "margin:8px 0 0" }, "The compiler read the data, checked every statement against it, and found nothing wrong.")));
     if (st.proven != null) pane.append(h("div", { class: "stats" },
-      h("div", { class: "stat" }, h("b", {}, st.proven), h("span", {}, "contracts proven: no check at run time")),
-      h("div", { class: "stat" }, h("b", {}, st.runtime), h("span", {}, "checked at run time")),
-      h("div", { class: "stat" }, h("b", {}, st.removed ?? 0), h("span", {}, "checks the optimizer removed"))));
+      h("div", { class: "stat t-green" }, h("b", {}, st.proven), h("span", {}, "contracts proven: no check at run time")),
+      h("div", { class: "stat t-yellow" }, h("b", {}, st.runtime), h("span", {}, "checked at run time")),
+      h("div", { class: "stat t-blue" }, h("b", {}, st.removed ?? 0), h("span", {}, "checks the optimizer removed"))));
     pane.append(h("p", { class: "explain" }, "Try it: break something in the program. Problems show up while you type."));
     if (r.sections.EXPLAIN) pane.append(h("div", { class: "block dashed" }, h("pre", {}, r.sections.EXPLAIN)));
     return;
@@ -519,7 +544,7 @@ function paneCertificate(pane, r) {
   if (!c) { pane.append(h("p", {}, "No certificate: the program does not compile yet. See Problems.")); return; }
   pane.append(h("p", { class: "explain" }, "The compiler weakened each fact about the data one at a time and analysed the program again. It kept only the facts without which a proof breaks. Any new file with these facts gives the same program, so it runs without compiling again."));
   const html = esc(c).split("\n").map((l) => l.includes("&lt;-") && !l.includes("only carried") ? `<span class="cert-need">${l}</span>` : l).join("\n");
-  pane.append(h("div", { class: "block" }, h("pre", { html })));
+  pane.append(h("div", { class: "block sky" }, h("pre", { html })));
   pane.append(h("p", { class: "explain" }, h("b", {}, "Underlined"), ": a fact some line of the program needs. Everything else only needs its type. Try it in the Run tab."));
 }
 
@@ -584,13 +609,13 @@ function paneCompare(pane, r) {
       let line = p.ok ? "Finished without an error." : "Crashed while running.";
       if (p.images && p.images.brightest_mean != null && p.images.brightest_mean < 2)
         line = `Finished without an error, and wrote ${p.images.count} PNG files whose brightest mean pixel is ${p.images.brightest_mean.toFixed(2)} of 255: every image is black.`;
-      plainOut.append(h("div", { class: "block dashed" }, h("div", { class: "kicker" }, "plain script · " + (p.seconds * 1000).toFixed(0) + " ms"),
+      plainOut.append(h("div", { class: "block before" }, h("div", { class: "kicker" }, "plain script · " + (p.seconds * 1000).toFixed(0) + " ms"),
         h("p", { style: "font-weight:600;margin:6px 0" }, line), h("pre", { style: "white-space:pre-wrap" }, p.output || (p.files ? `wrote ${p.files.count} file(s), no checks:\n` + p.files.names.join("\n") : "(no output)")),
         p.images && p.images.samples.length ? h("div", { style: "display:flex;gap:8px;margin-top:10px" }, p.images.samples.map((s) => h("img", { src: "/api/raw?path=" + encodeURIComponent(s), style: "width:80px;height:80px;object-fit:cover;border:2px solid currentColor", alt: "output image" }))) : null));
     } catch (e) { plainOut.textContent = e.message; }
     plain.disabled = false; plain.textContent = "Run as a plain script";
   } }, "Run as a plain script");
-  const ours = h("div", { class: "block " + (r.ok ? "ink" : "") }, h("div", { class: "kicker" }, "PrepLang, Phase 3 · " + (r.seconds * 1000).toFixed(0) + " ms"),
+  const ours = h("div", { class: "block " + (r.ok ? "ok" : "bad") }, h("div", { class: "kicker" }, "PrepLang, Phase 3 · " + (r.seconds * 1000).toFixed(0) + " ms"),
     h("p", { style: "font-weight:600;margin:6px 0" }, r.ok ? "Compiles: every statement checked against the data before anything runs." : `Refuses to compile: ${r.diagnostics.filter((d) => d.level === "error").length} error(s), nothing runs.`),
     r.diagnostics[0] ? h("pre", { style: "white-space:pre-wrap" }, r.diagnostics[0].text) : null);
   pane.append(h("div", { class: "row2" }, h("div", {}, h("h3", { style: "margin-bottom:10px" }, "Without a compiler"), plain, h("div", { style: "margin-top:12px" }, plainOut)),
@@ -602,8 +627,8 @@ function paneCompare(pane, r) {
         const [a, b] = [await api("/api/compile", { path: S.path, compiler: "phase2" }), await api("/api/compile", { path: S.path })];
         oldOut.innerHTML = "";
         oldOut.append(h("div", { class: "stats" },
-          h("div", { class: "stat" }, h("b", {}, (a.seconds * 1000).toFixed(0) + " ms"), h("span", {}, "Review 2 compiler: " + (a.summary || "").replace("Compiled successfully: ", ""))),
-          h("div", { class: "stat" }, h("b", {}, (b.seconds * 1000).toFixed(0) + " ms"), h("span", {}, "Phase 3 compiler: " + (b.summary || "").replace("Compiled successfully: ", "")))),
+          h("div", { class: "stat t-orange" }, h("b", {}, (a.seconds * 1000).toFixed(0) + " ms"), h("span", {}, "Review 2 compiler: " + (a.summary || "").replace("Compiled successfully: ", ""))),
+          h("div", { class: "stat t-green" }, h("b", {}, (b.seconds * 1000).toFixed(0) + " ms"), h("span", {}, "Phase 3 compiler: " + (b.summary || "").replace("Compiled successfully: ", "")))),
           h("p", { class: "explain" }, "Small files compile fast either way; on a million rows Phase 2 needs about 1.9 s and Phase 3 about 0.13 s. The bigger change: Phase 2's program refuses every new file, Phase 3's runs on any file that fits the certificate."));
       } catch (e) { oldOut.textContent = e.message; }
       old.disabled = false; old.textContent = "Compile with both compilers";
@@ -628,7 +653,7 @@ async function liftNow() {
     out.innerHTML = "";
     if (!r.ok) { out.append(h("pre", {}, r.notes || "could not lift")); return; }
     const text = (await api("/api/file?path=" + encodeURIComponent(r.program))).text;
-    out.append(h("div", { class: "block ink" }, h("div", { class: "kicker" }, r.program), h("pre", {}, text)),
+    out.append(h("div", { class: "block sky" }, h("div", { class: "kicker" }, r.program), h("pre", {}, text)),
       h("p", { class: "explain" }, r.notes.replace(/^Wrote .*$/m, "").trim()),
       h("button", { onclick: async () => { await loadTree(); select("program", r.program); } }, "Open it and compile"));
     loadTree();
