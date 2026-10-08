@@ -17,6 +17,16 @@ class ContractError(Exception):
     pass
 
 
+def report(kind, error, trace):
+    """A refused input or a broken contract is reported in one line, not as a traceback."""
+    if issubclass(kind, ContractError):
+        print(f"ContractError: {error}", file=sys.stderr)
+    else:
+        sys.__excepthook__(kind, error, trace)
+
+
+sys.excepthook = report
+
 # An input can be given another file or folder when the program is run:
 #   py -3 generated.py students=new_students.csv
 INPUTS = dict(arg.split("=", 1) for arg in sys.argv[1:] if "=" in arg)
