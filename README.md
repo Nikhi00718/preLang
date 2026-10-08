@@ -114,6 +114,21 @@ The generated program is always `output/generated.py`, and `SAVE` paths are rela
 With no flags every stage except `--lineage` is printed. Compilation stops after the first phase
 that reports an error, so one mistake is not reported again by later phases.
 
+## PrepLang Studio (the demo app)
+
+```bash
+py -3 studio/studio.py
+```
+
+It makes a workspace next to this folder (`comp_v1/demo`) with `csv/`, `images/` and `programs/`, and
+opens a local app at http://127.0.0.1:8765. Edit a program and problems appear while you type; the
+Phases, Certificate, Run and Compare tabs show each compiler phase, the data certificate, the
+generated program on any CSV file or image folder, and the same steps as a plain script or with the
+Review 2 compiler. CSV files are edited in a grid, image folders shown as a gallery where test
+images (any size, channels, or a broken file) can be added. Everything runs the real compiler.
+`--reset` puts the workspace back to how it started. The terminal version of the demo is
+`demo/TERMINAL_DEMO.md`.
+
 ## The language
 
 A program is a list of statements. Keywords are case-insensitive; `#` starts a comment.

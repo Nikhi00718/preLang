@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PrepLang Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Besley:wght@500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Two inks only: ink on paper, inverted for what the compiler decided. */
+:root {
+  --ink: #18140f;
+  --paper: #fff8e7;
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --display: "Besley", Georgia, "Times New Roman", serif;
+  --body: "Archivo", Arial, Helvetica, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  --line: 3px solid var(--fg);
+  --thin: 2px solid var(--fg);
+  --hair: 1px solid var(--fg);
+  --dash: 2px dashed var(--fg);
+  --shadow: 5px 5px 0 var(--fg);
+  --shadow-sm: 3px 3px 0 var(--fg);
+  --code: 14px;
+  --lh: 22px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: var(--ink); --fg: var(--paper); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: var(--ink); --fg: var(--paper); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45; overflow: hidden; }
+button, select, input { font: inherit; color: var(--fg); background: var(--bg); }
+button { border: var(--thin); padding: 6px 12px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+button:hover:not(:disabled) { box-shadow: var(--shadow-sm); transform: translate(-1px, -1px); }
+button:active:not(:disabled) { box-shadow: none; transform: none; }
+button:disabled { cursor: default; border-style: dashed; }
+button.solid, button.on { background: var(--fg); color: var(--bg); }
+button.flat { border: none; padding: 4px 6px; }
+button.flat:hover { box-shadow: none; transform: none; text-decoration: underline; }
+select, input[type=number], input[type=text] { border: var(--thin); padding: 5px 8px; min-width: 0; }
+:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+.mono { font-family: var(--mono); }
+.kicker { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.01em; margin: 0; line-height: 1.1; }
+kbd { font-family: var(--mono); font-size: 11px; border: var(--hair); padding: 0 4px; }
+
+/* ---------- frame ---------- */
+.app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+.top { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-bottom: var(--line); }
+.brand { font-family: var(--display); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.brand .mark { width: 26px; height: 26px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-family: var(--mono); font-size: 13px; }
+.top .where { font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.body { display: grid; grid-template-columns: 250px 1fr; min-height: 0; }
+.side { border-right: var(--line); overflow-y: auto; padding: 14px 12px 24px; }
+.side h4 { margin: 18px 4px 6px; display: flex; justify-content: space-between; align-items: center; }
+.side h4:first-child { margin-top: 4px; }
+.item { display: flex; width: 100%; text-align: left; border: 2px solid transparent; padding: 5px 8px; font-weight: 400; gap: 8px; align-items: baseline; }
+.item:hover { border: var(--thin); box-shadow: none; transform: none; }
+.item.on { background: var(--fg); color: var(--bg); border: var(--thin); }
+.item .t { font-family: var(--mono); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.item .n { font-family: var(--mono); font-size: 11px; }
+.main { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ---------- welcome ---------- */
+.welcome { overflow-y: auto; padding: 34px 40px; }
+.welcome h1 { font-size: 46px; max-width: 18ch; }
+.welcome p.lead { font-size: 18px; max-width: 62ch; margin: 14px 0 26px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; max-width: 1100px; }
+.card { border: var(--line); box-shadow: var(--shadow); padding: 16px 18px; background: var(--bg); }
+.card.ink { background: var(--fg); color: var(--bg); }
+.card h3 { font-size: 21px; margin: 6px 0 8px; }
+.card p { margin: 0 0 12px; }
+.card.ink button { border-color: var(--bg); color: var(--bg); background: var(--fg); }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 28px 0 0; max-width: 1100px; display: grid; gap: 8px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: var(--hair); }
+.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-weight: 600; }
+
+/* ---------- program view ---------- */
+.prog { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); flex: 1; min-height: 0; }
+.ed { display: flex; flex-direction: column; min-height: 0; border-right: var(--line); }
+.bar { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: var(--thin); flex-wrap: wrap; }
+.bar .name { font-family: var(--mono); font-weight: 600; font-size: 14px; margin-right: auto; display: flex; gap: 8px; align-items: center; min-width: 0; }
+.dot { width: 9px; height: 9px; border: var(--thin); border-radius: 50%; display: inline-block; }
+.dot.dirty { background: var(--fg); }
+.code { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: 52px 1fr; overflow: hidden; }
+.gutter { overflow: hidden; border-right: var(--hair); position: relative; }
+.gutter .nums { position: absolute; top: 0; left: 0; right: 0; padding: 12px 0; font-family: var(--mono); font-size: 12px; line-height: var(--lh); text-align: right; }
+.gutter .nums div { padding-right: 9px; height: var(--lh); }
+.gutter .nums div.err { background: var(--fg); color: var(--bg); font-weight: 600; }
+.gutter .nums div.warn { text-decoration: underline dashed; font-weight: 600; }
+.layer { position: relative; overflow: hidden; }
+.layer pre, .layer textarea { position: absolute; inset: 0; margin: 0; padding: 12px 14px; font-family: var(--mono); font-size: var(--code); line-height: var(--lh); white-space: pre; tab-size: 4; border: 0; }
+.layer pre { pointer-events: none; overflow: hidden; }
+.layer textarea { resize: none; background: transparent; color: transparent; caret-color: var(--fg); overflow: auto; outline: none; }
+.layer textarea::selection { background: var(--fg); color: var(--bg); }
+.hl .k { font-weight: 600; }
+.hl .c { font-style: italic; }
+.hl .s { text-decoration: underline dotted; text-underline-offset: 3px; }
+.hl .eline { background: var(--fg); color: var(--bg); box-shadow: -14px 0 0 var(--fg), 600px 0 0 var(--fg); }
+.hl .wline { text-decoration: underline wavy; text-underline-offset: 4px; }
+.status { border-top: var(--thin); padding: 7px 14px; font-family: var(--mono); font-size: 12px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.status .verdict { font-weight: 600; padding: 2px 8px; border: var(--thin); }
+.status .verdict.bad { background: var(--fg); color: var(--bg); }
+.status .keys { margin-left: auto; white-space: nowrap; }
+
+.panel { display: flex; flex-direction: column; min-height: 0; }
+.tabs { display: flex; border-bottom: var(--thin); overflow-x: auto; }
+.tabs button { border: 0; border-right: var(--thin); padding: 10px 16px; }
+.tabs button:hover { box-shadow: none; transform: none; text-decoration: underline; }
+.tabs button.on { background: var(--fg); color: var(--bg); }
+.tabs button .count { font-family: var(--mono); font-size: 11px; margin-left: 6px; border: 1.5px solid currentColor; padding: 0 5px; }
+.pane { flex: 1; overflow: auto; padding: 18px; min-height: 0; }
+.pane pre { font-family: var(--mono); font-size: 13px; line-height: 1.5; margin: 0; white-space: pre; }
+.pane .block { border: var(--line); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 18px; background: var(--bg); overflow-x: auto; }
+.pane .block.ink { background: var(--fg); color: var(--bg); }
+.pane .block.dashed { border-style: dashed; box-shadow: none; }
+.pane .explain { margin: 0 0 14px; max-width: 70ch; }
+.diag { border: var(--thin); margin-bottom: 14px; }
+.diag header { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-bottom: var(--thin); }
+.diag.error header { background: var(--fg); color: var(--bg); }
+.diag header .msg { font-weight: 600; flex: 1; min-width: 0; }
+.diag header button { padding: 2px 8px; font-size: 12px; }
+.diag.error header button { border-color: var(--bg); color: var(--bg); background: var(--fg); }
+.diag pre { padding: 10px; overflow-x: auto; font-size: 12.5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.chips button { padding: 4px 10px; font-size: 13px; }
+.big { font-family: var(--display); font-size: 34px; font-weight: 700; line-height: 1.05; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 14px 0; }
+.stat { border: var(--thin); padding: 8px 10px; }
+.stat b { font-family: var(--display); font-size: 26px; display: block; }
+.stat span { font-size: 12px; }
+.inputs { display: grid; gap: 10px; margin: 6px 0 14px; }
+.inputs label { display: grid; grid-template-columns: 1fr; gap: 4px; }
+.inputs label .kicker { display: flex; justify-content: space-between; gap: 8px; }
+.verdict-block { border: var(--line); box-shadow: var(--shadow); padding: 16px 18px; margin: 16px 0; }
+.verdict-block.admitted, .verdict-block.finished { background: var(--fg); color: var(--bg); }
+.verdict-block.refused, .verdict-block.failed, .verdict-block.not { border-style: solid; border-width: 4px; }
+.verdict-block .big { font-size: 30px; }
+.verdict-block pre { white-space: pre-wrap; margin-top: 10px; font-size: 13px; }
+table.preview { border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+table.preview td, table.preview th { border: var(--hair); padding: 3px 8px; text-align: left; white-space: nowrap; }
+table.preview th { background: var(--fg); color: var(--bg); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.cert-need { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- csv view ---------- */
+.grid-wrap { flex: 1; overflow: auto; min-height: 0; }
+table.sheet { border-collapse: separate; border-spacing: 0; font-family: var(--mono); font-size: 13px; }
+table.sheet th, table.sheet td { border-right: var(--hair); border-bottom: var(--hair); padding: 0; height: 30px; }
+table.sheet thead th { position: sticky; top: 0; background: var(--fg); color: var(--bg); z-index: 2; border-color: var(--bg); }
+table.sheet .rn { position: sticky; left: 0; background: var(--bg); text-align: right; padding: 0 8px; font-size: 11px; z-index: 1; border-right: var(--thin); min-width: 46px; }
+table.sheet thead .rn { background: var(--fg); color: var(--bg); z-index: 3; }
+table.sheet [contenteditable] { padding: 4px 10px; outline: none; min-width: 70px; white-space: nowrap; }
+table.sheet td[contenteditable]:focus { box-shadow: inset 0 0 0 2px var(--fg); }
+table.sheet td.empty { background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--fg) 6px 7px); background-size: 10px 10px; background-blend-mode: normal; }
+table.sheet td.empty:focus { background-image: none; }
+table.sheet td.changed { font-weight: 600; text-decoration: underline; }
+table.sheet .del { border: 0; padding: 0 6px; font-size: 12px; visibility: hidden; }
+table.sheet tr:hover .del { visibility: visible; }
+.colstats { font-size: 10.5px; font-weight: 400; display: block; letter-spacing: 0; text-transform: none; opacity: 1; }
+
+/* ---------- images view ---------- */
+.gallery { flex: 1; overflow: auto; padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; align-content: start; }
+.shot { border: var(--line); box-shadow: var(--shadow-sm); background: var(--bg); display: flex; flex-direction: column; }
+.shot .img { aspect-ratio: 4 / 3; display: grid; place-items: center; border-bottom: var(--thin); overflow: hidden; }
+.shot img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.shot.broken .img { background: var(--fg); color: var(--bg); font-family: var(--mono); font-weight: 600; letter-spacing: .1em; }
+.shot .meta { padding: 8px 10px; font-family: var(--mono); font-size: 12px; }
+.shot .meta b { font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maker { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.maker input[type=number] { width: 80px; }
+.summary { display: flex; gap: 18px; flex-wrap: wrap; padding: 10px 18px; border-bottom: var(--thin); font-family: var(--mono); font-size: 12.5px; }
+.summary b { font-weight: 600; }
+
+/* ---------- toast ---------- */
+.toast { position: fixed; bottom: 18px; right: 18px; background: var(--fg); color: var(--bg); padding: 10px 16px; font-weight: 600; box-shadow: 4px 4px 0 var(--bg), 4px 4px 0 2px var(--fg); transform: translateY(200%); visibility: hidden; transition: transform .2s, visibility .2s; z-index: 50; max-width: 420px; }
+.toast.show { transform: none; visibility: visible; }
+.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: r .7s linear infinite; vertical-align: -1px; }
+@keyframes r { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } .toast { transition: none; } }
+
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100vh; }
+  .body { grid-template-columns: 1fr; }
+  .side { border-right: 0; border-bottom: var(--line); max-height: 40vh; }
+  .prog { grid-template-columns: 1fr; }
+  .ed { border-right: 0; border-bottom: var(--line); height: 60vh; }
+  .panel { min-height: 70vh; }
+  .welcome { padding: 22px 16px; }
+  .welcome h1 { font-size: 34px; }
+  .row2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="mark">P/</span>PrepLang Studio</div>
+    <div class="where" id="where" title="The demo workspace"></div>
+    <button class="flat" id="openWork" title="Open the workspace folder in Explorer">Open folder</button>
+    <button class="flat" id="refresh" title="Read the folders again">Refresh</button>
+    <button id="theme" title="Switch light and dark">Dark</button>
+  </header>
+  <div class="body">
+    <nav class="side" id="side" aria-label="Workspace"></nav>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "html") el.innerHTML = v;
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return el;
+};
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+let toastTimer;
+function toast(text) {
+  const t = $("#toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("studio." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("studio." + k, JSON.stringify(v)); } catch {} },
+};
+
+/* ---------------- state ---------------- */
+const S = { tree: null, sel: null, dirty: false, compiled: null, tab: store.get("tab", "problems"), phase: "SEMANTIC ANALYSIS", runChoices: {} };
+const base = (p) => p.split("/").pop();
+
+/* ---------------- theme ---------------- */
+function applyTheme(t) {
+  if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
+  const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  $("#theme").textContent = dark ? "Light" : "Dark";
+}
+$("#theme").onclick = () => {
+  const now = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = now === "dark" ? "light" : "dark";
+  store.set("theme", next);
+  applyTheme(next);
+};
+applyTheme(store.get("theme", null));
+
+/* ---------------- sidebar ---------------- */
+async function loadTree() {
+  S.tree = await api("/api/tree");
+  $("#where").textContent = S.tree.workspace;
+  renderSide();
+}
+function renderSide() {
+  const t = S.tree, side = $("#side");
+  side.innerHTML = "";
+  const item = (kind, path, label, n) => h("button", {
+    class: "item" + (S.sel && S.sel.path === path ? " on" : ""), title: path,
+    onclick: () => select(kind, path),
+  }, h("span", { class: "t" }, label), n != null ? h("span", { class: "n" }, n) : null);
+  side.append(h("h4", { class: "kicker" }, "Programs"));
+  t.programs.forEach((p) => side.append(item("program", p, base(p), p.endsWith(".py") ? "pandas" : null)));
+  side.append(h("h4", { class: "kicker" }, "CSV files"));
+  t.tables.forEach((p) => side.append(item("table", p, p.replace(/^csv\//, ""))));
+  side.append(h("h4", { class: "kicker" }, "Image folders"));
+  t.folders.forEach((f) => side.append(item("images", f.path, f.name + "/", f.count)));
+  side.append(h("h4", { class: "kicker" }, "Studio"));
+  side.append(h("button", { class: "item" + (!S.sel ? " on" : ""), onclick: () => select(null) }, h("span", { class: "t" }, "How to demo")));
+}
+async function select(kind, path) {
+  if (S.dirty && !confirm("You have unsaved changes. Leave without saving?")) return;
+  S.dirty = false;
+  S.sel = kind ? { kind, path } : null;
+  store.set("sel", S.sel);
+  renderSide();
+  const main = $("#main");
+  main.innerHTML = "";
+  if (!kind) return renderWelcome(main);
+  if (kind === "program") return renderProgram(main, path);
+  if (kind === "table") return renderTable(main, path);
+  if (kind === "images") return renderImages(main, path);
+}
+window.addEventListener("beforeunload", (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------------- welcome ---------------- */
+function renderWelcome(main) {
+  const w = h("div", { class: "welcome" });
+  const first = (k, p) => () => select(k, p);
+  w.append(
+    h("div", { class: "kicker" }, "Compiler Design Lab · V.Nikhil · 24BAI0073"),
+    h("h1", {}, "Change the data. Watch the compiler react."),
+    h("p", { class: "lead" }, "PrepLang reads your CSV files and image folders while it compiles. Edit a program, a table or an image folder here, and every check runs the real compiler and the real generated program."),
+    h("div", { class: "cards" },
+      h("div", { class: "card ink" }, h("div", { class: "kicker" }, "01 · program"), h("h3", {}, "Edit a program"),
+        h("p", {}, "Problems appear while you type: wrong column, wrong type, broken contract, with the line."),
+        h("button", { onclick: first("program", "programs/students.prep") }, "Open students.prep")),
+      h("div", { class: "card" }, h("div", { class: "kicker" }, "02 · data"), h("h3", {}, "Edit a CSV file"),
+        h("p", {}, "Change a mark to 730 or empty a name, save as a new batch, and run the compiled program on it."),
+        h("button", { onclick: first("table", "csv/next_week.csv") }, "Open next_week.csv")),
+      h("div", { class: "card" }, h("div", { class: "kicker" }, "03 · images"), h("h3", {}, "Change an image folder"),
+        h("p", {}, "Add a 150 px photo or a broken file, then run the image program on that folder."),
+        h("button", { onclick: first("images", "images/new_photos") }, "Open new_photos/"))),
+    h("ol", { class: "steps" },
+      h("li", {}, h("span", { html: "<b>Problems.</b> Open <span class=mono>students.prep</span>, change <span class=mono>marks</span> to <span class=mono>mark</span> on line 19. The line turns black and the hint says <i>did you mean 'marks'?</i>" })),
+      h("li", {}, h("span", { html: "<b>Phases.</b> Undo, then open the Phases tab: tokens, syntax tree, the data read at compile time, the proven contracts, the three-address code." })),
+      h("li", {}, h("span", { html: "<b>Certificate.</b> The facts the proofs need: marks 0 to 100 for line 5, no missing names for line 6." })),
+      h("li", {}, h("span", { html: "<b>Run.</b> Pick <span class=mono>next_week.csv</span>: admitted without compiling again. Pick <span class=mono>typo_week.csv</span>: refused with the row and the line." })),
+      h("li", {}, h("span", { html: "<b>Compare.</b> The same steps as a plain pandas script, and the Review 2 compiler, side by side." })),
+      h("li", {}, h("span", { html: "<b>Images.</b> Open <span class=mono>imageset.prep</span>, Run on <span class=mono>new_photos/</span> and <span class=mono>small_photos/</span>." })),
+      h("li", {}, h("span", { html: "<b>pandas.</b> Open <span class=mono>titanic_clean.py</span> and lift it into PrepLang." })),
+    ),
+    h("p", { class: "mono", style: "margin-top:22px;font-size:12px" }, "Keys: Ctrl+S save · Ctrl+Enter compile · Alt+1…5 tabs. Start over: py -3 studio\\studio.py --reset"),
+  );
+  main.append(w);
+}
+
+/* ---------------- program view ---------------- */
+const KEYWORDS = /\b[A-Z][A-Z0-9_]+\b/g;
+function highlight(src, marks) {
+  return src.split("\n").map((line, i) => {
+    let out = "", rest = line, comment = "";
+    const ci = indexOutsideString(line, "#");
+    if (ci >= 0) { rest = line.slice(0, ci); comment = line.slice(ci); }
+    out = rest.split(/("(?:[^"\\]|\\.)*"?)/).map((part, j) =>
+      j % 2 ? `<span class="s">${esc(part)}</span>` : esc(part).replace(KEYWORDS, (k) => `<span class="k">${k}</span>`)).join("");
+    if (comment) out += `<span class="c">${esc(comment)}</span>`;
+    const m = marks[i + 1];
+    if (m === "error") return `<span class="eline">${out || " "}</span>`;
+    if (m === "warning") return `<span class="wline">${out || " "}</span>`;
+    return out;
+  }).join("\n") + "\n";
+}
+function indexOutsideString(line, ch) {
+  let q = false;
+  for (let i = 0; i < line.length; i++) { if (line[i] === '"') q = !q; else if (line[i] === ch && !q) return i; }
+  return -1;
+}
+
+async function renderProgram(main, path) {
+  const file = await api("/api/file?path=" + encodeURIComponent(path));
+  const isPy = path.endsWith(".py");
+  const prog = h("div", { class: "prog" });
+  const name = h("div", { class: "name" }, h("span", { class: "dot", id: "dirtyDot" }), base(path));
+  const saveBtn = h("button", { onclick: save, title: "Ctrl+S" }, "Save");
+  const compileBtn = h("button", { class: "solid", onclick: () => compileNow(true), title: "Ctrl+Enter" }, isPy ? "Lift to PrepLang" : "Compile");
+  if (isPy) compileBtn.onclick = liftNow;
+  const ta = h("textarea", { spellcheck: "false", wrap: "off", "aria-label": "Program source", autocapitalize: "off", autocomplete: "off" });
+  const pre = h("pre", { class: "hl", "aria-hidden": "true" });
+  const nums = h("div", { class: "nums" });
+  const status = h("div", { class: "status", id: "status" });
+  const ed = h("section", { class: "ed" },
+    h("div", { class: "bar" }, name, saveBtn, compileBtn),
+    h("div", { class: "code" }, h("div", { class: "gutter" }, nums), h("div", { class: "layer" }, pre, ta)),
+    status);
+  const panel = h("section", { class: "panel" });
+  prog.append(ed, panel);
+  main.append(prog);
+  ta.value = file.text;
+  S.src = file.text; S.path = path; S.marks = {}; S.compiled = null; S.isPy = isPy;
+
+  const paint = () => {
+    pre.innerHTML = isPy ? esc(ta.value) + "\n" : highlight(ta.value, S.marks);
+    const n = ta.value.split("\n").length;
+    nums.innerHTML = Array.from({ length: n }, (_, i) => `<div class="${S.marks[i + 1] === "error" ? "err" : S.marks[i + 1] === "warning" ? "warn" : ""}">${i + 1}</div>`).join("");
+    sync();
+  };
+  const sync = () => { pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; nums.style.transform = `translateY(${-ta.scrollTop}px)`; };
+  S.paint = paint; S.ta = ta;
+  ta.addEventListener("scroll", sync);
+  let timer;
+  ta.addEventListener("input", () => {
+    setDirty(ta.value !== S.src);
+    paint();
+    if (!isPy) { clearTimeout(timer); timer = setTimeout(() => compileNow(false), 450); }
+  });
+  ta.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") { e.preventDefault(); const s = ta.selectionStart; ta.setRangeText("    ", s, ta.selectionEnd, "end"); ta.dispatchEvent(new Event("input")); }
+  });
+  paint();
+  if (isPy) { renderPyPanel(panel); setStatus("pandas script · Lift to PrepLang translates its cleaning steps"); }
+  else { renderPanel(panel); compileNow(false); }
+}
+function setDirty(d) { S.dirty = d; const dot = $("#dirtyDot"); if (dot) dot.classList.toggle("dirty", d); }
+function setStatus(html) { const s = $("#status"); if (s) s.innerHTML = html; }
+
+async function save() {
+  if (!S.sel || !S.ta) return;
+  await api("/api/save", { path: S.path, text: S.ta.value });
+  S.src = S.ta.value; setDirty(false); toast("Saved " + base(S.path));
+}
+
+let compileSeq = 0;
+async function compileNow(saveFirst) {
+  if (!S.ta || S.isPy) return;
+  if (saveFirst && S.dirty) await save();
+  const seq = ++compileSeq;
+  setStatus('<span class="spin"></span> compiling');
+  try {
+    const r = await api("/api/compile", { path: S.path, source: S.dirty ? S.ta.value : undefined });
+    if (seq !== compileSeq) return;
+    S.compiled = r;
+    S.marks = {};
+    r.diagnostics.forEach((d) => { if (d.line && S.marks[d.line] !== "error") S.marks[d.line] = d.level; });
+    S.paint();
+    const errs = r.diagnostics.filter((d) => d.level === "error").length, warns = r.diagnostics.length - errs;
+    const st = explainStats(r.sections.EXPLAIN || "");
+    setStatus(
+      `<span class="verdict ${r.ok ? "" : "bad"}">${r.ok ? "COMPILES" : errs + " ERROR" + (errs === 1 ? "" : "S")}</span>` +
+      `<span>${(r.seconds * 1000).toFixed(0)} ms</span>` +
+      (warns ? `<span>${warns} warning${warns === 1 ? "" : "s"}</span>` : "") +
+      (r.ok && st.proven != null ? `<span>${st.proven} proven · ${st.runtime} at run time · ${st.removed} checks removed</span>` : "") +
+      `<span class="keys"><kbd>Ctrl+S</kbd> save <kbd>Ctrl+Enter</kbd> compile</span>`);
+    if (saveFirst) toast(r.ok ? "Compiled in " + (r.seconds * 1000).toFixed(0) + " ms" : "Compilation failed: " + errs + " error(s)");
+    renderPanel();
+  } catch (e) { setStatus("could not compile: " + esc(e.message)); }
+}
+function explainStats(text) {
+  const n = (re) => { const m = text.match(re); return m ? +m[1] : null; };
+  return { proven: n(/contracts proven\s+(\d+)/), runtime: n(/checked at run time\s+(\d+)/), removed: n(/contract check elimination\s+(\d+)/) };
+}
+function jumpTo(line) {
+  const ta = S.ta, lines = ta.value.split("\n");
+  let start = 0;
+  for (let i = 0; i < line - 1 && i < lines.length; i++) start += lines[i].length + 1;
+  ta.focus();
+  ta.setSelectionRange(start, start + (lines[line - 1] || "").length);
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 22;
+  ta.scrollTop = Math.max(0, (line - 4) * lh);
+}
+
+const TABS = [["problems", "Problems"], ["phases", "Phases"], ["certificate", "Certificate"], ["run", "Run"], ["compare", "Compare"]];
+const PHASES = [["TOKENS", "1 Tokens"], ["AST", "2 Syntax tree"], ["SCHEMA", "3 Data read"], ["SEMANTIC ANALYSIS", "4 Semantic"],
+  ["SYMBOL TABLE", "Symbol table"], ["LINEAGE", "Lineage"], ["IR", "5 IR"], ["OPTIMIZATION REPORT", "6 Optimizer"],
+  ["OPTIMIZED IR", "Optimized IR"], ["DATA CERTIFICATE", "7 Certificate"], ["EXPLAIN", "Plan"]];
+const PHASE_NOTE = {
+  TOKENS: "Phase 1, lexer: characters become tokens, each with its line and column for error messages.",
+  AST: "Phase 2, LL(1) recursive-descent parser: every statement starts with its own keyword, so one token of look-ahead picks the rule.",
+  SCHEMA: "Phase 3: the data files are read now, while compiling: type, missing values and range of every column; size and channels of every image.",
+  "SEMANTIC ANALYSIS": "Phase 4: every statement changes the facts. Contracts get a verdict: PROVEN, violated, or checked at run time.",
+  "SYMBOL TABLE": "The symbol table after the last statement: each dataset with the facts about its columns or images.",
+  LINEAGE: "Where every output column comes from.",
+  IR: "Phase 5: three-address code; conditions become temporaries t1, t2, ...",
+  "OPTIMIZATION REPORT": "Phase 6: what the optimizer removed and why: proven checks, operations that do nothing, unused columns.",
+  "OPTIMIZED IR": "The IR after optimization: this is what becomes Python.",
+  "DATA CERTIFICATE": "Phase 7 (new in Phase 3): the facts the proofs need. A new file with these facts runs without compiling again.",
+  EXPLAIN: "The execution plan in one page.",
+};
+
+function renderPanel(panel) {
+  panel = panel || $(".panel");
+  if (!panel) return;
+  const r = S.compiled;
+  panel.innerHTML = "";
+  const nErr = r ? r.diagnostics.length : 0;
+  const tabs = h("div", { class: "tabs", role: "tablist" }, TABS.map(([k, label], i) =>
+    h("button", { class: S.tab === k ? "on" : "", role: "tab", "aria-selected": S.tab === k, title: "Alt+" + (i + 1), onclick: () => { S.tab = k; store.set("tab", k); renderPanel(); } },
+      label, k === "problems" && nErr ? h("span", { class: "count" }, nErr) : null)));
+  const pane = h("div", { class: "pane" });
+  panel.append(tabs, pane);
+  if (!r) { pane.append(h("p", {}, h("span", { class: "spin" }), " compiling")); return; }
+  ({ problems: paneProblems, phases: panePhases, certificate: paneCertificate, run: paneRun, compare: paneCompare })[S.tab](pane, r);
+}
+
+function paneProblems(pane, r) {
+  if (!r.diagnostics.length) {
+    const st = explainStats(r.sections.EXPLAIN || "");
+    pane.append(h("div", { class: "block ink" }, h("div", { class: "kicker" }, "no problems"),
+      h("div", { class: "big", style: "margin-top:6px" }, "Compiles in " + (r.seconds * 1000).toFixed(0) + " ms"),
+      h("p", { style: "margin:8px 0 0" }, "The compiler read the data, checked every statement against it, and found nothing wrong.")));
+    if (st.proven != null) pane.append(h("div", { class: "stats" },
+      h("div", { class: "stat" }, h("b", {}, st.proven), h("span", {}, "contracts proven: no check at run time")),
+      h("div", { class: "stat" }, h("b", {}, st.runtime), h("span", {}, "checked at run time")),
+      h("div", { class: "stat" }, h("b", {}, st.removed ?? 0), h("span", {}, "checks the optimizer removed"))));
+    pane.append(h("p", { class: "explain" }, "Try it: break something in the program. Problems show up while you type."));
+    if (r.sections.EXPLAIN) pane.append(h("div", { class: "block dashed" }, h("pre", {}, r.sections.EXPLAIN)));
+    return;
+  }
+  r.diagnostics.forEach((d) => {
+    pane.append(h("div", { class: "diag " + d.level },
+      h("header", {}, h("span", { class: "kicker" }, d.level + " · " + d.kind), h("span", { class: "msg" }, d.message),
+        d.line ? h("button", { onclick: () => jumpTo(d.line) }, "line " + d.line) : null),
+      h("pre", {}, d.text.split("\n").slice(1).join("\n"))));
+  });
+}
+
+function panePhases(pane, r) {
+  const have = PHASES.filter(([k]) => r.sections[k] != null && r.sections[k].trim());
+  if (!have.length) { pane.append(h("p", {}, "No phase output: the program has errors before the phases run. See Problems.")); return; }
+  if (!have.find(([k]) => k === S.phase)) S.phase = have[0][0];
+  pane.append(h("div", { class: "chips" }, have.map(([k, label]) =>
+    h("button", { class: S.phase === k ? "on" : "", onclick: () => { S.phase = k; renderPanel(); } }, label))));
+  pane.append(h("p", { class: "explain" }, PHASE_NOTE[S.phase] || ""));
+  pane.append(h("div", { class: "block" }, h("pre", {}, r.sections[S.phase])));
+}
+
+function paneCertificate(pane, r) {
+  const c = r.sections["DATA CERTIFICATE"];
+  if (!c) { pane.append(h("p", {}, "No certificate: the program does not compile yet. See Problems.")); return; }
+  pane.append(h("p", { class: "explain" }, "The compiler weakened each fact about the data one at a time and analysed the program again. It kept only the facts without which a proof breaks. Any new file with these facts gives the same program, so it runs without compiling again."));
+  const html = esc(c).split("\n").map((l) => l.includes("&lt;-") && !l.includes("only carried") ? `<span class="cert-need">${l}</span>` : l).join("\n");
+  pane.append(h("div", { class: "block" }, h("pre", { html })));
+  pane.append(h("p", { class: "explain" }, h("b", {}, "Underlined"), ": a fact some line of the program needs. Everything else only needs its type. Try it in the Run tab."));
+}
+
+function candidates(kind) {
+  return kind === "images" ? S.tree.folders.map((f) => f.path) : S.tree.tables;
+}
+function paneRun(pane, r) {
+  if (!r.ok) { pane.append(h("p", {}, "Fix the problems first: a program that does not compile is never run.")); return; }
+  pane.append(h("p", { class: "explain" }, "Compile once, then run the generated Python on any file. A file that is not the compiled one is admitted only if it satisfies the certificate."));
+  const choices = S.runChoices[S.path] || (S.runChoices[S.path] = {});
+  const form = h("div", { class: "inputs" });
+  r.inputs.forEach((inp) => {
+    const sel = h("select", { onchange: (e) => { choices[inp.name] = e.target.value; } },
+      h("option", { value: "" }, "the compiled file: " + inp.file),
+      candidates(inp.kind).map((p) => h("option", { value: p, selected: choices[inp.name] === p }, p)));
+    form.append(h("label", {}, h("span", { class: "kicker" }, h("span", {}, inp.name), h("span", {}, inp.kind === "images" ? "image folder" : "table")), sel));
+  });
+  const out = h("div");
+  const go = h("button", { class: "solid", onclick: async () => {
+    if (S.dirty) await save();
+    go.disabled = true; go.innerHTML = '<span class="spin"></span> running';
+    try { showRun(out, await api("/api/run", { path: S.path, inputs: choices })); }
+    catch (e) { out.textContent = e.message; }
+    go.disabled = false; go.textContent = "Run program";
+  } }, "Run program");
+  pane.append(form, go, out);
+  if (S.lastRun && S.lastRun.path === S.path) showRun(out, S.lastRun.result);
+}
+function showRun(out, res) {
+  S.lastRun = { path: S.path, result: res };
+  out.innerHTML = "";
+  const v = res.verdict;
+  const title = { admitted: "ADMITTED", finished: "FINISHED", refused: "REFUSED", failed: "FAILED", "not compiled": "NOT COMPILED" }[v] || v;
+  const sub = { admitted: "A new input with every fact of the certificate: the compiled program runs on it.",
+    finished: "The compiled input: every proof holds.",
+    refused: "The input breaks a fact the program relies on. Nothing was written.",
+    failed: "The program stopped with an error.", "not compiled": "Fix the problems first." }[v] || "";
+  const msg = (res.output || "").split("\n").filter((l) => /ContractError|Admitted|Saved|Wrote|Error/.test(l))
+    .map((l) => l.replace(/^ContractError: /, "")).join("\n");
+  out.append(h("div", { class: "verdict-block " + (v === "not compiled" ? "not" : v) },
+    h("div", { class: "kicker" }, "run · " + ((res.seconds || 0) * 1000).toFixed(0) + " ms"),
+    h("div", { class: "big" }, title), h("div", {}, sub), msg ? h("pre", {}, msg) : null));
+  (res.previews || []).forEach((p) => {
+    if (!p.head) { out.append(h("p", { class: "mono" }, `Saved ${p.rows ?? ""} image(s) ${p.file || ""}`)); return; }
+    const rows = p.head.map(parseCsvLine);
+    out.append(h("div", { class: "kicker", style: "margin:14px 0 6px" }, `${p.file} · ${p.rows} rows`),
+      h("div", { style: "overflow-x:auto" }, h("table", { class: "preview" },
+        h("thead", {}, h("tr", {}, rows[0].map((c) => h("th", {}, c)))),
+        h("tbody", {}, rows.slice(1).map((r) => h("tr", {}, r.map((c) => h("td", {}, c))))))));
+  });
+}
+
+function paneCompare(pane, r) {
+  pane.append(h("p", { class: "explain" }, "The same program three ways: as a plain pandas/OpenCV script with no checks, with the Review 2 compiler, and with today's compiler."));
+  const plainOut = h("div"), oldOut = h("div");
+  const plain = h("button", { onclick: async () => {
+    if (S.dirty) await save();
+    plain.disabled = true; plain.innerHTML = '<span class="spin"></span> running the script';
+    try {
+      const p = await api("/api/plain", { path: S.path });
+      plainOut.innerHTML = "";
+      let line = p.ok ? "Finished without an error." : "Crashed while running.";
+      if (p.images && p.images.brightest_mean != null && p.images.brightest_mean < 2)
+        line = `Finished without an error, and wrote ${p.images.count} PNG files whose brightest mean pixel is ${p.images.brightest_mean.toFixed(2)} of 255: every image is black.`;
+      plainOut.append(h("div", { class: "block dashed" }, h("div", { class: "kicker" }, "plain script · " + (p.seconds * 1000).toFixed(0) + " ms"),
+        h("p", { style: "font-weight:600;margin:6px 0" }, line), h("pre", { style: "white-space:pre-wrap" }, p.output || (p.files ? `wrote ${p.files.count} file(s), no checks:\n` + p.files.names.join("\n") : "(no output)")),
+        p.images && p.images.samples.length ? h("div", { style: "display:flex;gap:8px;margin-top:10px" }, p.images.samples.map((s) => h("img", { src: "/api/raw?path=" + encodeURIComponent(s), style: "width:80px;height:80px;object-fit:cover;border:2px solid currentColor", alt: "output image" }))) : null));
+    } catch (e) { plainOut.textContent = e.message; }
+    plain.disabled = false; plain.textContent = "Run as a plain script";
+  } }, "Run as a plain script");
+  const ours = h("div", { class: "block " + (r.ok ? "ink" : "") }, h("div", { class: "kicker" }, "PrepLang, Phase 3 · " + (r.seconds * 1000).toFixed(0) + " ms"),
+    h("p", { style: "font-weight:600;margin:6px 0" }, r.ok ? "Compiles: every statement checked against the data before anything runs." : `Refuses to compile: ${r.diagnostics.filter((d) => d.level === "error").length} error(s), nothing runs.`),
+    r.diagnostics[0] ? h("pre", { style: "white-space:pre-wrap" }, r.diagnostics[0].text) : null);
+  pane.append(h("div", { class: "row2" }, h("div", {}, h("h3", { style: "margin-bottom:10px" }, "Without a compiler"), plain, h("div", { style: "margin-top:12px" }, plainOut)),
+    h("div", {}, h("h3", { style: "margin-bottom:10px" }, "With PrepLang"), ours)));
+  if (S.tree.phase2) {
+    const old = h("button", { onclick: async () => {
+      old.disabled = true; old.innerHTML = '<span class="spin"></span> compiling';
+      try {
+        const [a, b] = [await api("/api/compile", { path: S.path, compiler: "phase2" }), await api("/api/compile", { path: S.path })];
+        oldOut.innerHTML = "";
+        oldOut.append(h("div", { class: "stats" },
+          h("div", { class: "stat" }, h("b", {}, (a.seconds * 1000).toFixed(0) + " ms"), h("span", {}, "Review 2 compiler: " + (a.summary || "").replace("Compiled successfully: ", ""))),
+          h("div", { class: "stat" }, h("b", {}, (b.seconds * 1000).toFixed(0) + " ms"), h("span", {}, "Phase 3 compiler: " + (b.summary || "").replace("Compiled successfully: ", "")))),
+          h("p", { class: "explain" }, "Small files compile fast either way; on a million rows Phase 2 needs about 1.9 s and Phase 3 about 0.13 s. The bigger change: Phase 2's program refuses every new file, Phase 3's runs on any file that fits the certificate."));
+      } catch (e) { oldOut.textContent = e.message; }
+      old.disabled = false; old.textContent = "Compile with both compilers";
+    } }, "Compile with both compilers");
+    pane.append(h("h3", { style: "margin:26px 0 10px" }, "Review 2 against today"), old, h("div", { style: "margin-top:12px" }, oldOut));
+  }
+}
+
+function renderPyPanel(panel) {
+  panel.innerHTML = "";
+  const pane = h("div", { class: "pane" });
+  panel.append(h("div", { class: "tabs" }, h("button", { class: "on" }, "Lift to PrepLang")), pane);
+  pane.append(h("p", { class: "explain" }, "Most cleaning code already exists as pandas scripts. The lifter reads this script with Python's own parser (it does not run it) and translates its cleaning steps into PrepLang, up to the first line PrepLang cannot express exactly."),
+    h("button", { class: "solid", onclick: liftNow }, "Lift to PrepLang"), h("div", { id: "liftOut", style: "margin-top:16px" }));
+}
+async function liftNow() {
+  if (S.dirty) await save();
+  const out = $("#liftOut");
+  out.innerHTML = '<span class="spin"></span> lifting';
+  try {
+    const r = await api("/api/lift", { path: S.path });
+    out.innerHTML = "";
+    if (!r.ok) { out.append(h("pre", {}, r.notes || "could not lift")); return; }
+    const text = (await api("/api/file?path=" + encodeURIComponent(r.program))).text;
+    out.append(h("div", { class: "block ink" }, h("div", { class: "kicker" }, r.program), h("pre", {}, text)),
+      h("p", { class: "explain" }, r.notes.replace(/^Wrote .*$/m, "").trim()),
+      h("button", { onclick: async () => { await loadTree(); select("program", r.program); } }, "Open it and compile"));
+    loadTree();
+  } catch (e) { out.textContent = e.message; }
+}
+
+/* ---------------- csv view ---------------- */
+function parseCsv(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+const parseCsvLine = (l) => parseCsv(l)[0] || [];
+const csvCell = (v) => /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+
+async function renderTable(main, path) {
+  const file = await api("/api/file?path=" + encodeURIComponent(path));
+  const rows = parseCsv(file.text);
+  const head = rows.shift() || [];
+  const LIMIT = 2000;
+  S.ta = null; S.path = path;
+  const info = h("span", { class: "mono", style: "font-size:12px" });
+  const bar = h("div", { class: "bar" }, h("div", { class: "name" }, h("span", { class: "dot", id: "dirtyDot" }), path), info,
+    h("button", { onclick: () => addRow() }, "Add row"),
+    h("button", { onclick: saveAs }, "Save as new batch"),
+    h("button", { class: "solid", onclick: saveTable, title: "Ctrl+S" }, "Save"));
+  const table = h("table", { class: "sheet" });
+  const wrap = h("div", { class: "grid-wrap" }, table);
+  const usage = h("div", { class: "summary" });
+  main.append(bar, usage, wrap);
+
+  const stats = (ci) => {
+    const vals = rows.map((r) => r[ci] ?? "");
+    const missing = vals.filter((v) => v === "").length;
+    const nums = vals.filter((v) => v !== "").map(Number);
+    const numeric = nums.length && nums.every((n) => !isNaN(n));
+    return (numeric ? `${Math.min(...nums)} … ${Math.max(...nums)}` : "text") + (missing ? ` · ${missing} empty` : "");
+  };
+  const draw = () => {
+    table.innerHTML = "";
+    table.append(h("thead", {}, h("tr", {}, h("th", { class: "rn" }, "#"),
+      head.map((c, ci) => h("th", {}, h("div", { contenteditable: "plaintext-only", "data-head": ci, oninput: (e) => { head[ci] = e.target.textContent; setDirty(true); } }, c),
+        h("span", { class: "colstats", style: "padding:0 10px 4px" }, stats(ci)))), h("th", {}))));
+    const body = h("tbody");
+    rows.slice(0, LIMIT).forEach((r, ri) => {
+      body.append(h("tr", {}, h("td", { class: "rn" }, ri + 1),
+        head.map((_, ci) => h("td", { contenteditable: "plaintext-only", class: (r[ci] ?? "") === "" ? "empty" : "", "data-r": ri, "data-c": ci,
+          oninput: (e) => { r[ci] = e.target.textContent; e.target.classList.add("changed"); e.target.classList.toggle("empty", r[ci] === ""); setDirty(true); },
+          onkeydown: (e) => { if (e.key === "Enter") { e.preventDefault(); const next = table.querySelector(`[data-r="${ri + 1}"][data-c="${ci}"]`); if (next) next.focus(); } },
+        }, r[ci] ?? "")),
+        h("td", {}, h("button", { class: "del", title: "Delete this row", onclick: () => { rows.splice(ri, 1); setDirty(true); draw(); } }, "×"))));
+    });
+    table.append(body);
+    info.textContent = `${rows.length} rows · ${head.length} columns` + (rows.length > LIMIT ? ` · showing ${LIMIT}` : "");
+  };
+  const addRow = () => { rows.push(head.map(() => "")); setDirty(true); draw(); wrap.scrollTop = wrap.scrollHeight; const c = table.querySelector(`[data-r="${rows.length - 1}"][data-c="0"]`); if (c) c.focus(); };
+  const text = () => [head, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
+  async function saveTable() {
+    await api("/api/save", { path, text: text() });
+    setDirty(false); toast("Saved " + base(path)); table.querySelectorAll(".changed").forEach((c) => c.classList.remove("changed"));
+  }
+  async function saveAs() {
+    const name = prompt("Name of the new batch (in csv/):", base(path).replace(/\.csv$/, "") + "_edited.csv");
+    if (!name) return;
+    const to = "csv/" + name.replace(/[\\/]/g, "").replace(/(\.csv)?$/, ".csv");
+    await api("/api/copy", { path, to });
+    await api("/api/save", { path: to, text: text() });
+    setDirty(false); await loadTree(); toast("Saved as " + to); select("table", to);
+  }
+  S.saveTable = saveTable;
+  const users = S.tree.programs.filter((p) => p.endsWith(".prep"));
+  usage.append(h("span", {}, h("b", {}, "Try: "), "change a mark to 730, or empty a name, then save as a new batch."),
+    h("span", {}, h("b", {}, "Run it: "), "open ", h("button", { class: "flat", onclick: () => { S.runChoices["programs/students.prep"] = { students: path }; S.tab = "run"; select("program", "programs/students.prep"); } }, "students.prep → Run with this file")));
+  draw();
+}
+
+/* ---------------- images view ---------------- */
+async function renderImages(main, path) {
+  const data = await api("/api/images?path=" + encodeURIComponent(path));
+  S.ta = null; S.path = path;
+  const ok = data.images.filter((i) => !i.broken);
+  const range = (k) => ok.length ? `${Math.min(...ok.map((i) => i[k]))}–${Math.max(...ok.map((i) => i[k]))}` : "–";
+  const chans = [...new Set(ok.map((i) => i.channels))].sort().join(", ") || "–";
+  const broken = data.images.length - ok.length;
+  const w = h("input", { type: "number", value: 150, min: 1, max: 4000, "aria-label": "width" });
+  const hh = h("input", { type: "number", value: 120, min: 1, max: 4000, "aria-label": "height" });
+  const ch = h("select", { "aria-label": "channels" }, h("option", { value: 3 }, "color (3)"), h("option", { value: 1 }, "gray (1)"), h("option", { value: 4 }, "RGBA (4)"));
+  const fmt = h("select", { "aria-label": "format" }, h("option", {}, "jpg"), h("option", {}, "png"));
+  const br = h("input", { type: "checkbox", id: "brk" });
+  const bar = h("div", { class: "bar" }, h("div", { class: "name" }, path + "/"),
+    h("div", { class: "maker" }, h("span", { class: "kicker" }, "add image"), w, "×", hh, ch, fmt,
+      h("label", { for: "brk", style: "display:flex;gap:4px;align-items:center" }, br, "broken"),
+      h("button", { class: "solid", onclick: async () => {
+        try {
+          const r = await api("/api/make_image", { folder: path, width: w.value, height: hh.value, channels: ch.value, format: ch.value === "4" ? "png" : fmt.value, broken: br.checked });
+          toast("Added " + base(r.path)); await loadTree(); select("images", path);
+        } catch (e) { toast(e.message); }
+      } }, "Add")),
+    h("button", { onclick: () => api("/api/open", { path }) }, "Open in Explorer"));
+  const users = { "images/train": "imageset.prep", "images/new_photos": "imageset.prep", "images/small_photos": "imageset.prep" };
+  const summary = h("div", { class: "summary" },
+    h("span", {}, h("b", {}, data.images.length), " files"), h("span", {}, "width ", h("b", {}, range("width"))), h("span", {}, "height ", h("b", {}, range("height"))),
+    h("span", {}, "channels ", h("b", {}, chans)), h("span", {}, "broken ", h("b", {}, broken)),
+    h("button", { class: "flat", onclick: () => { S.runChoices["programs/imageset.prep"] = { train: path }; S.tab = "run"; select("program", "programs/imageset.prep"); } }, "imageset.prep → Run with this folder"));
+  const gal = h("div", { class: "gallery" });
+  data.images.forEach((im) => {
+    gal.append(h("div", { class: "shot" + (im.broken ? " broken" : "") },
+      h("div", { class: "img" }, im.broken ? "BROKEN FILE" : h("img", { src: "/api/raw?path=" + encodeURIComponent(im.path) + "&t=" + Date.now(), alt: im.name })),
+      h("div", { class: "meta" }, h("b", { title: im.path }, im.path.slice(path.length + 1)),
+        im.broken ? "cannot be decoded" : `${im.width} × ${im.height} · ${im.channels} ch · ${im.depth}`)));
+  });
+  if (!data.images.length) gal.append(h("p", {}, "Empty folder. Add an image above, or copy some in with Explorer and press Refresh."));
+  main.append(bar, summary, gal);
+}
+
+/* ---------------- keys and start ---------------- */
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    if (S.sel && S.sel.kind === "program") save().then(() => compileNow(false));
+    else if (S.sel && S.sel.kind === "table" && S.saveTable) S.saveTable();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && S.sel && S.sel.kind === "program") { e.preventDefault(); S.isPy ? liftNow() : compileNow(true); }
+  if (e.altKey && /^[1-5]$/.test(e.key) && S.sel && S.sel.kind === "program" && !S.isPy) { e.preventDefault(); S.tab = TABS[+e.key - 1][0]; store.set("tab", S.tab); renderPanel(); }
+});
+$("#refresh").onclick = async () => { await loadTree(); if (S.sel && !S.dirty) select(S.sel.kind, S.sel.path); toast("Folders read again"); };
+$("#openWork").onclick = () => api("/api/open", { path: "." });
+
+(async () => {
+  try {
+    await loadTree();
+    const last = store.get("sel", null);
+    const exists = last && (S.tree.programs.includes(last.path) || S.tree.tables.includes(last.path) || S.tree.folders.some((f) => f.path === last.path));
+    exists ? select(last.kind, last.path) : select(null);
+  } catch (e) {
+    $("#main").innerHTML = `<div class="welcome"><h1>Studio server not reachable</h1><p class="lead">Start it with <span class="mono">py -3 studio\\studio.py</span> in the PrepLang folder.</p><pre>${esc(e.message)}</pre></div>`;
+  }
+})();
+</script>
+</body>
+</html>
