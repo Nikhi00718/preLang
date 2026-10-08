@@ -2,8 +2,13 @@
 
 About 12 minutes, plus questions. Two things are open side by side:
 
-- **the demo page** `demo/PrepLang_Demo.html` (works offline; arrow keys move between chapters)
-- **a terminal** in the project folder for the live run: `py -3 demo/run_demo.py`
+- **the slides** `demo/PrepLang_Demo_Deck.pptx` (15 slides; the speaker notes hold what to say), or
+  the interactive page `demo/PrepLang_Demo.html` (works offline; arrow keys move between chapters)
+- **a terminal** in the project folder for the live run
+
+Every slide with a black TERMINAL bar names one step: run `py -3 demo/run_demo.py --only N`, explain
+at each `[Enter]`, and go back to the slides when it prints "Back to the slides". The slides are
+rebuilt from the captured numbers with `node demo/deck.js` (needs the pptxgenjs npm package).
 
 Before the review, once: build the compiler, then
 

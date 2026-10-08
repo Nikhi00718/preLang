@@ -3,6 +3,7 @@
     py -3 demo/run_demo.py prepare          # once: Phase 2 compiler, sample images, big CSV, Titanic data
     py -3 demo/run_demo.py                  # the walkthrough, pausing after each step (press Enter)
     py -3 demo/run_demo.py --step 5         # start at step 5
+    py -3 demo/run_demo.py --only 5         # run step 5 alone (the slides say which step to run)
     py -3 demo/run_demo.py --no-pause       # rehearse without stopping
 
 Steps (the same order as demo/PrepLang_Demo.html):
@@ -268,7 +269,11 @@ if __name__ == "__main__":
     if "prepare" in sys.argv:
         prepare()
         sys.exit(0)
-    first = int(sys.argv[sys.argv.index("--step") + 1]) if "--step" in sys.argv else 1
+    if "--only" in sys.argv:
+        STEPS[int(sys.argv[sys.argv.index("--only") + 1]) - 1]()
+        print("\nBack to the slides.")
+        sys.exit(0)
+    first =int(sys.argv[sys.argv.index("--step") + 1]) if "--step" in sys.argv else 1
     for step in STEPS[first - 1:]:
         step()
     print("\nEnd of the demo.")
