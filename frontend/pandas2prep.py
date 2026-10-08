@@ -1,6 +1,7 @@
 """A second front end: lifts the data-cleaning part of a pandas script into PrepLang.
 
     py -3 frontend/pandas2prep.py script.py      (prints the .prep program; notes go to stderr)
+    py -3 frontend/pandas2prep.py script.py -o lifted.prep      (writes it to a file instead)
 
 The script is parsed with Python's own parser (the ast module), not run. Every
 DataFrame read with pd.read_csv("...") is followed through the statements of the
@@ -397,7 +398,12 @@ def lift(source):
 
 if __name__ == "__main__":
     result = lift(open(sys.argv[1], encoding="utf-8", errors="replace").read())
-    print(result.program(), end="")
+    if "-o" in sys.argv:
+        out = sys.argv[sys.argv.index("-o") + 1]
+        open(out, "w", encoding="utf-8").write(result.program())
+        print(f"Wrote {out}", file=sys.stderr)
+    else:
+        print(result.program(), end="")
     for variable, frame in result.frames.items():
         print(f"# {variable}: " + (f"lifted until {frame.stopped_at}" if frame.stopped_at else "lifted completely"),
               file=sys.stderr)

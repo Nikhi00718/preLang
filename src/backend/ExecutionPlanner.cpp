@@ -55,7 +55,17 @@ std::string ExecutionPlanner::generate(const IRProgram& program, const std::stri
         out << "import pandas as pd\n\nif int(pd.__version__.split(\".\")[0]) < 3:\n"
             << "    pd.options.mode.copy_on_write = True\n";
     }
-    out << "\nHERE = Path(__file__).resolve().parent\n\n\nclass ContractError(Exception):\n    pass\n\n\n" << R"(# An input can be given another file or folder when the program is run:
+    out << "\nHERE = Path(__file__).resolve().parent\n\n\nclass ContractError(Exception):\n    pass\n\n\n" << R"(def report(kind, error, trace):
+    """A refused input or a broken contract is reported in one line, not as a traceback."""
+    if issubclass(kind, ContractError):
+        print(f"ContractError: {error}", file=sys.stderr)
+    else:
+        sys.__excepthook__(kind, error, trace)
+
+
+sys.excepthook = report
+
+)" << R"(# An input can be given another file or folder when the program is run:
 #   py -3 generated.py students=new_students.csv
 INPUTS = dict(arg.split("=", 1) for arg in sys.argv[1:] if "=" in arg)
 same_input = {}  # input -> True if it is the one the compiler analysed

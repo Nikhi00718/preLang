@@ -1,6 +1,7 @@
 """The live demo of PrepLang in a terminal. Every step runs the real compiler and pauses.
 
     py -3 demo/run_demo.py prepare          # once: Phase 2 compiler, sample images, big CSV, Titanic data
+    py -3 demo/run_demo.py stage            # demo/live: a folder for typing the demo by hand (TERMINAL_DEMO.md)
     py -3 demo/run_demo.py                  # the walkthrough, pausing after each step (press Enter)
     py -3 demo/run_demo.py --step 5         # start at step 5
     py -3 demo/run_demo.py --only 5         # run step 5 alone (the slides say which step to run)
@@ -103,6 +104,17 @@ def fresh(name, source=None):
     return folder
 
 
+def make_photos(folder):
+    """Two new image folders: photos that fit the certificate, and a folder with one 150 px wide photo."""
+    rng = np.random.default_rng(1)
+    for name, shapes in {"new_photos": [(300, 260, 3), (640, 480, 1), (250, 900, 3), (400, 300, 4)],
+                         "small_photos": [(300, 300, 3), (150, 100, 3)]}.items():
+        (folder / name).mkdir(exist_ok=True)
+        for i, (w, h, c) in enumerate(shapes):
+            pixels = rng.integers(0, 255, (h, w, c) if c > 1 else (h, w), dtype=np.uint8)
+            cv2.imwrite(str(folder / name / f"photo_{i}{'.png' if c == 4 else '.jpg'}"), pixels)
+
+
 # ---------- steps ----------
 
 def step1():
@@ -198,13 +210,7 @@ def step5():
 def step6():
     title(6, "Image folders")
     folder = fresh("images", ROOT / "examples" / "images")
-    rng = np.random.default_rng(1)
-    for name, shapes in {"new_photos": [(300, 260, 3), (640, 480, 1), (250, 900, 3), (400, 300, 4)],
-                         "small_photos": [(300, 300, 3), (150, 100, 3)]}.items():
-        (folder / name).mkdir()
-        for i, (w, h, c) in enumerate(shapes):
-            pixels = rng.integers(0, 255, (h, w, c) if c > 1 else (h, w), dtype=np.uint8)
-            cv2.imwrite(str(folder / name / f"photo_{i}{'.png' if c == 4 else '.jpg'}"), pixels)
+    make_photos(folder)
     show_file(folder / "imageset.prep")
     run([NEW, "imageset.prep", "--certificate", "--python"], cwd=folder, keep=stage("CERTIFICATE"))
     pause()
@@ -263,17 +269,64 @@ def prepare():
     print("Ready: Phase 2 compiler, sample images, the big CSV and the Titanic files.")
 
 
+def make_live():
+    """Makes demo/live, a short folder for typing the demo by hand (demo/TERMINAL_DEMO.md)."""
+    live = HERE / "live"
+    if live.exists():
+        try:
+            shutil.rmtree(live)
+        except PermissionError:
+            sys.exit("demo\\live is in use: cd out of it (cd ..\\..) and close Explorer windows on it, then run stage again.")
+    live.mkdir()
+    # Short commands: .\preplang and .\phase2 run the two compilers from this folder.
+    (live / "preplang.cmd").write_text(f'@"{NEW}" %*\n', encoding="utf-8")
+    (live / "phase2.cmd").write_text(f'@"{OLD}" %*\n', encoding="utf-8")
+    for name in ("students.prep", "students.csv"):
+        shutil.copyfile(ROOT / "examples" / "tabular" / name, live / name)
+    for name in ("next_week.csv", "typo_week.csv", "missing_name.csv"):
+        shutil.copyfile(HERE / "data" / name, live / name)
+    # Phase 2 reads students.csv by its fixed name, so it gets its own copy to replace.
+    (live / "old").mkdir()
+    for name in ("students.prep", "students.csv", "phase2.cmd"):
+        shutil.copyfile(live / name, live / "old" / name)
+    shutil.copyfile(live / "next_week.csv", live / "old" / "next_week.csv")
+    program =(live / "students.prep").read_text(encoding="utf-8")
+    (live / "typo.prep").write_text(program.replace("SELECT students [name, age, marks];",
+                                                    "SELECT students [name, age, mark];"), encoding="utf-8")
+    for name in ("lexical_error.prep", "invalid.prep", "semantic_error.prep"):
+        error = (ROOT / "examples" / "errors" / name).read_text(encoding="utf-8")
+        (live / name).write_text(error.replace("../tabular/students.csv", "students.csv"), encoding="utf-8")
+    images = live / "images"
+    shutil.copytree(ROOT / "examples" / "images", images, ignore=shutil.ignore_patterns("output", "processed"))
+    linked = (images / "linked.prep").read_text(encoding="utf-8")
+    (images / "black.prep").write_text(linked.replace("CONVERT imgs TO NPY;", "CONVERT imgs TO PNG;"), encoding="utf-8")
+    shutil.copyfile(live / "preplang.cmd", images / "preplang.cmd")
+    make_photos(images)
+    csv = ROOT / "eval" / "data" / "tall_1000000.csv"
+    (live / "big.prep").write_text(f'LOAD "{csv.as_posix()}" AS t;\nSAVE t AS "big_out.csv";\n', encoding="utf-8")
+    titanic = live / "titanic"
+    titanic.mkdir()
+    shutil.copyfile(HERE / "titanic_clean.py", titanic / "titanic_clean.py")
+    shutil.copyfile(live / "preplang.cmd", titanic / "preplang.cmd")
+    for name in ("train.csv", "test.csv"):
+        shutil.copyfile(ROOT / "eval" / "data" / "titanic" / name, titanic / name)
+    print(f"Ready: {live}\nNext:  cd demo\\live   and follow demo/TERMINAL_DEMO.md")
+
+
 STEPS = [step1, step2, step3, step4, step5, step6, step7, step8]
 
 if __name__ == "__main__":
     if "prepare" in sys.argv:
         prepare()
         sys.exit(0)
+    if "stage" in sys.argv:
+        make_live()
+        sys.exit(0)
     if "--only" in sys.argv:
         STEPS[int(sys.argv[sys.argv.index("--only") + 1]) - 1]()
         print("\nBack to the slides.")
         sys.exit(0)
-    first =int(sys.argv[sys.argv.index("--step") + 1]) if "--step" in sys.argv else 1
+    first = int(sys.argv[sys.argv.index("--step") + 1]) if "--step" in sys.argv else 1
     for step in STEPS[first - 1:]:
         step()
     print("\nEnd of the demo.")

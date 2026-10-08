@@ -22,3 +22,6 @@ __pycache__/
 
 # The demo: generated working folders
 demo/work/
+
+# The folder for the hand-typed demo (py -3 demo/run_demo.py stage)
+demo/live/
