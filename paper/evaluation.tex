@@ -8,9 +8,10 @@ certificates compose across stages? \textbf{RQ7:} What does reuse cost at run ti
 how we tested soundness and the bugs the evaluation found in our own implementation.
 
 \paragraph{Setup.} Intel Core i5-12450H (8 cores), 16\,GB RAM, Windows~11; MSVC 14.44 (Release);
-Python 3.14, pandas 3.0, NumPy 2.5, OpenCV 5.0, pyarrow 25. pandera 0.34 and Great Expectations 0.18
-(its last release with an automatic profiler) run in a Python 3.11 environment, TFDV 1.21 in WSL
-(Ubuntu, Python 3.12), since it has no Windows build. Times include starting Python.
+Python 3.14, pandas 3.0, NumPy 2.5, OpenCV 5.0, pyarrow 25. pandera 0.34 and Great Expectations
+0.18.22, whose onboarding data assistant builds a suite from a sample (we found no such assistant in
+the 1.x line), run in a Python 3.11 environment, TFDV 1.21 in WSL (Ubuntu, Python 3.12), since it has
+no Windows build. Times include starting Python.
 
 \paragraph{Scoring reuse.} RQ3--RQ6 score every way of running a new batch $T$ against the ground
 truth: a fresh compilation of the pipeline for $T$, run. A policy either runs a program on $T$ or
@@ -107,26 +108,30 @@ reformatted.
 \input{realtable}
 \input{figure-policies}
 
-Over \RealRuns{} runs (Table~\ref{tab:rq-real}), selective deoptimization handles
-\RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
+Over \RealRuns{} runs (Table~\ref{tab:rq-real}, Fig.~\ref{fig:policies}), selective deoptimization
+handles \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
 \RealDeoptUnsound{} wrong; the full certificate handles \RealFullCorrect{}. The difference is
-\RealRescued{} months the full certificate refuses: in three, the traffic sensor reports temperatures
-of 0\,K, and the re-enabled range check stops the run as the fresh compilation does; in others, a
-month has an hour with 9,831\,mm of rain or a day with humidity 0, which the compiled month had not,
-and the removed cleaning filter runs again and writes what the fresh compilation writes. All
-\RealDeoptNeedless{} remaining refusals are one event: in February 2023 the taxi publisher changed
-\texttt{passenger\_count} and \texttt{payment\_type} from double to integer, and the program compiled
-on January 2022 reads them as \textsc{Float}; a type is a fact no run-time code of the compiled program
-stands in for, and monthly compilation follows the change after one month.
+\RealRescued{} months the full certificate refuses. In three, the traffic sensor reports temperatures
+of 0\,K; the re-enabled range check stops the run, as the fresh compilation fails. In four, a month has
+an hour with 9,831\,mm of rain or a day with humidity 0, which the compiled month had not; the removed
+cleaning filter runs again and the run writes what the fresh compilation writes. In two, a taxi trip
+has a fare of \$2,020; the re-enabled check runs after the filter that removes that trip, passes, and
+the run finishes. All \RealDeoptNeedless{} remaining refusals are one event: in February 2023 the
+taxi publisher changed \texttt{passenger\_count} and \texttt{payment\_type} from double to integer,
+and the program compiled on January 2022 reads them as \textsc{Float}. A type is a fact no run-time
+code of the compiled program stands in for; monthly compilation follows the change after one month.
 
-The validators are either strict or unsound. With every column, they refuse
-\RealValidatorStopMin--\RealValidatorStopMax\% of the months: Great Expectations' profile constrains
-means, medians and unique counts, pandera's inferred schema the range of every column, and TFDV's the
-string domains of columns the program never reads (a new holiday name refuses a traffic month). Given
-only the columns the program reads, TFDV, which infers no numeric ranges, admits every month, and the
-optimized program then writes wrong files whenever a month needs a removed filter or check
-(\RealTfdvReadUnsound{} months); pandera with ranges is sound here but still refuses most months,
-because it requires the compiled month's own range of every column.
+The validators are either strict or unsound. Great Expectations' profile constrains means, medians,
+quantiles and unique counts, and pandera's inferred schema the compiled month's range of every
+column; set up on every column or only on the columns read, they refuse
+\RealValidatorStopMin--\RealValidatorStopMax\% of the months although a fresh compilation runs them.
+TFDV infers types, presence and string domains but no numeric ranges. On every column it refuses
+\RealTfdvAllNeedlessPct\% of the months, for string values of columns the program never reads (a new
+holiday name refuses a traffic month); on the columns read it refuses fewer, but both setups admit
+months on which the optimized program writes other files than a fresh compilation
+(\RealTfdvReadUnsound{} months): the taxi months after the type change, written with the old column
+types, and traffic months with an impossible rain reading that a removed filter should have dropped.
+Generic validators do not know which facts the compiled program relies on.
 
 \subsection{RQ5: Real pandas scripts}\label{sec:rq-corpus}
 

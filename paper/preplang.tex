@@ -63,9 +63,9 @@ publish a guarantee for each table it writes; checking it against the next stage
 shows which downstream checks can never fire and writes the upstream contracts that would close
 the gap. On \RealRuns{} real monthly batches of three public datasets, selective deoptimization
 handles \RealDeoptCorrect{} batches exactly as a fresh compilation would and none
-unsoundly, where Great Expectations, pandera and TFDV, set up on the same data, refuse
-\RealValidatorStopMin--\RealValidatorStopMax\% of the batches or, without range checks, admit
-batches on which the optimized program writes wrong data. On \CorpusBothScripts{} held-out pandas
+unsoundly, where Great Expectations and pandera, set up on the same data, refuse
+\RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs, and TFDV,
+which checks no numeric ranges, admits months on which the optimized program writes different files. On \CorpusBothScripts{} held-out pandas
 scripts from GitHub for two Kaggle tasks, \CorpusBothSame{} of \CorpusBothRuns{} runs on new batches
 reproduce the scripts' own results and none differ.
 \end{abstract}
@@ -102,8 +102,8 @@ static guarantee between the stages of a pipeline, since every stage would chang
 A fingerprint of the compiled file keeps all three but refuses every new batch.
 Data-validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} infer expectations from the data
 rather than from the program: on our real monthly data, the suites they infer refuse most new
-months, and the ones that leave numeric ranges out admit months on which the optimized program
-writes wrong data (Section~\ref{sec:eval}). What is missing is the program's side of the question:
+months, and the one that leaves numeric ranges out admits months on which the optimized program
+writes other files than a fresh compilation would (Section~\ref{sec:eval}). What is missing is the program's side of the question:
 \emph{which facts of the compile-time data does the compiled program depend on, and what can it do
 for a batch that lacks one?}
 
@@ -382,8 +382,9 @@ others run as in the source program.
 \begin{corollary}[Agreement with a fresh compilation]
 If a fresh compilation of $T$ succeeds, its program computes the same as the source program on $T$
 (Lemma~\ref{lem:sound}), hence as the deoptimized program. If it reports a contract as violated, the
-removal of that contract's check is not in $\Pi(\alpha(T))$, so it is in $D$ or was never removed,
-and the deoptimized program stops at that check.
+removal of that contract's check is not in $\Pi(\alpha(T))$, so it is in $D$ or was never removed;
+the source program fails on $T$ at that check or at an earlier one, and so does the deoptimized
+program.
 \end{corollary}
 
 So a batch is refused only for facts that no run-time code stands in for. Item certificates are
@@ -391,7 +392,8 @@ weaker than $\full$ in the directions their removal does not care about: the che
 Fig.~\ref{fig:students} needs no lower bound of 10 and allows missing marks.
 
 \paragraph{Mechanization.} We mechanized Theorem~\ref{thm:deopt} in Lean~4~\cite{lean4} for an
-abstract setting (\texttt{proofs/Deopt.lean}, \LeanLines{} lines, no axioms beyond Lean's core): a
+abstract setting (\texttt{proofs/Deopt.lean}, \LeanLines{} lines of Lean's core language, no Mathlib;
+the theorems use no axiom but propositional extensionality): a
 program is a list of partial state transformers; an analysis is any function from abstract inputs to
 discharged obligations that is monotone and whose no-effect proofs are sound for admitted inputs;
 item certificates are abstract inputs on which the analysis discharges their removal; and the
