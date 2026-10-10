@@ -186,6 +186,7 @@ def run_script(compiler, item, month_files):
         shutil.rmtree(folder)
     folder.mkdir(parents=True)
     (folder / "program.prep").write_text(program, encoding="utf-8")
+    record["program"] = program
     shutil.copyfile(month_files[0], folder / "data.csv")
     full = subprocess.run([str(compiler), "program.prep", "--python", "--no-deopt"], cwd=folder,
                           capture_output=True, text=True)
@@ -202,6 +203,10 @@ def run_script(compiler, item, month_files):
         return record
     record["outcome"] = "lifted"
     record["facts"] = text.count("<- ")
+    contract = json.loads((folder / "output" / "preplang_contract.json").read_text(encoding="utf-8"))
+    record["removals"] = sum(bool(removal["needs"]) for removal in contract["removals"])  # can deoptimize
+    record["dates_admitted"] = any("dates" in facts for table in contract["inputs"].values()
+                                   for facts in table["columns"].values())
     output = folder / "output"
     args = [f"{frame.name}=" for frame in result.frames.values()]
     record["months"] = []

@@ -177,6 +177,26 @@ values in the training file, such as \texttt{LotFrontage}; those fills are never
 certificate does not constrain them. The remaining refusals are batches the scripts crash on too:
 Kaggle's test files have no target column.
 
+\input{drifttable}
+
+\paragraph{Other people's pipelines on real monthly data.} The pipelines of RQ4 are ours, and most
+Kaggle batches above are made, not observed. GitHub code search for Python files that read the UCI
+traffic file, or the bike-sharing \texttt{day.csv} or \texttt{hour.csv}, returned \DriftAll{} files.
+Their cleaning mostly begins by parsing the date column and deriving hours, weekdays or Celsius
+temperatures from it, which the first lifter version cannot express. With \texttt{PARSE\_DATE} and
+\texttt{DERIVE} in the language and the second lifter version, developed on the traffic scripts while
+the bike scripts stayed held out, \DriftCompiled{} scripts compile on the first month of the real data
+(\DriftDerive{} \texttt{DERIVE} and \DriftParseDate{} \texttt{PARSE\_DATE} among \DriftStatements{}
+lifted statements) and run on every later month (Table~\ref{tab:rq-drift}). All \DriftRuns{} runs end
+as the scripts' own statements do on the same month, and none is refused. Most of these programs have
+no proof that depends on values that drift: their certificates require column types, and for
+\DriftDatesAdmitted{} of them that a column holds dates; \DriftWithRemovals{} have a removal that can run
+again. Two traffic scripts filter impossible readings themselves (\texttt{temp > 0},
+\texttt{rain\_1h < 500}). On October 2012 both filters keep every row and are removed, and they run
+again in exactly the three months with a temperature of 0\,K or 9,831\,mm of rain, where the full
+certificate refuses the month (\DriftTrafficFullNeedless{} runs). One lifted script fills a text column
+with the number 0, which pandas accepts and \PL rejects as a type error.
+
 \subsection{RQ6: Composing stages}\label{sec:rq-compose}
 
 Each workload of RQ4 gets a second stage that reads the cleaned table, as a feature step would: range

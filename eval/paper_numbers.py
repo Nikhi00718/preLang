@@ -343,6 +343,8 @@ def drift_numbers(records):
         "All": len(records), "Lifted": len(lifted), "Compiled": sum(r["outcome"] == "lifted" for r in records),
         "CompileErrors": sum(r["outcome"] == "compile error" for r in records),
         "Statements": sum(r["lifted"] for r in lifted), "Derive": statements.count("DERIVE"),
+        "WithRemovals": sum(bool(r.get("removals")) for r in records),
+        "DatesAdmitted": sum(bool(r.get("dates_admitted")) for r in records),
         "ParseDate": statements.count("PARSE_DATE"), "Runs": len(runs),
         "Same": count(lambda m: m["prep"] == "finished" and m["same"]),
         "Wrong": count(lambda m: (m["prep"] == "finished" and not m["same"]) or
@@ -368,6 +370,7 @@ def drift_corpora(numbers):
     numbers.update({f"Drift{k}": v for k, v in total.items()})
     numbers.update({f"DriftHeld{k}": v for k, v in held.items()})
     rows = [("GitHub files", "All"), ("lifted, in scope", "Lifted"), ("compiled on the first month", "Compiled"),
+            (r"\quad with a removal that can run again", "WithRemovals"),
             ("statements lifted", "Statements"), (r"\quad of them \texttt{DERIVE}", "Derive"),
             (r"\quad of them \texttt{PARSE\_DATE}", "ParseDate"), ("runs on later months", "Runs"),
             (r"\emph{With deoptimization:} as the script", "Same"),
@@ -379,7 +382,7 @@ def drift_corpora(numbers):
              r"(RQ5): lifted with derived columns and dates, compiled on the first month and run on every later "
              r"month; the ground truth is the lifted pandas statements run on the same month. The traffic scripts "
              r"were the development set of the second lifter version.}", r"\label{tab:rq-drift}", r"\centering",
-             r"\footnotesize", r"\begin{tabular}{@{}l" + "r" * len(found) + "@{}}", r"\toprule",
+             r"\footnotesize", r"\setlength{\tabcolsep}{4pt}",r"\begin{tabular}{@{}l" + "r" * len(found) + "@{}}", r"\toprule",
              " & " + " & ".join(f"{title}" for _, title, _, _ in found) + r" \\",
              " & " + " & ".join(f"({role})" for _, _, role, _ in found) + r" \\", r"\midrule"]
     for label, key in rows:

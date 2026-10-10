@@ -349,3 +349,30 @@ course project, the innovation is far beyond what the rubric expects.
 batch-level checks on cheap statistics, exact selective re-enabling with a mechanized theorem, and
 composition of the resulting certificates) was not found in prior work; each ingredient has a clear
 precedent, listed above. The implementation's monotonicity and soundness are tested, not proven.
+
+## Added in October 2026 (second round): a mechanized core, dates and derived columns, other people's pipelines
+
+What a reviewer at a top venue would raise, and what was done about it:
+
+- **"The analysis itself is only tested."** `proofs/Core.lean` defines the analysis of a core of
+  PrepLang (numeric columns abstracted by missing values and an interval; FILL_NULL, FILTER with >= and
+  <=, DROP_NULL, DERIVE of a sum, BETWEEN and NOT_NULL contracts) and proves the transfer functions
+  sound, every no-effect proof valid, the analysis monotone, the run-time check of the generated code
+  sound and complete for a certificate, and from these the exactness and composition theorems end to
+  end. Axioms: `propext` and `Quot.sound` only (no classical choice). The C++ implementation is still
+  tested, not proven, for the full language.
+- **"The language has no dates or computed columns."** `PARSE_DATE` turns a text column of ISO dates
+  into DATETIME (the compiler reads the column's values only for such a statement, so no other
+  program pays for it, and every earlier result is unchanged: the same re-analysis counts for all 11
+  programs and the same randomized test results). `DERIVE t.c = e` computes a column with + - * / or
+  YEAR/MONTH/DAY/HOUR/WEEKDAY of a date. New compile-time errors: a division by a value that can be 0,
+  and text that is not a date (with its row). Certificates gain "this column holds dates" (admission)
+  and date bounds widened to calendar boundaries (a FILTER on MONTH compiled on October data needs dates
+  from 1 October to 31 December of one year, and deoptimizes in January).
+- **"The pipelines of the real-data experiment are the authors' own."** GitHub scripts for the same UCI
+  traffic and bike-sharing data, lifted with the second lifter version (traffic scripts as the
+  development set, bike scripts held out), compiled on the first real month and run on every later
+  month against the scripts' own pandas statements (`eval/drift_corpus.py`).
+
+Still open: joins; a proof for the full C++ analysis; showing reuse saving time (compilation is cheap,
+so the paper does not claim it).

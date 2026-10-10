@@ -54,8 +54,8 @@ useless, but its proofs are about one file. We present \PL, a compiler for table
 preprocessing pipelines that computes an abstract dataset state from the data, or from its
 metadata alone, decides every contract as proven, violated or deferred, and optimizes, together
 with three ways to carry its proofs to new batches. \emph{Data certificates}, found by re-analysing
-the program under counterfactually weakened input facts, are 1-minimal sets of input facts that
-the proofs and removals depend on. \emph{Selective deoptimization} keeps every removed check and
+the program under counterfactually weakened input facts, are sets of input facts that the proofs
+and removals depend on, 1-minimal for programs without derived columns. \emph{Selective deoptimization} keeps every removed check and
 operation in the generated program with its own item certificate: a new batch runs the optimized
 program, and only the removals whose certificates it breaks run again; a batch is refused only for
 facts no run-time code can stand in for, such as a column's type. We prove this exact for every
@@ -67,9 +67,10 @@ handles \RealDeoptCorrect{} batches exactly as a fresh compilation would and non
 unsoundly, where Great Expectations and pandera, set up on the same data, refuse
 \RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs, and TFDV,
 which checks no numeric ranges, admits months on which the optimized program does not do what a fresh
-compilation does. On \CorpusBothLifted{} held-out pandas
-scripts from GitHub for two Kaggle tasks, lifted into \PL, \CorpusBothSame{} of \CorpusBothRuns{} runs
-on new batches reproduce the scripts' own results and none differ.
+compilation does. Pandas scripts from GitHub, lifted into \PL, reproduce their own
+results on new batches: \CorpusBothSame{} of \CorpusBothRuns{} runs of \CorpusBothLifted{} held-out
+scripts for two Kaggle tasks, and all \DriftRuns{} monthly runs of \DriftCompiled{} scripts written by
+others for the traffic and bike data; none differ.
 \end{abstract}
 
 \keywords{data-aware compilation, abstract interpretation, data validation, speculative
@@ -111,13 +112,13 @@ for a batch that lacks one?}
 
 \paragraph{Contributions.}
 \begin{itemize}
-\item \textbf{Data-aware compilation} for tables and images (Section~\ref{sec:lang}): one abstract
-state, computed from the data or from metadata only, used for type checking, for hybrid checking of
-value contracts~\cite{flanagan2006}, and for optimization.
+\item \textbf{Data-aware compilation} for tables, dates, derived columns and images
+(Section~\ref{sec:lang}): one abstract state, computed from the data or from metadata only, used for
+type checking, for hybrid checking of value contracts~\cite{flanagan2006}, and for optimization.
 \item \textbf{Data certificates} (Section~\ref{sec:cert}): by analysing the program again under
-counterfactually weakened input facts, the compiler finds a 1-minimal set of input facts that its
-proofs and removals depend on, over every column of a file and over boxes of image shapes, using
-the forward analysis as a black box.
+counterfactually weakened input facts, the compiler finds a set of input facts that its proofs
+and removals depend on (1-minimal without derived columns), over every column of a file, the dates
+of a column, and boxes of image shapes, using the forward analysis as a black box.
 \item \textbf{Selective deoptimization} (Section~\ref{sec:deopt}): the optimizer removes
 instructions \emph{speculatively}; the compiler derives an admission certificate (the facts no
 run-time code can stand in for) and an item certificate for every removal. On a new batch the
@@ -132,7 +133,8 @@ of its consumers ever refuses or deoptimizes.
 \item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
 monthly batches of three public datasets, scored against fresh compilations and against
 pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothLifted{}
-held-out pandas scripts for two Kaggle tasks, lifted into \PL by a second front end; two-stage
+held-out pandas scripts for two Kaggle tasks, lifted into \PL by a second front end, and
+\DriftCompiled{} scripts by others run on the real months; two-stage
 pipelines; injected mistakes and \RbTotal{} real failures from GitHub issues; and the cost of all of
 it.
 \end{itemize}

@@ -1,0 +1,7099 @@
+[
+ {
+  "id": "14c6493815e817af",
+  "url": "https://github.com/justmarkham/DAT3/blob/03099f4777170d838680d923ed2a67c674ba297c/code/06_regression_class.py",
+  "rank": 1,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "ae829aa28ed1ce1d",
+  "url": "https://github.com/zwq2018/AI_UAV/blob/21e411339b03da860036635fb449fec8ff70a04e/\u4f5c\u4e1a/\u7b2c\u56db\u6b21\u4f5c\u4e1a/\u67e5\u826f\u745c/Bp_nn_proj/task2_data_processing.py",
+  "rank": 2,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "beb5eff175eb8b56",
+  "url": "https://github.com/sbremman/causal_shap_python/blob/dfef2de35d281b9cdd9a473fe274c90f38a51092/main.py",
+  "rank": 3,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 17,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS bike;\nDERIVE bike.trend = (instant - 1);\nSAVE bike AS \"bike_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "251af3b71fadb844",
+  "url": "https://github.com/axelmedjber/logistics-ai-optimization/blob/e381e8a1231d7e79528da0f37511f21bb7fcba41/ml/data.py",
+  "rank": 4,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "e2358f27716fa83c",
+  "url": "https://github.com/Sajidnsr/ML_Project__Rental_Bike_Sharing/blob/f8ad5fb529a4587fecb8b4670be51a46b18e7a61/src/data_preprocess.py",
+  "rank": 5,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "500c2a59531789a2",
+  "url": "https://github.com/saattrupdan/doubt/blob/152d24dfeec196d47dcd1b0ccc1d45c38d5a758c/src/doubt/datasets/bike_sharing_daily.py",
+  "rank": 6,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "18aae7b1cff48be2",
+  "url": "https://github.com/nyxcalamity/classwork/blob/dfe47a40fe57ec5e0ccfd672a8dcaf246386de99/interviews/ds/data-science.py",
+  "rank": 7,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "dfbe425a2b0eaeb5",
+  "url": "https://github.com/nandofioretto/dp-federated_sharing/blob/4f237565568e5765119a80a3754a16b009fa1158/src/data_loader.py",
+  "rank": 8,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "ecf9cc7a02512971",
+  "url": "https://github.com/lxkarp/timeseries-modeling/blob/79eec8622f11dba657c2e51bc63afe3084b748b6/data/reshape_bike_data.py",
+  "rank": 9,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4c58976bea5acb56",
+  "url": "https://github.com/hossein-haeri/msmsa/blob/a8efbe350803c6c07fe6a9dac66f74d024158324/sim_runner.py",
+  "rank": 10,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "29918bc628c8e8bf",
+  "url": "https://github.com/Ocramoi/SCC0275_Projeto3/blob/348f3c9b43e8bf84b38db77c74dd5b3af29943d0/src/main.py",
+  "rank": 11,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "a1fd9dfdd5084627",
+  "url": "https://github.com/Ahmadfaisal04/bike-sharing-submission/blob/bb2edd3acc59db1b041f299dfc0db1f9863b2a74/dashboard/dashboard.py",
+  "rank": 12,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "866fd501cfef1a2d",
+  "url": "https://github.com/HaykTarkhanyan/python_math_ml_course/blob/949d2b3951704ab12a2b6c03e7c0a525c1952b83/ml/05_interpretability/py_src/interp_shap_figs.py",
+  "rank": 13,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "3e5a8144026d7d74",
+  "url": "https://github.com/NichikouGN/TUDTK-DoAn2-Nhom13/blob/53bc0ae9ac9e8a5c67c5ded4329c386c35f4950d/main.py",
+  "rank": 14,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "10289426c2c8488f",
+  "url": "https://github.com/LinusRosales/DE-Bike-rental/blob/550befce09169e45b69d1d1064375c0d1e9c0aa9/dags/generate_sql_inserts.py",
+  "rank": 15,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1a516b627cbd24b0",
+  "url": "https://github.com/Gurenorakun/Bikeshare/blob/6a863b4f5ec51797a442cee35fd7bd4f9205f664/streamlit_app.py",
+  "rank": 16,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "5f65f2f82f2ddcad",
+  "url": "https://github.com/Mojtaba-Alehosseini/demand-forecasting/blob/ba9bf7ecda2c20777b67f9979192d8d30ce64bcc/src/forecast/data.py",
+  "rank": 17,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "b1a2812d115613fe",
+  "url": "https://github.com/nuhaasalsabila/TugasDicoding/blob/c2458ba2ab1e8649470d60ff6347a5c72e3e8dab/Streamlit.py",
+  "rank": 18,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "29585a25f1b96451",
+  "url": "https://github.com/Corden404/SCAU-MachineLearning-Lab/blob/7dc6127d67bf4576616b023e3c590bdd445d4675/exp4/task7.py",
+  "rank": 19,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "353f5e9e221cd8f2",
+  "url": "https://github.com/hossein-haeri/msmsa/blob/a8efbe350803c6c07fe6a9dac66f74d024158324/datasets/data_loader.py",
+  "rank": 20,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "af5eb4dc9d849790",
+  "url": "https://github.com/Corden404/SCAU-MachineLearning-Lab/blob/7dc6127d67bf4576616b023e3c590bdd445d4675/exp4/task5.py",
+  "rank": 21,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "46658dcb09073c2b",
+  "url": "https://github.com/Imam-f/dicoding-datas/blob/beecfe914df37cb5c74c9ee4d03376ae44c30b31/Hello.py",
+  "rank": 22,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "0fbbb60167430c84",
+  "url": "https://github.com/shirtwig/Bike-Rental-Prediction-System/blob/9828ee5691d2c7977c38dd62f398ccbeb8a61dca/train_model.py",
+  "rank": 23,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "10862d9f68babd27",
+  "url": "https://github.com/slytercode/Bike_analysis/blob/ff9f9926a42b5cfbe9cdf88c1cdfacd63b17c3b3/bike_analysis.py",
+  "rank": 24,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 16,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.check_total = (casual + registered);\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "000f6a4277fad668",
+  "url": "https://github.com/DJCordhose/insurance-ml/blob/fd969a62e093012fdcd056175098c626764276a0/monitoring/scripts/prepare_datasets.py",
+  "rank": 25,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "0ea5d8c4a929da53",
+  "url": "https://github.com/printlnfathur/Project1/blob/8830f9e863f90c00ed04732539891723a1b3695e/dashboard.py",
+  "rank": 26,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "00afe73b57d7cf6f",
+  "url": "https://github.com/YuxiaDing/NonparametricAnalysis-FinalProject/blob/04d6c675899f3c5063ff9550cdb3b32f5e46234f/code/real_data_bike.py",
+  "rank": 27,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "261b8feb079d1051",
+  "url": "https://github.com/innovsm/bike_prediction/blob/c835adbe11a63812273d8fa3419d980720b1bf37/prediction.py",
+  "rank": 28,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4559d111d33fd058",
+  "url": "https://github.com/naufaldaffandp/AnalisiDataDenganPython/blob/1f42751dc212ee79d23883aa731791a5fe963452/app (1).py",
+  "rank": 29,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "ec04c4cd48539a8c",
+  "url": "https://github.com/ZAINAZHAR303/python/blob/7e08e4db80b0aef74696d57ef30ab041301345c8/machine learning/bicycle algorithm.py",
+  "rank": 30,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "5b1f2c718c7a74fb",
+  "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/create_models.py",
+  "rank": 31,
+  "changes": 2,
+  "lifted": 2,
+  "statements": 4,
+  "complete": true,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 15,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_humidity = (temp * hum);\nDERIVE df.temp_windspeed = (temp * windspeed);\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "657d60bb14fe49b2",
+  "url": "https://github.com/Corden404/SCAU-MachineLearning-Lab/blob/7dc6127d67bf4576616b023e3c590bdd445d4675/exp4/task3.py",
+  "rank": 32,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "724f946138b4fe95",
+  "url": "https://github.com/avilog/shap2llm/blob/74c24a9df6ad9df008f465c23f231f6c0810addb/examples/bike_counts.py",
+  "rank": 33,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "7dc3c84fe0a79a47",
+  "url": "https://github.com/nealsweijen61/TalkToGP/blob/9d700c515a9d62e42d35f6af8a1a9c90b9031bac/data/train_bikes_model.py",
+  "rank": 34,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4189031838240d76",
+  "url": "https://github.com/VitorNunesCPT/faculdade/blob/d679fcaf893dba9dc755ab2daf1b1ae7d3e2db7d/app.py",
+  "rank": 35,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "31f4c3df127a0420",
+  "url": "https://github.com/Corden404/SCAU-MachineLearning-Lab/blob/7dc6127d67bf4576616b023e3c590bdd445d4675/exp4/task8.py",
+  "rank": 36,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "14cff9813b6e4655",
+  "url": "https://github.com/billafirlla/SubmissionBeginnerIDCamp2023/blob/327a3b7e0ffdd9b3730697028a5ccfcf1aeba44e/dashboard.py",
+  "rank": 37,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "f61a23f31b88ef33",
+  "url": "https://github.com/fadlishidqi/bike-sharing-analytic-streamlit/blob/f29995fe1ebfb28bb07d437176ce12c51528d8c0/app.py",
+  "rank": 38,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "85479b79b3b7562f",
+  "url": "https://github.com/HaykTarkhanyan/python_math_ml_course/blob/949d2b3951704ab12a2b6c03e7c0a525c1952b83/ml/06_feature_engineering/py_src/fe_figs.py",
+  "rank": 39,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "cb351ec2c65b2272",
+  "url": "https://github.com/nuhaasalsabila/TugasDicoding/blob/c2458ba2ab1e8649470d60ff6347a5c72e3e8dab/proyek_analisis_data.py",
+  "rank": 40,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "f259ceb328ca2a47",
+  "url": "https://github.com/innovsm/bike_prediction/blob/c835adbe11a63812273d8fa3419d980720b1bf37/eda.py",
+  "rank": 41,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "9d2bed6e80bdb4f6",
+  "url": "https://github.com/agungasptra/dashboard_bike_sharing/blob/dc58eada7c458970e5c8582b75bf30bc7120c262/dashboard_bike_sharing.py",
+  "rank": 42,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS day_df;\nPARSE_DATE day_df.dteday;\nSAVE day_df AS \"day_df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "807463951bbda578",
+  "url": "https://github.com/adipurnamk/Belajar-Pengembangan-Machine-Learning/blob/a2e7504a05ae4b326551dfb99340dc9a74d5f1c1/submission_2_time_series_with_lstm.py",
+  "rank": 43,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "987e20a62af9a400",
+  "url": "https://github.com/jisron/BIKE/blob/58345f61bc2df2b3295f6477a197673b8859101e/Bike.py",
+  "rank": 44,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "65a6448e5a647277",
+  "url": "https://github.com/HaykTarkhanyan/python_math_ml_course/blob/949d2b3951704ab12a2b6c03e7c0a525c1952b83/ml/05_interpretability/py_src/interp_pfi_effects_figs.py",
+  "rank": 45,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "798c70a106fcf5df",
+  "url": "https://github.com/Aflizaa/proyek_analisis_data/blob/1b3a5a9f09d001dc8c4316c29ad3bd4501e6a548/streamlit_app.py",
+  "rank": 46,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1d18c166671764ee",
+  "url": "https://github.com/HaykTarkhanyan/python_math_ml_course/blob/949d2b3951704ab12a2b6c03e7c0a525c1952b83/ml/05_interpretability/py_src/interp_linear_trees_figs.py",
+  "rank": 47,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "785bba73244e69e5",
+  "url": "https://github.com/anggerharyo/bike-sharing-data-analysis/blob/5acc634791e4d3b27209eaa3e15e5f67097284a4/dashboard/dashboard.py",
+  "rank": 48,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "3a58d4c0b60433a0",
+  "url": "https://github.com/sarthakagrawal927/forecast-lab/blob/9ae50aa0ff2ee363fca6bd8efd917ee1a58c57b8/demand-forecast/run_trend.py",
+  "rank": 49,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "71e7a43417f189ee",
+  "url": "https://github.com/nasthasawulan/dicoding_project/blob/3d35892bc7e835440d1c569cfda8f3beb446f2c9/dashboard.py",
+  "rank": 50,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "3e5e4153d309a2e1",
+  "url": "https://github.com/nyck33/bike-sharing-mlp-keras-scikitlearn-compare/blob/cdfac34c90d7fd04752e90815c6ca12c827bc630/keras_solver.py",
+  "rank": 51,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "9e8cfed3e52134e6",
+  "url": "https://github.com/Corden404/SCAU-MachineLearning-Lab/blob/7dc6127d67bf4576616b023e3c590bdd445d4675/exp4/task10.py",
+  "rank": 52,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1295ed7138487977",
+  "url": "https://github.com/Arthdrm/PythonCode/blob/f50c15d7fb051bbf5d9b9c5b575ac52c7553ac4f/bikesharing-dashboard/main.py",
+  "rank": 53,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "467fc276d40f2a87",
+  "url": "https://github.com/Oussamayousre/grafana_monitoring_service/blob/0c1a6b2a47100bccc9c5118f0e05eff25abb8592/scripts/prepare_datasets.py",
+  "rank": 54,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "21eb4088a1f14584",
+  "url": "https://github.com/naufalFaqih/dashboard/blob/8f980b19d8b31c3aad5af57096fbba32d10bf860/streamlit_app.py",
+  "rank": 55,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "a5723d38d59af561",
+  "url": "https://github.com/Esylum/Rental-Bike-Analysis/blob/47d189c73800988197a28496c4d9ef2194f2453a/Dashboard/dashboard.py",
+  "rank": 56,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "2a5ebcc0541f988b",
+  "url": "https://github.com/FadelYang/dicoding-analisis-data-python/blob/ce3d3fed53f4ad4038d14cd222a8f453e0778f65/dashboard/dashboard.py",
+  "rank": 57,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "bb9dfd7183f2fb12",
+  "url": "https://github.com/ramzan5/DashBoard/blob/6b60548fa8df8b3e0167257aaf050713cd3cd06b/MachineLearningModel.py",
+  "rank": 58,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "92c864362b2568e5",
+  "url": "https://github.com/skr-g16/proyek_analisis_data/blob/40608f15b01bf08d4fb583951c09e4ee09b7f263/dashboard/dashboard.py",
+  "rank": 59,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "aed2e914e5da72f5",
+  "url": "https://github.com/NelaNurazizah/Backpropagation/blob/b8cb1d85fa90b214685d71425febb90df0092daf/train_model.py",
+  "rank": 60,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "969e176defe577b3",
+  "url": "https://github.com/gusssdx/project-belajar-analisis-data-dengan-python/blob/b7a1667c7a38b8c5ce49db060bbfee5c1316e0d2/Dashboard/app.py",
+  "rank": 61,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "b87dcce8ea18b570",
+  "url": "https://github.com/princeofverry/Submission_Dicoding_Verry/blob/119a1d7d99919fe8cadef9a23eeba979958a7522/dashboard.py",
+  "rank": 62,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "e257a70b2a739015",
+  "url": "https://github.com/Domloj/MachineLearning/blob/8868f9da5307b65b130015b8b20dc4477f6ce451/lab12/lab12.py",
+  "rank": 63,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "fd46a3d70e1bde2e",
+  "url": "https://github.com/ortizserratosa/autostats-agent-thesis-artifact/blob/98192fff4e67c18dd33ae6e9edf27a6a81889e7f/scripts/prepare_real_datasets.py",
+  "rank": 64,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "b66dc27b6e0d75e4",
+  "url": "https://github.com/cadilanatalia/analysisdata/blob/728bee851a393d211db2f075649b11704f971605/dashboard.py",
+  "rank": 65,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "7ad71a5f4d8bc404",
+  "url": "https://github.com/HaykTarkhanyan/python_math_ml_course/blob/949d2b3951704ab12a2b6c03e7c0a525c1952b83/ml/05_interpretability/py_src/interp_rulefit_figs.py",
+  "rank": 66,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "593a9bdc9c89a3cb",
+  "url": "https://github.com/Riandra4trend/Dashboard-Final-Project/blob/5168c85f507f4995dda62e1634ade66f0a5b4b65/dashboard.py",
+  "rank": 67,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "5f756a04b7e74203",
+  "url": "https://github.com/richalfajril/richal-bike-sharing-data-set/blob/2a36d180bbc150844a7b8c1736fe55e7512a5c2e/dashboard/app.py",
+  "rank": 68,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "4eae6535513f4519",
+  "url": "https://github.com/amarhrs/Analisis-Penyewaan-Sepeda/blob/6c5705aae3aa76c9c005ac586205c8a03b1016d7/dashboard.py",
+  "rank": 69,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "7062ee56d9e5fa35",
+  "url": "https://github.com/fofananab/streamlit/blob/7e958374e56d48cafc56bc4e09cfd1e659703041/projet.py",
+  "rank": 70,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "db804d6adf8d44c7",
+  "url": "https://github.com/SaiaMazayaFatin/bike-rentals-dashboard/blob/2fc0258e1ca92e28b626b0ba28777f8bb5b6291b/dashboard/dashboard.py",
+  "rank": 71,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "2931136d1ae5c56e",
+  "url": "https://github.com/Corden404/SCAU-MachineLearning-Lab/blob/7dc6127d67bf4576616b023e3c590bdd445d4675/exp4/task9.py",
+  "rank": 72,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "bcf2af0c685942b3",
+  "url": "https://github.com/Subhranshu-123/BIKE2/blob/4e2bd8fc0719c01ddcb64fa4bad2430eeb51476d/BIKE 1  (1).py",
+  "rank": 73,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 2,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS bike;\nSELECT bike [season, yr, mnth, holiday, weekday, workingday, weathersit, temp, atemp, hum, windspeed, cnt];\nSAVE bike AS \"bike_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "ed1e8b7827b105dd",
+  "url": "https://github.com/januarsyah901/PPD/blob/093639eef255461cb06a8793cfd36a2b70ac2f21/P5/laporan/render_colab_outputs.py",
+  "rank": 74,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1971527c7708a176",
+  "url": "https://github.com/alvinodieno/pedasharing/blob/c5524e5ba977d73039ae3af2037cea940520479c/dashboard.py",
+  "rank": 75,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "16e5942e61686540",
+  "url": "https://github.com/wahyupelitajaya/Dicoding-Submission-Analysis-Data/blob/d62bb51c65d552c06ecdef9161e276277983b449/dashboard/dashboard.py",
+  "rank": 76,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "4ac2e19a4aa8a5b6",
+  "url": "https://github.com/Rapapap/PSD-UAS-IF3-TENSORFLOW/blob/5f767aa7845affcfc1e09159b160ea71d1733cfa/Dashboard.py",
+  "rank": 77,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "76420b8e1354a8cf",
+  "url": "https://github.com/zainzain22/lizastudy/blob/2e3e9a5167f0abee6f026a79603704b25bb9d8cc/dashboard.py",
+  "rank": 78,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "a618079851d2d985",
+  "url": "https://github.com/alvian2022/proyek_analisis_data_dicoding/blob/72dbffa0a2638e991b89802e8d18b723c2fe8cc8/dashboard.py",
+  "rank": 79,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "3574178c386e4632",
+  "url": "https://github.com/fitrihartanti4/Dashbord-Bike-Sharing-Dataset/blob/ca2226040f27f3cea7f65973acef0b80aa9d9a62/Dashboard.py",
+  "rank": 80,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "5bd85cd72b2ee1c1",
+  "url": "https://github.com/NerbFox/bike-sharing-analysis/blob/ecc7095e101d2cc655804a3f15a655842bad5e72/dashboard.py",
+  "rank": 81,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "702407cbec0d9ad7",
+  "url": "https://github.com/jah3/Machine-Learning/blob/b8f0946d84ccc572cda3c8048db7dc5871299d9d/lab1/app.py",
+  "rank": 82,
+  "changes": 3,
+  "lifted": 2,
+  "statements": 4,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 22,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nDROP df [instant, dteday];\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "47043833fdd5f43f",
+  "url": "https://github.com/malikkamal12/Rental-Bike/blob/86b63e8b06d8b41108bec247467000efc70d5894/dashboard.py",
+  "rank": 83,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "13bfe9826be5d043",
+  "url": "https://github.com/adityaananda17/dbAdit/blob/793b29d592c0d362a8aebbc30568c8c93d4dcfbb/dashboard.py",
+  "rank": 84,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "5204503d5a7ec7b2",
+  "url": "https://github.com/fskgiulia/algorithmic-data-analysis/blob/beb5f1001378bf6621c8f6d3f4a1c02727a17e16/CA5_material/ca5-code.py",
+  "rank": 85,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "37013aa47e626498",
+  "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/run_analysis.py",
+  "rank": 86,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "e42d51c0d743d3e2",
+  "url": "https://github.com/wcbih/Submission/blob/3c95d20490b35405edb803766a90ab5a4eaaf34f/dashboard.py",
+  "rank": 87,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "556f46fee8e14faf",
+  "url": "https://github.com/Gynoish/Proyek-Analisis-Data/blob/0866b2da85c1360d920b2fdaaded71da9b167bd1/dashboard.py",
+  "rank": 88,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "8e3b57bafe4ca13f",
+  "url": "https://github.com/edeo/landsat_looker/blob/d4c8f8f1edfdc2b3c83c42d3db0b67ef7baa4c66/heath/lin_reg.py",
+  "rank": 89,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "dc866147ae144015",
+  "url": "https://github.com/musmeong/streamlit-test/blob/e601e329678483d112fb45965dfe3a47620bc849/dashboard.py",
+  "rank": 90,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "27705e4a89c99077",
+  "url": "https://github.com/khalidalghifarii/bike-sharing-dashboard/blob/6e69812d9edf73f4dd6e4b0187151f0c47d2f962/dashboard.py",
+  "rank": 91,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1cf58d49fdd419ca",
+  "url": "https://github.com/Aflizaa/proyek_analisis_data/blob/1b3a5a9f09d001dc8c4316c29ad3bd4501e6a548/proyek_analisis_data.py",
+  "rank": 92,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "f1dab1a0f3485c70",
+  "url": "https://github.com/Revohndrsyh/Streamlit_analisis/blob/a6b42f6d97743c4a6a18195ee50b11608575d26a/dashboard.py",
+  "rank": 93,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "58650e545fec4801",
+  "url": "https://github.com/frenskuy/Proyek-Analisis-Data/blob/1121b8272172e65454742071d9a58579b1454932/dashboard.py",
+  "rank": 94,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "69e3ef3259a36491",
+  "url": "https://github.com/PaulTitto/Belajar-Analisis-Data-dengan-Python/blob/48844a0b9ff77d5a61f35b0195c7e9171c7cd3ec/dashboard.py",
+  "rank": 95,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "bd02a2979cfd4a07",
+  "url": "https://github.com/ola-sk/bike-sharing-case-study-linear-regression/blob/9c1ffcaef7b92806eab506584bec3269b10b243f/part 1/preprocess.py",
+  "rank": 96,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4ebe6431ee799166",
+  "url": "https://github.com/XnomaX/Submission-Dicoding/blob/bf34422469298971cc02f5faa102541e568527bc/dashboard.py",
+  "rank": 97,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "806a5e91971f020a",
+  "url": "https://github.com/mariouskono/bike-rental-analisis/blob/3ab58b7c77072c99b98a6e77e5a370bda5d441ac/dashboard/dashboard.py",
+  "rank": 98,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "d5ffa159bfc448b5",
+  "url": "https://github.com/HaykTarkhanyan/python_math_ml_course/blob/949d2b3951704ab12a2b6c03e7c0a525c1952b83/ml/06_feature_engineering/py_src/fe_measure.py",
+  "rank": 99,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "497abc712f58036b",
+  "url": "https://github.com/BapakmuLah/Bike-rental-analysis/blob/cbb1cc173c423b68e9a3846d83ff83d9f9cc187d/Dashboard/dashboard.py",
+  "rank": 100,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "01486a2b872f1f29",
+  "url": "https://github.com/fofananab/streamlit/blob/7e958374e56d48cafc56bc4e09cfd1e659703041/evolut.py",
+  "rank": 101,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "197b7f68717aa7e9",
+  "url": "https://github.com/MasDewaa/Analisis-Data-Bike-Sharing/blob/41553010a2bca4c8ac0f88604710a936427e35e4/dashboard.py",
+  "rank": 102,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "25240a5616219419",
+  "url": "https://github.com/m002b4kx4144/dicoding/blob/aa7e6aeb9100da3f129c856008febcd2ddf09baa/dashboard/dashboard.py",
+  "rank": 103,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "bde88876445a47b7",
+  "url": "https://github.com/disooqi/COMP-6321-Project/blob/0886e5726baa54b6b2cd3a92b18272ba226e41f4/dos/regression/bike_sharing/_pipeline.py",
+  "rank": 104,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "752630078705955d",
+  "url": "https://github.com/difadlyaulhaq/streamlit-to-deploy-data-analytics/blob/d3e076fdb462e489a07d09526f325909bc196285/dashboard/app.py",
+  "rank": 105,
+  "changes": 5,
+  "lifted": 4,
+  "statements": 6,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 14,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df_day;\nDERIVE df_day.temp2 = ((temp * 47) - 8);\nDERIVE df_day.atemp2 = ((atemp * 66) - 16);\nDERIVE df_day.hum2 = (hum * 100);\nDERIVE df_day.windspeed2 = (windspeed * 67);\nSAVE df_day AS \"df_day_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "93aa2c8821490524",
+  "url": "https://github.com/Swastymaharani/Streamlit-Proyek-Analisis-Data/blob/6337dcfa180efc46f4119f87652d6079a834c34f/dashboard.py",
+  "rank": 106,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "702165f1a3e9ddb1",
+  "url": "https://github.com/JunaidBhaimia/AI-ML/blob/c6d6e89a331601b0b5f824a5f0b3496e6b3390d5/LAB-Experiments/ML/SupervisedLearning/LIRvsDT.py",
+  "rank": 107,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "1e2b3ecf53029a5d",
+  "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/generate_models.py",
+  "rank": 108,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "e9f717f7aac9f7d3",
+  "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/simple_analysis.py",
+  "rank": 109,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "339ecf7753a3952e",
+  "url": "https://github.com/owhileo/WeeklyML/blob/0bb4f7c472852e51fa2ad348954e3914209586e6/week1/\u8d1d\u53f6\u65af\u4f18\u5316/\u5b9e\u9a8c/\u4ee3\u7801/data_process.py",
+  "rank": 110,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "8fd749bf8bbed75e",
+  "url": "https://github.com/4ranklyn/proyek_analisis_data_dicoding/blob/72cb1137cb24ccc315c288c0bebc4247eaf85773/dashboard/dashboard.py",
+  "rank": 111,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "98b8d4871e5b3cc4",
+  "url": "https://github.com/tedyhermawanto/analisis-data/blob/99159b462f7fdef82583870bbc5e6e224063c12f/Dashboard/Dashboard.py",
+  "rank": 112,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "9654f8ed3403c419",
+  "url": "https://github.com/curinethahubbard-a11y/DataVisualization/blob/f1be9ab3ad22517074a4e2631818d7e045b539e9/Hubbard_Curinetha_FinalProject.py",
+  "rank": 113,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "19a269ab5271f01b",
+  "url": "https://github.com/bluevita/Submission-Dicoding-Belajar-Data-Analytics-dengan-Python-/blob/f32bac1d0a14c20f1e6376488b6a96a54b97a8f6/dashbord/dashboard.py",
+  "rank": 114,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "40e905ed1706cfec",
+  "url": "https://github.com/PLRpower/computer-science-courses/blob/e8bf5079ad2434cfd734428189293551d6e9a5b8/a3-maths/boucle2/boucle2.py",
+  "rank": 115,
+  "changes": 2,
+  "lifted": 2,
+  "statements": 4,
+  "complete": true,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 16,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.atemp = (atemp * 10000);\nDERIVE df.temp = (temp * 41);\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "da0f51eaf11a5323",
+  "url": "https://github.com/MalikaPutriRahmawati/RentalSepeda/blob/a0bc79dda145036aa11afaae0c5c7fbe6e28ea46/dashboard/dashboard.py",
+  "rank": 116,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "356bc7d04f0f5608",
+  "url": "https://github.com/FahriPutra00/Dicoding-Dashboard_Bike_Sharing_Dataset_Analysis/blob/82221ae94bf8cf4fd97f296697d8cfbad53f07b1/Fahri_Submission_Dashboard.py",
+  "rank": 117,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "d8191ce1494c3544",
+  "url": "https://github.com/jramadhannw/Proyek_Analisis_Data/blob/c9f02fb3cbceed27d6d6e6cc8bfeebc491e40017/dashboard/dashboard.py",
+  "rank": 118,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "09c68eedbf5cd1ad",
+  "url": "https://github.com/ayuindah02/proyek-dicoding-DA/blob/b151cf74421b42f05b00eb8eddf9304e83ac1d02/dashboard/dashboard.py",
+  "rank": 119,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "fee74e185017f1f9",
+  "url": "https://github.com/fransco-go/bike_analyst/blob/be924f1a33a8e54e5e8b1207b0ad9685ac6433ab/bike_dashboard.py",
+  "rank": 120,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "49260e4f3a6f1cfc",
+  "url": "https://github.com/Basavaprabhu46/bike-rental-forecasting/blob/74cd7f6d8f653a1686cd5cb1cbd5b79f06a4f15a/notebooks/01_eda.py",
+  "rank": 121,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "841b149a7792d7b3",
+  "url": "https://github.com/jlxndro/sub_dataanalyst/blob/c4e9cf68f5bc3efb57c43b9fb117887fe1afc6b3/dashboard/dash.py",
+  "rank": 122,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "d2246fc19cd6a504",
+  "url": "https://github.com/fofananab/streamlit/blob/7e958374e56d48cafc56bc4e09cfd1e659703041/autremodel.py",
+  "rank": 123,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "397ec215ca7c9277",
+  "url": "https://github.com/wdffdw07/CityuSDSC2004CodePart/blob/59e2319259417174d7a29ef3af29b6d190b81aab/modeling_utils.py",
+  "rank": 124,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "e00d4e7e068dc7e8",
+  "url": "https://github.com/fitrihartanti4/Dashbord-Bike-Sharing-Dataset/blob/ca2226040f27f3cea7f65973acef0b80aa9d9a62/Dashboard Proyek.py",
+  "rank": 125,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "34c3771936602947",
+  "url": "https://github.com/shrigel/Data-Analysis/blob/6f0c2a9fca542347b6a4a02afaa3bd2e1e479ce5/Dashboard/dashboard.py",
+  "rank": 126,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "d3fb1901cb33ef97",
+  "url": "https://github.com/xiaofeng-iii/jc3509-bike-sharing-assessment/blob/a589953cc15aed62551599bdfa24efdaa3e83450/src/visualize_eda.py",
+  "rank": 127,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "ab41f8bd54970bec",
+  "url": "https://github.com/juliankkk/Project-Data-Analisis-/blob/9b33dc35d6c56dd7731f4760efe3cabd91fc15ac/dashboard1.py",
+  "rank": 128,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "ae3b1a4964f54e43",
+  "url": "https://github.com/Esylum/Rental-Bike-Analysis/blob/47d189c73800988197a28496c4d9ef2194f2453a/rent_data_analysis.py",
+  "rank": 129,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "7e7ec942558aae21",
+  "url": "https://github.com/Chinmay4285/classification-algorithms-project/blob/d019717b246f8b82ff9124250208877a0d62ab58/utils/data_utils.py",
+  "rank": 130,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "e614350ae8b832c2",
+  "url": "https://github.com/gmaaliki/bike-sharing-data-analysis/blob/d8342d82dea81177cdba558c83225f470dcb7a6a/dashboard/dashboard.py",
+  "rank": 131,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "77cd319a5619b011",
+  "url": "https://github.com/difadlyaulhaq/streamlit-to-deploy-data-analytics/blob/d3e076fdb462e489a07d09526f325909bc196285/dashboard/dashboard.py",
+  "rank": 132,
+  "changes": 5,
+  "lifted": 4,
+  "statements": 6,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 14,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df_day;\nDERIVE df_day.temp2 = ((temp * 47) - 8);\nDERIVE df_day.atemp2 = ((atemp * 66) - 16);\nDERIVE df_day.hum2 = (hum * 100);\nDERIVE df_day.windspeed2 = (windspeed * 67);\nSAVE df_day AS \"df_day_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "3bd69a13d3729b29",
+  "url": "https://github.com/Gufrilfirdaus/Analysis_Data_Bike_Sharing/blob/a5d4d3c4291cdadbbdf94e1a2b4a515692372a64/Streamlit_app.py",
+  "rank": 133,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "17f6a09c0713846c",
+  "url": "https://github.com/teotsi/Data_Mining_project/blob/9d81e70c1aeade2aeae9ece292f317e0a9617097/Reader.py",
+  "rank": 134,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "da1aac152c84a726",
+  "url": "https://github.com/papuys/streamlit/blob/04164cb0ff4cf9c0e594a51ad5ea1df561bc5815/dashboard/dashboard.py",
+  "rank": 135,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "959f007434f3e782",
+  "url": "https://github.com/jaycentg/bike-rent-dashboard/blob/ba92f0314fc9e3fd2cc66a4957d7df91ba626de6/dashboard/dashboard.py",
+  "rank": 136,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6f19565a40ed99d1",
+  "url": "https://github.com/asterracea/submission/blob/1306fa2a6563429090b9b9679fa29062dacefa09/dashboard/dashboard.py",
+  "rank": 137,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "d3f0087bb4a09055",
+  "url": "https://github.com/giommazz/kaggle-bike-sharing/blob/7981b58c035c86adee5f0b8e0dcd0e6e4f8b51b0/bike-sharing-solution-hour.py",
+  "rank": 138,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6700a1cc744e011a",
+  "url": "https://github.com/egeaktemur/Bike-Sharing-Project/blob/2cb416dcca236dd8185b37d03daf88bda0691904/Code.py",
+  "rank": 139,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "9c9c86fecebdd5c1",
+  "url": "https://github.com/alifrizqullahmaruf/Dicoding_ProyekAnalisisData/blob/938e70945b8ee6a655a05bb0449abe94381c0740/dashboard/dashboard.py",
+  "rank": 140,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "d9d2412979885802",
+  "url": "https://github.com/adityaananda17/dbAdit/blob/793b29d592c0d362a8aebbc30568c8c93d4dcfbb/dashboard/dashboard.py",
+  "rank": 141,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "2c90a633f289b810",
+  "url": "https://github.com/wisnufrmdhn/Project-Laskar-AI/blob/2fccdd67155c9788b539621891afc9772ad53847/dashboard/dashboard.py",
+  "rank": 142,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6231ac9411c82e38",
+  "url": "https://github.com/gabriellodwi/Bike-Sharing-Final-Project-Data-Analysis-with-Python/blob/49d456ef5fbab0ba890c4e5390af8cbfd06e2dca/Dashboard/dashboard.py",
+  "rank": 143,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6ec14a5cffb45203",
+  "url": "https://github.com/iwadas/uczenie_maszynowe/blob/6ea4f2d4edfce251ca916dd37ddf18a0cf1e2044/12_bike_sharing_time_series.py",
+  "rank": 144,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "5b260fa2e62f884d",
+  "url": "https://github.com/ailham4321/Proyek-Analisis-Data-Dicoding/blob/aba9c0f3c3e894250fdb33f1519cb58e8915039f/Dashboard/dashboard.py",
+  "rank": 145,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "326ba1f57d4bfd43",
+  "url": "https://github.com/dglcn/Proyek-akhir-analisis-data/blob/b7cbd6d9276996d94a2c5d0b68a8e24e3d0cbd2a/copy_of_proyek_analisis_data.py",
+  "rank": 146,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "8c5807f5c7453e95",
+  "url": "https://github.com/aljauzr/dataanalysis-submission-dicoding/blob/f2334687f77b2f72f4a08656256a3774b47aee7f/dashboard/dashboard.py",
+  "rank": 147,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "232ae265361d45ec",
+  "url": "https://github.com/leonardkumaro/Data-Analysis-With-Phyton/blob/a2e6a00a491001bbc6c32136409275c471b36e7b/dashboard/dashboard.py",
+  "rank": 148,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "f2f11ee6cc12c90f",
+  "url": "https://github.com/mhmmdridlo/bike-sharing/blob/91810edcca50b63ce3c11107f027ef24a309fc26/dashboard/dashboard.py",
+  "rank": 149,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "d3f57fc57e47a49f",
+  "url": "https://github.com/Aionn-99/Dicoding-Analisis-Data/blob/0f0717604c94a2acb148f5ea086f8d1abd04ab8c/dashboard/dashboard.py",
+  "rank": 150,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "eceecb4e4da60bfe",
+  "url": "https://github.com/KronosDP/bike-sharing-dashboard/blob/50aca61b7baad8bdb6ca9f159c14734afac13249/dashboard/dashboard.py",
+  "rank": 151,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "21027123c7e1df04",
+  "url": "https://github.com/naufalFaqih/submission-bike-analysis/blob/5955f51081205e30d0b0b8ff33eddbe370bdda0b/dashboard/dashboard.py",
+  "rank": 152,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "928ada1a24c20926",
+  "url": "https://github.com/rizkybossman/submission-dicoding-phyton1/blob/2dbcd41e7b92138232c38f8d617bd6bac7efea54/dashboard/dashboard.py",
+  "rank": 153,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "705fe8916a699fb8",
+  "url": "https://github.com/DavidMarioYS/Proyek-Analisis-Data-Dicoding-Bangkit/blob/6d56abd3872cdf07e54a7dc202926e5942fea02d/dashboard/dashboard.py",
+  "rank": 154,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "ae02dc2f8458be1d",
+  "url": "https://github.com/amayaesh/Semester3_ML/blob/36aee8dc65e3d1bd79cd6e579f05a7cf26c1bb50/tugasmandiri_03.py",
+  "rank": 155,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "99cd8257b20028a4",
+  "url": "https://github.com/anindyalkwr/bike-sharing-dashboard/blob/af115d354c6dc309b531298eea42e035074cf6b5/dashboard/dashboard.py",
+  "rank": 156,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "2efd60073effe1c1",
+  "url": "https://github.com/naznienfevrianne/dicode/blob/5c0a7fe7e908e036eb25b116dd8306a90224ef32/dashboard/dashboard.py",
+  "rank": 157,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4b71c2ca9555ed0d",
+  "url": "https://github.com/kianaaa19/bike-sharing-rentals/blob/f1fb77e80c461142d23c5a6e99188e598d828047/dashboard/dashboard.py",
+  "rank": 158,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "310320bcf9e33eed",
+  "url": "https://github.com/Swastymaharani/Proyek-Analisis-Data/blob/da26cdd159c458088b59022c6d448ce4104edd11/dashboard/dashboard.py",
+  "rank": 159,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "a3d44fc849e65fb3",
+  "url": "https://github.com/Diantaland/Proyek-Analisis-Data/blob/0bf895f0ee67a782cdc9aeb78a6e89630e6aea8d/proyek_analisis_data.py",
+  "rank": 160,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "47a4fb84f3513893",
+  "url": "https://github.com/Ivsucram/ACDC/blob/a57de2438edcf01de16d10e5a4f32b0583da540b/ACDCDataManipulator.py",
+  "rank": 161,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "2cc940cbcc2f1a68",
+  "url": "https://github.com/deadfighter10/BikeRentDemand/blob/03a2a22202c5254fab667f5fbab7af2b6a281f9e/main.py",
+  "rank": 162,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1dc314a6b4eeaf24",
+  "url": "https://github.com/cchalc/tsfy23_dryrun/blob/7bad9b4eef0a7c09bf43a6ad59f9d29d4f7b96ba/notebooks/eda_extras/ipywidgets_data_apps.py",
+  "rank": 163,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "5fb6241bbc57b8f6",
+  "url": "https://github.com/puransinha/Bike_rides/blob/596bc31b180deac26975361d741f51114ea46f84/bikerides_assignment_Final-ver1.py",
+  "rank": 164,
+  "changes": 3,
+  "lifted": 3,
+  "statements": 5,
+  "complete": true,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 26,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS bike;\nPARSE_DATE bike.dteday;\nDROP bike [instant, hum, temp, atemp, windspeed];\nDROP bike [dteday];\nSAVE bike AS \"bike_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "16f1e59451ebcea0",
+  "url": "https://github.com/Karan9783/bike-rental-eda/blob/a3c06fde1c33892302372c6a839b5202d1a18b91/EDA.py",
+  "rank": 165,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "b99aa3545dcb8e43",
+  "url": "https://github.com/aleailearn/Proyek_Analisis/blob/d5590a20a7da2c9739fac1a6162027daf7ca0a6b/Dashboard/Dashboard.py",
+  "rank": 166,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 4,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "1e98d8bad103e37b",
+  "url": "https://github.com/biradarshiv/Python/blob/39160881babc1d158c33d74379883827c942a8b9/Matplotlibrary/2_First_Project.py",
+  "rank": 167,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "68411d47937119c8",
+  "url": "https://github.com/rudranshupaul/ML_Internship_Projects/blob/199565ea3d319fce1c0e33161f5179bdd83595a4/bike_sharing_project/bike_sharing_demand.py",
+  "rank": 168,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "b87a6ea7a220b5a0",
+  "url": "https://github.com/NkiroteHeda/BIKE-SHARING-ANALYSIS/blob/3f70b0aafe24e4fa6c4d3fa050e629331d6eb3d8/Bike-sharing-guided.py",
+  "rank": 169,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "836cab0ee5d904ea",
+  "url": "https://github.com/alvianrnn/Proyek-Bike-Sharing-m180d4ky1416/blob/37aca6f4be30298f071d2aa41f8f62a62073de2e/proyek_analisis_data_bike_sharing.py",
+  "rank": 170,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "2ba378866ca3fdef",
+  "url": "https://github.com/Ilhamokta74/Analisis-Data-dengan-Python/blob/3653dc344f633d49246c5a08a4cf93c78ab37e4c/belajar_analisis_data_dengan_python.py",
+  "rank": 171,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "afac34129364178e",
+  "url": "https://github.com/juliyonose7/applied-data-analytics-portfolio/blob/f9fc4155b99f9160b161f878cd079bfa5a6b57a5/Bike renting/analisis_bicicletas.py",
+  "rank": 172,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "14bf42f93c138603",
+  "url": "https://github.com/putribila/Bike-Sharing-Dashboard/blob/28181ed3fffcda60a19098b19fda5f7b197cb543/proyek_analisis_data_bike_sharing.py",
+  "rank": 173,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "b143b92a9835b304",
+  "url": "https://github.com/YudhaWS13/Bike_Sharing/blob/037e72112f478124883cd92693bf827fc05aff5d/dashboard/bike_sharing_dashboard.py",
+  "rank": 174,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "0410625ee614d215",
+  "url": "https://github.com/bumbutudor/AI-LAB/blob/97d4023954b34905e91055076727ae4acfe3fd55/CR-161/Samoil Ion/LAB3/index.py",
+  "rank": 175,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "2ff4ed4c0cef205c",
+  "url": "https://github.com/lfariabr/masters-swe-ai/blob/f33097bf549bc07d92ce911116b2e0415c65a22d/2026-T2/MLN/assignments/Assessment3/notebook/nb_cells_a.py",
+  "rank": 176,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "5f00ff4517eb7a57",
+  "url": "https://github.com/shopie14/dicoding-analisis-data-dgn-python/blob/2458baccdbe3452ef40d7504eee16769a22b8157/proyek_analisis_data_bike_sharing_dataset.py",
+  "rank": 177,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "70a929fdfcc78f65",
+  "url": "https://github.com/yufanana/MachineLearning02450/blob/f5c1e34c4db083976f0fab80a52f937b6d8bb654/project/Scripts/Group_7_Project_1_Scripts/karrar-6Lines.py",
+  "rank": 178,
+  "changes": 6,
+  "lifted": 5,
+  "statements": 7,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 15,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant];\nDERIVE df.temp = ((temp * (39 - -8)) + -8);\nDERIVE df.atemp = ((atemp * (50 - -16)) + -16);\nDERIVE df.hum = (hum * 100);\nDERIVE df.windspeed = (windspeed * 67);\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "2038f921a2240be4",
+  "url": "https://github.com/VeXEveryOne/MIREA/blob/a55f6c1b05d3768246d004356f430d3f7207466a/4/BD/practice_2/scripts/03_Visualization.py",
+  "rank": 179,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "b59af71965ef21bc",
+  "url": "https://github.com/ilhaaam24/Submission-DIcoding-Analisis-Data-dengan-Python/blob/0a9d5108fc23d7fa5bfe0af8ce953cf62d55b92d/dashboard/dashboard.py",
+  "rank": 180,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "6fbee4e53c679f00",
+  "url": "https://github.com/nafisdev/dataquest/blob/6a17efa5fa4f432156f569bcc813d072812bfa41/data-visualization-fundamentals/Scatter Plots and Correlations-521.py",
+  "rank": 181,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS bike_sharing;\nPARSE_DATE bike_sharing.dteday;\nSAVE bike_sharing AS \"bike_sharing_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "63f9716eae9915cc",
+  "url": "https://github.com/tfajarama/machine-learning-terapan/blob/63cb18826e882d1a95e600580fe082226dfbab28/projects/half-class-project/submission_1.py",
+  "rank": 182,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "7c0c041c74dd0a3d",
+  "url": "https://github.com/wandagustrifa/bike-sharing/blob/21cbbafd2daa85e08aa56c0c11d647fccae620d1/dashboard/Dashboard.py",
+  "rank": 183,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "af6d3501295a1799",
+  "url": "https://github.com/ryorichie/learn/blob/4581eca7684688304eb749532c9afe502bd22e8a/Python/Bangkit 2024/Dicoding Course/pandas/Tugas_Akhir/web.py",
+  "rank": 184,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "73de99d885e9c167",
+  "url": "https://github.com/adnamard/Rental-Bike-Dashboard/blob/c82ecb6bb100a0ac3c2a1a07b768996ac955b1c8/app.py",
+  "rank": 185,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "8ece1a1ebf4fc937",
+  "url": "https://github.com/raflinugrahasyach/Portfolio/blob/5b818ac68e4d5a0e2205fd0195c68990807ba170/Data_Visualization/Bike_Sharing_Analysis_Dashboard/app.py",
+  "rank": 186,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4a8f1634113476f8",
+  "url": "https://github.com/jturner421/dataquest/blob/9043272663a1179d8dce99017ec8f641da8ed899/Data Visualization Fundamentals/Scatter Plots/Answers.py",
+  "rank": 187,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "5352236461b527c7",
+  "url": "https://github.com/lfariabr/masters-swe-ai/blob/f33097bf549bc07d92ce911116b2e0415c65a22d/2026-T2/MLN/assignments/Assessment3/exports/MLN601FariaLuisBrief3v4.txt",
+  "rank": 188,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1ecee30069e3c0e3",
+  "url": "https://github.com/YoungDong99/Py-bigdata-analytics/blob/90337fdf64e0d14c258012359deaa7ba1d3e4b96/MachineLearning/chap08_Tree_Ensemble/exam02/exam03_XGBoostRegressor.py",
+  "rank": 189,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "ef0cf46cd3a365e8",
+  "url": "https://github.com/lfariabr/masters-swe-ai/blob/f33097bf549bc07d92ce911116b2e0415c65a22d/2026-T2/MLN/assignments/Assessment3/submission/MLN601FariaLuisBrief3.txt",
+  "rank": 190,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "0811f87ee78f7e94",
+  "url": "https://github.com/VeXEveryOne/MIREA/blob/a55f6c1b05d3768246d004356f430d3f7207466a/4/BD/\u0413\u0443\u0431\u0430\u0440\u0435\u0432\u0421\u0410/\u0418\u0441\u0445\u043e\u0434\u043d\u0438\u043a\u0438/build_reports.py",
+  "rank": 191,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1028bafd08b6deae",
+  "url": "https://github.com/aldrayn/dashboard/blob/93b07139f8f0370d12d235ebbba6447df2d9f991/proyek_analisis_data/dashboard/dashboard.py",
+  "rank": 192,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "f6a6ebf389013030",
+  "url": "https://github.com/realshubhamraut/CDAC-DBDA-coursework/blob/74ce47e854291be30aad697c00a7efd4c2396e5c/07.advanced-analytics-stats/ARCHIVE/module_6_AdvancedAnalyticsUsingStatistics/AdvancedAnalyticsUsingStatistics_Assignments CDAC/03.04 vineeta_assignment.py",
+  "rank": 193,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "711ec46e8958907c",
+  "url": "https://github.com/fagan2888/py_homework/blob/e12d96c3bd7b46538f149e79163495ddc072e0fb/book1/stat_test.py",
+  "rank": 194,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "f70fad5533c171a2",
+  "url": "https://github.com/kianaaa19/bike-sharing-rentals/blob/f1fb77e80c461142d23c5a6e99188e598d828047/dashboard.py",
+  "rank": 195,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "3ebfb122dba463db",
+  "url": "https://github.com/reallyz/shiyanlouSratches/blob/205786de38d4fd15a7a2deeb5d9290a86f5354fc/MoreAboutPy/e-2-2.py",
+  "rank": 196,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1797763b514b5b2d",
+  "url": "https://github.com/dwsafperri/Data_Analyst_Project_Dicoding/blob/8646f86c6ead80170695def074e970e82a9eb12b/dashboard/dashboard.py",
+  "rank": 197,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6204ab41ced13409",
+  "url": "https://github.com/aleailearn/Analisis_proyek/blob/681cb4c59fc0d85a003c499d5618d9c5cd28f8d7/Dashboard/Dashboard.py",
+  "rank": 198,
+  "changes": 2,
+  "lifted": 0,
+  "statements": 4,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "46c3453b0f0cae61",
+  "url": "https://github.com/Grego003/bike_rental_dashboard/blob/bfdbfda9162b918027d625ac1ecff911989564fa/dashboard/dashboard.py",
+  "rank": 199,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "3d4be4f7cb991a8d",
+  "url": "https://github.com/bogacsmz/legibright-trust-audit/blob/14dc28e07eef3eb1555a644d424240e249facb19/scripts/generality_check.py",
+  "rank": 200,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "0433e3230e663888",
+  "url": "https://github.com/fofananab/streamlit/blob/7e958374e56d48cafc56bc4e09cfd1e659703041/les Autremodel.py",
+  "rank": 201,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": true
+ },
+ {
+  "id": "8e581e59c9e9bfe7",
+  "url": "https://github.com/wdffdw07/CityuSDSC2004CodePart/blob/59e2319259417174d7a29ef3af29b6d190b81aab/q1_eda_script.py",
+  "rank": 202,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6e15d38b0a7aad8d",
+  "url": "https://github.com/geryyose/Bike-Sharing-Analysis/blob/475b91d69a46fe96e6c971367d638aa2841a52b3/dashboard/dashboard.py",
+  "rank": 203,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "c2988a2046daa3f0",
+  "url": "https://github.com/Ankitk25/bike-sharing-demand-prediction/blob/8a111dc38a4837578dd9514f29b9b630951c0d96/Bike Sharing Demand.py",
+  "rank": 204,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "9bd5790f25ef7860",
+  "url": "https://github.com/MeiLing19/Proyek-Analisis-Data-Bike-Sharing-Datasets/blob/2b48e9492ca8d32e3785402c67f38937bd25cd5b/proyek_analisis_data.py",
+  "rank": 205,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "f45407d8b8936469",
+  "url": "https://github.com/yusufbagussh/bike-sharing-dashboard/blob/24bda6f293e6f7a2a94939a9aee41e99ac123b55/dashboard/main_data.py",
+  "rank": 206,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "6bee1efb56755114",
+  "url": "https://github.com/razialkindi/bike-rental-visualization/blob/54b02bc59468866449bcdb966160b5e75a88b005/Dashboard/dashboard.py",
+  "rank": 207,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "9cf9b7c8ff1daf33",
+  "url": "https://github.com/Sul-bot/Dicoding-Data-Analysis/blob/0669ccc9e1b6d0eed6e317b8c1b82b8a7e542e17/dashboard/dashboard.py",
+  "rank": 208,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "815cc2d2329daa52",
+  "url": "https://github.com/febriananursyifarizqi/Bike-Sharing-Dashboard/blob/39aa6dcfce3396cf5d18b96a32491e7c3f0b8398/dashboard/dashboard.py",
+  "rank": 209,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "5b11ef29588f6a36",
+  "url": "https://github.com/eeshangpt/bike_sharing_analysis/blob/eb347f267ec343fc1c3294bdc1cf2302bd00ef39/linear_regression_analysis.py",
+  "rank": 210,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "965088a5b12fb14c",
+  "url": "https://github.com/WatsonNick/bike-sharing-data-analysis/blob/4f077dd923ce913534a289fb03729bfd5d58f1a9/dashboard/dashboard.py",
+  "rank": 211,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "05434fd724aa12fc",
+  "url": "https://github.com/mellygsln/dashboard2/blob/ce3e7bf165e44508c385e6a48415c35dcd9d4dd8/dashboard/tugasbangkit.py",
+  "rank": 212,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "b0a3f26244baa04b",
+  "url": "https://github.com/mrasooli/demo-devx/blob/51743ef0e3c79eef2250bf1d5f0979dd12852bf4/notebooks/eda_extras/ipywidgets_data_apps.py",
+  "rank": 213,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "82c3fbd372346bb3",
+  "url": "https://github.com/fedonatt/dicoding-submission-bike_share/blob/5d427f845721bd91b1a65cb5fcf61e3415800c99/dashboard/dashboard_bike.py",
+  "rank": 214,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "20e17615f8c4b89b",
+  "url": "https://github.com/ShashankKatti26112/Data-Science-with-Python/blob/2a94a57563b2e35cd276cbac1bf40b72c500d75c/Class 24 (Data Science with Python)/bikesharing_lr.py",
+  "rank": 215,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "710d2bbef5712f6c",
+  "url": "https://github.com/giommazz/kaggle-bike-sharing/blob/7981b58c035c86adee5f0b8e0dcd0e6e4f8b51b0/bike-sharing-solution-day.py",
+  "rank": 216,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "1c9f734b0a7bb089",
+  "url": "https://github.com/alvianrnn/Rev_Proyek_Analisis_Data/blob/49731afc6879d32245f31f081dc196d81af1fb14/proyek_analisis_data_bike_sharing.py",
+  "rank": 217,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "c351cc3b17829a77",
+  "url": "https://github.com/puransinha/Bike_rides/blob/596bc31b180deac26975361d741f51114ea46f84/Final_bikerides_assignment-ver2.py",
+  "rank": 218,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "25239970d884f423",
+  "url": "https://github.com/pratama-dev/bike-sharing-analytics-dashboard/blob/30015ef70d5b3913b0c700ef8ee56e4721c816d7/Dashboard/dashboard.py",
+  "rank": 219,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "c0e115cc5622be69",
+  "url": "https://github.com/ramzan5/DashBoard/blob/6b60548fa8df8b3e0167257aaf050713cd3cd06b/DataVisualization.py",
+  "rank": 220,
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "70ac89858eaba1c9",
+  "url": "https://github.com/ariiqalfajri/PDA/blob/a79b331d2d2f3590baea17766a44f8fb82f0ef06/Dashboard/proyek_analisis_data.py",
+  "rank": 221,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "c3da6e3fd8cc8d69",
+  "url": "https://github.com/mellygsln/dashboard3/blob/96858ec75eebfd9e22c9aeec69ab3bfb1f7a4660/dashboard/tugasbangkitrevision.py",
+  "rank": 222,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "4280e4ae3fca537f",
+  "url": "https://github.com/VeXEveryOne/MIREA/blob/a55f6c1b05d3768246d004356f430d3f7207466a/4/BD/practice_2/scripts/build_report.py",
+  "rank": 223,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "1d10cf448e949da2",
+  "url": "https://github.com/mzidanatsal/Bike-Sharing-Rentals-Dicoding-Final-Project/blob/780915c67af59efdb82efd1196804799003052b0/final_project_bike_rental_zidan.py",
+  "rank": 224,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "bc72ef69700f1665",
+  "url": "https://github.com/ading11/Bangkit_Bike_Rental/blob/5c59812f7c8a9ac46ced45f806893ebdf803a6c2/Dasboard/bike_sharing_dashboard.py",
+  "rank": 225,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "880716653beb077b",
+  "url": "https://github.com/azzahangely/bike-sharing/blob/a355f7e92275513e9891596729c30769daf20aa9/Dashboard/dashboard_bike-sharing-analysis.py",
+  "rank": 226,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "c50fcefaaa30fb34",
+  "url": "https://github.com/Azizahdahlan/bike-sharing-analysis/blob/118d183503ad02a4af9aaeeb5dd8be0778a21da8/code/bike_sharing_analysis.py",
+  "rank": 227,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "8703426b846baafa",
+  "url": "https://github.com/junjieshen/resources/blob/04c029e78cd571dc4374ab69a1f2fd7db5788ae8/scripts/plot/matplot.py",
+  "rank": 228,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "490c821eb71a048e",
+  "url": "https://github.com/yufanana/MachineLearning02450/blob/f5c1e34c4db083976f0fab80a52f937b6d8bb654/project/Scripts/Group_7_Project_1_Scripts/karrar-Tem&BikeRent.py",
+  "rank": 229,
+  "changes": 6,
+  "lifted": 5,
+  "statements": 7,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 16,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant, dteday];\nDERIVE df.temp = ((temp * (39 - -8)) + -8);\nDERIVE df.atemp = ((atemp * (50 - -16)) + -16);\nDERIVE df.hum = (hum * 100);\nDERIVE df.windspeed = (windspeed * 67);\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "7d1780bcac299b55",
+  "url": "https://github.com/Detailscool/YHMachineLearning/blob/6a73ea2d288e558b04d403c8de46513c751e4e20/ML/Regression/ReadFile&Predict-BikeSharing.py",
+  "rank": 230,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "737d9490aecf9aaa",
+  "url": "https://github.com/jeffwzhong1994/ML_Code_Implementation/blob/8b292bc692e1f0ec38a1e31483d2e83af668d2bd/data_science_industrial_practice/bikeshare.py",
+  "rank": 231,
+  "outcome": "not Python 3"
+ },
+ {
+  "id": "151314f89aecd0b9",
+  "url": "https://github.com/titmos/Data-Quest-learning/blob/cb87eda6f5af075da519ba71b223dc033c359060/Data_Visualization_learns.py",
+  "rank": 232,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "21690652ddcbff8d",
+  "url": "https://github.com/ACDC-paper-double-review/ACDC/blob/bf44a691d3860eb35731c0ce41f606188f233b1a/ACDCDataManipulator.py",
+  "rank": 233,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "708280e11a0534dd",
+  "url": "https://github.com/BhumikaSha111/BhumikaSharmaBikeSharingAssig/blob/d10649772393863b7ab1f7e925761b136b6b0ee9/BhumikaSharma_Bike Sharing Assig.py",
+  "rank": 234,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 20,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ],
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant, dteday];\nSAVE df AS \"df_lifted.csv\";\n",
+  "removals": 0,
+  "dates_admitted": false
+ },
+ {
+  "id": "d3a5ccebcd27a24e",
+  "url": "https://github.com/Alle-gut/Tugas-Akhir-Data-Analysis-Dicoding/blob/e017ff7dce5d9b0b9c820289e4f4943e533c1d70/submission/Dashboard.py",
+  "rank": 235,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "205fe5dc5ae3981a",
+  "url": "https://github.com/BreadAndButterMHJ/Data_Processing_Course_Final-_Project/blob/2840a525c70d292f4c5b10b46eecc04f4d0e278b/utils/data_processing.py",
+  "rank": 236,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "f7cb7f514a0c7bf8",
+  "url": "https://github.com/auliakhalfanii/analisis-data-dengan-python/blob/94c127ae733d6268187f82dea2fb1fb00ffe7493/dashboard/dashboard.py",
+  "rank": 237,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "8094b3882586eaef",
+  "url": "https://github.com/Suryy16/IDCamp-Data-Science-2024/blob/66b434c0b0822b5da69122b209f63805798bb86c/dashboard/dashboard.py",
+  "rank": 238,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "f40c8e04052f09db",
+  "url": "https://github.com/lfariabr/masters-swe-ai/blob/f33097bf549bc07d92ce911116b2e0415c65a22d/2026-T2/MLN/assignments/Assessment3/notebook/nb_cells_v4_a.py",
+  "rank": 239,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "01de98e1f6e3cf22",
+  "url": "https://github.com/aqilarsul/Bike-Sharing-Rentals-Dicoding-Final-Project/blob/fe6ae6859fb8adac4639dbd276e9825cab288488/data_project_analysis_bike_sharing_dataset.py",
+  "rank": 240,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "02e76daa25302932",
+  "url": "https://github.com/Odellc/stats/blob/cb29e0b3b11ec9d1ffcc5274b598bcb869696ff6/poisson_model.py",
+  "rank": 241,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "fea7de747e6fa755",
+  "url": "https://github.com/nandaarya/bike-sharing-dataset-data-analysis/blob/47ccc5cdd5b5ac540c4e1592b6de7503ff6660eb/proyek_analisis_data_bike_sharing_dataset.py",
+  "rank": 242,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "7ab9b938c4be3fba",
+  "url": "https://github.com/Suryy16/Bike-Sharing-Data-Analysis/blob/bed1d3a81469908cdf00a8508ce5b014d537a8f8/submission/dashboard/dashboard.py",
+  "rank": 243,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "6c21772b09f45db5",
+  "url": "https://github.com/VeXEveryOne/MIREA/blob/a55f6c1b05d3768246d004356f430d3f7207466a/4/BD/practice_1/scripts/02_BikeSharing.py",
+  "rank": 244,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "586e4879107d87c5",
+  "url": "https://github.com/andreichiro/Insper_PostGraduate/blob/d0ba653faf91fdf6ca7d0a68d500e567d5495c1a/CS/Aula4/lab5/lab5.py",
+  "rank": 245,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "d247a946a4e43998",
+  "url": "https://github.com/yonviuinsu/submission_data_analysis/blob/4fe0eb129d8e58b4345693670822fcb2556c9daf/submission/dashboard/dashboard.py",
+  "rank": 246,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "60542425061020ba",
+  "url": "https://github.com/aorursy/new-nb-6/blob/9270b04b37cc46cc1e416fd04e96b5bfd55cc5d5/preecee_bike-sharing-eda-and-ensemble-modelling.py",
+  "rank": 247,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "df0c13c04986a946",
+  "url": "https://github.com/lfariabr/masters-swe-ai/blob/f33097bf549bc07d92ce911116b2e0415c65a22d/2026-T2/MLN/assignments/Assessment3/notebook/nb_cells_v5.py",
+  "rank": 248,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "5eb31c67066fe01d",
+  "url": "https://github.com/JoyceMbiguidi/Machine-Learning/blob/8d0b28a5782eee8a21472b6f824336a4f6621298/Python/Forets aleatoires/random_forest_regression__bike.py",
+  "rank": 249,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "e98f40cf7cf24f35",
+  "url": "https://github.com/lfariabr/masters-swe-ai/blob/f33097bf549bc07d92ce911116b2e0415c65a22d/2026-T2/MLN/assignments/Assessment3/exports/MLN601FariaLuisBrief3v3.txt",
+  "rank": 250,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "f439a3898036810c",
+  "url": "https://github.com/YoungDong99/Py-bigdata-analytics/blob/90337fdf64e0d14c258012359deaa7ba1d3e4b96/MachineLearning/chap12_TimeSeries/lecture/step01_default_model.py",
+  "rank": 251,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "f63a8ce1cefba76d",
+  "url": "https://github.com/VeXEveryOne/MIREA/blob/a55f6c1b05d3768246d004356f430d3f7207466a/4/BD/\u0410\u043b\u0431\u0430\u0445\u0442\u0438\u043d\u0418\u0412/\u0418\u0441\u0445\u043e\u0434\u043d\u0438\u043a\u0438/build_reports.py",
+  "rank": 252,
+  "outcome": "does not read the data file with pd.read_csv(path)"
+ },
+ {
+  "id": "14714f372f976fa4",
+  "url": "https://github.com/AndersonCSM/python_development/blob/7e74724fb5942af8a04588c1080f9fdea6424123/intro-machine-learning/ExerciciosResolvidos/Data-visualization-fundamentals/Scatter Plots and Correlations-521.py",
+  "rank": 253,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ },
+ {
+  "id": "87f5594e224a2cfb",
+  "url": "https://github.com/aqwertyuiop48/upgrad_programming_1/blob/62edb536807eee1c45f567a91dc5a94932bdc360/2_Course_continuation/_1_Exam_1/2_Machine_learning/1_Linear_regression/2_Bike_sharing_assignment/Bike_sharing_assignment.py",
+  "rank": 254,
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
+ }
+]

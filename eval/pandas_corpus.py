@@ -1,7 +1,10 @@
 """Data certificates for real pandas scripts (RQ9).
 
     py -3 eval/pandas_corpus.py collect [titanic|houses]    # once: scripts from GitHub (needs gh, signed in)
-    py -3 eval/pandas_corpus.py [titanic|houses] [path/to/preplang.exe]
+    py -3 eval/pandas_corpus.py [titanic|houses] [--derived] [path/to/preplang.exe]
+
+With --derived the second lifter version (PARSE_DATE and DERIVE) is used, and the results go
+to eval/results/pandas_corpus[_houses]_derived.json and .md; without it, the first version.
 
 Two corpora, each from GitHub code search in GitHub's ranking order, without duplicates:
   * titanic  Python files with read_csv, fillna and Embarked (the Kaggle Titanic data)
@@ -56,9 +59,12 @@ CORPORA = {  # name -> code search query, data folder, columns that get extra mi
 NAME = sys.argv[2] if len(sys.argv) > 2 and sys.argv[1] == "collect" else (
     sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in CORPORA else "titanic")
 QUERY, DATA, HOLES, RESULT = CORPORA[NAME]
+DERIVED = "--derived" in sys.argv  # the second lifter version, written after these corpora were evaluated
+RESULT += "_derived" if DERIVED else ""
 TITANIC = DATA  # the data folder of the corpus (kept under this name: train.csv and test.csv)
 CORPUS = ROOT / "eval" / "data" / ("pandas_corpus" if NAME == "titanic" else f"pandas_corpus_{NAME}")
-WORK = ROOT / "eval" / "work" / ("pandas_corpus" if NAME == "titanic" else f"pandas_corpus_{NAME}")
+WORK = ROOT / "eval" / "work" / (("pandas_corpus" if NAME == "titanic" else f"pandas_corpus_{NAME}") +
+                                  ("_derived" if DERIVED else ""))
 
 
 def prepare_houses():
@@ -203,7 +209,7 @@ def batches(seed_count=5):
 def run_script(compiler, script_id, source):
     record = {"id": script_id}
     try:
-        result = lift(source, derived=False)  # the lifter as it was for these held-out corpora
+        result = lift(source, derived=DERIVED)
     except SyntaxError:
         record["outcome"] = "not Python 3"
         return record, None
@@ -357,5 +363,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "collect":
         collect()
     else:
-        rest = [arg for arg in sys.argv[1:] if arg not in CORPORA]
+        rest = [arg for arg in sys.argv[1:] if arg not in CORPORA and arg != "--derived"]
         main(Path(rest[0]).resolve() if rest else ROOT / "build" / "Release" / "preplang.exe")

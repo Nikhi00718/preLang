@@ -1,0 +1,30 @@
+\begin{table}[t]
+\caption{Other people's pandas scripts for the monthly traffic and bike data (RQ5): lifted with derived columns and dates, compiled on the first month and run on every later month; the ground truth is the lifted pandas statements run on the same month. The traffic scripts were the development set of the second lifter version.}
+\label{tab:rq-drift}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & Traffic & Bikes, daily & Bikes, hourly \\
+ & (development) & (held out) & (held out) \\
+\midrule
+GitHub files & 241 & 254 & 450 \\
+lifted, in scope & 42 & 19 & 12 \\
+compiled on the first month & 41 & 19 & 12 \\
+\quad with a removal that can run again & 3 & 0 & 1 \\
+statements lifted & 104 & 38 & 21 \\
+\quad of them \texttt{DERIVE} & 51 & 22 & 7 \\
+\quad of them \texttt{PARSE\_DATE} & 36 & 9 & 7 \\
+runs on later months & 2,542 & 437 & 276 \\
+\emph{With deoptimization:} as the script & 2,542 & 437 & 276 \\
+\quad stopped where the script fails & 0 & 0 & 0 \\
+\quad refused, script runs & 0 & 0 & 0 \\
+\quad different (wrong) & 0 & 0 & 0 \\
+\quad ran with removals re-enabled & 6 & 0 & 0 \\
+\emph{Full certificate:} as the script & 2,536 & 437 & 276 \\
+\quad refused, script runs & 6 & 0 & 0 \\
+\quad different (wrong) & 0 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
