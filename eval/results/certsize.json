@@ -1,0 +1,96 @@
+[
+ {
+  "program": "metadata_only.prep",
+  "columns": 3,
+  "file_columns": 6,
+  "full": 6,
+  "admission": 3,
+  "items": [
+   2,
+   1
+  ]
+ },
+ {
+  "program": "ml_split.prep",
+  "columns": 7,
+  "file_columns": 7,
+  "full": 9,
+  "admission": 7,
+  "items": [
+   2
+  ]
+ },
+ {
+  "program": "optimize.prep",
+  "columns": 9,
+  "file_columns": 12,
+  "full": 12,
+  "admission": 9,
+  "items": [
+   2,
+   1
+  ]
+ },
+ {
+  "program": "students.prep",
+  "columns": 6,
+  "file_columns": 6,
+  "full": 9,
+  "admission": 6,
+  "items": [
+   2,
+   1
+  ]
+ },
+ {
+  "program": "tableset.prep",
+  "columns": 16,
+  "file_columns": 18,
+  "full": 16,
+  "admission": 16,
+  "items": []
+ },
+ {
+  "program": "traffic",
+  "columns": 6,
+  "file_columns": 9,
+  "full": 15,
+  "admission": 6,
+  "items": [
+   2,
+   2,
+   2,
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "program": "bikes",
+  "columns": 7,
+  "file_columns": 16,
+  "full": 17,
+  "admission": 7,
+  "items": [
+   2,
+   2,
+   2,
+   2,
+   1,
+   2
+  ]
+ },
+ {
+  "program": "taxi",
+  "columns": 9,
+  "file_columns": 20,
+  "full": 15,
+  "admission": 9,
+  "items": [
+   1,
+   2,
+   2,
+   1
+  ]
+ }
+]

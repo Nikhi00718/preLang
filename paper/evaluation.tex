@@ -210,6 +210,16 @@ deoptimization against at most \CcFullAnalysesMax{} for the full certificate alo
 \CcRatioMax$\times$ as many), and every compilation took \CcMsMin{} to \CcMsMax\,ms. The analysis is
 cheap because it runs on dataset states, not on data.
 
+The certificates are small enough to read. For the \CsPrograms{} table programs, counting a type, the
+absence of missing values and each bound as one fact, the full certificate has \CsFullMin{} to
+\CsFullMax{} facts, the admission certificate here holds only the type of each certified column, and
+each of the \CsItems{} item certificates needs \CsItemMin{} or \CsItemMax{} facts beyond it. The real
+pipelines' certificates mention \CsTrafficCols{} of the \CsTrafficFileCols{} traffic columns,
+\CsBikesCols{} of \CsBikesFileCols{} bike columns and \CsTaxiCols{} of \CsTaxiFileCols{} taxi columns,
+with bounds only at the program's constants. The validators constrain every column they are set up on
+with facts no proof needs, such as the compiled month's exact range or mean; that, not the number of
+columns, is why Great Expectations and pandera refuse as often on the columns read as on all of them.
+
 We state the consequence plainly: at these sizes reuse does not save time, because a fresh compilation is
 itself cheap. What reuse buys is a fixed, reviewed artifact that runs unchanged on every admitted batch
 (\S\ref{sec:rq-real}), an exact signal when a batch drifts, naming the removal it breaks, and output

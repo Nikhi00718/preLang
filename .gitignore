@@ -27,3 +27,9 @@ demo/work/
 # The folder for the hand-typed demo (py -3 demo/run_demo.py stage)
 demo/live/
 eval/.venv-baselines/
+
+# LaTeX build files of the paper
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/build_log.txt

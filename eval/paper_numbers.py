@@ -86,6 +86,8 @@ def main():
         imagebatches(load("imagebatches.json"), numbers)
     if (RESULTS / "certcost.json").exists():
         certcost(load("certcost.json"), numbers)
+    if (RESULTS / "certsize.json").exists():
+        certsize(load("certsize.json"), numbers)
     soundness_tests(numbers)
 
     numbers["TestCount"] = test_count()
@@ -407,6 +409,18 @@ def certcost(rows, numbers):
     numbers.update(CcPrograms=len(rows), CcAnalysesMin=min(deopt), CcAnalysesMax=max(deopt),
                    CcFullAnalysesMax=max(full), CcMsMin=f"{min(ms):.0f}", CcMsMax=f"{max(ms):.0f}",
                    CcRatioMax=f"{max(d / f for d, f in zip(deopt, full) if f):.1f}")
+
+
+def certsize(rows, numbers):
+    """Facts in the full, admission and item certificates of the table programs."""
+    items = [n for r in rows for n in r["items"]]
+    numbers.update(CsPrograms=len(rows), CsFullMin=min(r["full"] for r in rows), CsFullMax=max(r["full"] for r in rows),
+                   CsItems=len(items), CsItemMin=min(items), CsItemMax=max(items),
+                   CsAdmissionTypesOnly="yes" if all(r["admission"] == r["columns"] for r in rows) else "no")
+    for r in rows:
+        if r["program"] in ("traffic", "bikes", "taxi"):
+            name = r["program"].capitalize()
+            numbers[f"Cs{name}Cols"], numbers[f"Cs{name}FileCols"] = r["columns"], r["file_columns"]
 
 
 def imagebatches(rows, numbers):
