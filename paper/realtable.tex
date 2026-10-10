@@ -1,17 +1,17 @@
 \begin{table}[t]
-\caption{Real monthly batches (RQ8): admitted by each policy}
+\caption{Real monthly batches (RQ8). Facts and Cert.: months admitted by the compiled month's own facts and by the certificate; Fresh: admitted months that end like a fresh compilation; Refused: refused although a fresh compilation runs. Traffic and Bikes are UCI CSV files, Taxi is NYC TLC green-taxi Parquet.}
 \label{tab:rq8}
 \centering
 \footnotesize
 \begin{tabular}{@{}llrrrrr@{}}
 \toprule
-Data & Anchor & Months & File facts & Certificate & Like fresh & Refused, fresh runs \\
+Data & Anchor & Months & Facts & Cert. & Fresh & Refused \\
 \midrule
-Traffic (UCI, CSV) & first & 62 & 0 & 59 & 59 & 1 \\
+Traffic & first & 62 & 0 & 59 & 59 & 1 \\
  & previous & 60 & 2 & 58 & 58 & 1 \\
-Bikes (UCI, CSV) & first & 23 & 0 & 22 & 22 & 1 \\
+Bikes & first & 23 & 0 & 22 & 22 & 1 \\
  & previous & 23 & 0 & 22 & 22 & 1 \\
-Green taxi (NYC TLC, Parquet) & first & 35 & 0 & 11 & 11 & 17 \\
+Taxi & first & 35 & 0 & 11 & 11 & 17 \\
  & previous & 35 & 0 & 33 & 33 & 2 \\
 \bottomrule
 \end{tabular}

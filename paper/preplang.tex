@@ -1,6 +1,8 @@
 \documentclass[conference]{IEEEtran}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsthm}
+\usepackage{stmaryrd}
+\usepackage{array}
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -200,10 +202,10 @@ $\tau \in \{\textsc{Integer}, \textsc{Float}, \textsc{String}, \textsc{Boolean}\
 \{\textit{none}, \textit{maybe}\}$ for missing values; an interval~\cite{cousot1976}; and an
 exactness flag $\epsilon$. Its concretization is
 \begin{multline*}
-\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau,\;
-  \nu = \textit{none} \Rightarrow M_c(T) = 0, \\
-  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big) \wedge
-  \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.
+\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau, \\
+  \nu = \textit{none} \Rightarrow M_c(T) = 0,\;
+  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big) \\
+  \wedge \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.
 \end{multline*}
 So an exact column promises two things: both interval bounds occur in the data, and the
 missing-value flag is certain. For a CSV file, \texttt{LOAD} reads every cell and builds the
@@ -238,7 +240,7 @@ cannot become JPG.
 \label{tab:transfer}
 \centering
 \footnotesize
-\begin{tabular}{@{}ll@{}}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.85cm}@{}}
 \toprule
 Statement & Effect on the abstract state \\
 \midrule

@@ -140,10 +140,10 @@ def realbatches(rows, numbers):
                    RealFacts=sum(bool(r["file_facts_admit"]) for r in rows),
                    RealFactsPct=f"{100 * sum(bool(r['file_facts_admit']) for r in rows) / len(rows):.0f}",
                    RealNeedless=sum(r["compiled_once"] == "refused" and r["fresh"] == "finished" for r in rows))
-    names = {"traffic": "Traffic (UCI, CSV)", "bikes": "Bikes (UCI, CSV)", "taxi": "Green taxi (NYC TLC, Parquet)"}
-    table = [r"\begin{table}[t]", r"\caption{Real monthly batches (RQ8): admitted by each policy}", r"\label{tab:rq8}",
+    names = {"traffic": "Traffic", "bikes": "Bikes", "taxi": "Taxi"}
+    table = [r"\begin{table}[t]", r"\caption{Real monthly batches (RQ8). Facts and Cert.: months admitted by the compiled month's own facts and by the certificate; Fresh: admitted months that end like a fresh compilation; Refused: refused although a fresh compilation runs. Traffic and Bikes are UCI CSV files, Taxi is NYC TLC green-taxi Parquet.}", r"\label{tab:rq8}",
              r"\centering", r"\footnotesize", r"\begin{tabular}{@{}llrrrrr@{}}", r"\toprule",
-             r"Data & Anchor & Months & File facts & Certificate & Like fresh & Refused, fresh runs \\", r"\midrule"]
+             r"Data & Anchor & Months & Facts & Cert. & Fresh & Refused \\", r"\midrule"]
     for workload in dict.fromkeys(r["workload"] for r in rows):
         for mode in ("first", "previous"):
             items = [r for r in rows if r["workload"] == workload and r["mode"] == mode]
