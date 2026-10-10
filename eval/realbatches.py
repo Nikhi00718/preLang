@@ -2,6 +2,7 @@
 
     py -3 eval/realbatches.py download     # once: public datasets into eval/data/real/
     py -3 eval/realbatches.py [path/to/preplang.exe]
+    py -3 eval/realbatches.py validators   # then: pandera, Great Expectations and TFDV on the same months
 
 Three public datasets with real monthly batches:
   * traffic  UCI Metro Interstate Traffic Volume, hourly 2012-2018, one CSV per month
@@ -17,6 +18,7 @@ so no value is re-formatted. Writes eval/results/realbatches.json and .md.
 """
 import json
 import shutil
+import time
 import subprocess
 import sys
 import urllib.request
@@ -27,7 +29,8 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from certificates import file_facts_admit, outputs, same_outputs  # noqa: E402
+from policies import (OUTCOMES, compile_variants, file_facts_admit, run_fresh, run_program,  # noqa: E402
+                      run_validators, score)
 
 ROOT = Path(__file__).resolve().parent.parent
 REAL = ROOT / "eval" / "data" / "real"
@@ -131,26 +134,9 @@ def prepare(folder, program, input_file, batch):
     shutil.copyfile(batch, folder / input_file)
 
 
-def compile_run(compiler, folder, run):
-    done = subprocess.run([str(compiler), "program.prep", "--run" if run else "--python"], cwd=folder,
-                          capture_output=True, text=True)
-    text = done.stdout + done.stderr
-    if "Compilation failed" in text:
-        return "compile error", text
-    return ("finished" if done.returncode == 0 else "contract error"), text
 
 
-def run_compiled(folder, name, batch):
-    out = folder / "output"
-    for path in list(out.rglob("*")):
-        if path.is_file() and path.name != "generated.py":
-            path.unlink()
-    done = subprocess.run([PYTHON, str(out / "generated.py"), f"{name}={batch}"], capture_output=True, text=True)
-    text = done.stdout + done.stderr
-    if done.returncode == 0:
-        return "finished", "", outputs(out)
-    reason = next((line for line in text.splitlines() if line.startswith("ContractError")), text[-300:])
-    return ("refused" if "is not the input the program was compiled with" in text else "contract error"), reason, {}
+POLICIES = ("fingerprint", "file facts", "pandera", "gx", "tfdv", "full", "deopt")
 
 
 def main(compiler):
@@ -163,65 +149,132 @@ def main(compiler):
                 anchor = batches[0] if mode == "first" else batches[i - 1]
                 if mode == "previous" or i == 1:
                     prepare(anchor_folder, program, input_file, anchor)
-                    anchor_status, text = compile_run(compiler, anchor_folder, run=False)
-                    anchor_ok = anchor_status == "finished"
+                    anchor_ok, _ = compile_variants(compiler, anchor_folder, "program.prep")
+                    generated = (anchor_folder / "output" / "generated.py").read_text(encoding="utf-8") \
+                        if anchor_ok else ""
+                    original = read(anchor)
+                    columns = [c for c in original.columns if f'"{c}"' in generated]
                 if not anchor_ok:  # the anchor month itself does not compile: nothing to deploy
                     rows.append({"workload": workload, "mode": mode, "anchor": anchor.stem, "batch": batch.stem,
-                                 "compiled_once": "anchor fails", "fresh": None, "reason": "", "file_facts_admit": None,
-                                 "same_outputs": None})
+                                 "fresh": None})
                     continue
-                compiled_once, reason, out_a = run_compiled(anchor_folder, name, batch)
+                started = time.perf_counter()
+                deopt = run_program(anchor_folder, "generated.py", {name: batch})
+                deopt_seconds = time.perf_counter() - started
+                full = run_program(anchor_folder, "generated_full.py", {name: batch})
+                trusted = run_program(anchor_folder, "generated_full.py", {name: batch}, trust=True)
                 fresh_folder = WORK / workload / "fresh"
                 prepare(fresh_folder, program, input_file, batch)
-                fresh, _ = compile_run(compiler, fresh_folder, run=True)
-                out_b = outputs(fresh_folder / "output") if fresh == "finished" else {}
-                generated = (anchor_folder / "output" / "generated.py").read_text(encoding="utf-8")
-                original, new = read(anchor), read(batch)
-                columns = [c for c in original.columns if f'"{c}"' in generated]
-                rows.append({"workload": workload, "mode": mode, "anchor": anchor.stem, "batch": batch.stem,
-                             "compiled_once": compiled_once, "fresh": fresh, "reason": reason,
-                             "file_facts_admit": file_facts_admit(original, new, columns),
-                             "same_outputs": same_outputs(out_a, out_b) if compiled_once == fresh == "finished" else None})
-                print(workload, mode, anchor.stem, "->", batch.stem, compiled_once, fresh, flush=True)
+                started = time.perf_counter()
+                fresh = run_fresh(compiler, fresh_folder, "program.prep")
+                fresh_seconds = time.perf_counter() - started
+                new = read(batch)
+                rows.append({
+                    "workload": workload, "mode": mode, "anchor": anchor.stem, "batch": batch.stem,
+                    "anchor_path": str(anchor.resolve()), "batch_path": str(batch.resolve()), "columns": columns,
+                    "fresh": fresh["status"], "deopt": deopt["status"], "deopts": deopt["deopts"],
+                    "reason": deopt["reason"], "full": full["status"], "full_reason": full["reason"],
+                    "trusted": trusted["status"],
+                    "outcome": {"fingerprint": score({"status": "refused"}, fresh),
+                                "full": score(full, fresh), "deopt": score(deopt, fresh),
+                                "trusted": score(trusted, fresh)},
+                    "file_facts_admit": file_facts_admit(original, new, columns),
+                    "seconds": {"deopt run": deopt_seconds, "fresh compile and run": fresh_seconds},
+                })
+                print(workload, mode, anchor.stem, "->", batch.stem, "deopt", deopt["status"], len(deopt["deopts"]),
+                      "full", full["status"], "fresh", fresh["status"], flush=True)
+    for r in rows:  # the file-facts emulation; the tools are added by `realbatches.py validators`
+        if r["fresh"] is not None:
+            r["outcome"]["file facts"] = outcome_of(r["file_facts_admit"], r)
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / "realbatches.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
     write_markdown(rows)
 
 
-def agrees(r):
-    if r["compiled_once"] == "finished":
-        return r["fresh"] == "finished" and r["same_outputs"]
-    return r["compiled_once"] == "contract error" and r["fresh"] in ("contract error", "compile error")
+def add_validators(rows):
+    """The data-validation tools, set up on each anchor month, decide on the later months."""
+    groups = defaultdict(list)
+    for r in rows:
+        if r["fresh"] is not None:
+            groups[(r["workload"], r["anchor_path"])].append(r)
+    for (workload, anchor), items in groups.items():
+        decisions = run_validators(anchor, [r["batch_path"] for r in items], items[0]["columns"],
+                                   WORK / workload / "validators.json")
+        for r in items:
+            r["validators"] = {tool: admits.get(r["batch_path"]) for tool, admits in decisions.items()}
+            for tool, admit in r["validators"].items():
+                if admit is not None:
+                    r["outcome"][tool] = outcome_of(admit, r)
+            r["outcome"]["file facts"] = outcome_of(r["file_facts_admit"], r)
+        print("validators", workload, Path(anchor).stem, len(items), flush=True)
+
+
+def outcome_of(admits, r):
+    """A validator gates the optimized program: refused, or the run with the input trusted."""
+    if admits:
+        return r["outcome"]["trusted"]
+    return "needless stop" if r["fresh"] == "finished" else "correct stop"
 
 
 def write_markdown(rows):
-    lines = ["# RQ8: data certificates on real monthly batches", "",
-             "Each pipeline is compiled on one month (the first month, or the month before) and given the "
-             "next months with `name=file`; each month is also compiled and run fresh as the ground truth.", "",
-             "| Workload | Anchor | Batches | Fingerprint | File facts | Certificate | Ends like fresh | "
-             "Unsound | Refused, fresh runs |", "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
+    rows = [r for r in rows if r["fresh"] is not None]
+    policies = ["fingerprint", "file facts"] + sorted({k for r in rows for k in r["outcome"]
+                                                      if "/" in k}) + ["full", "deopt"]
+    lines = ["# RQ8: reusing a compiled pipeline on real monthly batches", "",
+             "Each pipeline is compiled on one month (the first, or the month before) and given the next months "
+             "with `name=file`; each month is also compiled and run fresh as the ground truth. Every policy is scored "
+             "against that fresh run (see eval/policies.py): *correct* = it ran and wrote the fresh files, or it "
+             "stopped where the fresh run stops; *needless* = it refused a month the fresh compilation runs; "
+             "*unsound* = it finished with other files than the fresh run, or where the fresh run fails.", "",
+             "| Workload | Anchor | Months | " + " | ".join(policies) + " |",
+             "|---|---|---:|" + "---:|" * len(policies)]
+
+    def cell(items, policy):
+        counts = Counter(r["outcome"].get(policy) for r in items)
+        if None in counts and len(counts) == 1:
+            return "-"
+        correct = counts["correct run"] + counts["correct stop"]
+        return f"{correct} / {counts['needless stop']} / {counts['unsound'] + counts['wrong stop']}"
+
     for workload in WORKLOADS:
         for mode in ("first", "previous"):
-            items = [r for r in rows if r["workload"] == workload and r["mode"] == mode and r["fresh"] is not None]
-            admitted = [r for r in items if r["compiled_once"] != "refused"]
-            unsound = sum(r["compiled_once"] == "finished" and not agrees(r) for r in items)
-            needless = sum(r["compiled_once"] == "refused" and r["fresh"] == "finished" for r in items)
-            lines.append(f"| {workload} | {mode} | {len(items)} | 0 | {sum(r['file_facts_admit'] for r in items)} | "
-                         f"{len(admitted)} | {sum(agrees(r) for r in admitted)} | {unsound} | {needless} |")
-    lines += ["", "## Why batches were refused", ""]
+            items = [r for r in rows if r["workload"] == workload and r["mode"] == mode]
+            if items:
+                lines.append(f"| {workload} | {mode} | {len(items)} | " +
+                             " | ".join(cell(items, p) for p in policies) + " |")
+    lines.append(f"| **all** | | {len(rows)} | " + " | ".join(cell(rows, p) for p in policies) + " |")
+    lines += ["", "Cells: correct / needless stops / unsound (incl. wrong stops).", "",
+              "## Deoptimization", ""]
+    deopted = [r for r in rows if r["deopts"]]
+    lines.append(f"- months that ran with at least one removed instruction re-enabled: {len(deopted)}")
+    removals = Counter(d.split(":")[0] + ":" + d.split(":")[1] for r in deopted for d in r["deopts"])
+    for item, count in removals.most_common():
+        lines.append(f"  - {count} x {item}")
+    full_refused = [r for r in rows if r["full"] == "refused" and r["deopt"] != "refused"]
+    lines.append(f"- refused by the full certificate but admitted with deoptimization: {len(full_refused)}")
+    lines += ["", "## Why the deoptimizing program still refused months", ""]
     reasons = Counter()
     for r in rows:
-        if r["compiled_once"] == "refused":
-            needed = r["reason"].split("relies on this for ")[-1].split(". Compile")[0]
-            reasons[(r["workload"], needed if "relies on this" in r["reason"] else r["reason"][:120])] += 1
+        if r["deopt"] == "refused":
+            reasons[(r["workload"], r["reason"].split(" and ", 1)[-1][:140])] += 1
     for (workload, reason), count in reasons.most_common():
         lines.append(f"- {workload}: {count} x {reason}")
-    lines.append("")
+    times = [r["seconds"] for r in rows]
+    lines += ["", "## Time per month (median)", "",
+              f"- compiled program with admission and deoptimization: "
+              f"{sorted(t['deopt run'] for t in times)[len(times) // 2]:.2f} s",
+              f"- fresh compilation and run: {sorted(t['fresh compile and run'] for t in times)[len(times) // 2]:.2f} s",
+              ""]
     (RESULTS / "realbatches.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "download":
         download()
+    elif len(sys.argv) > 1 and sys.argv[1] == "validators":
+        rows = json.loads((RESULTS / "realbatches.json").read_text(encoding="utf-8"))
+        add_validators(rows)
+        (RESULTS / "realbatches.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
+        write_markdown(rows)
     else:
         main(Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "build" / "Release" / "preplang.exe")

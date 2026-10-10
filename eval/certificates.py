@@ -11,11 +11,10 @@ values drifting, values missing, values out of range). For every batch:
   * fresh:          the batch is put in place of the file, compiled and run
                     (the ground truth: what compiling for this batch gives)
 
-Three admission policies are compared on the same batches:
-  * fingerprint     the earlier guard: only the byte-identical file
-  * file facts      every fact of the compiled file (type, no missing values,
-                    [min, max] of every column read), like a schema inferred by TFDV
-  * certificate     only the facts the program's proofs need (PrepLang)
+The admission policies of eval/policies.py are compared on the same batches
+(fingerprint, file facts, the full certificate, the certificate with
+deoptimization; `certificates.py validators` adds pandera, Great Expectations
+and TFDV), each scored against the fresh run.
 
 Soundness: when the compiled-once program admits a batch and finishes, the
 fresh compilation must finish too and write exactly the same files.
@@ -30,10 +29,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from policies import compile_variants, run_fresh, run_program, run_validators, score  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "eval" / "work" / "certificates"
 RESULTS = ROOT / "eval" / "results"
-COMPILER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "build" / "Release" / "preplang.exe"
+COMPILER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 and sys.argv[1] != "validators" else \
+    ROOT / "build" / "Release" / "preplang.exe"
 PYTHON = sys.executable
 SEEDS = 4
 
@@ -173,35 +176,6 @@ def same_outputs(a, b):
     return True
 
 
-def run_compiled(folder, keys, batch_path):
-    output = folder / "output"
-    for path in list(output.rglob("*")):
-        if path.is_file() and path.name != "generated.py":
-            path.unlink()
-    args = [f"{key}={batch_path}" for key in keys]
-    done = subprocess.run([PYTHON, str(output / "generated.py"), *args], capture_output=True, text=True)
-    text = done.stdout + done.stderr
-    if done.returncode == 0:
-        return "finished", outputs(output)
-    if "is not the input the program was compiled with" in text:
-        return "refused", {}
-    return "contract error", {}
-
-
-def run_fresh(source_folder, program, relative, batch_path, fresh):
-    if fresh.exists():
-        shutil.rmtree(fresh)
-    shutil.copytree(source_folder, fresh, ignore=shutil.ignore_patterns("output", "processed"))
-    shutil.copyfile(batch_path, fresh / relative)
-    done = subprocess.run([str(COMPILER), program, "--run"], cwd=fresh, capture_output=True, text=True)
-    text = done.stdout + done.stderr
-    if "Compilation failed" in text:
-        return "compile error", {}
-    if done.returncode != 0:
-        return "contract error", {}
-    return "finished", outputs(fresh / "output")
-
-
 def main():
     WORK.mkdir(parents=True, exist_ok=True)
     rows = []
@@ -210,8 +184,8 @@ def main():
         if folder.exists():
             shutil.rmtree(folder)
         shutil.copytree(source, folder, ignore=shutil.ignore_patterns("output", "processed"))
-        compiled = subprocess.run([str(COMPILER), program, "--python"], cwd=folder, capture_output=True, text=True)
-        assert compiled.returncode == 0, compiled.stdout
+        ok, text = compile_variants(COMPILER, folder, program)
+        assert ok, text
         generated = (folder / "output" / "generated.py").read_text(encoding="utf-8")
         for keys, relative in groups:
             original = read_table(folder / relative)
@@ -221,20 +195,65 @@ def main():
                 if name == "daily":  # other days of the same process
                     edits = {"another day": make_day(100 + seed), "another season": make_day(200 + seed, drift=12)}
                 for kind, frame in edits.items():
-                    batch = WORK / f"batch{Path(relative).suffix}"
+                    batch = WORK / "batches" / (f"{name}_{'+'.join(keys)}_{kind}_{seed}".replace(" ", "_") +
+                                                Path(relative).suffix)
+                    batch.parent.mkdir(parents=True, exist_ok=True)
                     write_table(frame, batch)
-                    compiled_once, out_a = run_compiled(folder, keys, batch)
-                    fresh, out_b = run_fresh(source, program, relative, batch, WORK / "fresh")
+                    inputs = {key: batch for key in keys}
+                    deopt = run_program(folder, "generated.py", inputs)
+                    full = run_program(folder, "generated_full.py", inputs)
+                    trusted = run_program(folder, "generated_full.py", inputs, trust=True)
+                    fresh = fresh_run(source, program, relative, batch, WORK / "fresh")
                     rows.append({
                         "workload": name, "table": "+".join(keys), "edit": kind, "seed": seed,
-                        "compiled_once": compiled_once, "fresh": fresh,
+                        "anchor_path": str((folder / relative).resolve()), "batch_path": str(batch.resolve()),
+                        "columns": columns, "fresh": fresh["status"], "deopt": deopt["status"],
+                        "deopts": deopt["deopts"], "full": full["status"], "trusted": trusted["status"],
+                        "outcome": {"fingerprint": score({"status": "refused"}, fresh), "full": score(full, fresh),
+                                    "deopt": score(deopt, fresh), "trusted": score(trusted, fresh)},
                         "file_facts_admit": file_facts_admit(original, frame, columns),
-                        "same_outputs": same_outputs(out_a, out_b) if compiled_once == fresh == "finished" else None,
+                        # the names earlier versions of this file wrote
+                        "compiled_once": deopt["status"],
+                        "same_outputs": deopt["status"] == fresh["status"] == "finished" and
+                        same_outputs(deopt["files"], fresh["files"]),
                     })
-                    print(name, keys, kind, seed, compiled_once, fresh, flush=True)
+                    rows[-1]["outcome"]["file facts"] = outcome_of(rows[-1]["file_facts_admit"], rows[-1])
+                    print(name, keys, kind, seed, "deopt", deopt["status"], len(deopt["deopts"]), "full",
+                          full["status"], "fresh", fresh["status"], flush=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / "certificates.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
     write_markdown(rows)
+
+
+def outcome_of(admits, r):
+    """A validator gates the optimized program: refused, or the run with the input trusted."""
+    if admits:
+        return r["outcome"]["trusted"]
+    return "needless stop" if r["fresh"] == "finished" else "correct stop"
+
+
+def add_validators(rows):
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for r in rows:
+        groups[(r["workload"], r["anchor_path"])].append(r)
+    for (workload, anchor), items in groups.items():
+        decisions = run_validators(anchor, [r["batch_path"] for r in items], items[0]["columns"],
+                                   WORK / f"validators_{workload}_{Path(anchor).stem}.json")
+        for r in items:
+            r["validators"] = {tool: admits.get(r["batch_path"]) for tool, admits in decisions.items()}
+            for tool, admit in r["validators"].items():
+                if admit is not None:
+                    r["outcome"][tool] = outcome_of(admit, r)
+        print("validators", workload, Path(anchor).name, len(items), flush=True)
+
+
+def fresh_run(source_folder, program, relative, batch_path, fresh):
+    if fresh.exists():
+        shutil.rmtree(fresh)
+    shutil.copytree(source_folder, fresh, ignore=shutil.ignore_patterns("output", "processed"))
+    shutil.copyfile(batch_path, fresh / relative)
+    return run_fresh(COMPILER, fresh, program)
 
 
 def agrees(r):
@@ -247,6 +266,29 @@ def agrees(r):
 def write_markdown(rows):
     def share(items, test):
         return f"{sum(1 for r in items if test(r))}/{len(items)}"
+
+    from collections import Counter
+    policies = ["fingerprint", "file facts"] + sorted({k for r in rows for k in r.get("outcome", {})
+                                                      if "/" in k}) + ["full", "deopt"]
+
+    def cell(items, policy):
+        counts = Counter(r["outcome"].get(policy) for r in items)
+        if set(counts) == {None}:
+            return "-"
+        return (f"{counts['correct run'] + counts['correct stop']} / {counts['needless stop']} / "
+                f"{counts['unsound'] + counts['wrong stop']}")
+
+    policy_lines = ["## Every policy against the fresh run", "",
+                    "Cells: correct (ran with the fresh files, or stopped where the fresh run stops) / needless "
+                    "stops (refused, but the fresh compilation runs) / unsound (incl. wrong stops).", "",
+                    "| Workload | Batches | " + " | ".join(policies) + " |", "|---|---:|" + "---:|" * len(policies)]
+    for workload in dict.fromkeys(r["workload"] for r in rows):
+        items = [r for r in rows if r["workload"] == workload]
+        policy_lines.append(f"| {workload} | {len(items)} | " + " | ".join(cell(items, p) for p in policies) + " |")
+    policy_lines.append(f"| **all** | {len(rows)} | " + " | ".join(cell(rows, p) for p in policies) + " |")
+    policy_lines.append("")
+    policy_lines.append(f"Batches that ran with a removed instruction re-enabled: {sum(1 for r in rows if r['deopts'])}")
+    policy_lines.append("")
 
     lines = ["# RQ7: reusing a compiled program on new data (data certificates)", "",
              "Each batch is run by the program compiled once (with `table=batch`) and, as the ground truth, "
@@ -276,8 +318,15 @@ def write_markdown(rows):
     lines += ["", "*Admitted* counts batches the certificate let through; a deferred or value-level check may "
               "still stop such a run, exactly as it stops the fresh compilation. *Unsound* would be a batch the "
               "compiled-once program finished on while the fresh compilation failed or wrote different files.", ""]
+    lines = lines[:2] + policy_lines + lines[2:]
     (RESULTS / "certificates.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "validators":
+        rows = json.loads((RESULTS / "certificates.json").read_text(encoding="utf-8"))
+        add_validators(rows)
+        (RESULTS / "certificates.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
+        write_markdown(rows)
+    else:
+        main()

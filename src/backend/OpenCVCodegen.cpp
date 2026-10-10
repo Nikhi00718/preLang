@@ -193,7 +193,7 @@ def list_images_checked(name, path, recursive, single, fingerprint, broken, cert
         names = sorted(p.relative_to(folder).as_posix() for p in found
                        if p.is_file() and p.suffix.lower() in IMAGE_TYPES)
     listing = "".join(f"{file}|{(folder / file).stat().st_size}\n" for file in names)
-    same_input[name] = zlib.crc32(listing.encode("utf-8")) == fingerprint
+    same_input[name] = zlib.crc32(listing.encode("utf-8")) == fingerprint or TRUST_INPUTS
     broken_images[name] = broken if same_input[name] else admit_images(name, path, folder, names, certificate)
     return folder, names
 

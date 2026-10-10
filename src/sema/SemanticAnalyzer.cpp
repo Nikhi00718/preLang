@@ -599,9 +599,15 @@ void SemanticAnalyzer::visit(const SaveStmt& node) {
     }
     std::vector<std::string> saved;
     for (TableState* table : resolution->tables) {
+        SavedTable written{node.kind == DataKind::TableSet ? node.path + "/" + table->name : node.path,
+                           dataset.kind == DatasetKind::TableSet ? dataset.name + "." + table->name : dataset.name,
+                           {}};
         for (const ColumnState& column : table->columns) {
             recordColumn(dataset, *table, column, node.location.line, "saved to \"" + node.path + "\"");
+            written.columns.push_back({column.name, columnTypeName(column.type), column.nullable, column.range.min,
+                                       column.range.max, isNumeric(column.type) && column.range.isKnown()});
         }
+        result_.saved.push_back(written);
         addTarget(node, tableTarget(dataset, *table));
         saved.push_back(columnDisplayName(dataset, *table, "") + " (" + join(table->columnNames()) + ")");
     }

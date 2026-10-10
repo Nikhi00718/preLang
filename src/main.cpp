@@ -246,6 +246,9 @@ int main(int argc, char* argv[]) {
     std::filesystem::create_directories(outputFolder);
     const std::filesystem::path script = outputFolder / "generated.py";
     std::ofstream(script) << python;
+    // The certificates and output guarantees, for composing pipeline stages (tools/contracts.py).
+    std::ofstream contract(outputFolder / "preplang_contract.json");
+    writeContract(contract, certificate, source.path());
     if (options.python) {
         printHeader("PYTHON (ExecutionPlanner + PandasCodegen + OpenCVCodegen) -> " + script.generic_string());
         std::cout << python;

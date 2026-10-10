@@ -111,6 +111,10 @@ struct Certificate {
     std::vector<TableCertificate> fullTables;  // every proof, i.e. the certificate without deoptimization
     std::vector<ImageCertificate> fullImages;
     std::vector<std::string> recheckedIfChanged;  // contracts proven from the values
+    // What every table the program writes is known to satisfy, for any admitted
+    // input (the analysis run on the admission certificate): the program's guarantee
+    // to the next stage of a pipeline (see tools/contracts.py).
+    std::vector<SavedTable> guarantees;
     int analysisRuns = 0;                         // how many times the program was analysed again
     bool exactOnly = false;                       // no certificate: only the compiled files are accepted
 
@@ -151,6 +155,7 @@ private:
     int runs_ = 0;
 
     Proofs analyse();
+    std::vector<SavedTable> outputsNow();  // what the analysis with the current facts says the SAVEs write
     std::vector<std::string> broken() { return criterion_(analyse()); }
     static Proofs proofsOf(const AnalysisResult& result, const std::string& error);
     // The proofs of `base` that `run` lost, and the error of `run`; empty if it kept all of them.
@@ -185,6 +190,11 @@ std::vector<std::string> admissionProblems(const TableCertificate& certificate, 
 std::vector<std::string> admissionProblems(const ImageCertificate& certificate, const ImageSetSchema& input);
 
 void printCertificate(std::ostream& out, const Certificate& certificate);
+
+// The certificates and guarantees as JSON (output/preplang_contract.json): what
+// each input must satisfy to be admitted, what each speculative removal needs, and
+// what each output satisfies. tools/contracts.py composes these between stages.
+void writeContract(std::ostream& out, const Certificate& certificate, const std::string& program);
 
 // "jpg" for .jpg and .jpeg files, "png" for .png files
 std::string imageExtension(const std::string& path);

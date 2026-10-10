@@ -1,11 +1,14 @@
 """Data certificates for real pandas scripts (RQ9).
 
-    py -3 eval/pandas_corpus.py collect        # once: real Titanic scripts from GitHub (needs gh, signed in)
-    py -3 eval/pandas_corpus.py [path/to/preplang.exe]
+    py -3 eval/pandas_corpus.py collect [titanic|houses]    # once: scripts from GitHub (needs gh, signed in)
+    py -3 eval/pandas_corpus.py [titanic|houses] [path/to/preplang.exe]
 
-Corpus: GitHub code search for Python files that contain read_csv, fillna and
-Embarked (the Kaggle Titanic data), in GitHub's ranking order, without
-duplicates. The scripts are never run as a whole: frontend/pandas2prep.py lifts
+Two corpora, each from GitHub code search in GitHub's ranking order, without duplicates:
+  * titanic  Python files with read_csv, fillna and Embarked (the Kaggle Titanic data)
+  * houses   Python files with read_csv, fillna and LotFrontage (Kaggle House Prices; its
+             files mark missing values with the text NA, which pandas reads as missing:
+             eval/data/houses/train.csv and test.csv are written with empty cells instead,
+             PrepLang's notation, from the Kaggle files kaggle_train.csv and kaggle_test.csv) The scripts are never run as a whole: frontend/pandas2prep.py lifts
 the part of their cleaning that PrepLang expresses, and only those lifted
 statements are run as the ground truth.
 
@@ -17,7 +20,9 @@ extra missing values. Each batch is run twice:
   * PrepLang     the program compiled once, with train=batch (admitted or refused by its certificate)
   * the script   the lifted original pandas statements, executed on the batch (the ground truth)
 
-and the two cleaned tables are compared. Writes eval/results/pandas_corpus.json and .md.
+and the two cleaned tables are compared. The compiled program runs in two
+versions: with deoptimization (PrepLang's default) and without (--no-deopt, the
+full certificate). Writes eval/results/pandas_corpus[_houses].json and .md.
 """
 import ast
 import hashlib
@@ -38,13 +43,29 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "frontend"))
 from pandas2prep import lift  # noqa: E402
 
-CORPUS = ROOT / "eval" / "data" / "pandas_corpus"
-TITANIC = ROOT / "eval" / "data" / "titanic"
-WORK = ROOT / "eval" / "work" / "pandas_corpus"
 RESULTS = ROOT / "eval" / "results"
 PYTHON = sys.executable
-QUERY = "read_csv fillna Embarked language:python"
 PAGES = 5  # 100 results per page
+CORPORA = {  # name -> code search query, data folder, columns that get extra missing values, result name
+    "titanic": ("read_csv fillna Embarked language:python", ROOT / "eval" / "data" / "titanic",
+                ["Age", "Fare", "Embarked", "Sex", "Pclass"], "pandas_corpus"),
+    "houses": ("read_csv fillna LotFrontage language:python", ROOT / "eval" / "data" / "houses",
+               ["LotFrontage", "MasVnrArea", "GarageYrBlt", "MSZoning", "KitchenQual"], "pandas_corpus_houses"),
+}
+NAME = sys.argv[2] if len(sys.argv) > 2 and sys.argv[1] == "collect" else (
+    sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in CORPORA else "titanic")
+QUERY, DATA, HOLES, RESULT = CORPORA[NAME]
+TITANIC = DATA  # the data folder of the corpus (kept under this name: train.csv and test.csv)
+CORPUS = ROOT / "eval" / "data" / ("pandas_corpus" if NAME == "titanic" else f"pandas_corpus_{NAME}")
+WORK = ROOT / "eval" / "work" / ("pandas_corpus" if NAME == "titanic" else f"pandas_corpus_{NAME}")
+
+
+def prepare_houses():
+    """train.csv and test.csv with empty cells where the Kaggle files write NA (pandas reads both as missing)."""
+    for name in ("train.csv", "test.csv"):
+        frame = pd.read_csv(DATA / f"kaggle_{name}", dtype=str, keep_default_na=False)
+        frame = frame.replace({"NA": ""})
+        frame.to_csv(DATA / name, index=False)
 
 # A file name with "test" means the Kaggle Titanic test file; with "titanic" or "train",
 # the training file. (Scripts written for another Titanic table, such as the lower-case
@@ -63,29 +84,45 @@ def data_role(path):
 # ---------- collecting the corpus ----------
 
 def collect():
+    """Code search pages in order, then the files themselves, fetched in parallel."""
+    from concurrent.futures import ThreadPoolExecutor
     CORPUS.mkdir(parents=True, exist_ok=True)
-    index, seen = [], set()
+    found = []
     for page in range(1, PAGES + 1):
         done = subprocess.run(["gh", "api", "-X", "GET", "search/code", "-f", f"q={QUERY}", "-f", "per_page=100",
                                "-f", f"page={page}"], capture_output=True, text=True,
                               encoding="utf-8")
         items = json.loads(done.stdout).get("items", [])
-        for item in items:
-            repo = item["repository"]["full_name"]
-            sha = item["url"].split("ref=")[-1]
-            raw = f"https://raw.githubusercontent.com/{repo}/{sha}/" + urllib.parse.quote(item["path"])
-            try:
-                text = urllib.request.urlopen(raw, timeout=30).read()
-            except OSError:
-                continue
-            digest = hashlib.sha256(text).hexdigest()[:16]
-            if digest in seen:
-                continue
-            seen.add(digest)
-            (CORPUS / f"{digest}.py").write_bytes(text)
-            index.append({"id": digest, "url": item["html_url"], "rank": len(index) + 1})
-        print("page", page, "files", len(index), flush=True)
+        found += items
+        print("page", page, "results", len(found), flush=True)
+        if len(items) < 100:
+            break
         time.sleep(7)  # the code search API allows 10 requests a minute
+
+    def fetch(item):
+        repo = item["repository"]["full_name"]
+        sha = item["url"].split("ref=")[-1]
+        raw = f"https://raw.githubusercontent.com/{repo}/{sha}/" + urllib.parse.quote(item["path"])
+        for _ in range(3):
+            try:
+                return urllib.request.urlopen(raw, timeout=30).read()
+            except OSError:
+                time.sleep(2)
+        return None
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        texts = list(pool.map(fetch, found))
+    index, seen = [], set()
+    for item, text in zip(found, texts):  # GitHub's ranking order
+        if text is None:
+            continue
+        digest = hashlib.sha256(text).hexdigest()[:16]
+        if digest in seen:
+            continue
+        seen.add(digest)
+        (CORPUS / f"{digest}.py").write_bytes(text)
+        index.append({"id": digest, "url": item["html_url"], "rank": len(index) + 1})
+    print("files", len(index), flush=True)
     (CORPUS / "index.json").write_text(json.dumps(index, indent=1), encoding="utf-8")
 
 
@@ -153,7 +190,7 @@ def batches(seed_count=5):
         out[f"resampled {seed}"] = folder / f"resampled_{seed}.csv"
         resampled.to_csv(out[f"resampled {seed}"], index=False)
         holes = train.copy()
-        column = ["Age", "Fare", "Embarked", "Sex", "Pclass"][seed]
+        column = HOLES[seed]
         holes.loc[rng.random(len(holes)) < 0.2, column] = ""
         out[f"missing {column}"] = folder / f"missing_{column}.csv"
         holes.to_csv(out[f"missing {column}"], index=False)
@@ -190,6 +227,10 @@ def run_script(compiler, script_id, source):
     (folder / "program.prep").write_text(program, encoding="utf-8")
     for name in ("train.csv", "test.csv"):
         shutil.copyfile(TITANIC / name, folder / name)
+    full = subprocess.run([str(compiler), "program.prep", "--python", "--no-deopt"], cwd=folder,
+                          capture_output=True, text=True)
+    if full.returncode == 0:
+        shutil.copyfile(folder / "output" / "generated.py", folder / "output" / "generated_full.py")
     done = subprocess.run([str(compiler), "program.prep", "--python", "--certificate"], cwd=folder,
                           capture_output=True, text=True)
     text = done.stdout + done.stderr
@@ -210,24 +251,30 @@ def run_batches(prepared, record, batch_files):
     output = folder / "output"
     record["batches"] = []
     for batch, path in batch_files.items():
-        for old in output.rglob("*.csv"):
-            old.unlink()
-        done = subprocess.run([PYTHON, str(output / "generated.py"), f"{name}={path}"], capture_output=True, text=True)
-        text = done.stdout + done.stderr
-        if done.returncode == 0:
-            ours = "finished"
-        elif "is not the input the program was compiled with" in text:
-            ours = "refused"
-        else:
-            ours = "contract error"
         truth = ground_truth(result.source_lines, mapping, result.frames, path, folder)
         script = "crashes" if isinstance(truth, str) else "runs"
-        same = None
-        if ours == "finished" and script == "runs":
-            same = same_table(output / f"{name}_lifted.csv", truth[train])
-        reason = next((line for line in text.splitlines() if line.startswith("ContractError")), "")
-        record["batches"].append({"batch": batch, "prep": ours, "script": script, "same": same,
-                                  "script_error": truth if isinstance(truth, str) else "", "reason": reason[:400]})
+        entry = {"batch": batch, "script": script, "script_error": truth if isinstance(truth, str) else ""}
+        for variant, generated in (("prep", "generated.py"), ("prep_full", "generated_full.py")):
+            for old in output.rglob("*.csv"):
+                old.unlink()
+            done = subprocess.run([PYTHON, str(output / generated), f"{name}={path}"], capture_output=True, text=True)
+            text = done.stdout + done.stderr
+            if done.returncode == 0:
+                ours = "finished"
+            elif "is not the input the program was compiled with" in text:
+                ours = "refused"
+            else:
+                ours = "contract error"
+            same = None
+            if ours == "finished" and script == "runs":
+                same = same_table(output / f"{name}_lifted.csv", truth[train])
+            reason = next((line for line in text.splitlines() if line.startswith("ContractError")), "")
+            suffix = "" if variant == "prep" else "_full"
+            entry.update({variant: ours, "same" + suffix: same, "reason" + suffix: reason[:400]})
+            if variant == "prep":
+                entry["deopts"] = [line[len("Deoptimized "):] for line in done.stdout.splitlines()
+                                   if line.startswith("Deoptimized ")]
+        record["batches"].append(entry)
 
 
 def process(job):
@@ -246,6 +293,8 @@ def process(job):
 def main(compiler):
     from concurrent.futures import ProcessPoolExecutor
     index = json.loads((CORPUS / "index.json").read_text(encoding="utf-8"))
+    if NAME == "houses":
+        prepare_houses()
     batch_files = batches()  # written once, before the workers start
     jobs = [(compiler, item, batch_files) for item in index]
     records = []
@@ -254,7 +303,7 @@ def main(compiler):
             records.append(record)
             print(item["rank"], record["outcome"], flush=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "pandas_corpus.json").write_text(json.dumps(records, indent=1), encoding="utf-8")
+    (RESULTS / f"{RESULT}.json").write_text(json.dumps(records, indent=1), encoding="utf-8")
     write_markdown(records)
 
 
@@ -284,6 +333,13 @@ def write_markdown(records):
                   f"- admitted, stopped by a run-time contract check: {count(lambda b: b['prep'] == 'contract error')}",
                   f"- refused, and the script crashes on it too: {count(lambda b: b['prep'] == 'refused' and b['script'] == 'crashes')}",
                   f"- refused, but the script runs (conservative): {count(lambda b: b['prep'] == 'refused' and b['script'] == 'runs')}",
+                  f"- ran with a removed check or operation re-enabled (deoptimized): {count(lambda b: b.get('deopts'))}",
+                  "", "Without deoptimization (--no-deopt, the full certificate):",
+                  f"- admitted: {count(lambda b: b.get('prep_full') != 'refused')}",
+                  f"- admitted, finished and identical: {count(lambda b: b.get('prep_full') == 'finished' and b.get('same_full'))}",
+                  f"- admitted, finished, different (unsound): "
+                  f"{count(lambda b: b.get('prep_full') == 'finished' and not b.get('same_full'))}",
+                  f"- refused, but the script runs: {count(lambda b: b.get('prep_full') == 'refused' and b['script'] == 'runs')}",
                   "", "| Batch | Runs | Admitted | Identical to the script | Script crashes |",
                   "|---|---:|---:|---:|---:|"]
         for batch in dict.fromkeys(b["batch"] for b in runs):
@@ -291,11 +347,12 @@ def write_markdown(records):
             lines.append(f"| {batch} | {len(items)} | {sum(b['prep'] != 'refused' for b in items)} | "
                          f"{sum(bool(b['same']) for b in items)} | {sum(b['script'] == 'crashes' for b in items)} |")
     lines.append("")
-    (RESULTS / "pandas_corpus.md").write_text("\n".join(lines), encoding="utf-8")
+    (RESULTS / f"{RESULT}.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "collect":
         collect()
     else:
-        main(Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "build" / "Release" / "preplang.exe")
+        rest = [arg for arg in sys.argv[1:] if arg not in CORPORA]
+        main(Path(rest[0]).resolve() if rest else ROOT / "build" / "Release" / "preplang.exe")

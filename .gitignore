@@ -1,5 +1,6 @@
 # CMake build folder
 build/
+build-dev/
 
 # CSV files written by the unit tests when run from the project folder
 test_*.csv
@@ -25,3 +26,4 @@ demo/work/
 
 # The folder for the hand-typed demo (py -3 demo/run_demo.py stage)
 demo/live/
+eval/.venv-baselines/

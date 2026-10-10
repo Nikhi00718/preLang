@@ -47,8 +47,25 @@ struct ContractRecord {
                                 // type and image contracts have none
 };
 
+// What the analysis knows about one column a SAVE writes: the facts every output
+// file of the program has, for inputs with the analysed facts (a guarantee).
+struct SavedColumn {
+    std::string name;
+    std::string type;    // INTEGER, FLOAT, STRING, BOOLEAN, DATETIME
+    bool nullable = true;
+    double min = 0, max = 0;
+    bool hasRange = false;
+};
+
+struct SavedTable {
+    std::string path;   // as written in the SAVE statement
+    std::string table;  // table key: "trips", or "company.staff"
+    std::vector<SavedColumn> columns;
+};
+
 // Everything semantic analysis hands to the later phases.
 struct AnalysisResult {
+    std::vector<SavedTable> saved;  // one per table a SAVE or SAVE_TABLES writes
     // Resolved targets of each statement, in order, for the IR builder.
     std::map<const Stmt*, std::vector<Target>> targets;
     // (statement, target key) -> why that part provably changes nothing.

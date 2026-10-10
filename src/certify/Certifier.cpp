@@ -5,6 +5,7 @@
 #include "sema/SymbolTable.h"
 
 #include <algorithm>
+#include <charconv>
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -174,6 +175,15 @@ Certifier::Proofs Certifier::analyse() {
     return proofsOf(result, "");
 }
 
+std::vector<SavedTable> Certifier::outputsNow() {
+    Diagnostics diagnostics;
+    SymbolTable symbols;
+    schemas_.setOverrides(facts_);
+    schemas_.setImageOverrides(imageFacts_);
+    ++runs_;
+    return SemanticAnalyzer(symbols, schemas_, baseFolder_, diagnostics).analyze(program_).saved;
+}
+
 Certifier::Proofs Certifier::proofsOf(const AnalysisResult& result, const std::string& error) {
     Proofs proofs;
     proofs.error = error;
@@ -254,6 +264,7 @@ Certificate Certifier::certify(const IRProgram& optimized, const AnalysisResult&
     const Proofs compiled = proofsOf(analysis, "");
     if (!lost(base, compiled).empty() || !lost(compiled, base).empty()) {
         certificate.exactOnly = true;
+        certificate.guarantees = analysis.saved;  // only the compiled files are admitted
         certificate.analysisRuns = runs_;
         schemas_.setOverrides({});
         schemas_.setImageOverrides({});
@@ -287,6 +298,7 @@ Certificate Certifier::certify(const IRProgram& optimized, const AnalysisResult&
     if (speculative.empty()) {
         certificate.tables = certificate.fullTables;
         certificate.images = certificate.fullImages;
+        certificate.guarantees = outputsNow();
     } else {
         const std::map<std::string, TableSchema> fullFacts = facts_;
         const std::map<std::string, ImageSetSchema> fullImageFacts = imageFacts_;
@@ -313,6 +325,9 @@ Certificate Certifier::certify(const IRProgram& optimized, const AnalysisResult&
         for (const ImageCertificate& full : certificate.fullImages) {
             certificate.images.push_back(certifyImages(full.dataset, optimized.images.at(full.dataset), &full));
         }
+        // Every admitted input runs the program's own semantics (deoptimization keeps
+        // it), so what the analysis says for the admission facts holds for every run.
+        certificate.guarantees = outputsNow();
 
         // 3. One item certificate per removal, each found from the full certificate.
         for (const auto& [key, description] : speculative) {
@@ -990,4 +1005,106 @@ void printCertificate(std::ostream& out, const Certificate& certificate) {
             out << "  " << contract << '\n';
         }
     }
+}
+
+namespace {
+
+std::string jsonString(const std::string& text) {
+    std::string quoted = "\"";
+    for (char c : text) {
+        if (c == '\\' || c == '"') {
+            quoted += '\\';
+            quoted += c;
+        } else if (static_cast<unsigned char>(c) < 0x20) {
+            quoted += ' ';
+        } else {
+            quoted += c;
+        }
+    }
+    return quoted + "\"";
+}
+
+std::string jsonNumber(double value) {
+    if (std::isinf(value) || std::isnan(value)) {
+        return "null";
+    }
+    char text[32];
+    const auto end = std::to_chars(text, text + sizeof text, value).ptr;
+    return std::string(text, end);
+}
+
+std::string jsonList(const std::vector<std::string>& items) {
+    std::string text = "[";
+    for (size_t i = 0; i < items.size(); ++i) {
+        text += (i > 0 ? ", " : "") + jsonString(items[i]);
+    }
+    return text + "]";
+}
+
+// {"marks": {"type": "INTEGER", "required": true, "not_null": [...], "min": 0, "min_for": [...]}, ...}
+std::string columnsJson(const TableCertificate& table, const std::string& indent) {
+    std::string text = "{";
+    for (size_t i = 0; i < table.columns.size(); ++i) {
+        const ColumnFacts& c = table.columns[i];
+        text += (i > 0 ? ",\n" + indent : "") + jsonString(c.name) + ": {\"type\": " +
+                (c.typeFixed ? jsonString(columnTypeName(c.type)) : "null") +
+                ", \"required\": " + (c.required ? "true" : "false");
+        if (c.notNull) {
+            text += ", \"not_null\": true, \"not_null_for\": " + jsonList(c.notNullFor);
+        }
+        if (!std::isinf(c.min)) {
+            text += ", \"min\": " + jsonNumber(c.min) + ", \"min_strict\": " + (c.minStrict ? "true" : "false") +
+                    ", \"min_for\": " + jsonList(c.minFor);
+        }
+        if (!std::isinf(c.max)) {
+            text += ", \"max\": " + jsonNumber(c.max) + ", \"max_strict\": " + (c.maxStrict ? "true" : "false") +
+                    ", \"max_for\": " + jsonList(c.maxFor);
+        }
+        text += "}";
+    }
+    return text + "}";
+}
+
+}  // namespace
+
+void writeContract(std::ostream& out, const Certificate& certificate, const std::string& program) {
+    out << "{\n  \"program\": " << jsonString(program) << ",\n  \"exact_only\": "
+        << (certificate.exactOnly ? "true" : "false") << ",\n  \"inputs\": {";
+    for (size_t i = 0; i < certificate.tables.size(); ++i) {
+        const TableCertificate& table = certificate.tables[i];
+        out << (i > 0 ? "," : "") << "\n    " << jsonString(table.key) << ": {\"file\": " << jsonString(table.file)
+            << ",\n      \"columns\": " << columnsJson(table, "                   ") << "}";
+    }
+    out << "\n  },\n  \"removals\": [";
+    bool first = true;
+    for (const ItemCertificate& item : certificate.items) {
+        if (item.empty()) {
+            continue;
+        }
+        out << (first ? "" : ",") << "\n    {\"key\": " << jsonString(item.key)
+            << ", \"description\": " << jsonString(item.description) << ",\n     \"needs\": {";
+        for (size_t i = 0; i < item.tables.size(); ++i) {
+            out << (i > 0 ? ", " : "") << jsonString(item.tables[i].key) << ": "
+                << columnsJson(item.tables[i], "                ");
+        }
+        out << "}, \"images\": " << (item.images.empty() ? "false" : "true") << "}";
+        first = false;
+    }
+    out << "\n  ],\n  \"outputs\": {";
+    for (size_t i = 0; i < certificate.guarantees.size(); ++i) {
+        const SavedTable& saved = certificate.guarantees[i];
+        out << (i > 0 ? "," : "") << "\n    " << jsonString(saved.path) << ": {\"table\": " << jsonString(saved.table)
+            << ", \"columns\": {";
+        for (size_t c = 0; c < saved.columns.size(); ++c) {
+            const SavedColumn& column = saved.columns[c];
+            out << (c > 0 ? ",\n        " : "\n        ") << jsonString(column.name) << ": {\"type\": "
+                << jsonString(column.type) << ", \"nullable\": " << (column.nullable ? "true" : "false");
+            if (column.hasRange) {
+                out << ", \"min\": " << jsonNumber(column.min) << ", \"max\": " << jsonNumber(column.max);
+            }
+            out << "}";
+        }
+        out << "}}";
+    }
+    out << "\n  }\n}\n";
 }
