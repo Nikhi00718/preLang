@@ -520,6 +520,9 @@ def soundness_tests(numbers):
         numbers.update(RandFull=full.group(1), RandDeopt=deopt.group(1), RandDeopted=deopt.group(2))
     if folders:
         numbers["RandFolders"] = sum(int(f) for f in folders)
+    dates = re.search(r"(\d+) of 400 random inputs admitted with deoptimization, (\d+) of them deoptimize", text)
+    if dates:
+        numbers.update(RandDates=dates.group(1), RandDatesDeopted=dates.group(2))
 
 
 if __name__ == "__main__":

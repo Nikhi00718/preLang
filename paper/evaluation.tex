@@ -175,7 +175,11 @@ the removed \texttt{fillna} again for exactly those batches (\CorpusDeopted{} Ti
 \HousesDeopted{} House Prices runs). Most House Prices scripts fill columns that already have missing
 values in the training file, such as \texttt{LotFrontage}; those fills are never removed, and the
 certificate does not constrain them. The remaining refusals are batches the scripts crash on too:
-Kaggle's test files have no target column.
+Kaggle's test files have no target column. The second lifter version (Section~\ref{sec:lift}), written
+on other scripts after these corpora were evaluated, lifts \CorpusBothDerStatements{} cleaning
+statements of the same held-out scripts instead of \CorpusBothStatements{}; the runs end as before
+(\CorpusBothDerSame{} of \CorpusBothDerRuns{} identical to the scripts, \CorpusBothDerUnsound{}
+different).
 
 \input{drifttable}
 
@@ -264,7 +268,9 @@ admitted with deoptimization compiles without new errors and keeps every removal
 deoptimize (or stops at a re-enabled check exactly where the fresh compilation reports a violation).
 For the running example, \RandFull{} of 400 random tables fit the full certificate and \RandDeopt{} are
 admitted with deoptimization; \RandFolders{} random image folders are admitted with deoptimization,
-all keeping their removals.
+all keeping their removals. A program with \texttt{PARSE\_DATE}, \texttt{DERIVE} and a filter on the
+month admits \RandDates{} of 400 random batches (dates across three years, text that is not a date,
+divisors of 0), \RandDatesDeopted{} of them deoptimizing something, none losing a removal it keeps.
 
 \paragraph{What the evaluation found in our implementation.} Each of the following was a case where
 the implementation did not follow the definitions; each is fixed and has a regression test. (1)~The

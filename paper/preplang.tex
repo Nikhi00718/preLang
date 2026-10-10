@@ -498,7 +498,8 @@ program depends on, selective deoptimization keeps the compiled program usable f
 some of them, and composition carries guarantees from one stage to the next. On real monthly data,
 the compiled program handles \RealDeoptCorrectPct\% of new months exactly as a fresh compilation
 would, without recompiling, where validators set up on the same data refuse most months or let wrong
-results through; on real scripts it reproduces the scripts' results on every batch it runs. The
+results through; on real scripts, including pipelines written by others and run on the real months, it reproduces
+the scripts' results on every batch it runs. The
 refusals that remain come from facts no run-time code can replace, such as a publisher changing a
 column's type, and point to the next step: certificates that let generated code adapt to such
 changes, joins in the language, and the mechanized soundness proof extended from the core
