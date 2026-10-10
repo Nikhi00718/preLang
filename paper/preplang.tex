@@ -65,9 +65,9 @@ the gap. On \RealRuns{} real monthly batches of three public datasets, selective
 handles \RealDeoptCorrect{} batches exactly as a fresh compilation would and none
 unsoundly, where Great Expectations and pandera, set up on the same data, refuse
 \RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs, and TFDV,
-which checks no numeric ranges, admits months on which the optimized program writes different files. On \CorpusBothScripts{} held-out pandas
-scripts from GitHub for two Kaggle tasks, \CorpusBothSame{} of \CorpusBothRuns{} runs on new batches
-reproduce the scripts' own results and none differ.
+which checks no numeric ranges, admits months on which the optimized program writes different files. On \CorpusBothLifted{} held-out pandas
+scripts from GitHub for two Kaggle tasks, lifted into \PL, \CorpusBothSame{} of \CorpusBothRuns{} runs
+on new batches reproduce the scripts' own results and none differ.
 \end{abstract}
 
 \keywords{data-aware compilation, abstract interpretation, data validation, speculative
@@ -128,7 +128,7 @@ which of its checks can never fire, and synthesizes the contract a producer must
 of its consumers ever refuses or deoptimizes.
 \item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
 monthly batches of three public datasets, scored against fresh compilations and against
-pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothScripts{}
+pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothLifted{}
 held-out pandas scripts for two Kaggle tasks, lifted into \PL by a second front end; two-stage
 pipelines; injected mistakes and \RbTotal{} real failures from GitHub issues; and the cost of all of
 it.

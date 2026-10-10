@@ -1,0 +1,145 @@
+[
+ {
+  "program": "imageset",
+  "deopt": {
+   "seconds": 0.021058599930256605,
+   "analyses": 16,
+   "removals": 0
+  },
+  "full": {
+   "seconds": 0.02288220007903874,
+   "analyses": 16,
+   "removals": 0
+  }
+ },
+ {
+  "program": "linked",
+  "deopt": {
+   "seconds": 0.023807200137525797,
+   "analyses": 18,
+   "removals": 0
+  },
+  "full": {
+   "seconds": 0.02434120001271367,
+   "analyses": 18,
+   "removals": 0
+  }
+ },
+ {
+  "program": "optimize_images",
+  "deopt": {
+   "seconds": 0.02111180010251701,
+   "analyses": 14,
+   "removals": 2
+  },
+  "full": {
+   "seconds": 0.021163800032809377,
+   "analyses": 14,
+   "removals": 0
+  }
+ },
+ {
+  "program": "metadata_only",
+  "deopt": {
+   "seconds": 0.020592099986970425,
+   "analyses": 40,
+   "removals": 2
+  },
+  "full": {
+   "seconds": 0.021811299957334995,
+   "analyses": 31,
+   "removals": 0
+  }
+ },
+ {
+  "program": "ml_split",
+  "deopt": {
+   "seconds": 0.022223599953576922,
+   "analyses": 27,
+   "removals": 1
+  },
+  "full": {
+   "seconds": 0.022775700083002448,
+   "analyses": 24,
+   "removals": 0
+  }
+ },
+ {
+  "program": "optimize",
+  "deopt": {
+   "seconds": 0.02774760010652244,
+   "analyses": 67,
+   "removals": 3
+  },
+  "full": {
+   "seconds": 0.024449599906802177,
+   "analyses": 55,
+   "removals": 0
+  }
+ },
+ {
+  "program": "students",
+  "deopt": {
+   "seconds": 0.02445999998599291,
+   "analyses": 23,
+   "removals": 2
+  },
+  "full": {
+   "seconds": 0.02351440000347793,
+   "analyses": 14,
+   "removals": 0
+  }
+ },
+ {
+  "program": "tableset",
+  "deopt": {
+   "seconds": 0.032003500033169985,
+   "analyses": 58,
+   "removals": 0
+  },
+  "full": {
+   "seconds": 0.03500910010188818,
+   "analyses": 58,
+   "removals": 0
+  }
+ },
+ {
+  "program": "traffic",
+  "deopt": {
+   "seconds": 0.030274800024926662,
+   "analyses": 146,
+   "removals": 6
+  },
+  "full": {
+   "seconds": 0.026390000013634562,
+   "analyses": 63,
+   "removals": 0
+  }
+ },
+ {
+  "program": "bikes",
+  "deopt": {
+   "seconds": 0.03426479990594089,
+   "analyses": 207,
+   "removals": 6
+  },
+  "full": {
+   "seconds": 0.027115199947729707,
+   "analyses": 122,
+   "removals": 0
+  }
+ },
+ {
+  "program": "taxi",
+  "deopt": {
+   "seconds": 0.03215360012836754,
+   "analyses": 162,
+   "removals": 4
+  },
+  "full": {
+   "seconds": 0.03190130018629134,
+   "analyses": 119,
+   "removals": 0
+  }
+ }
+]

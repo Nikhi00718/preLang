@@ -1,0 +1,25 @@
+\begin{table}[t]
+\caption{Real pandas scripts from GitHub (RQ5): held-out scripts, lifted, compiled once on the training file and run on new batches; the ground truth is the lifted pandas statements run on the same batch.}
+\label{tab:rq-corpus}
+\centering
+\footnotesize
+\begin{tabular}{@{}lr@{}}
+\toprule
+& Titanic \\
+\midrule
+Held-out scripts & 272 \\
+Lifted, in scope & 130 \\
+Compiled & 124 \\
+Runs on new batches & 1364 \\
+\emph{Full certificate:} admitted & 1364 \\
+\quad identical to the script & 0 \\
+\quad refused, script runs & 0 \\
+\emph{With deoptimization:} admitted & 1347 \\
+\quad identical to the script & 1347 \\
+\quad stopped by a check & 0 \\
+\quad different (unsound) & 0 \\
+\quad refused, script runs & 10 \\
+\quad ran with removals re-enabled & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}

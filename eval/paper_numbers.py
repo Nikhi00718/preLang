@@ -84,6 +84,8 @@ def main():
         overhead(load("overhead.json"), numbers)
     if (RESULTS / "imagebatches.json").exists():
         imagebatches(load("imagebatches.json"), numbers)
+    if (RESULTS / "certcost.json").exists():
+        certcost(load("certcost.json"), numbers)
     soundness_tests(numbers)
 
     numbers["TestCount"] = test_count()
@@ -259,7 +261,7 @@ def corpus_numbers(records, prefix, numbers, held_out_from):
 
 def corpora(numbers):
     rows = []
-    both_scripts = both_runs = both_same = 0
+    both_scripts = both_runs = both_same = both_lifted = 0
     for name, file, prefix, held in (("Titanic", "pandas_corpus.json", "Corpus", 100),
                                      ("House Prices", "pandas_corpus_houses.json", "Houses", 0)):
         if not (RESULTS / file).exists():
@@ -268,8 +270,10 @@ def corpora(numbers):
         both_scripts += len(test)
         both_runs += len(runs)
         both_same += numbers[f"{prefix}Same"]
+        both_lifted += numbers[f"{prefix}Compiled"]
         rows.append((name, prefix))
-    numbers.update(CorpusBothScripts=both_scripts, CorpusBothRuns=both_runs, CorpusBothSame=both_same)
+    numbers.update(CorpusBothScripts=both_scripts, CorpusBothRuns=both_runs, CorpusBothSame=both_same,
+                   CorpusBothLifted=both_lifted)
     lines = [r"\begin{table}[t]", r"\caption{Real pandas scripts from GitHub (RQ5): held-out scripts, lifted, "
              r"compiled once on the training file and run on new batches; the ground truth is the lifted pandas "
              r"statements run on the same batch.}", r"\label{tab:rq-corpus}", r"\centering", r"\footnotesize",
@@ -295,6 +299,13 @@ def composition(results, numbers):
              r"\label{tab:rq-compose}", r"\centering", r"\footnotesize", r"\begin{tabular}{@{}llrrrrr@{}}", r"\toprule",
              r"Data & Stage 1 & Facts & Guar. & Months & Deopt. & Guar.\ broken \\", r"\midrule"]
     total_broken = total_months = 0
+    written = [r for r in results if not r["strengthened"]]
+    numbers["ComposeFacts"] = sum(link.get("facts", 0) for r in written for link in r["composition"].get("links", []))
+    numbers["ComposeGuaranteed"] = sum(link.get("guaranteed", 0) for r in written
+                                       for link in r["composition"].get("links", []))
+    numbers["ComposeStageOneStops"] = sum(m["stage1"] != "finished" for r in written for m in r["months"])
+    numbers["ComposeLikeFresh"] = sum(m.get("outcome") in ("correct run", "correct stop")
+                                      for r in results for m in r["months"] if m.get("stage2"))
     for r in results:
         links = r["composition"].get("links", [{}])
         facts = sum(link.get("facts", 0) for link in links)
@@ -315,10 +326,22 @@ def overhead(rows, numbers):
     if not finished:
         return
     med = lambda key: statistics.median(r[key] for r in finished)  # noqa: E731
-    over = statistics.median((r["deopt"] - r["trusted"]) / r["trusted"] for r in finished)
+    ratios = sorted(100 * (r["deopt"] - r["trusted"]) / r["trusted"] for r in finished)
+    low, _, high = statistics.quantiles(ratios, n=4)
     numbers.update(OhMonths=len(finished), OhTrusted=f"{med('trusted'):.2f}", OhFull=f"{med('full'):.2f}",
-                   OhDeopt=f"{med('deopt'):.2f}", OhPct=f"{100 * over:.0f}", OhCompile=f"{med('compile'):.2f}",
-                   OhFresh=f"{med('fresh'):.2f}")
+                   OhDeopt=f"{med('deopt'):.2f}", OhPct=f"{statistics.median(ratios):+.0f}",
+                   OhPctLow=f"{low:+.0f}", OhPctHigh=f"{high:+.0f}", OhCompile=f"{med('compile'):.2f}",
+                   OhCompileMs=f"{1000 * med('compile'):.0f}", OhFresh=f"{med('fresh'):.2f}")
+
+
+def certcost(rows, numbers):
+    """Re-analyses and compile time of certification, with and without deoptimization."""
+    deopt = [r["deopt"]["analyses"] for r in rows]
+    full = [r["full"]["analyses"] for r in rows]
+    ms = [1000 * r[k]["seconds"] for r in rows for k in ("deopt", "full")]
+    numbers.update(CcPrograms=len(rows), CcAnalysesMin=min(deopt), CcAnalysesMax=max(deopt),
+                   CcFullAnalysesMax=max(full), CcMsMin=f"{min(ms):.0f}", CcMsMax=f"{max(ms):.0f}",
+                   CcRatioMax=f"{max(d / f for d, f in zip(deopt, full) if f):.1f}")
 
 
 def imagebatches(rows, numbers):

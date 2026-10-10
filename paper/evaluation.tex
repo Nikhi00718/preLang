@@ -4,7 +4,7 @@ We ask seven questions. \textbf{RQ1:} Does compiling against the data find mista
 is processed? \textbf{RQ2:} What does data-aware compilation cost and gain? \textbf{RQ3:} Can a
 compiled program be reused on edited batches? \textbf{RQ4:} On real data that changes from month to
 month, compared with data-validation tools? \textbf{RQ5:} For real pandas scripts? \textbf{RQ6:} Do
-certificates compose across stages? \textbf{RQ7:} What does reuse cost at run time? We also report
+certificates compose across stages? \textbf{RQ7:} What do certification and reuse cost? We also report
 how we tested soundness and the bugs the evaluation found in our own implementation.
 
 \paragraph{Setup.} Intel Core i5-12450H (8 cores), 16\,GB RAM, Windows~11; MSVC 14.44 (Release);
@@ -74,13 +74,18 @@ missing values in one column, and one value far out of range (\CertBatches{} bat
 Both certificates handle every batch correctly (Table~\ref{tab:rq-edits}): the full certificate by
 refusing exactly the batches whose fresh compilation fails, selective deoptimization by running them
 and stopping at the re-enabled check (\CertDeopted{} batches ran with removals re-enabled). The
-fingerprint refuses every edited batch, and so do the compiled file's own facts for most. Gating the
+fingerprint refuses every edited batch (\CertFpNeedless{} of them needlessly), and the compiled file's
+own facts refuse \CertFactsNeedless{} that a fresh compilation runs. Gating the
 optimized program with the file's own facts is also unsound (\CertFactsUnsound{} wrong runs): on the
 table set and on the linked images, resampled and drifted rows repeat keys or lose matches, so a
 contract the compiler had proven by reading the values (\texttt{UNIQUE}, \texttt{REFERENCES},
 \texttt{MATCH\_RATE}) no longer holds and the fresh compilation reports it, while the file's facts,
 which are facts of single columns, admit the batch and the optimized program finishes. \PL runs such
-checks again whenever an input changed.
+checks again whenever an input changed. The real validators fare no better: pandera's inferred schema
+is unsound on the same batches (\CertPanderaAllUnsound{} wrong), TFDV's, which has no ranges, on these
+and on batches whose values drift past what a removed check or filter relied on (\CertTfdvAllUnsound{}
+wrong), and Great Expectations' statistical suite, which
+is sound here, refuses \CertGxAllNeedless{} batches that a fresh compilation runs.
 
 \paragraph{Image folders.} A pipeline that makes images gray and $64\times64$, compiled on a folder
 of gray $64\times64$ images, has its \texttt{GRAYSCALE} and \texttt{RESIZE} removed speculatively. We
@@ -171,20 +176,42 @@ compiled and run fresh on stage~1's output.
 
 \input{comptable}
 
-Across \ComposeMonths{} months through both stages, no fact the composition reported as guaranteed ever
-made stage~2 refuse or deoptimize (Table~\ref{tab:rq-compose}). The facts it reported as open are
-real: stage~1 never constrains, for example, taxi tips, which stage~2 expects in $[0,500]$. With the
-\texttt{EXPECT} statements the tool suggested added to stage~1, every fact composes, and a month that
-breaks one now stops in stage~1, where the data enters, instead of deoptimizing downstream.
+The composition shows that stage~1 already guarantees most of what stage~2 relies on
+(\ComposeGuaranteed{} of \ComposeFacts{} facts across the three workloads), so stage~2's checks of
+those facts can never fire on stage~1's output (Table~\ref{tab:rq-compose}). The facts it reports as
+open are genuine gaps between the stages: stage~1 never bounds taxi tips, which stage~2 expects in
+$[0,500]$; it fills missing rain with 0 but never bounds rain from below; and it never checks the
+traffic cloud cover or the bike temperatures for missing values, which stage~2's filters, removed as
+always true, rely on. For each, the tool wrote the \texttt{EXPECT} that stage~1 would need. Across
+\ComposeMonths{} months through both stages (in both versions), no fact reported as guaranteed ever
+made stage~2 refuse or deoptimize. The open facts also held in these months, so stage~2 never
+deoptimized at all; the composition's value here is that after the suggested statements are added to
+stage~1, every fact stage~2 relies on is guaranteed statically, for all future months, and adding
+them made no month stop earlier in stage~1 (the same \ComposeStageOneStops{} months stop there in both
+versions, all at the checks stage~1 already had). Every stage-2 run ended exactly like a fresh
+compilation of stage~2 on the same input.
 
 \subsection{RQ7: The cost of reuse}\label{sec:rq-cost}
 
 Reusing a compiled program costs its admission check and, with deoptimization, the facts of the columns
-item certificates mention. Over the \OhMonths{} real months on which every variant finished, the
-median run took \OhTrusted\,s with no check at all, \OhFull\,s with admission against the full
-certificate, and \OhDeopt\,s with admission and deoptimization (\OhPct\% over no check); compiling the
-month afresh took \OhCompile\,s before running, and compiling and running \OhFresh\,s. Deoptimization
-needs one pass over a few columns that the program reads anyway; recompiling reads every cell again.
+item certificates mention. Over the \OhMonths{} real months on which every variant finished (median of
+three runs each), the median run took \OhTrusted\,s with no check at all, \OhFull\,s with admission
+against the full certificate, and \OhDeopt\,s with admission and deoptimization. The difference between
+the last and the first is \OhPct\% at the median (interquartile range \OhPctLow\% to \OhPctHigh\%), which
+is inside the run-to-run noise of the machine: the check is one pass over a few columns the program reads
+anyway. Compiling a month afresh took \OhCompileMs\,ms before running and \OhFresh\,s with the run.
+
+Certification is paid once, at compile time. Over \CcPrograms{} programs (the shipped examples and
+the three real pipelines), the compiler ran \CcAnalysesMin{} to \CcAnalysesMax{} re-analyses with
+deoptimization against at most \CcFullAnalysesMax{} for the full certificate alone (at most
+\CcRatioMax$\times$ as many), and every compilation took \CcMsMin{} to \CcMsMax\,ms. The analysis is
+cheap because it runs on dataset states, not on data.
+
+We state the consequence plainly: at these sizes reuse does not save time, because a fresh compilation is
+itself cheap. What reuse buys is a fixed, reviewed artifact that runs unchanged on every admitted batch
+(\S\ref{sec:rq-real}), an exact signal when a batch drifts, naming the removal it breaks, and output
+guarantees a downstream stage can rely on without seeing the data (\S\ref{sec:rq-compose}). Recompiling
+gives none of these: each month gets a different program and no statement about what it assumed.
 
 \subsection{Testing soundness}\label{sec:soundtest}
 

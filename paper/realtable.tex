@@ -1,18 +1,20 @@
-\begin{table}[t]
-\caption{Real monthly batches (RQ8). Facts and Cert.: months admitted by the compiled month's own facts and by the certificate; Fresh: admitted months that end like a fresh compilation; Refused: refused although a fresh compilation runs. Traffic and Bikes are UCI CSV files, Taxi is NYC TLC green-taxi Parquet.}
-\label{tab:rq8}
+\begin{table*}[t]
+\caption{Reusing compiled pipelines on real monthly batches (RQ4), both deployments (compiled on the first month, and on the month before). ok: handled as a fresh compilation of the month would; ref.: refused although a fresh compilation runs; wrong: finished with other files than the fresh run, or where it fails. Validators gate the optimized program (Section~\ref{sec:rq-real}).}
+\label{tab:rq-real}
 \centering
 \footnotesize
-\begin{tabular}{@{}llrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrrrrrr@{}}
 \toprule
-Data & Anchor & Months & Facts & Cert. & Fresh & Refused \\
+& \multicolumn{3}{c}{Traffic (CSV)} & \multicolumn{3}{c}{Bikes (CSV)} & \multicolumn{3}{c}{Taxi (Parquet)} & \multicolumn{3}{c}{all 238} \\
+\cmidrule(l){2-4}\cmidrule(l){5-7}\cmidrule(l){8-10}\cmidrule(l){11-13}
+Policy & ok & ref. & wrong & ok & ref. & wrong & ok & ref. & wrong & ok & ref. & wrong \\
 \midrule
-Traffic & first & 62 & 0 & 59 & 59 & 1 \\
- & previous & 60 & 2 & 58 & 58 & 1 \\
-Bikes & first & 23 & 0 & 22 & 22 & 1 \\
- & previous & 23 & 0 & 22 & 22 & 1 \\
-Taxi & first & 35 & 0 & 11 & 11 & 17 \\
- & previous & 35 & 0 & 33 & 33 & 2 \\
+Fingerprint & 3 & 119 & 0 & 0 & 46 & 0 & 14 & 56 & 0 & 17 & 221 & 0 \\
+File facts & 5 & 117 & 0 & 0 & 46 & 0 & 14 & 56 & 0 & 19 & 219 & 0 \\
+TFDV, every column & 5 & 117 & 0 & 0 & 46 & 0 & 46 & 0 & 24 & 51 & 163 & 24 \\
+TFDV, columns read & 92 & 27 & 3 & 0 & 46 & 0 & 46 & 0 & 24 & 138 & 73 & 27 \\
+Full certificate & 120 & 2 & 0 & 44 & 2 & 0 & 51 & 19 & 0 & 215 & 23 & 0 \\
+\textbf{Selective deoptimization} & \textbf{122} & \textbf{0} & \textbf{0} & \textbf{46} & \textbf{0} & \textbf{0} & \textbf{53} & \textbf{17} & \textbf{0} & \textbf{221} & \textbf{17} & \textbf{0} \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}

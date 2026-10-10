@@ -1,0 +1,2442 @@
+[
+ {
+  "workload": "taxi",
+  "strengthened": false,
+  "composition": {
+   "links": [
+    {
+     "output": "trips_clean.parquet",
+     "input": "trips",
+     "facts": 13,
+     "guaranteed": 11,
+     "open": [
+      {
+       "column": "tip_amount",
+       "kind": "min",
+       "value": 0,
+       "level": "removal",
+       "for": [
+        "line 6: EXPECT trips.tip_amount BETWEEN 0 AND 500"
+       ]
+      },
+      {
+       "column": "tip_amount",
+       "kind": "max",
+       "value": 500,
+       "level": "removal",
+       "for": [
+        "line 6: EXPECT trips.tip_amount BETWEEN 0 AND 500"
+       ]
+      }
+     ],
+     "fixes": [
+      "EXPECT trips.tip_amount BETWEEN 0 AND 500;"
+     ]
+    }
+   ],
+   "missing": 2
+  },
+  "report": "trips_clean.parquet -> trips: 11 of 13 facts guaranteed by preplang_contract.json\n  guaranteed   passenger_count present  (admission: admission)\n  guaranteed   trip_distance present  (admission: admission)\n  guaranteed   fare_amount present  (admission: admission)\n  guaranteed   tip_amount present  (admission: admission)\n  guaranteed   payment_type present  (admission: admission)\n  guaranteed   fare_amount min 0  (removal: line 3: EXPECT trips.fare_amount BETWEEN 0 AND 1000)\n  guaranteed   fare_amount max 1000  (removal: line 3: EXPECT trips.fare_amount BETWEEN 0 AND 1000)\n  guaranteed   passenger_count not_null  (removal: line 4: EXPECT trips.passenger_count NOT_NULL)\n  guaranteed   trip_distance min 0  (removal: line 5: EXPECT trips.trip_distance BETWEEN 0 AND 100)\n  guaranteed   trip_distance max 100  (removal: line 5: EXPECT trips.trip_distance BETWEEN 0 AND 100)\n  guaranteed   payment_type not_null  (removal: line 7: removed because trips.payment_type has no missing values here)\n  NOT implied  tip_amount min 0  (removal: line 6: EXPECT trips.tip_amount BETWEEN 0 AND 500)\n  NOT implied  tip_amount max 500  (removal: line 6: EXPECT trips.tip_amount BETWEEN 0 AND 500)\n  stage 1 would guarantee them with, before its SAVE:\n    EXPECT trips.tip_amount BETWEEN 0 AND 500;\n2 fact(s) not guaranteed: stage 2 may refuse or deoptimize\n",
+  "program1": "# Green taxi trips of one month, cleaned for a fare model.\nLOAD \"trips.parquet\" AS trips;\nEXPECT trips.VendorID NOT_NULL;\nEXPECT trips.PULocationID BETWEEN 1 AND 265;\nEXPECT trips.DOLocationID BETWEEN 1 AND 265;\nEXPECT trips.lpep_pickup_datetime NOT_NULL;\nFILL_NULL trips.passenger_count WITH 1;\nFILL_NULL trips.payment_type WITH 5;\nFILTER trips WHERE fare_amount >= 0 AND trip_distance > 0 AND trip_distance < 100;\nEXPECT trips.fare_amount BETWEEN 0 AND 1000;\nSELECT trips [lpep_pickup_datetime, PULocationID, DOLocationID, passenger_count, trip_distance, fare_amount, tip_amount, payment_type];\nSAVE trips AS \"trips_clean.parquet\";\n",
+  "months": [
+   {
+    "month": "2023-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-06",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-08",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-09",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-10",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-11",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-12",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2024-01",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2024-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   }
+  ]
+ },
+ {
+  "workload": "taxi",
+  "strengthened": true,
+  "composition": {
+   "links": [
+    {
+     "output": "trips_clean.parquet",
+     "input": "trips",
+     "facts": 13,
+     "guaranteed": 13,
+     "open": [],
+     "fixes": []
+    }
+   ]
+  },
+  "report": "trips_clean.parquet -> trips: 13 of 13 facts guaranteed by preplang_contract.json\n  guaranteed   passenger_count present  (admission: admission)\n  guaranteed   trip_distance present  (admission: admission)\n  guaranteed   fare_amount present  (admission: admission)\n  guaranteed   tip_amount present  (admission: admission)\n  guaranteed   payment_type present  (admission: admission)\n  guaranteed   fare_amount min 0  (removal: line 3: EXPECT trips.fare_amount BETWEEN 0 AND 1000)\n  guaranteed   fare_amount max 1000  (removal: line 3: EXPECT trips.fare_amount BETWEEN 0 AND 1000)\n  guaranteed   passenger_count not_null  (removal: line 4: EXPECT trips.passenger_count NOT_NULL)\n  guaranteed   trip_distance min 0  (removal: line 5: EXPECT trips.trip_distance BETWEEN 0 AND 100)\n  guaranteed   trip_distance max 100  (removal: line 5: EXPECT trips.trip_distance BETWEEN 0 AND 100)\n  guaranteed   tip_amount min 0  (removal: line 6: EXPECT trips.tip_amount BETWEEN 0 AND 500)\n  guaranteed   tip_amount max 500  (removal: line 6: EXPECT trips.tip_amount BETWEEN 0 AND 500)\n  guaranteed   payment_type not_null  (removal: line 7: removed because trips.payment_type has no missing values here)\ncomposes: stage 2 never refuses or deoptimizes a stage-1 output for its values\n",
+  "program1": "# Green taxi trips of one month, cleaned for a fare model.\nLOAD \"trips.parquet\" AS trips;\nEXPECT trips.VendorID NOT_NULL;\nEXPECT trips.PULocationID BETWEEN 1 AND 265;\nEXPECT trips.DOLocationID BETWEEN 1 AND 265;\nEXPECT trips.lpep_pickup_datetime NOT_NULL;\nFILL_NULL trips.passenger_count WITH 1;\nFILL_NULL trips.payment_type WITH 5;\nFILTER trips WHERE fare_amount >= 0 AND trip_distance > 0 AND trip_distance < 100;\nEXPECT trips.fare_amount BETWEEN 0 AND 1000;\nSELECT trips [lpep_pickup_datetime, PULocationID, DOLocationID, passenger_count, trip_distance, fare_amount, tip_amount, payment_type];\nEXPECT trips.tip_amount BETWEEN 0 AND 500;\nSAVE trips AS \"trips_clean.parquet\";\n",
+  "months": [
+   {
+    "month": "2023-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-06",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2023-08",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-09",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-10",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-11",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2023-12",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2024-01",
+    "stage1": "contract error",
+    "stage1_deopts": []
+   },
+   {
+    "month": "2024-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2024-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   }
+  ]
+ },
+ {
+  "workload": "traffic",
+  "strengthened": false,
+  "composition": {
+   "links": [
+    {
+     "output": "traffic_clean.csv",
+     "input": "traffic",
+     "facts": 14,
+     "guaranteed": 12,
+     "open": [
+      {
+       "column": "rain_1h",
+       "kind": "min",
+       "value": 0,
+       "level": "removal",
+       "for": [
+        "line 5: EXPECT traffic.rain_1h BETWEEN 0 AND 100"
+       ]
+      },
+      {
+       "column": "clouds_all",
+       "kind": "not_null",
+       "value": null,
+       "level": "removal",
+       "for": [
+        "line 7: removed because the condition is true for every row of traffic"
+       ]
+      }
+     ],
+     "fixes": [
+      "EXPECT traffic.rain_1h BETWEEN 0 AND 100;",
+      "EXPECT traffic.clouds_all NOT_NULL;"
+     ]
+    }
+   ],
+   "missing": 2
+  },
+  "report": "traffic_clean.csv -> traffic: 12 of 14 facts guaranteed by preplang_contract.json\n  guaranteed   temp present  (admission: admission)\n  guaranteed   rain_1h present  (admission: admission)\n  guaranteed   clouds_all present  (admission: admission)\n  guaranteed   weather_main present  (admission: admission)\n  guaranteed   traffic_volume present  (admission: admission)\n  guaranteed   traffic_volume min 0  (removal: line 3: EXPECT traffic.traffic_volume BETWEEN 0 AND 1)\n  guaranteed   traffic_volume max 1  (removal: line 3: EXPECT traffic.traffic_volume BETWEEN 0 AND 1)\n  guaranteed   weather_main not_null  (removal: line 4: EXPECT traffic.weather_main NOT_NULL)\n  guaranteed   rain_1h max 100  (removal: line 5: EXPECT traffic.rain_1h BETWEEN 0 AND 100)\n  guaranteed   temp min 230  (removal: line 6: EXPECT traffic.temp BETWEEN 230 AND 320)\n  guaranteed   temp max 320  (removal: line 6: EXPECT traffic.temp BETWEEN 230 AND 320)\n  guaranteed   clouds_all max 100  (removal: line 7: removed because the condition is true for every row of traffic)\n  NOT implied  rain_1h min 0  (removal: line 5: EXPECT traffic.rain_1h BETWEEN 0 AND 100)\n  NOT implied  clouds_all not_null  (removal: line 7: removed because the condition is true for every row of traffic)\n  stage 1 would guarantee them with, before its SAVE:\n    EXPECT traffic.rain_1h BETWEEN 0 AND 100;\n    EXPECT traffic.clouds_all NOT_NULL;\n2 fact(s) not guaranteed: stage 2 may refuse or deoptimize\n",
+  "program1": "# Hourly traffic and weather of one month, cleaned for a forecasting model.\nLOAD \"traffic.csv\" AS traffic;\nEXPECT traffic.traffic_volume BETWEEN 0 AND 10000;\nEXPECT traffic.temp BETWEEN 230 AND 320;            # Kelvin\nEXPECT traffic.clouds_all BETWEEN 0 AND 100;\nEXPECT traffic.weather_main NOT_NULL;\nFILL_NULL traffic.rain_1h WITH 0;\nFILTER traffic WHERE rain_1h < 100;                  # drops impossible rain readings\nNORMALIZE traffic.traffic_volume USING MINMAX;\nSELECT traffic [date_time, temp, rain_1h, clouds_all, weather_main, traffic_volume];\nSAVE traffic AS \"traffic_clean.csv\";\n",
+  "months": [
+   {
+    "month": "2012-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-01",
+    "stage1": "contract error",
+    "stage1_deopts": [
+     "line 4: EXPECT traffic.temp BETWEEN 230 AND 320: temp goes down to 0.0, below 230"
+    ]
+   },
+   {
+    "month": "2014-02",
+    "stage1": "contract error",
+    "stage1_deopts": [
+     "line 4: EXPECT traffic.temp BETWEEN 230 AND 320: temp goes down to 0.0, below 230"
+    ]
+   },
+   {
+    "month": "2014-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-07",
+    "stage1": "finished",
+    "stage1_deopts": [
+     "line 8: removed because the condition is true for every row of traffic: rain_1h goes up to 9831.3, at or above 100"
+    ],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   }
+  ]
+ },
+ {
+  "workload": "traffic",
+  "strengthened": true,
+  "composition": {
+   "links": [
+    {
+     "output": "traffic_clean.csv",
+     "input": "traffic",
+     "facts": 14,
+     "guaranteed": 14,
+     "open": [],
+     "fixes": []
+    }
+   ]
+  },
+  "report": "traffic_clean.csv -> traffic: 14 of 14 facts guaranteed by preplang_contract.json\n  guaranteed   temp present  (admission: admission)\n  guaranteed   rain_1h present  (admission: admission)\n  guaranteed   clouds_all present  (admission: admission)\n  guaranteed   weather_main present  (admission: admission)\n  guaranteed   traffic_volume present  (admission: admission)\n  guaranteed   traffic_volume min 0  (removal: line 3: EXPECT traffic.traffic_volume BETWEEN 0 AND 1)\n  guaranteed   traffic_volume max 1  (removal: line 3: EXPECT traffic.traffic_volume BETWEEN 0 AND 1)\n  guaranteed   weather_main not_null  (removal: line 4: EXPECT traffic.weather_main NOT_NULL)\n  guaranteed   rain_1h min 0  (removal: line 5: EXPECT traffic.rain_1h BETWEEN 0 AND 100)\n  guaranteed   rain_1h max 100  (removal: line 5: EXPECT traffic.rain_1h BETWEEN 0 AND 100)\n  guaranteed   temp min 230  (removal: line 6: EXPECT traffic.temp BETWEEN 230 AND 320)\n  guaranteed   temp max 320  (removal: line 6: EXPECT traffic.temp BETWEEN 230 AND 320)\n  guaranteed   clouds_all not_null  (removal: line 7: removed because the condition is true for every row of traffic)\n  guaranteed   clouds_all max 100  (removal: line 7: removed because the condition is true for every row of traffic)\ncomposes: stage 2 never refuses or deoptimizes a stage-1 output for its values\n",
+  "program1": "# Hourly traffic and weather of one month, cleaned for a forecasting model.\nLOAD \"traffic.csv\" AS traffic;\nEXPECT traffic.traffic_volume BETWEEN 0 AND 10000;\nEXPECT traffic.temp BETWEEN 230 AND 320;            # Kelvin\nEXPECT traffic.clouds_all BETWEEN 0 AND 100;\nEXPECT traffic.weather_main NOT_NULL;\nFILL_NULL traffic.rain_1h WITH 0;\nFILTER traffic WHERE rain_1h < 100;                  # drops impossible rain readings\nNORMALIZE traffic.traffic_volume USING MINMAX;\nSELECT traffic [date_time, temp, rain_1h, clouds_all, weather_main, traffic_volume];\nEXPECT traffic.rain_1h BETWEEN 0 AND 100;\nEXPECT traffic.clouds_all NOT_NULL;\nSAVE traffic AS \"traffic_clean.csv\";\n",
+  "months": [
+   {
+    "month": "2012-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2013-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-01",
+    "stage1": "contract error",
+    "stage1_deopts": [
+     "line 4: EXPECT traffic.temp BETWEEN 230 AND 320: temp goes down to 0.0, below 230"
+    ]
+   },
+   {
+    "month": "2014-02",
+    "stage1": "contract error",
+    "stage1_deopts": [
+     "line 4: EXPECT traffic.temp BETWEEN 230 AND 320: temp goes down to 0.0, below 230"
+    ]
+   },
+   {
+    "month": "2014-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2014-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2015-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-07",
+    "stage1": "finished",
+    "stage1_deopts": [
+     "line 8: removed because the condition is true for every row of traffic: rain_1h goes up to 9831.3, at or above 100"
+    ],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2016-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2017-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2018-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   }
+  ]
+ },
+ {
+  "workload": "bikes",
+  "strengthened": false,
+  "composition": {
+   "links": [
+    {
+     "output": "days_clean.csv",
+     "input": "days",
+     "facts": 11,
+     "guaranteed": 10,
+     "open": [
+      {
+       "column": "temp",
+       "kind": "not_null",
+       "value": null,
+       "level": "removal",
+       "for": [
+        "line 6: removed because the condition is true for every row of days"
+       ]
+      }
+     ],
+     "fixes": [
+      "EXPECT days.temp NOT_NULL;"
+     ]
+    }
+   ],
+   "missing": 1
+  },
+  "report": "days_clean.csv -> days: 10 of 11 facts guaranteed by preplang_contract.json\n  guaranteed   weathersit present  (admission: admission)\n  guaranteed   temp present  (admission: admission)\n  guaranteed   hum present  (admission: admission)\n  guaranteed   windspeed present  (admission: admission)\n  guaranteed   hum min 0  (removal: line 3: EXPECT days.hum BETWEEN 0 AND 1)\n  guaranteed   hum max 1  (removal: line 3: EXPECT days.hum BETWEEN 0 AND 1)\n  guaranteed   windspeed not_null  (removal: line 4: EXPECT days.windspeed NOT_NULL)\n  guaranteed   weathersit min 1  (removal: line 5: EXPECT days.weathersit BETWEEN 1 AND 4)\n  guaranteed   weathersit max 4  (removal: line 5: EXPECT days.weathersit BETWEEN 1 AND 4)\n  guaranteed   temp min 0  (removal: line 6: removed because the condition is true for every row of days)\n  NOT implied  temp not_null  (removal: line 6: removed because the condition is true for every row of days)\n  stage 1 would guarantee them with, before its SAVE:\n    EXPECT days.temp NOT_NULL;\n1 fact(s) not guaranteed: stage 2 may refuse or deoptimize\n",
+  "program1": "# Daily bike rentals of one month, cleaned for a demand model.\nLOAD \"days.csv\" AS days;\nEXPECT days.cnt BETWEEN 0 AND 10000;\nEXPECT days.hum BETWEEN 0 AND 1;\nEXPECT days.temp BETWEEN 0 AND 1;\nEXPECT days.weathersit BETWEEN 1 AND 4;\nFILL_NULL days.windspeed WITH 0;\nFILTER days WHERE hum > 0;                            # a humidity of 0 is a sensor failure\nNORMALIZE days.cnt USING ZSCORE;\nSELECT days [dteday, season, weathersit, temp, hum, windspeed, cnt];\nSAVE days AS \"days_clean.csv\";\n",
+  "months": [
+   {
+    "month": "2011-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-03",
+    "stage1": "finished",
+    "stage1_deopts": [
+     "line 8: removed because the condition is true for every row of days: hum goes down to 0.0, at or below 0"
+    ],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   }
+  ]
+ },
+ {
+  "workload": "bikes",
+  "strengthened": true,
+  "composition": {
+   "links": [
+    {
+     "output": "days_clean.csv",
+     "input": "days",
+     "facts": 11,
+     "guaranteed": 11,
+     "open": [],
+     "fixes": []
+    }
+   ]
+  },
+  "report": "days_clean.csv -> days: 11 of 11 facts guaranteed by preplang_contract.json\n  guaranteed   weathersit present  (admission: admission)\n  guaranteed   temp present  (admission: admission)\n  guaranteed   hum present  (admission: admission)\n  guaranteed   windspeed present  (admission: admission)\n  guaranteed   hum min 0  (removal: line 3: EXPECT days.hum BETWEEN 0 AND 1)\n  guaranteed   hum max 1  (removal: line 3: EXPECT days.hum BETWEEN 0 AND 1)\n  guaranteed   windspeed not_null  (removal: line 4: EXPECT days.windspeed NOT_NULL)\n  guaranteed   weathersit min 1  (removal: line 5: EXPECT days.weathersit BETWEEN 1 AND 4)\n  guaranteed   weathersit max 4  (removal: line 5: EXPECT days.weathersit BETWEEN 1 AND 4)\n  guaranteed   temp not_null  (removal: line 6: removed because the condition is true for every row of days)\n  guaranteed   temp min 0  (removal: line 6: removed because the condition is true for every row of days)\ncomposes: stage 2 never refuses or deoptimizes a stage-1 output for its values\n",
+  "program1": "# Daily bike rentals of one month, cleaned for a demand model.\nLOAD \"days.csv\" AS days;\nEXPECT days.cnt BETWEEN 0 AND 10000;\nEXPECT days.hum BETWEEN 0 AND 1;\nEXPECT days.temp BETWEEN 0 AND 1;\nEXPECT days.weathersit BETWEEN 1 AND 4;\nFILL_NULL days.windspeed WITH 0;\nFILTER days WHERE hum > 0;                            # a humidity of 0 is a sensor failure\nNORMALIZE days.cnt USING ZSCORE;\nSELECT days [dteday, season, weathersit, temp, hum, windspeed, cnt];\nEXPECT days.temp NOT_NULL;\nSAVE days AS \"days_clean.csv\";\n",
+  "months": [
+   {
+    "month": "2011-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-03",
+    "stage1": "finished",
+    "stage1_deopts": [
+     "line 8: removed because the condition is true for every row of days: hum goes down to 0.0, at or below 0"
+    ],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2011-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-01",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-02",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-03",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-04",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-05",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-06",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-07",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-08",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-09",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-10",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-11",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   },
+   {
+    "month": "2012-12",
+    "stage1": "finished",
+    "stage1_deopts": [],
+    "stage2": "finished",
+    "stage2_deopts": [],
+    "stage2_reason": "",
+    "fresh2": "finished",
+    "outcome": "correct run",
+    "guaranteed_fact_broken": false
+   }
+  ]
+ }
+]
