@@ -1,0 +1,73 @@
+\section{Related Work}\label{sec:related}
+
+\paragraph{Data validation.} TFDV~\cite{breck2019}, Deequ~\cite{schelter2018}, Great
+Expectations~\cite{gx}, pandera~\cite{bantilan2020} and the Data Linter~\cite{hynes2017} check
+expectations on datasets when a pipeline runs, and infer them from a sample to bootstrap a suite.
+Auto-Validate~\cite{song2021} infers validation rules for recurring pipelines from data lakes, and
+Auto-Validate-by-History~\cite{tu2023} from the statistics of past runs. All of them start from the
+data. A certificate starts from the program: it contains exactly the facts the compiled program's
+proofs and removals depend on, so it neither requires facts no proof needs (the main source of the
+refusals in Section~\ref{sec:rq-real}) nor omits facts a removal needs (the source of the wrong runs
+of validators without range checks).
+
+\paragraph{Static analysis of data-science code and input specifications.} Urban and
+M\"uller~\cite{urban2018} analyse which input data a program uses, and Urban~\cite{urban2020} infers
+\emph{necessary} conditions on the structure and values of the input data of Python data-processing
+programs by abstract interpretation; certificates are \emph{sufficient} conditions, for the proofs
+of a particular compilation, found with the data at hand. Negrini et al.~\cite{negrini2023} infer the
+shapes of notebook data frames; Zhuang and Lu~\cite{zhuang2022} type-check data-frame columns;
+Gerstl et al.~\cite{gerstl2026} infer the shapes of R data frames and become more precise when the
+datasets are available; Subotić et al.~\cite{subotic2022} and Drobnjakovi\'c et
+al.~\cite{drobnjakovic2022} find data leakage; Lagouvardos et al.~\cite{lagouvardos2020} infer tensor
+shapes; mlinspect~\cite{grafberger2022} instruments pipelines. Meijer et al.~\cite{meijer2026} load a
+sample of the data during static analysis to check data-dependent API contracts of ML code, the
+closest use of data at analysis time; they report faults, whereas \PL compiles, removes work and
+carries its proofs to new data. Mirji~\cite{mirji2026} proves structural contracts of Spark pipelines
+at compile time and rechecks the schema at the output; Sihler et al.~\cite{sihler2026} make implicit
+assumptions of analysis scripts explicit for run-time checking.
+
+\paragraph{Speculation and deoptimization.} Dynamic compilers specialize code behind guards and
+deoptimize when a guard fails~\cite{holzle1992}; Flückiger et al.~\cite{flueckiger2018} prove such
+transformations correct. In data processing, Tuplex~\cite{spiegelberg2021} compiles a fast path for
+the common case of a sample and sends rows that violate its assumptions to a general path, Schiavio
+et al.~\cite{schiavio2020} speculate on input formats in Spark's SQL compiler and deoptimize at run
+time, and adaptive query execution switches between compiled variants~\cite{kohn2018}. These
+speculate for speed and fall back per row or per code region. Selective deoptimization speculates on
+the facts behind correctness proofs, decides once per batch on statistics the program computes
+anyway, re-enables exactly the removals whose certificates break, and is exact
+(Theorem~\ref{thm:deopt}).
+
+\paragraph{Validity ranges.} Progressive query optimization attaches validity ranges to the operators
+of a plan and re-optimizes when a cardinality leaves them~\cite{markl2004}; parametric query
+optimization precomputes plans per parameter range~\cite{ioannidis1992}. Item certificates are
+validity ranges for correctness obligations, derived by re-analysis rather than cost estimates, and
+leaving them re-enables one instruction rather than the whole plan.
+
+\paragraph{Residual checks and hybrid checking.} Soft typing~\cite{cartwright1991} and hybrid type
+checking~\cite{flanagan2006} discharge what they can statically and check the rest at run time;
+assertion-checking systems reduce run-time checks by abstract interpretation~\cite{stulova2018}, and
+sound gradual verification inserts checks for weakened specifications~\cite{zimmerman2024}. \PL does
+this per batch: a check is residual only for batches that break its certificate.
+
+\paragraph{Preconditions, abduction and certificates.} Necessary preconditions~\cite{cousot2013} and
+sufficient ones by backward under-approximation~\cite{mine2014} are conditions on a program's inputs
+for its assertions; abductive inference~\cite{dillig2012} finds the weakest facts that discharge a
+proof obligation. An item certificate is such a sufficient condition for one removal, restricted to a
+finite lattice anchored at the program's constants, so that a forward analyzer used as a black box
+finds a maximal one; DeepInfer~\cite{ahmed2024} infers data preconditions of trained networks.
+Proof-carrying code~\cite{necula1997} and abstraction-carrying code~\cite{albert2004} ship a proof or
+an abstract model that a consumer checks; a data certificate ships the facts the proofs need, and the
+generated program checks every new input against them.
+
+\paragraph{Contracts and composition.} Assume-guarantee contracts compose components by
+refinement~\cite{benveniste2018}; schema registries check that a reader schema can read what a writer
+schema produces~\cite{avro}; data contracts between producers and consumers are written by hand. In
+\PL both sides of the containment are derived from the stages' proofs, and the producer contract is
+synthesized from the consumers' code.
+
+\paragraph{Types from data and data-centric compilers.} F\# type providers~\cite{petricek2016} infer
+types from sample data at compile time. Min/max statistics per block let databases skip
+data~\cite{moerkotte1998}; \PL uses the same Parquet statistics~\cite{parquet} to prove contracts.
+Halide~\cite{ragan2013}, Weld~\cite{palkar2017}, Dias~\cite{baziotis2024} and
+Magpie~\cite{jindal2021} optimize data code driven by the program; \PL's optimizations are driven by
+facts about the data, and its certificates say when they still apply.

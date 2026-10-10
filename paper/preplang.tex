@@ -5,6 +5,10 @@
 \usepackage{stmaryrd}
 \usepackage{array}
 \usepackage{xspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 
 \settopmatter{printacmref=false, printfolios=true}
 \renewcommand\footnotetextcopyrightpermission[1]{}
@@ -90,9 +94,12 @@ are proven or reported as violated, with the offending row, before any data is p
 optimizer deletes the checks of proven contracts and the operations the state shows to be useless.
 
 That raises the question this paper answers. A pipeline compiled and proven for this month's file
-runs again next month, on a file the proofs were not made for. Recompiling every batch throws away
-the reviewed, tested artifact and its explanations, and hides drift that the compiled program was
-optimized away from. A fingerprint of the compiled file is sound but refuses every new batch.
+runs again next month, on a file the proofs were not made for. Recompiling every batch is possible,
+but it gives up three things: the compiled program as a fixed, reviewed and tested artifact whose
+manifest records the proofs it relies on; the signal that the data has drifted away from what the
+program was optimized for, since a fresh compilation silently produces a different program; and any
+static guarantee between the stages of a pipeline, since every stage would change with every batch.
+A fingerprint of the compiled file keeps all three but refuses every new batch.
 Data-validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} infer expectations from the data
 rather than from the program: on our real monthly data, the suites they infer refuse most new
 months, and the ones that leave numeric ranges out admit months on which the optimized program
@@ -138,6 +145,8 @@ compose the resulting certificates across pipeline stages (Section~\ref{sec:rela
 
 \section{Overview}\label{sec:overview}
 
+\input{figure-arch}
+
 Fig.~\ref{fig:students} cleans a table of students. Compiled against a file whose marks lie in
 $[35,95]$ and whose names are all present, \PL proves the contracts on lines~2--3, finds that
 \texttt{FILL\_NULL} on line~4 and \texttt{FILTER} on line~5 change nothing, and generates a program
@@ -178,7 +187,7 @@ ContractError: line 2: s.marks has values outside 0 to 100
 The run stops exactly where a fresh compilation of the batch stops (it reports the contract as
 violated). A batch with missing marks re-enables the fill and the filter, and writes what a fresh
 compilation writes; a batch with marks as text is refused, because the compiled code reads marks as
-integers. On 400 random batches, 127 fit the full certificate and 361 are admitted with
+integers. On 400 random batches, \RandFull{} fit the full certificate and \RandDeopt{} are admitted with
 deoptimization; for every one of them, a fresh compilation proves every removal the program keeps
 (Section~\ref{sec:eval}).
 
@@ -312,7 +321,12 @@ program's constants. A weakening is kept if the criterion still holds. The analy
 only with the program's constants, so no other bound can keep more; the result is 1-minimal (no
 remaining fact can be weakened on its own), and a rejected weakening tells which obligations need the
 fact. The search uses the analysis as a black box, so it needs only a monotone forward analyzer, not
-backward operators~\cite{mine2014}. Each run reads no data: tables are replaced by their facts and
+backward operators~\cite{mine2014}. When every obligation is a conjunction of conditions on single
+facts of one column (range and not-null contracts, fills, and filters over one column are), the
+certificates that discharge it form a product of chains, one per fact, and the search finds its
+greatest element whatever the order in which facts are tried; an obligation over several columns,
+such as a filter \texttt{a > 0 OR b > 0} that is always true, can have incomparable maximal
+certificates (\texttt{a > 0}, or \texttt{b > 0}), and the order picks one. Each run reads no data: tables are replaced by their facts and
 image folders by \emph{corner images}, one per combination of the extreme sizes, channel counts and
 depths of the box. Every image decision is a universal or existential test over files of a
 conjunction of one-dimensional conditions, so a folder inside the box passes whenever its corners do.

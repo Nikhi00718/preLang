@@ -97,8 +97,13 @@ def run_jobs(jobs_file, out, tools, columns_scope):
     report = {tool: {} for tool in tools}
     for job in jobs:
         columns = job["columns"] if columns_scope == "read" else None
-        anchor = read(job["anchor"], columns)
-        batches = {path: read(path, columns) for path in job["batches"]}
+        try:
+            anchor = read(job["anchor"], columns)
+            batches = {path: read(path, columns) for path in job["batches"]}
+        except Exception as error:  # a file the tool's environment cannot read: no decision
+            for tool in tools:
+                report[tool][job["anchor"]] = {"error": f"{type(error).__name__}: {error}"[:500]}
+            continue
         for tool in tools:
             try:
                 report[tool][job["anchor"]] = TOOLS[tool](anchor, batches)

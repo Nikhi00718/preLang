@@ -311,3 +311,41 @@ course project, the innovation is far beyond what the rubric expects.
 - S. Ahmed, H. Gao, H. Rajan, "Inferring data preconditions from deep learning models for
   trustworthy prediction in deployment", ICSE 2024. https://arxiv.org/abs/2401.14628
 - W. D. Clinger, "How to read floating point numbers accurately", PLDI 1990.
+
+## Added in October 2026: selective deoptimization, composition, and a stricter prior-art check
+
+### What was added
+
+- **N10. Selective deoptimization.** The optimizer removes proven-useless checks and operations
+  *speculatively*: they stay in the generated program behind guards. The certifier finds a full
+  certificate (every proof), an admission certificate (only what no run-time code can stand in for:
+  types, contracts without a run-time check, no compile errors) and one item certificate per removal.
+  A new batch outside admission is refused; otherwise each removal whose item certificate the batch
+  breaks runs again. Theorem: on every admitted batch this computes exactly what the source program
+  computes. Mechanized in Lean 4 (`proofs/Deopt.lean`, core only, axioms: `propext`).
+- **N11. Composition.** Every compilation writes the guarantee of each table it saves (the analysis
+  run on the admission certificate). `tools/contracts.py` checks it against the next stage's
+  certificates (assume-guarantee), names the facts it does not imply with the `EXPECT` stage 1 would
+  need, and synthesizes a producer contract from several consumers.
+- **Evaluation against real validators:** pandera (`infer_schema`), Great Expectations 0.18
+  (onboarding data assistant) and TFDV 1.21 (`infer_schema`), set up on the compiled file, on every
+  column and on the columns read; a second real-script corpus (Kaggle House Prices).
+
+### Prior work found in the October check (all now cited in the paper)
+
+| Work | What it does | Difference |
+|---|---|---|
+| Urban, "What Programs Want" (arXiv 2020); Urban & Müller (ESOP 2018) | infers *necessary* conditions on the input data of Python programs by abstract interpretation; input data usage | certificates are *sufficient*, per compilation, found with the data at hand, and used for admission and deoptimization |
+| Meijer, Sandahl, Varró, "Data-aware Static Analysis" (ICSE-NIER 2026) | loads a data sample during static analysis to check ML API contracts | a fault finder; no compilation, no removal, no reuse on new data |
+| Tuplex (SIGMOD 2021); Schiavio et al. (PVLDB 2020) | speculative compilation of data pipelines on a sample, per-row or per-region fallback / deoptimization | speculation for speed; no proofs, no per-obligation certificates, no exactness theorem |
+| Hölzle et al. (PLDI 1992); Flückiger et al. (POPL 2018) | deoptimization; correctness of speculative optimizations | general-purpose JITs; not data facts or batch-level admission |
+| Markl et al., progressive optimization (SIGMOD 2004) | validity ranges of plan operators, re-optimization outside them | ranges on cardinalities for performance; item certificates are validity ranges for correctness obligations |
+| Dillig et al., abductive inference (PLDI 2012); Miné (SCP 2014) | weakest facts that discharge a proof; sufficient preconditions by backward under-approximation | used for error diagnosis or C programs; here a forward analyzer is used as a black box over a finite constant-anchored lattice |
+| Stulova et al. (SCP 2018); gradual verification (POPL 2024) | residual run-time checks after static analysis | a check is residual for every input; here only for batches that break its certificate |
+| Abstraction-carrying code (LPAR 2004); Benveniste et al., contracts (2018); Avro schema compatibility | certificates checked by the consumer; assume-guarantee composition; writer/reader compatibility | both sides of the containment are derived from the stages' proofs |
+| Auto-Validate (SIGMOD 2021), Auto-Validate-by-History (KDD 2023) | validation rules for recurring pipelines from data lakes or past runs | from the data, not from the program |
+
+**Honest rating after these additions:** the combination (proof-derived per-removal certificates,
+batch-level checks on cheap statistics, exact selective re-enabling with a mechanized theorem, and
+composition of the resulting certificates) was not found in prior work; each ingredient has a clear
+precedent, listed above. The implementation's monotonicity and soundness are tested, not proven.

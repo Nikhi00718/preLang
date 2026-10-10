@@ -1,0 +1,32 @@
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, minimum height=2.6em,
+                text width=6.4em, inner sep=2pt},
+    data/.style={draw, align=center, font=\scriptsize, minimum height=2.2em, text width=6.4em,
+                 inner sep=2pt, fill=black!5},
+    arr/.style={-{Latex[length=1.6mm]}, semithick},
+    lbl/.style={font=\tiny, align=center}]
+  \node[data] (src) at (0, 0) {\texttt{.prep} program\\+ the batch it is\\compiled with};
+  \node[box] (ana) at (2.75, 0) {data-aware analysis\\(state, verdicts)};
+  \node[box] (opt) at (5.5, 0) {optimizer:\\speculative removal};
+  \node[box] (cer) at (5.5, -1.45) {certifier: re-analysis\\full $\mathcal{F}$, admission $\mathcal{A}$,\\item $\mathcal{C}_i$, guarantee $G$};
+  \node[box] (gen) at (2.75, -1.45) {generated program:\\admission, facts,\\\texttt{deopt(i)} guards};
+  \node[data] (new) at (0, -1.45) {new batch};
+  \node[box] (out) at (2.75, -2.95) {output, exactly as\\the source program};
+  \node[data] (con) at (5.5, -2.95) {\texttt{preplang\_}\\\texttt{contract.json}};
+  \node[box] (cmp) at (0, -2.95) {\texttt{contracts.py}:\\compose stages,\\producer contracts};
+  \draw[arr] (src) -- (ana);
+  \draw[arr] (ana) -- (opt);
+  \draw[arr] (opt) -- (cer);
+  \draw[arr] (cer) -- (gen);
+  \draw[arr] (new) -- (gen);
+  \draw[arr] (gen) -- node[lbl, right] {refuse only if\\outside $\mathcal{A}$} (out);
+  \draw[arr] (cer) -- (con);
+  \draw[arr] (con) -- (cmp);
+\end{tikzpicture}
+\caption{How \PL compiles once and reuses the result. The certifier re-runs the analysis with weaker
+input facts, reading no data; on a new batch, the generated program runs a removed instruction $i$
+only if the batch breaks its item certificate $\mathcal{C}_i$.}
+\label{fig:arch}
+\end{figure}

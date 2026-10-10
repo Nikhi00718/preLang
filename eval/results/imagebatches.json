@@ -1,0 +1,517 @@
+[
+ {
+  "kind": "gray 64x64",
+  "seed": 0,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [],
+  "reason": "",
+  "full": "finished",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "gray 64x64",
+  "seed": 1,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [],
+  "reason": "",
+  "full": "finished",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "gray 64x64",
+  "seed": 2,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [],
+  "reason": "",
+  "full": "finished",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "gray 64x64",
+  "seed": 3,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [],
+  "reason": "",
+  "full": "finished",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "gray 64x64",
+  "seed": 4,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [],
+  "reason": "",
+  "full": "finished",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "some color",
+  "seed": 0,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "some color",
+  "seed": 1,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "some color",
+  "seed": 2,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "some color",
+  "seed": 3,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "some color",
+  "seed": 4,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "other sizes",
+  "seed": 0,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 4: removed because every image is already 64x64: .png images have widths 47 to 176, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "other sizes",
+  "seed": 1,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 170, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "other sizes",
+  "seed": 2,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 173, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "other sizes",
+  "seed": 3,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 4: removed because every image is already 64x64: .png images have widths 44 to 182, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "other sizes",
+  "seed": 4,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 194, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "color and sizes",
+  "seed": 0,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels",
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 175, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "color and sizes",
+  "seed": 1,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels",
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 199, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "color and sizes",
+  "seed": 2,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels",
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 172, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "color and sizes",
+  "seed": 3,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels",
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 168, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "color and sizes",
+  "seed": 4,
+  "fresh": "finished",
+  "deopt": "finished",
+  "deopts": [
+   "line 3: removed because every image already has 1 channel: a .png image has 3 channels",
+   "line 4: removed because every image is already 64x64: .png images have widths 64 to 155, outside 64 to 64"
+  ],
+  "reason": "",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "correct run",
+   "trusted": "unsound"
+  }
+ },
+ {
+  "kind": "a broken file",
+  "seed": 0,
+  "fresh": "compile error",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\a_broken_file_0 is not the input the program was compiled with, and img_broken.png cannot be read; the compiled program relies on this for line 3: 1 of 2 files in imgs/ cannot be decoded (compile error). Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "contract error",
+  "outcome": {
+   "fingerprint": "correct stop",
+   "full": "correct stop",
+   "deopt": "correct stop",
+   "trusted": "correct stop"
+  }
+ },
+ {
+  "kind": "a broken file",
+  "seed": 1,
+  "fresh": "compile error",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\a_broken_file_1 is not the input the program was compiled with, and img_broken.png cannot be read; the compiled program relies on this for line 3: 1 of 2 files in imgs/ cannot be decoded (compile error). Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "contract error",
+  "outcome": {
+   "fingerprint": "correct stop",
+   "full": "correct stop",
+   "deopt": "correct stop",
+   "trusted": "correct stop"
+  }
+ },
+ {
+  "kind": "a broken file",
+  "seed": 2,
+  "fresh": "compile error",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\a_broken_file_2 is not the input the program was compiled with, and img_broken.png cannot be read; the compiled program relies on this for line 3: 1 of 2 files in imgs/ cannot be decoded (compile error). Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "contract error",
+  "outcome": {
+   "fingerprint": "correct stop",
+   "full": "correct stop",
+   "deopt": "correct stop",
+   "trusted": "correct stop"
+  }
+ },
+ {
+  "kind": "a broken file",
+  "seed": 3,
+  "fresh": "compile error",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\a_broken_file_3 is not the input the program was compiled with, and img_broken.png cannot be read; the compiled program relies on this for line 3: 1 of 2 files in imgs/ cannot be decoded (compile error). Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "contract error",
+  "outcome": {
+   "fingerprint": "correct stop",
+   "full": "correct stop",
+   "deopt": "correct stop",
+   "trusted": "correct stop"
+  }
+ },
+ {
+  "kind": "a broken file",
+  "seed": 4,
+  "fresh": "compile error",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\a_broken_file_4 is not the input the program was compiled with, and img_broken.png cannot be read; the compiled program relies on this for line 3: 1 of 2 files in imgs/ cannot be decoded (compile error). Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "contract error",
+  "outcome": {
+   "fingerprint": "correct stop",
+   "full": "correct stop",
+   "deopt": "correct stop",
+   "trusted": "correct stop"
+  }
+ },
+ {
+  "kind": "16-bit",
+  "seed": 0,
+  "fresh": "finished",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\16-bit_0 is not the input the program was compiled with, and its bit depths [8, 16] differ from the compiled [8]. Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "needless stop",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "16-bit",
+  "seed": 1,
+  "fresh": "finished",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\16-bit_1 is not the input the program was compiled with, and its bit depths [8, 16] differ from the compiled [8]. Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "needless stop",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "16-bit",
+  "seed": 2,
+  "fresh": "finished",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\16-bit_2 is not the input the program was compiled with, and its bit depths [8, 16] differ from the compiled [8]. Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "needless stop",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "16-bit",
+  "seed": 3,
+  "fresh": "finished",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\16-bit_3 is not the input the program was compiled with, and its bit depths [8, 16] differ from the compiled [8]. Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "needless stop",
+   "trusted": "correct run"
+  }
+ },
+ {
+  "kind": "16-bit",
+  "seed": 4,
+  "fresh": "finished",
+  "deopt": "refused",
+  "deopts": [],
+  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\work\\imagebatches\\batches\\16-bit_4 is not the input the program was compiled with, and its bit depths [8, 16] differ from the compiled [8]. Compile the .prep file again for this input.",
+  "full": "refused",
+  "trusted": "finished",
+  "outcome": {
+   "fingerprint": "needless stop",
+   "full": "needless stop",
+   "deopt": "needless stop",
+   "trusted": "correct run"
+  }
+ }
+]

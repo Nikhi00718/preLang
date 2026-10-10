@@ -37,7 +37,7 @@ def outputs(folder):
     """The files a run wrote (not the program or its manifest)."""
     files = {}
     for path in sorted(Path(folder).rglob("*")):
-        if path.is_file() and path.suffix in (".csv", ".parquet", ".npy"):
+        if path.is_file() and path.suffix.lower() in (".csv", ".parquet", ".npy", ".png", ".jpg", ".jpeg"):
             files[path.relative_to(folder).as_posix()] = path.read_bytes()
     return files
 

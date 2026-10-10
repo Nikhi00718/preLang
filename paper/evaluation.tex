@@ -1,0 +1,218 @@
+\section{Evaluation}\label{sec:eval}
+
+We ask seven questions. \textbf{RQ1:} Does compiling against the data find mistakes before any data
+is processed? \textbf{RQ2:} What does data-aware compilation cost and gain? \textbf{RQ3:} Can a
+compiled program be reused on edited batches? \textbf{RQ4:} On real data that changes from month to
+month, compared with data-validation tools? \textbf{RQ5:} For real pandas scripts? \textbf{RQ6:} Do
+certificates compose across stages? \textbf{RQ7:} What does reuse cost at run time? We also report
+how we tested soundness and the bugs the evaluation found in our own implementation.
+
+\paragraph{Setup.} Intel Core i5-12450H (8 cores), 16\,GB RAM, Windows~11; MSVC 14.44 (Release);
+Python 3.14, pandas 3.0, NumPy 2.5, OpenCV 5.0, pyarrow 25. pandera 0.34 and Great Expectations 0.18
+(its last release with an automatic profiler) run in a Python 3.11 environment, TFDV 1.21 in WSL
+(Ubuntu, Python 3.12), since it has no Windows build. Times include starting Python.
+
+\paragraph{Scoring reuse.} RQ3--RQ6 score every way of running a new batch $T$ against the ground
+truth: a fresh compilation of the pipeline for $T$, run. A policy either runs a program on $T$ or
+refuses it. Its outcome is \emph{correct} if it wrote exactly the files of the fresh run or stopped
+where the fresh run stops (a refusal, or a failing check, when the fresh compilation fails or its run
+stops); \emph{needless} if it refused $T$ although the fresh compilation runs, which costs a
+recompilation; and \emph{wrong} if it finished with other files than the fresh run, finished where the
+fresh run fails, or stopped where it does not. The policies are: the \emph{fingerprint} of the
+compiled file; the compiled file's own facts (types, no missing values, and the range of every column
+read, a schema as TFDV would record it with ranges); pandera's \texttt{infer\_schema} (dtypes,
+nullability, numeric ranges); Great Expectations' onboarding data assistant (an inferred suite of
+column statistics); TFDV's \texttt{infer\_schema} (types, presence, string domains); the \emph{full
+certificate}; and \emph{selective deoptimization}. The validators are set up on the file the pipeline
+was compiled with, once on every column (as they are used) and once on the columns the program reads
+(more favourable to them); when a validator admits $T$, the optimized program runs on it as it is.
+
+\subsection{RQ1: Mistakes found before any data is processed}
+
+\paragraph{Injected mistakes.} We injected 24 mistakes into the five example programs, one per
+mutant~\cite{jia2011}: misspelled columns, type errors (normalizing text, comparing a number with
+text), uses after removal, broken contracts (range, not-null, foreign key, schema, channels, width,
+match rate), a broken image, and three well-typed programs with silently wrong output. \PL reports all
+24 at compile time and nothing on the unmodified programs, in \RqOneMsMin--\RqOneMsMax\,ms; a
+script-style interpreter of the same programs crashes part-way on 20 and finishes 4 with wrong output
+(text filled into an integer column, a threshold on a normalized column that removes every row, and
+two pipelines that write black images). On 16 million Parquet rows, a misspelled column is reported in
+\ScTabNamePl\,s instead of after \ScTabNameScript\,s, and float pixels saved as PNG in \ScImgFloatPl\,s
+for 3,000 images, where the script runs \ScImgFloatScript\,s and writes black images.
+
+\paragraph{Real failures.} We chose 17 error messages that Python libraries print for common
+data-preparation failures, searched GitHub issues for each and read the first 12 results in order; an
+issue qualified if the failure happened while loading, transforming or saving data files and its root
+cause was stated, at most three per message: \RbTotal{} issues~\cite{islam2019,humbatova2020}. \PL
+reports \RbEarly{} of them (\RbEarlyPct\%) before any data is processed (\RbCompile{} without
+annotation, \RbContract{} once the requirement is declared with \texttt{EXPECT}); \RbDesign{} cannot
+occur in a \PL program, and \RbNone{} are not covered (input formats such as HEIC or GeoTIFF,
+operations such as pivots, dates, per-image label files). \RbPass{} of \RbCases{} reproductions behave
+as classified.
+
+\subsection{RQ2: Cost and gain of data-aware compilation}
+
+Analysing every cell of a one-million-row CSV file takes \CsvMillion\,s, \CsvSpeedup$\times$ faster
+than pandas' default reader reads it; Parquet compilation stays at \PqSixteen\,s from one to 16
+million rows; reading 3,000 image headers is \HdrRatio$\times$ faster than decoding the images. On a
+200,000-row, 40-column table with two contracts and a filter, the optimizer proves both contracts and
+loads 5 of 40 columns; the optimized program processes the data in \TabProcOpt\,s instead of
+\TabProcOz\,s (\TabCut\% less) with byte-identical output. Image pipelines stream one image at a
+time, in \ImgPlMem\,MiB of memory instead of \ImgBaseMem\,MiB for loading all 1,000 images.
+
+\subsection{RQ3: Reusing a compiled program on edited batches}\label{sec:rq-edits}
+
+Seven workloads are compiled once: the four table examples, one program run twice on one file, the
+Parquet example, images linked to labels, and a sensor pipeline of 20,000 rows per day. Each input
+table gets new batches: other days and a warmer season of the sensor process, and, for the examples,
+rows resampled with replacement, values moved by noise of 0.1, 0.5 and 1.5 standard deviations, 20\%
+missing values in one column, and one value far out of range (\CertBatches{} batches).
+
+\input{certtable}
+
+Both certificates handle every batch correctly (Table~\ref{tab:rq-edits}): the full certificate by
+refusing exactly the batches whose fresh compilation fails, selective deoptimization by running them
+and stopping at the re-enabled check (\CertDeopted{} batches ran with removals re-enabled). The
+fingerprint refuses every edited batch, and so do the compiled file's own facts for most. Gating the
+optimized program with the file's own facts is also unsound (\CertFactsUnsound{} wrong runs): on the
+table set and on the linked images, resampled and drifted rows repeat keys or lose matches, so a
+contract the compiler had proven by reading the values (\texttt{UNIQUE}, \texttt{REFERENCES},
+\texttt{MATCH\_RATE}) no longer holds and the fresh compilation reports it, while the file's facts,
+which are facts of single columns, admit the batch and the optimized program finishes. \PL runs such
+checks again whenever an input changed.
+
+\paragraph{Image folders.} A pipeline that makes images gray and $64\times64$, compiled on a folder
+of gray $64\times64$ images, has its \texttt{GRAYSCALE} and \texttt{RESIZE} removed speculatively. We
+gave it \ImgBatches{} new folders: gray $64\times64$ images, some color images, other sizes, both, a
+file that is not an image, and 16-bit images (five each), and compared the written images byte by
+byte with a fresh compilation. Selective deoptimization handles \ImgBDeoptCorrect{} correctly,
+re-running \texttt{GRAYSCALE} or \texttt{RESIZE} on \ImgBDeopted{} folders; the full certificate
+refuses those folders, and the optimized program run on them without a check writes color or
+wrongly sized images (\ImgBTrustedUnsound{} folders). The \ImgBDeoptNeedless{} needless refusals are
+the 16-bit folders: bit depths are fixed in every certificate because they decide the pixel type the
+generated code assumes, even where, as here, no instruction depends on it; certifying them would need
+the code generator's assumptions as obligations too.
+
+\subsection{RQ4: Real monthly data, against data-validation tools}\label{sec:rq-real}
+
+Three public datasets come in monthly batches: hourly traffic and weather on a Minnesota interstate
+(UCI, 2012--2018, 63 months of CSV), daily bike rentals in Washington (UCI, 2011--2012, 24 months),
+and New York green-taxi trips (NYC TLC, 2022--2024, the 36 Parquet files as published). For each we
+wrote one cleaning pipeline as a data engineer would: range contracts on the measured quantities,
+\texttt{NOT\_NULL} on keys, fills, a filter that removes impossible readings, a normalization and a
+selection. Each pipeline is deployed twice: compiled on the first month and run on every later one,
+and compiled on the month before each month. Batches are cut from the raw files, so no value is
+reformatted.
+
+\input{realtable}
+\input{figure-policies}
+
+Over \RealRuns{} runs (Table~\ref{tab:rq-real}), selective deoptimization handles
+\RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
+\RealDeoptUnsound{} wrong; the full certificate handles \RealFullCorrect{}. The difference is
+\RealRescued{} months the full certificate refuses: in three, the traffic sensor reports temperatures
+of 0\,K, and the re-enabled range check stops the run as the fresh compilation does; in others, a
+month has an hour with 9,831\,mm of rain or a day with humidity 0, which the compiled month had not,
+and the removed cleaning filter runs again and writes what the fresh compilation writes. All
+\RealDeoptNeedless{} remaining refusals are one event: in February 2023 the taxi publisher changed
+\texttt{passenger\_count} and \texttt{payment\_type} from double to integer, and the program compiled
+on January 2022 reads them as \textsc{Float}; a type is a fact no run-time code of the compiled program
+stands in for, and monthly compilation follows the change after one month.
+
+The validators are either strict or unsound. With every column, they refuse
+\RealValidatorStopMin--\RealValidatorStopMax\% of the months: Great Expectations' profile constrains
+means, medians and unique counts, pandera's inferred schema the range of every column, and TFDV's the
+string domains of columns the program never reads (a new holiday name refuses a traffic month). Given
+only the columns the program reads, TFDV, which infers no numeric ranges, admits every month, and the
+optimized program then writes wrong files whenever a month needs a removed filter or check
+(\RealTfdvReadUnsound{} months); pandera with ranges is sound here but still refuses most months,
+because it requires the compiled month's own range of every column.
+
+\subsection{RQ5: Real pandas scripts}\label{sec:rq-corpus}
+
+\paragraph{Corpora.} GitHub code search for Python files containing \texttt{read\_csv},
+\texttt{fillna} and \texttt{Embarked} (the Kaggle Titanic data) returned \CorpusAll{} distinct files,
+and for \texttt{read\_csv}, \texttt{fillna} and \texttt{LotFrontage} (Kaggle House Prices) \HousesAll{}
+files. We used the first 100 Titanic scripts as a development set, to choose which idioms the lifter
+handles; the remaining \CorpusTest{} and all House Prices scripts are held out: we did not look at them
+before the final run, and the lifter was not changed for House Prices. A script is in scope if it reads
+the training file with \texttt{pd.read\_csv(path)} at module level. The House Prices files mark missing
+values with the text \texttt{NA}, which pandas reads as missing; we give both sides the same files with
+empty cells instead, \PL's notation.
+
+\paragraph{Protocol.} The lifted program is compiled against the training file and given eleven new
+batches: Kaggle's real test file (no target column, and missing values in columns where the training
+file has none), five bootstrap resamples of the training rows, and five copies with 20\% extra missing
+values in one column. Each batch is run by the compiled program and, as ground truth, by the lifted
+pandas statements; the cleaned tables are compared value by value.
+
+\input{corpustable}
+
+\paragraph{Results.} With deoptimization, \CorpusSame{} Titanic runs and \HousesSame{} House Prices
+runs reproduce the scripts' results exactly, and none differ (Table~\ref{tab:rq-corpus}). The
+difference to the full certificate is the price of optimizing for the compiled data: the training
+files have no missing \texttt{Fare} (Titanic) or \texttt{MSZoning}, \texttt{KitchenQual} and other
+columns (House Prices), so the compiler removes the scripts' \texttt{fillna} on them, and the full
+certificate then refuses every batch with missing values there, including Kaggle's own test files.
+Deoptimization runs the removed \texttt{fillna} again for exactly those batches.
+
+\subsection{RQ6: Composing stages}\label{sec:rq-compose}
+
+Each workload of RQ4 gets a second stage that reads the cleaned table, as a feature step would: range
+and not-null contracts, a fill, a filter and a normalization. Both stages are compiled once (stage~2 on
+what stage~1 writes for the anchor month), and \texttt{tools/contracts.py} compares stage~1's guarantee
+with what stage~2 relies on. Every later month runs through both compiled stages, and stage~2 is also
+compiled and run fresh on stage~1's output.
+
+\input{comptable}
+
+Across \ComposeMonths{} months through both stages, no fact the composition reported as guaranteed ever
+made stage~2 refuse or deoptimize (Table~\ref{tab:rq-compose}). The facts it reported as open are
+real: stage~1 never constrains, for example, taxi tips, which stage~2 expects in $[0,500]$. With the
+\texttt{EXPECT} statements the tool suggested added to stage~1, every fact composes, and a month that
+breaks one now stops in stage~1, where the data enters, instead of deoptimizing downstream.
+
+\subsection{RQ7: The cost of reuse}\label{sec:rq-cost}
+
+Reusing a compiled program costs its admission check and, with deoptimization, the facts of the columns
+item certificates mention. Over the \OhMonths{} real months on which every variant finished, the
+median run took \OhTrusted\,s with no check at all, \OhFull\,s with admission against the full
+certificate, and \OhDeopt\,s with admission and deoptimization (\OhPct\% over no check); compiling the
+month afresh took \OhCompile\,s before running, and compiling and running \OhFresh\,s. Deoptimization
+needs one pass over a few columns that the program reads anyway; recompiling reads every cell again.
+
+\subsection{Testing soundness}\label{sec:soundtest}
+
+The theorems rest on monotonicity and soundness of the analysis, which we test rather than prove for
+the implementation. Randomized property tests generate tables (with missing, out-of-range, pruned and
+dropped columns) and image folders, decide admission and deoptimization with the certificates, and
+compile each input afresh: every input the full certificate admits keeps every proof, and every input
+admitted with deoptimization compiles without new errors and keeps every removal it does not
+deoptimize (or stops at a re-enabled check exactly where the fresh compilation reports a violation).
+For the running example, \RandFull{} of 400 random tables fit the full certificate and \RandDeopt{} are
+admitted with deoptimization; \RandFolders{} random image folders are admitted with deoptimization,
+all keeping their removals.
+
+\paragraph{What the evaluation found in our implementation.} Each of the following was a case where
+the implementation did not follow the definitions; each is fixed and has a regression test. (1)~The
+run-time \texttt{MATCH\_RATE} check, always eliminated before certificates existed, ran for the first
+time on changed labels and counted broken images that \texttt{REMOVE\_CORRUPT} had removed. (2)~The
+first certificate covered only the columns the optimized program loads, so a proven \texttt{NOT\_NULL}
+on a column pruned afterwards was unprotected. (3)~Admission let \textsc{Integer} data into a
+\textsc{Float} column and an empty column into any type; the property test found inputs whose fresh
+compilation decided differently. (4)~On the held-out Titanic set, scripts drop \texttt{Survived} before
+any use; with that \texttt{DROP} removed, admission treated the column as optional and admitted
+Kaggle's test file, on which the script fails. (5)~The lifter translated a \texttt{drop} that pandas
+rejects.
+
+\subsection{Threats to validity}
+
+The error messages of RQ1 were chosen by the author and one person classified the issues; the
+mutants and the script-style interpreter are ours. Performance numbers come from one machine. The
+pipelines of RQ4 and RQ6 are ours, written once before running them; the months are not. Validators are
+used with their automatic profilers, as a new user would; a hand-tuned suite can do better, but then
+encodes what the certificate derives. RQ5 compares with the lifted statements, not the whole scripts,
+and the lifted prefixes are short. Metadata-only soundness assumes truthful Parquet statistics. The
+mechanized theorem assumes monotonicity and soundness of the analysis, which we test. The language has
+no joins, loops or user functions, and certificates are facts about input columns: a fact needed only
+after a filter is still required of every input row.

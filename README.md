@@ -110,6 +110,11 @@ The generated program is always `output/generated.py`, and `SAVE` paths are rela
 | `--run` | runs the generated program afterwards (`py -3` on Windows, `python3` elsewhere) |
 | `--O0` | turns the optimizer off |
 | `--approx` | also applies approximate rewrites (RESIZE fusion) |
+| `--no-deopt` | removes proven-useless checks and operations outright (no deoptimization): a new input must then satisfy the full certificate |
+
+Every compilation also writes `output/preplang_contract.json`: the admission certificate, the item
+certificate of every speculative removal, and the guarantee for every table the program saves (see
+*Selective deoptimization* and *Composing stages* below).
 
 With no flags every stage except `--lineage` is printed. Compilation stops after the first phase
 that reports an error, so one mistake is not reported again by later phases.
@@ -272,13 +277,52 @@ What the certificate covers:
   images, and the generated program reads the header of every file of a new folder (no pixel is
   decoded) and admits the folder if every header fits.
 
-A file that breaks the certificate is refused before anything is written, with the row and the
-proof: `marks is 104 in data row 4, above 100; the compiled program relies on this for line 5:
-EXPECT students.marks BETWEEN 0 AND 100`. Contracts that were proven by reading the values
-(`UNIQUE`, `REFERENCES`, `MATCH_RATE`) keep their check, which runs only when an input changed.
-Because every transfer function is monotone, an input inside the certificate gets at least the
-compiled proofs; `tests/test_certificate.cpp` checks this on 400 random inputs, and
-`eval/certificates.py` on 244 new batches against a fresh compilation of each.
+Contracts that were proven by reading the values (`UNIQUE`, `REFERENCES`, `MATCH_RATE`) keep their
+check, which runs only when an input changed. Because every transfer function is monotone, an input
+inside the certificate gets at least the compiled proofs; `tests/test_certificate.cpp` checks this
+on 400 random inputs, and `eval/certificates.py` on 244 new batches against a fresh compilation of
+each.
+
+**4b. Selective deoptimization.** The optimizer does not delete a proven-useless check or operation:
+it keeps it in the generated program behind a guard (*speculative removal*). The certifier finds
+three certificates, each starting from the one before:
+
+- the **full certificate**: every proof and removal holds (what `--no-deopt` uses for admission);
+- the **admission certificate**: only what no run-time code can stand in for: column types,
+  contracts without a run-time check (types, image contracts), and the absence of compile errors.
+  A new input outside it is refused;
+- one **item certificate per removal**: the facts that one removal needs.
+
+For a new input, the generated program computes the missing-value counts and ranges of the columns
+the item certificates mention, and runs a removed instruction again only if the input breaks its
+item certificate:
+
+```text
+Admitted bad.csv for students: it satisfies the data certificate
+Deoptimized line 5: EXPECT students.marks BETWEEN 0 AND 100: marks goes up to 130, above 100
+ContractError: line 5: students.marks has values outside 0 to 100
+```
+
+Every other removal stays justified, so the run computes exactly what the source program computes
+(`proofs/Deopt.lean` mechanizes this in Lean 4 for any monotone analysis with sound no-effect proofs:
+`lean proofs/Deopt.lean`). A batch with missing values in a column whose `FILL_NULL` was removed now
+runs that `FILL_NULL` and writes what a fresh compilation writes, instead of being refused.
+
+**4c. Composing stages.** `output/preplang_contract.json` also holds, for every table the program
+saves, what the analysis guarantees about it for any admitted input. `tools/contracts.py` checks one
+stage's guarantee against the next stage's certificates and writes the `EXPECT` statements stage 1
+would need for the facts it does not guarantee:
+
+```bash
+py -3 tools/contracts.py check stage1/output/preplang_contract.json stage2/output/preplang_contract.json --link trips_clean.parquet=trips
+```
+
+```bash
+py -3 tools/contracts.py producer a/output/preplang_contract.json b/output/preplang_contract.json --input trips
+```
+
+The second command writes the contract a producer of `trips` must meet so that none of its consumers
+ever refuses or deoptimizes.
 
 **5. Batch errors.** One mistake in a wildcard is reported once, with a note for each table or
 image it affects.
@@ -414,12 +458,15 @@ src/sema        abstract dataset state, selectors, contracts, the semantic analy
 src/dataset     lineage and image-label linking
 src/ir          three-address IR
 src/optimizer   pass manager and the optimization passes
-src/certify     data certificates: counterfactual re-analysis and admission (tables and image folders)
+src/certify     data certificates (full, admission, one per removal) by counterfactual re-analysis,
+                admission, output guarantees and the contract file
 frontend/       pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
-src/backend     pandas code, OpenCV code, and the planner that joins them
+src/backend     pandas code, OpenCV code, deoptimization guards, and the planner that joins them
 src/explain     --explain, --dry-run, --lineage and the run manifest
-tests/          unit tests (207)
+tools/          contracts.py: composes compiled stages and synthesizes producer contracts
+proofs/         Deopt.lean: selective deoptimization and composition, mechanized in Lean 4
+tests/          unit tests, with randomized soundness tests of certificates and deoptimization
 examples/       example programs and data
-eval/           mutants, baseline, benchmarks and results
-paper/          conference paper draft (LaTeX)
+eval/           mutants, baselines (pandera, Great Expectations, TFDV), benchmarks, real data, results
+paper/          the paper (LaTeX, ACM format; preplang_ieee_v1.tex is the earlier IEEE draft)
 ```

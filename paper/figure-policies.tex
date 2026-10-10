@@ -1,0 +1,36 @@
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    xbar stacked, bar width=7pt, width=\columnwidth, height=6.2cm,
+    xmin=0, xmax=\RealRuns, enlarge y limits=0.06,
+    xlabel={real monthly batches}, xlabel style={font=\scriptsize},
+    symbolic y coords={TFDV read,TFDV all,GX read,GX all,pandera read,pandera all,File facts,Fingerprint,Full cert.,Deopt.},
+    ytick=data, yticklabel style={font=\scriptsize}, xticklabel style={font=\scriptsize},
+    legend style={font=\scriptsize, at={(0.5,1.02)}, anchor=south, legend columns=3, draw=none},
+    reverse legend=false]
+\addplot[fill=black!70, draw=black!70] coordinates {
+    (\RealTfdvReadCorrect,TFDV read) (\RealTfdvAllCorrect,TFDV all) (\RealGxReadCorrect,GX read)
+    (\RealGxAllCorrect,GX all) (\RealPanderaReadCorrect,pandera read) (\RealPanderaAllCorrect,pandera all)
+    (\RealFactsCorrect,File facts) (\RealFpCorrect,Fingerprint) (\RealFullCorrect,Full cert.)
+    (\RealDeoptCorrect,Deopt.)};
+\addplot[fill=black!20, draw=black!40] coordinates {
+    (\RealTfdvReadNeedless,TFDV read) (\RealTfdvAllNeedless,TFDV all) (\RealGxReadNeedless,GX read)
+    (\RealGxAllNeedless,GX all) (\RealPanderaReadNeedless,pandera read) (\RealPanderaAllNeedless,pandera all)
+    (\RealFactsNeedless,File facts) (\RealFpNeedless,Fingerprint) (\RealFullNeedless,Full cert.)
+    (\RealDeoptNeedless,Deopt.)};
+\addplot[pattern=north east lines, pattern color=black, draw=black] coordinates {
+    (\RealTfdvReadUnsound,TFDV read) (\RealTfdvAllUnsound,TFDV all) (\RealGxReadUnsound,GX read)
+    (\RealGxAllUnsound,GX all) (\RealPanderaReadUnsound,pandera read) (\RealPanderaAllUnsound,pandera all)
+    (\RealFactsUnsound,File facts) (\RealFpUnsound,Fingerprint) (\RealFullUnsound,Full cert.)
+    (\RealDeoptUnsound,Deopt.)};
+\legend{correct, refused needlessly, wrong}
+\end{axis}
+\end{tikzpicture}
+\caption{RQ4: \RealRuns{} real monthly batches, by admission policy. \emph{Correct}: ran and wrote
+the fresh compilation's files, or stopped where it stops; \emph{refused needlessly}: a recompilation
+was needed although the fresh compilation runs; \emph{wrong}: other files, or a run where the fresh
+compilation fails. Validators gate the optimized program; \emph{all}/\emph{read}: set up on every
+column, or on the columns the program reads.}
+\label{fig:policies}
+\end{figure}
