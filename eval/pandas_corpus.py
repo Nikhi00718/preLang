@@ -203,7 +203,7 @@ def batches(seed_count=5):
 def run_script(compiler, script_id, source):
     record = {"id": script_id}
     try:
-        result = lift(source)
+        result = lift(source, derived=False)  # the lifter as it was for these held-out corpora
     except SyntaxError:
         record["outcome"] = "not Python 3"
         return record, None

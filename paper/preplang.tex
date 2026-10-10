@@ -207,7 +207,10 @@ imply, with the \texttt{EXPECT} that stage~1 would need.
 table sets (a folder of them), images, image sets, and images linked to a table of labels. Table
 statements are \texttt{FILL\_NULL} (with a value, \texttt{MEAN}, \texttt{MEDIAN} or \texttt{MODE}),
 \texttt{DROP\_NULL}, \texttt{NORMALIZE}, \texttt{FILTER} (with \texttt{AND}, \texttt{OR},
-\texttt{NOT} and comparisons), \texttt{SELECT} and \texttt{DROP}; image statements are
+\texttt{NOT} and comparisons), \texttt{SELECT}, \texttt{DROP}, \texttt{PARSE\_DATE}, which turns a text
+column of ISO dates into \textsc{DateTime}, and \texttt{DERIVE t.c = e}, which adds or replaces a
+column computed with \texttt{+ - * /} from numeric columns and numbers, or as the \texttt{YEAR},
+\texttt{MONTH}, \texttt{DAY}, \texttt{HOUR} or \texttt{WEEKDAY} of a date; image statements are
 \texttt{RESIZE}, \texttt{GRAYSCALE}, \texttt{NORMALIZE RANGE}, \texttt{CONVERT}, \texttt{COMPRESS}
 and \texttt{REMOVE\_CORRUPT}. Selectors such as \texttt{company.*.* WHERE TYPE NUMERIC} address many
 columns, resolved against the inferred schemas. Contracts are written with \texttt{EXPECT}:
@@ -238,8 +241,16 @@ pandas reads them). An image set is abstracted as per-file shapes (width, height
 or not) from the PNG or JPEG header, a pixel type, a pixel range and an output format. Transfer
 functions follow the statements: \texttt{FILTER} refines intervals with its comparisons and, as in
 SQL's three-valued logic~\cite{codd1979}, makes compared columns non-missing; \texttt{FILL\_NULL}
-clears \textit{maybe} and joins the fill value; \texttt{NORMALIZE} sets $[0,1]$; \texttt{RESIZE}
-sets every shape. Saves check that the format can hold the pixels: \textsc{Float32} pixels cannot
+clears \textit{maybe} and joins the fill value; \texttt{NORMALIZE} sets $[0,1]$; \texttt{DERIVE}
+computes the interval of its value by interval arithmetic and makes it \textit{maybe} missing where an
+operand is; \texttt{RESIZE} sets every shape. \texttt{PARSE\_DATE} reads the values of its column (only
+then, so no other program pays for it): if every value is a date in one ISO layout, the column becomes
+\textsc{DateTime} with the first and last date as its interval, and otherwise the compiler names the
+first row that is not a date. A part of a date has its full range (\texttt{MONTH} in $[1,12]$) unless
+the dates fall in one year, month or day: dates from October to December give \texttt{MONTH} in
+$[10,12]$, so a later \texttt{FILTER} on the month can be proven to keep every row. A division by a
+value whose interval contains 0 is a compile error, since pandas would write infinities or missing
+values without a word. Saves check that the format can hold the pixels: \textsc{Float32} pixels cannot
 be saved as PNG, which a plain script would write as black images.
 
 \paragraph{Metadata only.} For Parquet files~\cite{parquet,melnik2010} the compiler reads only the
@@ -320,9 +331,14 @@ weakens one fact at a time, running the whole analysis again: missing values are
 bound becomes $-\infty$, or else the loosest program constant below it that works, first as a closed
 bound ($\geq k$) and then as an open one ($> k$); likewise upper bounds; a column the program only
 carries to its output may be absent; image boxes gain channel counts and size ranges, again up to the
-program's constants. A weakening is kept if the criterion still holds. The analysis compares intervals
-only with the program's constants, so no other bound can keep more; the result is 1-minimal (no
-remaining fact can be weakened on its own), and a rejected weakening tells which obligations need the
+program's constants; the first and last date of a column \texttt{PARSE\_DATE} reads become open, or else
+the start or end of their year, month or day; and that the column holds dates is kept or dropped like a
+type. A weakening is kept if the criterion still holds. Without \texttt{DERIVE}, the analysis compares
+intervals only with the program's constants, so no other bound can keep more and the result is
+1-minimal (no remaining fact can be weakened on its own). A derived column compares values computed
+from its inputs (\texttt{temp - 273.15 > 0}), and a part of a date changes at calendar boundaries; there
+the result is maximal among the candidates, which include the numbers in \texttt{DERIVE}, but a bound
+between them could keep more. Either way a rejected weakening tells which obligations need the
 fact. The search uses the analysis as a black box, so it needs only a monotone forward analyzer, not
 backward operators~\cite{mine2014}. When every obligation is a conjunction of conditions on single
 facts of one column (range and not-null contracts, fills, and filters over one column are), the
@@ -405,12 +421,14 @@ analysis discharges their removal; and the run-time check is sound for $\sqsubse
 that the greedy search ends only on certificates the re-analysis accepted and that it only weakens.
 \texttt{Core.lean} instantiates the setting with the analysis of a core of \PL: numeric columns
 abstracted by $\nu$ and an interval, \texttt{FILL\_NULL}, \texttt{FILTER} with $\geq$ and $\leq$,
-\texttt{DROP\_NULL}, and \texttt{BETWEEN} and \texttt{NOT\_NULL} contracts. For this core it proves the
+\texttt{DROP\_NULL}, \texttt{DERIVE} of the sum of two columns (interval addition), and \texttt{BETWEEN}
+and \texttt{NOT\_NULL} contracts. For this core it proves the
 transfer functions sound and every \textsc{Proven} verdict and no-effect proof valid
 (Lemma~\ref{lem:sound}), monotonicity (Lemma~\ref{lem:mono}), the run-time check of the generated code
 (missing values and bounds of the certified columns) sound and complete for a certificate, and from
 these Theorem~\ref{thm:deopt} and the composition theorem of Section~\ref{sec:compose} end to end. For
-the rest of the language (types, text, normalization, images, contracts proven by reading values) the
+the rest of the language (types, text, normalization, other arithmetic, dates, images, contracts
+proven by reading values) the
 two lemmas remain assumptions, which we test with randomized property tests that compare
 deoptimization decisions with fresh compilations (Section~\ref{sec:soundtest}).
 
@@ -449,11 +467,15 @@ translates, in order, the statements that change a followed DataFrame in a way \
 \texttt{fillna} with a constant or the column's \texttt{mean()}, \texttt{median()} or
 \texttt{mode()[0]}; \texttt{dropna}; \texttt{drop} of columns; column selection; boolean-mask
 filters; min--max and z-score normalization written as arithmetic; \texttt{assert} with
-\texttt{between}, \texttt{notna} or \texttt{is\_unique}; and \texttt{to\_csv}. Statements that only
-read a DataFrame are skipped. Lifting stops at the first statement that changes a DataFrame in
-another way (a new column, \texttt{map}, \texttt{get\_dummies}): the result is the longest prefix of
-the script's cleaning that \PL expresses exactly. The lifted statements, run on their own, are the
-ground truth for the compiled program in Section~\ref{sec:eval}.
+\texttt{between}, \texttt{notna} or \texttt{is\_unique}; and \texttt{to\_csv}. A second version,
+written after the corpora of Section~\ref{sec:rq-corpus} were evaluated, also translates
+\texttt{pd.to\_datetime} of a column into \texttt{PARSE\_DATE} (with \texttt{errors="coerce"}, too:
+on the inputs \PL admits, both read the same dates), \texttt{.dt.hour} and the other date parts, and
+arithmetic over columns and numbers into \texttt{DERIVE}. Statements that only read a DataFrame are
+skipped. Lifting stops at the first statement that changes a DataFrame in another way (\texttt{map},
+\texttt{get\_dummies}, \texttt{set\_index}): the result is the longest prefix of the script's cleaning
+that \PL expresses exactly. The lifted statements, run on their own, are the ground truth for the
+compiled program in Section~\ref{sec:eval}.
 
 \section{Implementation}
 The compiler is about \SrcLines{} lines of C++17 without external libraries: lexer, parser, schema
@@ -477,7 +499,7 @@ would, without recompiling, where validators set up on the same data refuse most
 results through; on real scripts it reproduces the scripts' results on every batch it runs. The
 refusals that remain come from facts no run-time code can replace, such as a publisher changing a
 column's type, and point to the next step: certificates that let generated code adapt to such
-changes, joins and dates in the language, and the mechanized soundness proof extended from the core
+changes, joins in the language, and the mechanized soundness proof extended from the core
 to the whole analysis.
 
 \paragraph{Artifact.} The compiler, the Lean development, the pandas front end, the composition tool,

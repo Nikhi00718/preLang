@@ -78,6 +78,7 @@ def main():
     certificates(load("certificates.json"), numbers)
     realbatches(load("realbatches.json"), numbers)
     corpora(numbers)
+    drift_corpora(numbers)
     if (RESULTS / "composition.json").exists():
         composition(load("composition.json"), numbers)
     if (RESULTS / "overhead.json").exists():
@@ -326,6 +327,65 @@ def corpus_numbers(records, prefix, numbers, held_out_from):
         f"{prefix}FullRefusedRuns": sum(b.get("prep_full") == "refused" and b["script"] == "runs" for b in runs),
     })
     return test, runs
+
+
+DRIFT = (("traffic", "Traffic", "development"), ("bikes", "Bikes, daily", "held out"),
+         ("hours", "Bikes, hourly", "held out"))
+
+
+def drift_numbers(records):
+    """Scripts by other people, compiled on the first month and run on every later month (RQ5)."""
+    lifted = [r for r in records if r["outcome"] in ("lifted", "compile error")]
+    runs = [m for r in records for m in r.get("months", [])]
+    count = lambda test: sum(1 for m in runs if test(m))  # noqa: E731
+    statements = [line.split()[0] for r in lifted for line in r.get("program", "").splitlines()]
+    return {
+        "All": len(records), "Lifted": len(lifted), "Compiled": sum(r["outcome"] == "lifted" for r in records),
+        "CompileErrors": sum(r["outcome"] == "compile error" for r in records),
+        "Statements": sum(r["lifted"] for r in lifted), "Derive": statements.count("DERIVE"),
+        "ParseDate": statements.count("PARSE_DATE"), "Runs": len(runs),
+        "Same": count(lambda m: m["prep"] == "finished" and m["same"]),
+        "Wrong": count(lambda m: (m["prep"] == "finished" and not m["same"]) or
+                       (m["prep"] == "contract error" and m["script"] == "runs")),
+        "Stops": count(lambda m: m["prep"] != "finished" and m["script"] == "crashes"),
+        "Needless": count(lambda m: m["prep"] == "refused" and m["script"] == "runs"),
+        "Deopted": count(lambda m: bool(m.get("deopts"))),
+        "FullSame": count(lambda m: m["prep_full"] == "finished" and m["same_full"]),
+        "FullWrong": count(lambda m: m["prep_full"] == "finished" and not m["same_full"]),
+        "FullNeedless": count(lambda m: m["prep_full"] == "refused" and m["script"] == "runs"),
+    }
+
+
+def drift_corpora(numbers):
+    found = [(key, title, role, drift_numbers(load(f"drift_corpus_{key}.json"))) for key, title, role in DRIFT
+             if (RESULTS / f"drift_corpus_{key}.json").exists()]
+    if not found:
+        return
+    total = {k: sum(n[k] for _, _, _, n in found) for k in found[0][3]}
+    held = {k: sum(n[k] for key, _, role, n in found if role == "held out") for k in found[0][3]}
+    for key, _, _, n in found:
+        numbers.update({f"Drift{key.capitalize()}{k}": v for k, v in n.items()})
+    numbers.update({f"Drift{k}": v for k, v in total.items()})
+    numbers.update({f"DriftHeld{k}": v for k, v in held.items()})
+    rows = [("GitHub files", "All"), ("lifted, in scope", "Lifted"), ("compiled on the first month", "Compiled"),
+            ("statements lifted", "Statements"), (r"\quad of them \texttt{DERIVE}", "Derive"),
+            (r"\quad of them \texttt{PARSE\_DATE}", "ParseDate"), ("runs on later months", "Runs"),
+            (r"\emph{With deoptimization:} as the script", "Same"),
+            (r"\quad stopped where the script fails", "Stops"), (r"\quad refused, script runs", "Needless"),
+            (r"\quad different (wrong)", "Wrong"), (r"\quad ran with removals re-enabled", "Deopted"),
+            (r"\emph{Full certificate:} as the script", "FullSame"), (r"\quad refused, script runs", "FullNeedless"),
+            (r"\quad different (wrong)", "FullWrong")]
+    lines = [r"\begin{table}[t]", r"\caption{Other people's pandas scripts for the monthly traffic and bike data "
+             r"(RQ5): lifted with derived columns and dates, compiled on the first month and run on every later "
+             r"month; the ground truth is the lifted pandas statements run on the same month. The traffic scripts "
+             r"were the development set of the second lifter version.}", r"\label{tab:rq-drift}", r"\centering",
+             r"\footnotesize", r"\begin{tabular}{@{}l" + "r" * len(found) + "@{}}", r"\toprule",
+             " & " + " & ".join(f"{title}" for _, title, _, _ in found) + r" \\",
+             " & " + " & ".join(f"({role})" for _, _, role, _ in found) + r" \\", r"\midrule"]
+    for label, key in rows:
+        lines.append(label + " & " + " & ".join(f"{n[key]:,}" for _, _, _, n in found) + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    (ROOT / "paper" / "drifttable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def corpora(numbers):

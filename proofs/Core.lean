@@ -10,7 +10,7 @@
   "missing". A column is abstracted, as in PrepLang, by whether it may have
   missing values and an interval (a missing bound is infinite). Statements:
     FILL_NULL c WITH v, FILTER c >= k, FILTER c <= k, DROP_NULL c,
-    EXPECT c BETWEEN a AND b, EXPECT c NOT_NULL.
+    EXPECT c BETWEEN a AND b, EXPECT c NOT_NULL, DERIVE c = a + b.
   A failing EXPECT stops the run. Values are integers (PrepLang's columns are
   integers, floats or text; the interval reasoning is the same).
 
@@ -47,6 +47,7 @@ inductive Stmt where
   | dropNull (c : Nat)
   | expectBetween (c : Nat) (a b : Int)
   | expectNotNull (c : Nat)
+  | derive (c a b : Nat)  -- DERIVE c = a + b: missing where an operand is
 
 def fillRow (c : Nat) (v : Int) (r : Row) : Row :=
   fun c' => if c' = c then (match r c with | none => some v | some x => some x) else r c'
@@ -56,6 +57,9 @@ def geRow (c : Nat) (k : Int) (r : Row) : Bool :=
 
 def leRow (c : Nat) (k : Int) (r : Row) : Bool :=
   match r c with | some x => decide (x ≤ k) | none => false
+
+def addRow (c a b : Nat) (r : Row) : Row :=
+  fun c' => if c' = c then (match r a, r b with | some x, some y => some (x + y) | _, _ => none) else r c'
 
 def betweenRow (c : Nat) (a b : Int) (r : Row) : Bool :=
   match r c with | some x => decide (a ≤ x) && decide (x ≤ b) | none => true
@@ -68,6 +72,7 @@ def step : Stmt → Table → Option Table
   | .dropNull c, t => some (t.filter (fun r => (r c).isSome))
   | .expectBetween c a b, t => if t.all (betweenRow c a b) then some t else none
   | .expectNotNull c, t => if t.all (fun r => (r c).isSome) then some t else none
+  | .derive c a b, t => some (t.map (addRow c a b))
 
 /-! ## The abstract domain -/
 
@@ -166,6 +171,11 @@ def joinHi : Option Int → Int → Option Int
   | none, _ => none
   | some x, v => some (if v ≤ x then x else v)
 
+-- Interval addition: an infinite bound stays infinite.
+def addBound : Option Int → Option Int → Option Int
+  | some x, some y => some (x + y)
+  | _, _ => none
+
 def absStep : Stmt → AState → AState
   | .fill c v, σ =>
     if (σ c).nullable then setCol σ c ⟨false, joinLo (σ c).lo v, joinHi (σ c).hi v⟩ else σ
@@ -174,6 +184,8 @@ def absStep : Stmt → AState → AState
   | .dropNull c, σ => setCol σ c ⟨false, (σ c).lo, (σ c).hi⟩
   | .expectBetween c a b, σ => setCol σ c ⟨(σ c).nullable, raiseLo (σ c).lo a, lowerHi (σ c).hi b⟩
   | .expectNotNull c, σ => setCol σ c ⟨false, (σ c).lo, (σ c).hi⟩
+  | .derive c a b, σ =>
+    setCol σ c ⟨(σ a).nullable || (σ b).nullable, addBound (σ a).lo (σ b).lo, addBound (σ a).hi (σ b).hi⟩
 
 def loAtLeast : Option Int → Int → Bool
   | none, _ => false
@@ -191,6 +203,7 @@ def proves (σ : AState) : Stmt → Bool
   | .dropNull c => !(σ c).nullable
   | .expectBetween c a b => loAtLeast (σ c).lo a && hiAtMost (σ c).hi b
   | .expectNotNull c => !(σ c).nullable
+  | .derive _ _ _ => false  -- it always changes its column
 
 /-! ### Lemmas about lists -/
 
@@ -299,6 +312,20 @@ theorem joinHi_self (h : Option Int) (v : Int) : hiOk (joinHi h v) v := by
   cases h with
   | none => simp [joinHi, hiOk]
   | some y => simp only [joinHi, hiOk]; split <;> omega
+
+theorem addBound_lo (a b : Option Int) (x y : Int) (ha : loOk a x) (hb : loOk b y) :
+    loOk (addBound a b) (x + y) := by
+  cases a <;> cases b <;> simp_all [addBound, loOk] <;> omega
+
+theorem addBound_hi (a b : Option Int) (x y : Int) (ha : hiOk a x) (hb : hiOk b y) :
+    hiOk (addBound a b) (x + y) := by
+  cases a <;> cases b <;> simp_all [addBound, hiOk] <;> omega
+
+theorem addBound_loLe (a b c d : Option Int) (h1 : loLe a c) (h2 : loLe b d) : loLe (addBound a b) (addBound c d) := by
+  cases a <;> cases b <;> cases c <;> cases d <;> simp_all [addBound, loLe] <;> omega
+
+theorem addBound_hiLe (a b c d : Option Int) (h1 : hiLe a c) (h2 : hiLe b d) : hiLe (addBound a b) (addBound c d) := by
+  cases a <;> cases b <;> cases c <;> cases d <;> simp_all [addBound, hiLe] <;> omega
 
 /-- The transfer functions are sound (Lemma 3.1, for the core). -/
 theorem step_sound (s : Stmt) (σ : AState) (t t' : Table) (ht : gamma σ t) (hs : step s t = some t') :
@@ -429,6 +456,37 @@ theorem step_sound (s : Stmt) (σ : AState) (t t' : Table) (ht : gamma σ t) (hs
           exact hx
       · intro _; exact h0 c'
     · cases hs
+  | derive c a b =>
+    simp only [step, Option.some.injEq] at hs
+    subst hs
+    intro r hr c'
+    obtain ⟨r0, hr0, rfl⟩ := mem_of_mem_map _ t r hr
+    have h0 := ht r0 hr0
+    simp only [absStep]
+    apply inCol_setCol
+    · intro hc
+      simp only [addRow, hc, ite_true]
+      cases ha : r0 a with
+      | none =>
+        have hx := h0 a
+        simp only [ha, inCol] at hx
+        simp only [inCol, hx, Bool.true_or]
+      | some x =>
+        cases hb : r0 b with
+        | none =>
+          have hy := h0 b
+          simp only [hb, inCol] at hy
+          simp only [inCol, hy, Bool.or_true]
+        | some y =>
+          have hx := h0 a
+          have hy := h0 b
+          simp only [ha, inCol] at hx
+          simp only [hb, inCol] at hy
+          simp only [inCol]
+          exact ⟨addBound_lo _ _ _ _ hx.1 hy.1, addBound_hi _ _ _ _ hx.2 hy.2⟩
+    · intro hc
+      simp only [addRow, hc, ite_false]
+      exact h0 c'
 
 theorem present_of_not_nullable (σ : AState) (t : Table) (c : Nat) (ht : gamma σ t)
     (hn : (σ c).nullable = false) (r : Row) (hr : r ∈ t) : ∃ x, r c = some x ∧ loOk (σ c).lo x ∧ hiOk (σ c).hi x := by
@@ -519,6 +577,7 @@ theorem proves_noop (s : Stmt) (σ : AState) (t : Table) (ht : gamma σ t) (hp :
       obtain ⟨x, hx, _⟩ := present_of_not_nullable σ t c ht hp r hr
       rw [hx]; rfl
     simp only [hall, ite_true]
+  | derive c a b => simp [proves] at hp
 
 /-! ### Monotonicity (Lemma 4.1, for the core) -/
 
@@ -553,6 +612,7 @@ theorem proves_mono (s : Stmt) (σ τ : AState) (h : le σ τ) (hp : proves τ s
     exact ⟨loAtLeast_mono _ _ _ (h c).2.1 hp.1, hiAtMost_mono _ _ _ (h c).2.2 hp.2⟩
   | expectNotNull c =>
     simp only [proves, Bool.not_eq_true'] at hp ⊢; exact not_nullable_mono _ _ (h c) hp
+  | derive c a b => simp [proves] at hp
 
 theorem raiseLo_mono (a b : Option Int) (k : Int) (h : loLe a b) : loLe (raiseLo a k) (raiseLo b k) := by
   cases a <;> cases b <;> simp only [loLe, raiseLo] at h ⊢ <;> (try split) <;> (try split) <;> omega
@@ -616,6 +676,11 @@ theorem absStep_mono (s : Stmt) (σ τ : AState) (h : le σ τ) : le (absStep s 
     exact setCol_le σ τ c _ _ h ⟨(h c).1, raiseLo_mono _ _ _ (h c).2.1, lowerHi_mono _ _ _ (h c).2.2⟩
   | expectNotNull c =>
     exact setCol_le σ τ c _ _ h ⟨fun h => h, (h c).2.1, (h c).2.2⟩
+  | derive c a b =>
+    refine setCol_le σ τ c _ _ h ⟨?_, addBound_loLe _ _ _ _ (h a).2.1 (h b).2.1, addBound_hiLe _ _ _ _ (h a).2.2 (h b).2.2⟩
+    intro hn
+    simp only [Bool.or_eq_true] at hn ⊢
+    exact hn.elim (fun x => Or.inl ((h a).1 x)) (fun x => Or.inr ((h b).1 x))
 
 /-! ## Programs -/
 

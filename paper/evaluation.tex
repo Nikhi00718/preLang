@@ -262,10 +262,11 @@ rejects.
 
 The error messages of RQ1 were chosen by the author and one person classified the issues; the
 mutants and the script-style interpreter are ours. Performance numbers come from one machine. The
-pipelines of RQ4 and RQ6 are ours, written once before running them; the months are not. Validators are
+pipelines of RQ4 and RQ6 are ours, written once before running them; the months are not, and RQ5 runs
+other people's pipelines on the same months. Validators are
 used with their automatic profilers, as a new user would; a hand-tuned suite can do better, but then
 encodes what the certificate derives. RQ5 compares with the lifted statements, not the whole scripts,
 and the lifted prefixes are short. Metadata-only soundness assumes truthful Parquet statistics. The
 mechanization covers a core of the language; the C++ implementation is tested, not proven. The language has
-no joins, loops or user functions, and certificates are facts about input columns: a fact needed only
+no joins, loops or user functions. Certificates are facts about input columns: a fact needed only
 after a filter is still required of every input row.

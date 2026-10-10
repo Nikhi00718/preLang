@@ -149,12 +149,25 @@ A program is a list of statements. Keywords are case-insensitive; `#` starts a c
 **Table operations:** `DROP_NULL t` or `DROP_NULL t [columns]` (only rows missing one of these),
 `FILL_NULL ... WITH value|MEAN|MEDIAN|MODE` (the statistic is computed from the data when the program
 runs; MEAN and MEDIAN make an INTEGER column FLOAT), `NORMALIZE ... USING ZSCORE|MINMAX`,
-`FILTER t WHERE condition`, `SELECT t [columns]`, `DROP t [columns]`.
+`FILTER t WHERE condition`, `SELECT t [columns]`, `DROP t [columns]`,
+`PARSE_DATE t.column` (a STRING column of ISO dates becomes DATETIME), and
+`DERIVE t.column = value` (a new or replaced column):
+
+```text
+PARSE_DATE traffic.date_time;                     # every value must be YYYY-MM-DD[ HH:MM[:SS]], one layout
+DERIVE traffic.hour = HOUR(date_time);            # YEAR, MONTH, DAY, HOUR, WEEKDAY (Monday = 0)
+DERIVE traffic.temp_c = temp - 273.15;            # + - * / over numeric columns and numbers
+DERIVE traffic.per_cloud = traffic_volume / (clouds_all + 1);
+```
+
+The compiler knows the range of every derived column (interval arithmetic; a part of a date is
+narrower than its full range when the dates fall in one year, month or day). A division by a value
+that can be 0 is a compile error, and `PARSE_DATE` names the first row that is not a date.
 
 **Column types** are BOOLEAN, INTEGER, FLOAT and STRING, inferred from the CSV cells, plus DATETIME
-for the date and timestamp columns of Parquet files. A DATETIME column can be kept, dropped, saved
-and checked with `NOT_NULL`; comparing or filling it is a type error, as the language has no date
-values.
+for the date and timestamp columns of Parquet files and the columns `PARSE_DATE` reads. A DATETIME
+column can be kept, dropped, saved, checked with `NOT_NULL` and taken apart with `DERIVE`; comparing
+or filling it is a type error, as the language has no date values.
 
 **Image operations:** `RESIZE i TO w h [KEEP_ASPECT]`, `GRAYSCALE i`, `NORMALIZE i RANGE low high`,
 `CONVERT i TO JPG|PNG|NPY`, `COMPRESS i QUALITY q`, `REMOVE_CORRUPT i`.
@@ -178,8 +191,8 @@ FILL_NULL company.*.age WITH 0 IF_EXISTS;            # skip the tables without t
 
 ```ebnf
 program        = { statement } EOF ;
-statement      = load | drop_null | fill_null | normalize | filter | select | drop | save | expect
-               | resize | grayscale | compress | convert | remove_corrupt | link ;
+statement      = load | drop_null | fill_null | normalize | filter | select | drop | parse_date | derive
+               | save | expect | resize | grayscale | compress | convert | remove_corrupt | link ;
 
 load           = ( "LOAD" | "LOAD_TABLES" | "LOAD_IMAGE" | "LOAD_IMAGES" ) STRING "AS" IDENT [ "RECURSIVE" ] ";" ;
 save           = "SAVE" table_ref "AS" STRING ";"  | "SAVE_TABLES" IDENT "TO" STRING ";"
@@ -191,6 +204,8 @@ normalize      = "NORMALIZE" column_selector ( "RANGE" number number
 filter         = "FILTER" table_ref "WHERE" or_expr ";" ;
 select         = "SELECT" table_ref column_list ";" ;
 drop           = "DROP" table_selector column_list [ "IF_EXISTS" ] ";" ;
+parse_date     = "PARSE_DATE" column_selector ";" ;
+derive         = "DERIVE" path "=" sum ";" ;          (* path: table.column or tableset.table.column *)
 expect         = "EXPECT" column_selector constraint [ "IF_EXISTS" ] ";" ;
 constraint     = "NUMBER" | "STRING" | "BOOLEAN" | "NOT_NULL" | "BETWEEN" number "AND" number | "UNIQUE"
                | "REFERENCES" path | "SCHEMA_SAME_AS" table_ref [ "EXCEPT" column_list ]
@@ -206,6 +221,11 @@ or_expr        = and_expr { "OR" and_expr } ;
 and_expr       = not_expr { "AND" not_expr } ;
 not_expr       = "NOT" not_expr | primary ;
 primary        = "(" or_expr ")" | IDENT comparison_op literal ;
+
+sum            = product { ( "+" | "-" ) product } ;
+product        = unary { ( "*" | "/" ) unary } ;
+unary          = "-" unary | operand ;
+operand        = NUMBER | IDENT [ "(" IDENT ")" ] | "(" sum ")" ;   (* IDENT ( ... ): YEAR, MONTH, DAY, HOUR, WEEKDAY *)
 
 table_ref       = IDENT [ "." IDENT ] ;
 table_selector  = IDENT [ "." ( IDENT | "*" ) ] ;

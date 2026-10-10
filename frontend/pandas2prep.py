@@ -20,6 +20,12 @@ expresses is translated:
     assert df["Age"].between(0, 100).all()              EXPECT df.Age BETWEEN 0 AND 100;
     df.to_csv("clean.csv", index=False)                 SAVE df AS "clean.csv";
 
+and, unless derived=False (the version that lifted the corpora of RQ5):
+
+    df["when"] = pd.to_datetime(df["when"])             PARSE_DATE df.when;
+    df["hour"] = df["when"].dt.hour                     DERIVE df.hour = HOUR(when);
+    df["temp_c"] = df["temp"] - 273.15                  DERIVE df.temp_c = temp - 273.15;
+
 Statements that only read a DataFrame (print, describe, plots, models) do not
 change it and are skipped. Lifting a DataFrame stops at the first statement that
 changes it in a way PrepLang cannot express (a new column, map, apply, ...): the
@@ -31,6 +37,9 @@ import sys
 from dataclasses import dataclass, field
 
 COMPARISONS = {ast.Gt: ">", ast.GtE: ">=", ast.Lt: "<", ast.LtE: "<=", ast.Eq: "==", ast.NotEq: "!="}
+ARITHMETIC = {ast.Add: "+", ast.Sub: "-", ast.Mult: "*", ast.Div: "/"}
+DATE_PARTS = {"year": "YEAR", "month": "MONTH", "day": "DAY", "hour": "HOUR", "weekday": "WEEKDAY",
+              "dayofweek": "WEEKDAY", "day_of_week": "WEEKDAY"}
 
 
 class Unsupported(Exception):
@@ -88,7 +97,8 @@ def name_text(column):
 
 
 class Lifter:
-    def __init__(self):
+    def __init__(self, derived=True):
+        self.derived = derived  # translate PARSE_DATE and DERIVE
         self.out = Lifted()
         self.texts = {}  # module-level names bound to a string, e.g. path = "data/train.csv"
 
@@ -332,7 +342,39 @@ class Lifter:
         method = self.normalization(value, column, variable)
         if method:
             return [f"NORMALIZE {name}.{name_text(column)} USING {method};"]
+        if self.derived:
+            # errors="coerce" turns text that is not a date into a missing value; PrepLang refuses such
+            # text instead, so the two agree on every input PrepLang runs.
+            coerce = [k for k in value.keywords if k.arg == "errors" and isinstance(k.value, ast.Constant)
+                      and k.value.value == "coerce"] if isinstance(value, ast.Call) else []
+            if isinstance(value, ast.Call) and len(value.keywords) == len(coerce) and len(value.args) == 1 and (
+                    (isinstance(value.func, ast.Attribute) and value.func.attr == "to_datetime" and
+                     isinstance(value.func.value, ast.Name) and value.func.value.id in ("pd", "pandas")) or
+                    (isinstance(value.func, ast.Name) and value.func.id == "to_datetime")) and \
+                    self.column_of(value.args[0], variable) == column:
+                return [f"PARSE_DATE {name}.{name_text(column)};"]
+            try:
+                return [f"DERIVE {name}.{name_text(column)} = {self.arithmetic(value, variable)};"]
+            except Unsupported:
+                pass
         raise Unsupported(f"a new value for column {column!r} that PrepLang cannot express")
+
+    def arithmetic(self, node, variable):
+        """A DERIVE value: + - * / over columns of the DataFrame and numbers, or a part of a date column."""
+        column = self.column_of(node, variable)
+        if column is not None:
+            return name_text(column)
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
+            return repr(node.value)
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+            return f"-{self.arithmetic(node.operand, variable)}"
+        if isinstance(node, ast.BinOp) and type(node.op) in ARITHMETIC:
+            return (f"({self.arithmetic(node.left, variable)} {ARITHMETIC[type(node.op)]} "
+                    f"{self.arithmetic(node.right, variable)})")
+        if isinstance(node, ast.Attribute) and node.attr in DATE_PARTS and isinstance(node.value, ast.Attribute) and \
+                node.value.attr == "dt" and self.column_of(node.value.value, variable) is not None:
+            return f"{DATE_PARTS[node.attr]}({name_text(self.column_of(node.value.value, variable))})"
+        raise Unsupported("a value that is not arithmetic over columns and numbers")
 
     def normalization(self, value, column, variable):
         """(c - c.min()) / (c.max() - c.min()) -> MINMAX;  (c - c.mean()) / c.std() -> ZSCORE"""
@@ -391,9 +433,10 @@ dir_methods = {"loc", "iloc", "shape", "columns", "index", "values", "dtypes", "
                "is_unique", "unique", "nunique", "value_counts", "replace", "rename", "size", "empty"}
 
 
-def lift(source):
-    """Lifts a pandas script; returns a Lifted, or raises SyntaxError for code Python 3 cannot parse."""
-    return Lifter().lift(ast.parse(source))
+def lift(source, derived=True):
+    """Lifts a pandas script; returns a Lifted, or raises SyntaxError for code Python 3 cannot parse.
+    derived=False lifts as the version that produced the corpus results of RQ5 (no PARSE_DATE, no DERIVE)."""
+    return Lifter(derived).lift(ast.parse(source))
 
 
 if __name__ == "__main__":
