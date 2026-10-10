@@ -97,7 +97,7 @@ def main():
                          ("corpustable", "tab:rq-corpus"), ("comptable", "tab:rq-compose")):
         path = ROOT / "paper" / f"{table}.tex"
         if not path.exists():  # its experiment has not run yet
-            path.write_text(r"\begin{table}[t]\caption{Results pending.}\label{" + label + "}\end{table}\n",
+            path.write_text(r"\begin{table}[t]\caption{Results pending.}\label{" + label + r"}\end{table}" + "\n",
                             encoding="utf-8")
             print("not in the results yet:", table)
 
@@ -228,6 +228,71 @@ def realbatches(rows, numbers):
                  "although a fresh compilation runs; wrong: finished with other files than the fresh run, or where it "
                  "fails. Validators gate the optimized program (Section~\\ref{sec:rq-real}).",
                  "tab:rq-real", "realtable.tex")
+    timeline(rows)
+
+
+TIMELINE_STYLES = {  # outcome -> TikZ style of a month's cell
+    "rerun": "fill=deopt, draw=deopt", "correct run": "fill=black!65, draw=black!65",
+    "correct stop": "fill=white, draw=black, line width=0.5pt", "needless stop": "fill=black!15, draw=black!15",
+    "unsound": "pattern=north east lines, pattern color=black, draw=black",
+}
+
+
+def timeline(rows):
+    """Figure: every later month of the first-month deployment, per policy, on a calendar axis."""
+    policies = (("TFDV read", "tfdv/read"), ("Full cert.", "full"), ("Deopt.", "deopt"))
+    names = {"traffic": "Traffic", "bikes": "Bikes", "taxi": "Taxi"}
+    cell, gap, label = 0.215, 0.035, 1.55  # cm
+    lines = [r"\begin{figure*}[t]", r"\centering", r"\definecolor{deopt}{RGB}{217,95,2}",
+             r"\begin{tikzpicture}[font=\scriptsize]"]
+    y = 0.0
+    for workload, title in names.items():
+        months = sorted((r for r in rows if r["workload"] == workload and r["mode"] == "first"),
+                        key=lambda r: r["batch"])
+        if not months:
+            continue
+        first_year, first_month = map(int, months[0]["batch"].split("-"))
+
+        def x(batch):
+            year, month = map(int, batch.split("-"))
+            return label + ((year - first_year) * 12 + month - first_month) * cell
+
+        lines.append(rf"\node[anchor=west, inner sep=0pt, font=\scriptsize\bfseries] at (0,{y:.3f}) {{{title}}};")
+        years = sorted({r["batch"][:4] for r in months})
+        for year in years:
+            if int(year) == first_year and first_month > 9:  # too few months to hold the label
+                continue
+            start = max(x(f"{year}-01"), x(months[0]["batch"]))
+            lines.append(rf"\node[anchor=west, inner sep=0pt, text=black!60] at ({start:.3f},{y:.3f}) {{{year}}};")
+        y -= 0.13
+        for name, key in policies:
+            y -= cell + gap
+            lines.append(rf"\node[anchor=east] at ({label - 0.08:.3f},{y + cell / 2:.3f}) {{{name}}};")
+            for r in months:
+                outcome = r["outcome"][key]
+                if outcome == "wrong stop":
+                    outcome = "unsound"
+                if key == "deopt" and outcome == "correct run" and r["deopts"]:
+                    outcome = "rerun"
+                left = x(r["batch"])
+                lines.append(rf"\path[{TIMELINE_STYLES[outcome]}] ({left:.3f},{y:.3f}) rectangle "
+                             rf"++({cell - gap:.3f},{cell:.3f});")
+        y -= 0.42
+    legend = (("correct run", "ran, wrote the fresh compilation's files"),
+              ("rerun", "ran with removals re-enabled, as fresh"),
+              ("correct stop", "stopped where the fresh compilation stops"),
+              ("needless stop", "refused although fresh runs"), ("unsound", "wrong output"))
+    lines.append(r"\matrix[anchor=north west, column sep=2pt, ampersand replacement=\&] at "
+                 rf"({label:.3f},{y + 0.25:.3f}) {{")
+    lines.append(" \\& ".join(rf"\path[{TIMELINE_STYLES[k]}] (0,0) rectangle ++({cell - gap:.3f},{cell:.3f}); \& "
+                              rf"\node[anchor=west, inner sep=1pt] {{{text}}};" for k, text in legend) + r" \\")
+    lines += ["};", r"\end{tikzpicture}",
+              r"\caption{RQ4, compiled on the first month: every later month on a calendar axis (the traffic data has "
+              r"a gap), for the best validator, the full certificate and selective deoptimization. White: a fresh "
+              r"compilation stops too (temperatures of 0\,K in 2014, taxi fares above \$1,000). The grey run in the "
+              r"taxi rows begins in February 2023, when the publisher changed two column types; TFDV admits those "
+              r"months, and the optimized program writes them with the old types.}", r"\label{fig:timeline}", r"\end{figure*}"]
+    (ROOT / "paper" / "figure-timeline.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def corpus_numbers(records, prefix, numbers, held_out_from):
@@ -329,8 +394,8 @@ def overhead(rows, numbers):
     ratios = sorted(100 * (r["deopt"] - r["trusted"]) / r["trusted"] for r in finished)
     low, _, high = statistics.quantiles(ratios, n=4)
     numbers.update(OhMonths=len(finished), OhTrusted=f"{med('trusted'):.2f}", OhFull=f"{med('full'):.2f}",
-                   OhDeopt=f"{med('deopt'):.2f}", OhPct=f"{statistics.median(ratios):+.0f}",
-                   OhPctLow=f"{low:+.0f}", OhPctHigh=f"{high:+.0f}", OhCompile=f"{med('compile'):.2f}",
+                   OhDeopt=f"{med('deopt'):.2f}", OhPct=f"${statistics.median(ratios):+.0f}$",
+                   OhPctLow=f"${low:+.0f}$", OhPctHigh=f"${high:+.0f}$", OhCompile=f"{med('compile'):.2f}",
                    OhCompileMs=f"{1000 * med('compile'):.0f}", OhFresh=f"{med('fresh'):.2f}")
 
 

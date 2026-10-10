@@ -1,1 +1,18 @@
-\begin{table}[t]\caption{Results pending.}\label{tab:rq-compose}\end{table}
+\begin{table}[t]
+\caption{Composing two compiled stages on real monthly data (RQ6). Facts: what stage~2 relies on (admission and removals); Guar.: implied by stage~1's guarantee; Months: run through both stages; Deopt.: months stage~2 deoptimized; by a guaranteed fact: never.}
+\label{tab:rq-compose}
+\centering
+\footnotesize
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+Data & Stage 1 & Facts & Guar. & Months & Deopt. & Guar.\ broken \\
+\midrule
+taxi & as written & 13 & 11 & 15 & 0 & 0 \\
+taxi & strengthened & 13 & 13 & 15 & 0 & 0 \\
+traffic & as written & 14 & 12 & 60 & 0 & 0 \\
+traffic & strengthened & 14 & 14 & 60 & 0 & 0 \\
+bikes & as written & 11 & 10 & 23 & 0 & 0 \\
+bikes & strengthened & 11 & 11 & 23 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}

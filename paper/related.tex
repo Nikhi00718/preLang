@@ -49,9 +49,9 @@ assertion-checking systems reduce run-time checks by abstract interpretation~\ci
 sound gradual verification inserts checks for weakened specifications~\cite{zimmerman2024}. \PL does
 this per batch: a check is residual only for batches that break its certificate.
 
-\paragraph{Preconditions, abduction and certificates.} Necessary preconditions~\cite{cousot2013} and
-sufficient ones by backward under-approximation~\cite{mine2014} are conditions on a program's inputs
-for its assertions; abductive inference~\cite{dillig2012} finds the weakest facts that discharge a
+\paragraph{Preconditions, abduction and certificates.} Necessary preconditions~\cite{cousot2013}, and
+sufficient ones found by backward under-approximation~\cite{mine2014}, are conditions on a program's
+inputs for its assertions; abductive inference~\cite{dillig2012} finds the weakest facts that discharge a
 proof obligation. An item certificate is such a sufficient condition for one removal, restricted to a
 finite lattice anchored at the program's constants, so that a forward analyzer used as a black box
 finds a maximal one; DeepInfer~\cite{ahmed2024} infers data preconditions of trained networks.

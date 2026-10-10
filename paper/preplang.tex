@@ -11,6 +11,7 @@
 \pgfplotsset{compat=1.18}
 
 \settopmatter{printacmref=false, printfolios=true}
+\setlength{\emergencystretch}{1.5em}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 
 % Every measured number comes from eval/results/ through eval/paper_numbers.py.
@@ -26,7 +27,7 @@
 }
 \lstset{language=PrepLang, basicstyle=\ttfamily\footnotesize, keywordstyle=\bfseries,
   commentstyle=\itshape\color{gray}, numbers=left, numberstyle=\tiny, xleftmargin=1.5em,
-  frame=tb, columns=fullflexible, breaklines=true}
+  frame=tb, columns=fullflexible, breaklines=true, showstringspaces=false}
 
 \newcommand{\PL}{PrepLang\xspace}
 \newcommand{\full}{\ensuremath{\mathcal{F}}}
@@ -65,7 +66,8 @@ the gap. On \RealRuns{} real monthly batches of three public datasets, selective
 handles \RealDeoptCorrect{} batches exactly as a fresh compilation would and none
 unsoundly, where Great Expectations and pandera, set up on the same data, refuse
 \RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs, and TFDV,
-which checks no numeric ranges, admits months on which the optimized program writes different files. On \CorpusBothLifted{} held-out pandas
+which checks no numeric ranges, admits months on which the optimized program does not do what a fresh
+compilation does. On \CorpusBothLifted{} held-out pandas
 scripts from GitHub for two Kaggle tasks, lifted into \PL, \CorpusBothSame{} of \CorpusBothRuns{} runs
 on new batches reproduce the scripts' own results and none differ.
 \end{abstract}
@@ -103,7 +105,7 @@ A fingerprint of the compiled file keeps all three but refuses every new batch.
 Data-validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} infer expectations from the data
 rather than from the program: on our real monthly data, the suites they infer refuse most new
 months, and the one that leaves numeric ranges out admits months on which the optimized program
-writes other files than a fresh compilation would (Section~\ref{sec:eval}). What is missing is the program's side of the question:
+does not do what a fresh compilation does (Section~\ref{sec:eval}). What is missing is the program's side of the question:
 \emph{which facts of the compile-time data does the compiled program depend on, and what can it do
 for a batch that lacks one?}
 
@@ -225,8 +227,8 @@ $a = \langle \tau, \nu, [l,u], \epsilon \rangle$: a type, $\nu \in \{\textit{non
 \begin{multline*}
 \gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau,\;
   \nu = \textit{none} \Rightarrow M_c(T) = 0, \\
-  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big)
-  \wedge \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.
+  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big) \wedge {} \\
+  \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.
 \end{multline*}
 An exact column promises that both bounds occur in the data, which is what allows a compile-time
 \textsc{Violated} verdict. \texttt{LOAD} of a CSV file builds the exact state from every cell (a
@@ -361,7 +363,8 @@ $T$ does not fit $\cert{i}$:
 \begin{lstlisting}[language=Python,numbers=none]
 if deopt("2:1:s..marks"):
     if not df_s["marks"].dropna().between(0, 100).all():
-        raise ContractError("line 2: s.marks has values outside 0 to 100")
+        raise ContractError(
+            "line 2: s.marks has values outside 0 to 100")
 \end{lstlisting}
 For the compiled file, \texttt{deopt} is false without looking at the data.
 

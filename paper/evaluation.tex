@@ -107,13 +107,15 @@ and New York green-taxi trips (NYC TLC, 2022--2024, the 36 Parquet files as publ
 wrote one cleaning pipeline as a data engineer would: range contracts on the measured quantities,
 \texttt{NOT\_NULL} on keys, fills, a filter that removes impossible readings, a normalization and a
 selection. Each pipeline is deployed twice: compiled on the first month and run on every later one,
-and compiled on the month before each month. Batches are cut from the raw files, so no value is
-reformatted.
+and compiled on the month before each month (\RealRuns{} runs; twice the month before has a temperature of
+0\,K, fails to compile itself, and leaves nothing to deploy). Batches are cut from the raw
+files, so no value is reformatted.
 
 \input{realtable}
 \input{figure-policies}
+\input{figure-timeline}
 
-Over \RealRuns{} runs (Table~\ref{tab:rq-real}, Fig.~\ref{fig:policies}), selective deoptimization
+Over \RealRuns{} runs (Table~\ref{tab:rq-real}, Figs.~\ref{fig:policies} and~\ref{fig:timeline}), selective deoptimization
 handles \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
 \RealDeoptUnsound{} wrong; the full certificate handles \RealFullCorrect{}. The difference is
 \RealRescued{} months the full certificate refuses. In three, the traffic sensor reports temperatures
@@ -133,10 +135,11 @@ column; set up on every column or only on the columns read, they refuse
 TFDV infers types, presence and string domains but no numeric ranges. On every column it refuses
 \RealTfdvAllNeedlessPct\% of the months, for string values of columns the program never reads (a new
 holiday name refuses a traffic month); on the columns read it refuses fewer, but both setups admit
-months on which the optimized program writes other files than a fresh compilation
-(\RealTfdvReadUnsound{} months): the taxi months after the type change, written with the old column
-types, and traffic months with an impossible rain reading that a removed filter should have dropped.
-Generic validators do not know which facts the compiled program relies on.
+months on which the optimized program does not do what a fresh compilation does
+(\RealTfdvReadUnsound{} months): taxi months after the type change, written with the old column types,
+and months on which a removed range check should have stopped the run, taxi fares above \$1,000 and
+traffic temperatures of 0\,K, where the optimized program finishes and writes the bad rows. Generic
+validators do not know which facts the compiled program relies on.
 
 \subsection{RQ5: Real pandas scripts}\label{sec:rq-corpus}
 
@@ -191,15 +194,15 @@ them made no month stop earlier in stage~1 (the same \ComposeStageOneStops{} mon
 versions, all at the checks stage~1 already had). Every stage-2 run ended exactly like a fresh
 compilation of stage~2 on the same input.
 
-\subsection{RQ7: The cost of reuse}\label{sec:rq-cost}
+\subsection{RQ7: The cost of certification and reuse}\label{sec:rq-cost}
 
 Reusing a compiled program costs its admission check and, with deoptimization, the facts of the columns
 item certificates mention. Over the \OhMonths{} real months on which every variant finished (median of
 three runs each), the median run took \OhTrusted\,s with no check at all, \OhFull\,s with admission
-against the full certificate, and \OhDeopt\,s with admission and deoptimization. The difference between
-the last and the first is \OhPct\% at the median (interquartile range \OhPctLow\% to \OhPctHigh\%), which
-is inside the run-to-run noise of the machine: the check is one pass over a few columns the program reads
-anyway. Compiling a month afresh took \OhCompileMs\,ms before running and \OhFresh\,s with the run.
+against the full certificate, and \OhDeopt\,s with admission and deoptimization. Admission with
+deoptimization changed the run time by \OhPct\% at the median (interquartile range \OhPctLow\% to
+\OhPctHigh\%), which is inside the run-to-run noise of the machine: the check is one pass over a few
+columns the program reads anyway. Compiling a month afresh took \OhCompileMs\,ms before running and \OhFresh\,s with the run.
 
 Certification is paid once, at compile time. Over \CcPrograms{} programs (the shipped examples and
 the three real pipelines), the compiler ran \CcAnalysesMin{} to \CcAnalysesMax{} re-analyses with
