@@ -1,16 +1,13 @@
-\documentclass[conference]{IEEEtran}
-\usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb,amsthm}
+\documentclass[sigconf,nonacm]{acmart}
+% For a double-blind submission: \documentclass[sigconf,review,anonymous]{acmart}
+
+\usepackage{listings}
 \usepackage{stmaryrd}
 \usepackage{array}
-\usepackage{booktabs}
-\usepackage{listings}
-\usepackage{xcolor}
-\usepackage{url}
+\usepackage{xspace}
 
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-\newtheorem{corollary}{Corollary}
+\settopmatter{printacmref=false, printfolios=true}
+\renewcommand\footnotetextcopyrightpermission[1]{}
 
 % Every measured number comes from eval/results/ through eval/paper_numbers.py.
 \input{numbers}
@@ -20,1108 +17,441 @@
     AS,TO,WITH,ON,USING,WHERE,TYPE,EXCEPT,IF_EXISTS,RECURSIVE,DROP_NULL,FILL_NULL,NORMALIZE,
     FILTER,SELECT,DROP,EXPECT,RESIZE,GRAYSCALE,COMPRESS,CONVERT,REMOVE_CORRUPT,LINK,
     RANGE,MINMAX,ZSCORE,KEEP_ASPECT,QUALITY,JPG,PNG,NPY,NUMERIC,NOT_NULL,BETWEEN,UNIQUE,
-    REFERENCES,SCHEMA_SAME_AS,CHANNELS,MIN_WIDTH,MIN_HEIGHT,MATCH_RATE,AND,OR,NOT},
+    REFERENCES,SCHEMA_SAME_AS,CHANNELS,MIN_WIDTH,MIN_HEIGHT,MATCH_RATE,AND,OR,NOT,MEDIAN,MEAN,MODE},
   sensitive=false, comment=[l]{\#}, morestring=[b]"
 }
 \lstset{language=PrepLang, basicstyle=\ttfamily\footnotesize, keywordstyle=\bfseries,
   commentstyle=\itshape\color{gray}, numbers=left, numberstyle=\tiny, xleftmargin=1.5em,
   frame=tb, columns=fullflexible, breaklines=true}
 
+\newcommand{\PL}{PrepLang\xspace}
+\newcommand{\full}{\ensuremath{\mathcal{F}}}
+\newcommand{\adm}{\ensuremath{\mathcal{A}}}
+\newcommand{\cert}[1]{\ensuremath{\mathcal{C}_{#1}}}
+
 \begin{document}
 
-\title{Compile Once, Reuse Safely: Data Certificates for\\Data-Aware Compilation of Preprocessing Pipelines}
+\title{Compile Once, Reuse Safely}
+\subtitle{Data Certificates and Selective Deoptimization for Preprocessing Pipelines}
 
-\author{\IEEEauthorblockN{Nikhil V}
-\IEEEauthorblockA{School of Computer Science and Engineering\\
-Vellore Institute of Technology, India\\
-atnikhil06@gmail.com}}
-
-\maketitle
+\author{Nikhil V}
+\affiliation{%
+  \institution{School of Computer Science and Engineering, Vellore Institute of Technology}
+  \city{Vellore}
+  \country{India}}
+\email{atnikhil06@gmail.com}
 
 \begin{abstract}
-Data-preparation pipelines are run again on every new batch of data, yet what one can establish
-about a pipeline---that the column it normalizes holds numbers, that a contract on its values
-holds, that an operation does nothing and can be removed---depends on the data. PrepLang is a
-language and compiler that makes the input data a compile-time input: it computes an abstract
-dataset state (column types, missing values and intervals; image sizes, channels and pixel types)
-from every CSV cell or from metadata alone (Parquet footers, image headers), propagates it through
-the pipeline, decides each declared contract as proven, violated or deferred to a run-time check,
-and optimizes. Our main contribution is the \emph{data certificate}. By analysing the compiled
-program again under counterfactually weakened input facts, the compiler finds a 1-minimal set of
-facts its proofs and optimizations depend on---for tables (types, missing values and bounds, also
-of columns the program never reads, and which carried columns may be absent) and for image folders
-(a box of shapes per file type, which the analysis sees through its corner images)---and the
-generated program admits any new input that satisfies them, naming the row and the proof when it
-refuses one. A second front end lifts the cleaning part of real pandas scripts into PrepLang. Over
-\RealRuns{} runs on real monthly data of three public datasets (traffic sensors, bike rentals and
-New York taxi trips), certificates admit \RealAdmitPct\% of new months where the compiled month's
-own facts admit \RealFactsPct\%, and every admitted run ends exactly as a fresh compilation of that
-month. On \CorpusLifted{} held-out pandas scripts from GitHub, \CorpusSame{} of \CorpusRuns{} runs on
-new Titanic batches reproduce the script's own result exactly and \CorpusUnsound{} differ. These
-comparisons and our randomized soundness tests exposed five bugs in our first implementation---three
-soundness holes in certificates, one in a generated check and one in the front end---which we
-report with their fixes. A parallel scanner analyses one million CSV rows in
-\CsvMillion\,s, \CsvSpeedup$\times$ faster than pandas reads them.
+Batch data-preparation pipelines are compiled once and run again on every new batch: next
+month's file has the same layout and different values. A compiler that reads the input data at
+compile time can prove a pipeline's contracts and delete the checks and operations the data makes
+useless, but its proofs are about one file. We present \PL, a compiler for table and image
+preprocessing pipelines that computes an abstract dataset state from the data, or from its
+metadata alone, decides every contract as proven, violated or deferred, and optimizes, together
+with three ways to carry its proofs to new batches. \emph{Data certificates}, found by re-analysing
+the program under counterfactually weakened input facts, are 1-minimal sets of input facts that
+the proofs and removals depend on. \emph{Selective deoptimization} keeps every removed check and
+operation in the generated program with its own item certificate: a new batch runs the optimized
+program, and only the removals whose certificates it breaks run again; a batch is refused only for
+facts no run-time code can stand in for, such as a column's type. We prove this exact for every
+admitted batch and mechanize the theorem in Lean~4. \emph{Composition} lets a compiled stage
+publish a guarantee for each table it writes; checking it against the next stage's certificates
+shows which downstream checks can never fire and writes the upstream contracts that would close
+the gap. On \RealRuns{} real monthly batches of three public datasets, selective deoptimization
+handles \RealDeoptCorrect{} batches exactly as a fresh compilation would and none
+unsoundly, where Great Expectations, pandera and TFDV, set up on the same data, refuse
+\RealValidatorStopMin--\RealValidatorStopMax\% of the batches or, without range checks, admit
+batches on which the optimized program writes wrong data. On \CorpusBothScripts{} held-out pandas
+scripts from GitHub for two Kaggle tasks, \CorpusBothSame{} of \CorpusBothRuns{} runs on new batches
+reproduce the scripts' own results and none differ.
 \end{abstract}
 
-\begin{IEEEkeywords}
-compilers, domain-specific languages, abstract interpretation, hybrid type checking, data
-validation, data preprocessing, machine learning pipelines
-\end{IEEEkeywords}
+\keywords{data-aware compilation, abstract interpretation, data validation, speculative
+optimization, deoptimization, data contracts, machine learning pipelines}
+
+\maketitle
 
 \section{Introduction}
 
 Data preparation is a large part of building machine-learning systems, and its errors propagate
 silently into models~\cite{sculley2015,polyzotis2018}. A preparation pipeline is usually a Python
-script built on pandas~\cite{mckinney2010} and OpenCV~\cite{bradski2000}. Such a script cannot
-know, until it runs, whether the column it normalizes holds numbers, whether a folder contains a
-grayscale image among color ones, or whether every image has a label. When an assumption is wrong,
-the script raises an exception after processing part of the data or, worse, finishes and writes a
-wrong dataset: a threshold applied to an already normalized column removes every row, and a float
-image in $[0,1]$ saved as PNG comes out black.
+script built on pandas~\cite{mckinney2010} and OpenCV~\cite{bradski2000}. Such a script cannot know,
+until it runs, whether the column it normalizes holds numbers, whether a folder contains a grayscale
+image among color ones, or whether a filter will keep any row. When an assumption is wrong, the
+script raises an exception after processing part of the data or, worse, finishes and writes a
+wrong dataset.
 
-Data validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} check declared expectations on
-the data, but at run time and on a dataset rather than on the program that transforms it. Static
-analyzers for data-science code~\cite{urban2019,subotic2022,lagouvardos2020,zhuang2022} look at the
-program but mostly not at the data. An analysis of R scripts~\cite{gerstl2026} reads the datasets
-but infers only the shape of data frames, and compile-time data contracts~\cite{mirji2026} check
-the structure of declared types. None of them knows whether a column has missing values, what
-range its values take, or how large an image is.
+Batch preparation has a property most program analyses leave unused: \emph{the inputs exist when
+the pipeline is compiled}. \PL, a small language and compiler for table and image preprocessing,
+makes the data a compile-time input, as F\# type providers do for types~\cite{petricek2016}. Its
+analysis reads every CSV cell, or only a Parquet footer or the image headers, and follows the types,
+missing values, value ranges and image properties through the pipeline. Contracts the state decides
+are proven or reported as violated, with the offending row, before any data is processed; the
+optimizer deletes the checks of proven contracts and the operations the state shows to be useless.
 
-Batch preparation has a property these approaches leave unused: \emph{the inputs exist when the
-pipeline is compiled}. PrepLang makes the data a compile-time input, as F\# type providers do for
-types~\cite{petricek2016}. That raises the question this paper answers: a pipeline compiled and
-proven for this month's file runs again next month, on a file the proofs were not made for. A
-fingerprint of the compiled file is sound but refuses every new batch; the compiled file's own
-facts, as a schema-inferring validator such as TFDV~\cite{breck2019} would record them, refuse most
-of them (RQ8). We contribute:
+That raises the question this paper answers. A pipeline compiled and proven for this month's file
+runs again next month, on a file the proofs were not made for. Recompiling every batch throws away
+the reviewed, tested artifact and its explanations, and hides drift that the compiled program was
+optimized away from. A fingerprint of the compiled file is sound but refuses every new batch.
+Data-validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} infer expectations from the data
+rather than from the program: on our real monthly data, the suites they infer refuse most new
+months, and the ones that leave numeric ranges out admit months on which the optimized program
+writes wrong data (Section~\ref{sec:eval}). What is missing is the program's side of the question:
+\emph{which facts of the compile-time data does the compiled program depend on, and what can it do
+for a batch that lacks one?}
 
+\paragraph{Contributions.}
 \begin{itemize}
-\item \textbf{Data-aware compilation} for tables and images: one abstract state, computed from the
-data or from metadata only, propagated by transfer functions, and used for type checking, for
-hybrid checking of value contracts (proven, violated with the offending rows, or deferred), and for
-optimization (Sections~\ref{sec:state}--\ref{sec:contracts}, \ref{sec:opt}).
-\item \textbf{Data certificates} (Section~\ref{sec:cert}): counterfactual re-analysis finds the
-facts each proof and each removed operation depends on; the certificate covers columns the
-optimized program never loads, lets carried columns be absent, uses strict bounds for strict
-comparisons, and describes image folders by boxes whose corner images stand for every folder in
-the box. We prove it sound from the monotonicity of the analysis and check it with randomized
-property tests.
-\item \textbf{A pandas front end} (Section~\ref{sec:lift}) that lifts the longest prefix of a
-script's cleaning that PrepLang expresses exactly, so certificates apply to existing code.
-\item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): monthly batches
-of three public datasets, \CorpusAll{} pandas scripts from GitHub split into a development and a
-held-out test set, \RbTotal{} real failures from GitHub issues, injected mistakes, and performance
-at scale; and three soundness bugs our own evaluation found in the implementation.
+\item \textbf{Data-aware compilation} for tables and images (Section~\ref{sec:lang}): one abstract
+state, computed from the data or from metadata only, used for type checking, for hybrid checking of
+value contracts~\cite{flanagan2006}, and for optimization.
+\item \textbf{Data certificates} (Section~\ref{sec:cert}): by analysing the program again under
+counterfactually weakened input facts, the compiler finds a 1-minimal set of input facts that its
+proofs and removals depend on, over every column of a file and over boxes of image shapes, using
+the forward analysis as a black box.
+\item \textbf{Selective deoptimization} (Section~\ref{sec:deopt}): the optimizer removes
+instructions \emph{speculatively}; the compiler derives an admission certificate (the facts no
+run-time code can stand in for) and an item certificate for every removal. On a new batch the
+generated program re-enables exactly the removals whose item certificates the batch breaks. We
+prove that this computes exactly what the source program computes on every admitted batch, and
+mechanize the theorem in Lean~4~\cite{lean4}.
+\item \textbf{Composition} (Section~\ref{sec:compose}): every compiled stage publishes a guarantee
+for each table it writes. An assume-guarantee check against the next stage's certificates shows
+which of its checks can never fire, and synthesizes the contract a producer must meet so that none
+of its consumers ever refuses or deoptimizes.
+\item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
+monthly batches of three public datasets, scored against fresh compilations and against
+pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothScripts{}
+held-out pandas scripts for two Kaggle tasks, lifted into \PL by a second front end; two-stage
+pipelines; injected mistakes and \RbTotal{} real failures from GitHub issues; and the cost of all of
+it.
 \end{itemize}
 
-The compiler has about 9,000 lines of C++17 and \TestCount{} unit tests; the artifact includes all
-evaluation scripts and the lists of scripts and data sources.
+Each ingredient has a precedent: speculation with a fallback path in data
+compilers~\cite{spiegelberg2021,schiavio2020}, deoptimization~\cite{holzle1992,flueckiger2018},
+validity ranges of query plans~\cite{markl2004}, residual run-time checks~\cite{stulova2018},
+abductive and sufficient conditions~\cite{dillig2012,mine2014}, inferred input
+specifications~\cite{urban2020}, and data validation. What is new, to our knowledge, is to derive
+per-removal input conditions from the proofs of a data-aware compiler, to check them once per batch
+on cheap statistics, to re-enable exactly the broken removals with an exactness theorem, and to
+compose the resulting certificates across pipeline stages (Section~\ref{sec:related}).
 
-\section{A Motivating Example}\label{sec:example}
+\section{Overview}\label{sec:overview}
 
-Fig.~\ref{fig:linked} prepares images and their labels for training. The folder holds six images of
-different sizes, one of them grayscale, and one file (\texttt{broken.jpg}) that is not an image.
+Fig.~\ref{fig:students} cleans a table of students. Compiled against a file whose marks lie in
+$[35,95]$ and whose names are all present, \PL proves the contracts on lines~2--3, finds that
+\texttt{FILL\_NULL} on line~4 and \texttt{FILTER} on line~5 change nothing, and generates a program
+without any of the four.
 
 \begin{figure}[t]
 \begin{lstlisting}
-LOAD_IMAGES "dataset/" AS imgs RECURSIVE;
-LOAD "labels.csv" AS labels;
-REMOVE_CORRUPT imgs;
-LINK imgs WITH labels ON filename AS training;
-EXPECT training MATCH_RATE 100%;
-RESIZE imgs TO 128 128;
-NORMALIZE imgs RANGE 0 1;   # pixels become FLOAT32
-CONVERT imgs TO NPY;
-SAVE_IMAGES imgs TO "processed/ml_ready/";
-SAVE labels AS "processed/labels.csv";
+LOAD "students.csv" AS s;
+EXPECT s.marks BETWEEN 0 AND 100;
+EXPECT s.name NOT_NULL;
+FILL_NULL s.marks WITH 0;
+FILTER s WHERE marks >= 10;
+SAVE s AS "out.csv";
 \end{lstlisting}
-\caption{Images linked to labels (\texttt{examples/images/linked.prep}).}
-\label{fig:linked}
+\caption{A pipeline whose four statements on lines 2--5 the optimizer removes.}
+\label{fig:students}
 \end{figure}
 
-Three small edits turn this into a typical broken pipeline. Without line~3, the equivalent script
-fails on the broken file after decoding the others; PrepLang reports at compile time that
-``1 of 7 files cannot be decoded''. With a labels file that lacks one image, the script's
-assertion fails only after every image has been decoded; PrepLang reports ``match rate of training
-is 83.33\%, expected at least 100\%''. With \texttt{CONVERT imgs TO PNG} in line~8, the script
-finishes without any error and writes black images. PrepLang instead reports:
+\paragraph{Certificates.} The certifier analyses the program again with weaker facts: marks may be
+missing, marks have no lower bound, and so on. A weakening is kept if the proofs survive. The
+\emph{full certificate} keeps all four removals: marks in $[10,100]$ without missing values, names
+without missing values, and the types of every column. Any batch inside it can run the optimized
+program unchanged.
 
+\paragraph{Deoptimization.} A batch with a mark of 101 is outside the full certificate. Without
+deoptimization it must be refused. With it, the compiler has also found an \emph{item certificate}
+per removal: the check on line~2 needs marks in $[0,100]$; the \texttt{FILL\_NULL} on line~4 needs
+marks without missing values; the \texttt{FILTER} on line~5 needs marks of at least 10 without
+missing values; the check on line~3 needs names. The \emph{admission certificate}, which keeps only
+what no run-time code can stand in for, requires only the column types. The generated program keeps
+the four statements behind guards, computes missing-value counts and ranges of the columns the
+guards read, and for this batch re-enables only the check on line~2:
 \begin{lstlisting}[language={},numbers=none]
-error[type]: cannot save FLOAT32 pixels as PNG:
-  NORMALIZE at line 7 scaled them to [0, 1]
-  = hint: image files store 8-bit pixels, so these
-    would come out almost black; add CONVERT imgs TO NPY
+Deoptimized line 2: EXPECT s.marks BETWEEN 0 AND 100:
+  marks goes up to 101, above 100
+ContractError: line 2: s.marks has values outside 0 to 100
 \end{lstlisting}
+The run stops exactly where a fresh compilation of the batch stops (it reports the contract as
+violated). A batch with missing marks re-enables the fill and the filter, and writes what a fresh
+compilation writes; a batch with marks as text is refused, because the compiled code reads marks as
+integers. On 400 random batches, 127 fit the full certificate and 361 are admitted with
+deoptimization; for every one of them, a fresh compilation proves every removal the program keeps
+(Section~\ref{sec:eval}).
 
-To produce this message, the compiler must know the pixel type and value range at line~9, which
-come from the file headers read at line~1 and the effect of line~7.
+\paragraph{Composition.} The compiled program also states what \texttt{out.csv} satisfies for every
+admitted batch: marks in $[10,100]$ without missing values (the deferred and re-enabled checks hold
+whenever the run finishes). A second stage compiled on \texttt{out.csv} needs no admission check for
+any fact that this guarantee implies, and \texttt{tools/contracts.py} names the facts it does not
+imply, with the \texttt{EXPECT} that stage~1 would need.
 
-\section{The PrepLang Language}\label{sec:lang}
+\section{Data-Aware Compilation}\label{sec:lang}
 
-PrepLang programs are straight-line sequences of statements over five kinds of data: a
-\texttt{TABLE} (one CSV or Parquet file), a \texttt{TABLESET} (a folder of them), an
-\texttt{IMAGE}, an \texttt{IMAGESET} (a folder, optionally recursive) and a \texttt{DATASET} (images
-linked to a table by a file-name column). Table statements are \texttt{FILL\_NULL},
+\subsection{Language}
+\PL programs are straight-line sequences of statements over tables (one CSV or Parquet file),
+table sets (a folder of them), images, image sets, and images linked to a table of labels. Table
+statements are \texttt{FILL\_NULL} (with a value, \texttt{MEAN}, \texttt{MEDIAN} or \texttt{MODE}),
 \texttt{DROP\_NULL}, \texttt{NORMALIZE}, \texttt{FILTER} (with \texttt{AND}, \texttt{OR},
 \texttt{NOT} and comparisons), \texttt{SELECT} and \texttt{DROP}; image statements are
-\texttt{RESIZE} (optionally \texttt{KEEP\_ASPECT}), \texttt{GRAYSCALE}, \texttt{NORMALIZE RANGE},
-\texttt{CONVERT}, \texttt{COMPRESS} and \texttt{REMOVE\_CORRUPT}.
+\texttt{RESIZE}, \texttt{GRAYSCALE}, \texttt{NORMALIZE RANGE}, \texttt{CONVERT}, \texttt{COMPRESS}
+and \texttt{REMOVE\_CORRUPT}. Selectors such as \texttt{company.*.* WHERE TYPE NUMERIC} address many
+columns, resolved against the inferred schemas. Contracts are written with \texttt{EXPECT}:
+\texttt{NUMBER}, \texttt{STRING}, \texttt{BOOLEAN}, \texttt{NOT\_NULL}, \texttt{BETWEEN},
+\texttt{UNIQUE}, \texttt{REFERENCES}, \texttt{SCHEMA\_SAME\_AS}, \texttt{CHANNELS},
+\texttt{MIN\_WIDTH}, \texttt{MIN\_HEIGHT} and \texttt{MATCH\_RATE}. Every statement begins with its
+own keyword, so the grammar is LL(1); the front end is a hand-written lexer and a recursive-descent
+parser with panic-mode recovery. The compiler generates one Python program (pandas for tables,
+OpenCV for images, one streaming pass per image save).
 
-\emph{Selectors} address many columns at once: \texttt{company.*.salary} names the column in every
-table of a table set, \texttt{company.*.* WHERE TYPE NUMERIC EXCEPT [id]} selects by the inferred
-type, and \texttt{IF\_EXISTS} skips tables without the column. Selectors are resolved against the
-inferred schemas, so a selector that matches a text column or misses a table is reported once, with
-a note for every table it affects.
-
-\emph{Contracts} are written with \texttt{EXPECT}: \texttt{NUMBER}, \texttt{STRING},
-\texttt{BOOLEAN}, \texttt{NOT\_NULL}, \texttt{BETWEEN}, \texttt{UNIQUE} for columns;
-\texttt{REFERENCES} and \texttt{SCHEMA\_SAME\_AS} across tables; \texttt{CHANNELS},
-\texttt{MIN\_WIDTH}, \texttt{MIN\_HEIGHT} for images; and \texttt{MATCH\_RATE} for linked datasets.
-
-The constructs real cleaning code uses most are covered: \texttt{FILL\_NULL c WITH MEAN},
-\texttt{MEDIAN} or \texttt{MODE} computes the fill value from the data when the program runs, and
-\texttt{DROP\_NULL t [a, b]} removes only rows missing one of the listed columns. Dates and
-timestamps of Parquet files are \textsc{DateTime} columns, which can be kept, dropped, saved and
-checked with \texttt{NOT\_NULL}; there are no date values to compare them with.
-
-Every statement begins with its own keyword, so the grammar is LL(1). The front end is a
-hand-written lexer and a recursive-descent parser with panic-mode recovery; every diagnostic has a
-caret, a hint and, for misspelled names, an edit-distance suggestion.
-
-\section{The Abstract Dataset State}\label{sec:state}
-
-The semantic analyzer maintains a state $\sigma$ mapping every dataset to an abstract value.
-Programs have no loops, so the analysis is a single forward pass in the style of abstract
-interpretation~\cite{cousot1977} and needs no widening.
-
-\textbf{Columns.} For a table $T$ and column $c$, let $V_c(T)$ be the multiset of present values
-and $M_c(T)$ the number of missing ones. A column is abstracted as
-$a = \langle \tau, \nu, [l,u], \epsilon \rangle$: a type
-$\tau \in \{\textsc{Integer}, \textsc{Float}, \textsc{String}, \textsc{Boolean}\}$; $\nu \in
-\{\textit{none}, \textit{maybe}\}$ for missing values; an interval~\cite{cousot1976}; and an
-exactness flag $\epsilon$. Its concretization is
+\subsection{The abstract dataset state}\label{sec:state}
+The semantic analyzer maintains a state $\sigma$ mapping every dataset to an abstract value; a
+single forward pass in the style of abstract interpretation~\cite{cousot1977} suffices, since
+programs have no loops. For a table $T$ and column $c$, let $V_c(T)$ be the multiset of present
+values and $M_c(T)$ the number of missing ones. A column is abstracted as
+$a = \langle \tau, \nu, [l,u], \epsilon \rangle$: a type, $\nu \in \{\textit{none},
+\textit{maybe}\}$ for missing values, an interval~\cite{cousot1976}, and an exactness flag, with
 \begin{multline*}
-\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau, \\
-  \nu = \textit{none} \Rightarrow M_c(T) = 0,\;
-  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big) \\
+\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau,\;
+  \nu = \textit{none} \Rightarrow M_c(T) = 0, \\
+  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big)
   \wedge \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.
 \end{multline*}
-So an exact column promises two things: both interval bounds occur in the data, and the
-missing-value flag is certain. For a CSV file, \texttt{LOAD} reads every cell and builds the
-exact state: the most specific type consistent with all cells (a numeric-looking column that
-becomes \textsc{String} remembers the offending line), the true minimum and maximum, and the true
-number of missing values. Files that are not UTF-8, which pandas would reject, are reported with
-their line and byte.
+An exact column promises that both bounds occur in the data, which is what allows a compile-time
+\textsc{Violated} verdict. \texttt{LOAD} of a CSV file builds the exact state from every cell (a
+parallel scanner analyses one million rows in \CsvMillion\,s, \CsvSpeedup$\times$ faster than
+pandas reads them). An image set is abstracted as per-file shapes (width, height, channels, broken
+or not) from the PNG or JPEG header, a pixel type, a pixel range and an output format. Transfer
+functions follow the statements: \texttt{FILTER} refines intervals with its comparisons and, as in
+SQL's three-valued logic~\cite{codd1979}, makes compared columns non-missing; \texttt{FILL\_NULL}
+clears \textit{maybe} and joins the fill value; \texttt{NORMALIZE} sets $[0,1]$; \texttt{RESIZE}
+sets every shape. Saves check that the format can hold the pixels: \textsc{Float32} pixels cannot
+be saved as PNG, which a plain script would write as black images.
 
-\textbf{Images.} An image set is abstracted as $\langle S, \delta, [l,u], \phi, q\rangle$: a list
-$S$ of per-file shapes (width, height, channels, broken or not); the pixel type
-$\delta \in \{\textsc{Uint8}, \textsc{Uint16}, \textsc{Float32}\}$; the pixel value range; the
-output format $\phi \in \{\textsc{Source}, \textsc{Jpg}, \textsc{Png}, \textsc{Npy}\}$; and the
-JPEG quality $q$. Shapes come from the PNG \texttt{IHDR} chunk or the JPEG start-of-frame marker;
-the format is decided by the file's first bytes, as the decoder does, not by its name. A file whose
-header cannot be parsed is broken.
+\paragraph{Metadata only.} For Parquet files~\cite{parquet,melnik2010} the compiler reads only the
+footer: types from the schema, intervals from the per-row-group statistics that databases use as
+zone maps~\cite{moerkotte1998}, missing values from the null counts. Compilation then costs
+\PqSixteen\,s for one or 16 million rows; soundness rests on truthful writer statistics.
 
-\textbf{Links.} \texttt{LINK} records the numbers of images, labels and matches; the match rate is
-$m/\max(|\mathit{images}|, |\mathit{labels}|)$.
+\subsection{Hybrid contract checking}\label{sec:contracts}
+For a contract $\varphi$ at a point with state $\sigma$, the compiler returns \textsc{Proven} if
+every dataset in $\gamma(\sigma)$ satisfies $\varphi$ (no check is generated), \textsc{Violated} if
+none does (compilation fails, naming the first offending row), and \textsc{Deferred} otherwise (a
+run-time check is generated). This is hybrid type checking~\cite{flanagan2006} and soft
+typing~\cite{cartwright1991} applied to data. A deferred contract refines $\sigma$ afterwards,
+because execution continues only if its check passed.
 
-\textbf{Transfer functions.} Table~\ref{tab:transfer} lists representative transfer functions.
-\texttt{FILTER} refines intervals with the comparison and, following SQL's three-valued
-logic~\cite{codd1979}, makes compared columns non-missing, because a comparison with a missing
-value is unknown and the row is dropped; the generated code uses pandas' nullable types so that
-execution follows the same rule. An empty refined interval means the filter removes every row,
-which is reported. Using a column after \texttt{DROP} or \texttt{SELECT} removed it is reported
-like a use after free. Save statements check that the format can hold the pixels:
-\textsc{Float32} pixels cannot be saved as JPG or PNG, and 4-channel or \textsc{Uint16} images
-cannot become JPG.
-
-\begin{table}[t]
-\caption{Representative transfer functions}
-\label{tab:transfer}
-\centering
-\footnotesize
-\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.85cm}@{}}
-\toprule
-Statement & Effect on the abstract state \\
-\midrule
-\texttt{FILL\_NULL c WITH v} & $\nu \gets \textit{none}$; if $\nu$ was \textit{maybe}:
-  $[l,u] \gets [l,u] \sqcup [v,v]$ \\
-\texttt{DROP\_NULL t} & $\nu \gets \textit{none}$ for all columns; $\epsilon \gets$ false \\
-\texttt{NORMALIZE c MINMAX} & $\tau \gets \textsc{Float}$; $[l,u] \gets [0,1]$; $\epsilon \gets$ false \\
-\texttt{FILTER t WHERE c $\ge$ k} & $[l,u] \gets [\max(l,k), u]$; $\nu_c \gets \textit{none}$;
-  $\epsilon \gets$ false \\
-\texttt{RESIZE i TO w h} & every shape $\gets w \times h$ \\
-\texttt{GRAYSCALE i} & every channel count $\gets 1$ \\
-\texttt{NORMALIZE i RANGE a b} & $\delta \gets \textsc{Float32}$; $[l,u] \gets [a,b]$ \\
-\texttt{CONVERT i TO f} & $\phi \gets f$ \\
-\texttt{REMOVE\_CORRUPT i} & remove broken files from $S$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Metadata-Only Analysis}\label{sec:metadata}
-
-Reading every cell makes compilation cost as much as reading the data once
-(Section~\ref{sec:eval}). For Parquet files~\cite{parquet,melnik2010} the compiler reads only the
-footer, a Thrift-encoded structure at the end of the file, and builds the state from the schema,
-the row count and the per-row-group column statistics, which databases already use to skip data
-as \emph{zone maps}~\cite{moerkotte1998}:
-\begin{itemize}
-\item $\tau$ from the physical and logical types (dates and timestamps are \textsc{DateTime};
-decimals and nested columns are reported as unsupported);
-\item $[l,u]$ from the smallest \texttt{min\_value} and largest \texttt{max\_value} over row groups,
-decoded with the column's signedness. The format only promises \emph{bounds}; the interval is exact
-only when every row group sets \texttt{is\_min\_value\_exact} and \texttt{is\_max\_value\_exact},
-which current writers such as Arrow do for numbers;
-\item $\nu$ from the summed \texttt{null\_count}. pandas reads a floating-point NaN as a missing
-value, but the null count excludes NaN, so a float column is \textit{none} only if the file also
-records a NaN count;
-\item $\epsilon$ only if the interval is exact and the number of missing values is known.
-\end{itemize}
-Contracts that need the values themselves (\texttt{UNIQUE}, \texttt{REFERENCES}, \texttt{LINK}) are
-deferred. The fingerprint of a Parquet input is the CRC-32 of its footer: the proofs use nothing
-else. The cost is independent of the number of rows. Soundness now rests on one assumption
-(\emph{S}): the writer's statistics are truthful.
-
-\section{Hybrid Contract Checking and Soundness}\label{sec:contracts}
-
-For a contract $\varphi$ at a program point with state $\sigma$, the compiler returns
-\textsc{Proven} if every dataset in $\gamma(\sigma)$ satisfies $\varphi$ (no check is generated),
-\textsc{Violated} if none does (compilation fails), and \textsc{Deferred} otherwise (a run-time
-check is generated). This is hybrid type checking~\cite{flanagan2006} and soft
-typing~\cite{cartwright1991} applied to data: prove what the state decides, check the rest. For
-\texttt{BETWEEN a AND b}, the contract is proven if $[l,u] \subseteq [a,b]$ and violated if the
-column is exact and $[l,u] \not\subseteq [a,b]$; for a CSV input the compiler then names the first
-offending row. A deferred contract is an assumption for the rest of the program, because execution
-continues only if the check passed: $\sigma$ is refined with $\varphi$ (for \texttt{BETWEEN},
-$[l,u] \gets [l,u] \sqcap [a,b]$ and $\epsilon \gets$ false, since $a$ and $b$ need not occur).
-
-\textbf{Fingerprint guard.} The generated program recomputes a CRC-32 of every CSV input, of every
-Parquet footer and of every image folder listing (names and sizes), and stops if any differs from
-the value recorded at compile time.
-
-\begin{lemma}[Initial state]\label{lem:init}
-If $T$ is the content of a CSV input, $T \in \gamma(\sigma_0)$. If $T$ is the content of a
-Parquet input whose statistics are truthful (S), $T \in \gamma(\sigma_0)$.
+\begin{lemma}[Soundness of the analysis]\label{lem:sound}
+If $T$ is the content of a CSV input, or of a Parquet input with truthful statistics, then
+$T \in \gamma(\sigma_0)$; for every statement $s$, $T \in \gamma(\sigma) \Rightarrow
+\llbracket s \rrbracket(T) \in \gamma(f_s(\sigma))$; a \textsc{Proven} verdict holds for every
+$T \in \gamma(\sigma)$ and a \textsc{Violated} one for none.
 \end{lemma}
-\begin{IEEEproof}
-For CSV, $\sigma_0$ is computed from all cells, so every clause holds with equality. For Parquet,
-S gives $V_c \subseteq [l,u]$; exactness is claimed only when the attained-bound flags are set and
-missing values are fully counted, so both clauses guarded by $\epsilon$ hold.
-\end{IEEEproof}
+\begin{proof}[Proof sketch]
+The initial state is computed from all cells, or from statistics that bound the values; exactness is
+claimed only when both bounds and the missing count are known. Transfer functions are case by case:
+\texttt{FILTER} keeps a subset of rows that satisfy the condition and clears $\epsilon$;
+\texttt{FILL\_NULL} adds its value exactly when values are missing. A \textsc{Violated} verdict needs
+an exact column, whose bound is a value of the data.
+\end{proof}
 
-\begin{theorem}[Transfer soundness]\label{thm:transfer}
-For every statement $s$ with semantics $\llbracket s \rrbracket$ and transfer function $f_s$,
-$T \in \gamma(\sigma) \Rightarrow \llbracket s \rrbracket(T) \in \gamma(f_s(\sigma))$.
-\end{theorem}
-\begin{IEEEproof}[Proof sketch]
-By cases; we show the ones that touch exactness. \texttt{FILTER} keeps a subset of rows, so
-$V'_c \subseteq V_c \subseteq [l,u]$, and every kept row satisfies the condition, which gives the
-refined bound; a compared column has no missing values in kept rows (three-valued logic); bounds
-may no longer occur, so $\epsilon$ is cleared. \texttt{FILL\_NULL c WITH v} gives
-$V'_c = V_c \cup \{v\}$ if $M_c > 0$ and $V'_c = V_c$ otherwise; the joined interval covers both.
-If $\epsilon$ holds, $M_c > 0 \Leftrightarrow \nu = \textit{maybe}$, so $v$ is added exactly when
-the transfer function adds it, and the bounds of the join occur. \texttt{NORMALIZE},
-\texttt{DROP\_NULL} and the image statements change values or shapes in a way the table states
-exactly, or clear $\epsilon$.
-\end{IEEEproof}
-
-\begin{theorem}[Verdict soundness]\label{thm:verdict}
-If the verdict for $\varphi$ is \textsc{Proven}, every $T \in \gamma(\sigma)$ satisfies $\varphi$;
-if it is \textsc{Violated}, no $T \in \gamma(\sigma)$ satisfies $\varphi$.
-\end{theorem}
-\begin{IEEEproof}[Proof sketch]
-For \texttt{BETWEEN}: $[l,u] \subseteq [a,b]$ and $V_c \subseteq [l,u]$ give $V_c \subseteq
-[a,b]$. If the column is exact and, say, $u > b$, then $u \in V_c$ and $\varphi$ fails. For
-\texttt{NOT\_NULL}: \textit{none} gives $M_c = 0$; a violation is reported only for an exact column
-with a positive missing count from the file. Image contracts are decided per file on exact shapes.
-\end{IEEEproof}
-
-\begin{corollary}[Check elimination]\label{cor:checks}
-Barring a CRC-32 collision, every run that passes the fingerprint guard reaches each
-\texttt{EXPECT} with a dataset in $\gamma(\sigma)$, so deleting the checks of proven contracts does
-not change which runs succeed.
-\end{corollary}
-\begin{IEEEproof}
-The guard makes the input equal to the analyzed one (for Parquet: its footer, which with S is all
-the proofs use); apply Lemma~\ref{lem:init}, Theorem~\ref{thm:transfer} along the program (deferred
-contracts refine $\sigma$ only after their check passed) and Theorem~\ref{thm:verdict}.
-\end{IEEEproof}
-
-Writing down $\gamma$ was useful in practice: it exposed an unsound case in our first Parquet
-implementation, which marked a float column exact although its missing values were not known, so
-that \texttt{FILL\_NULL} followed by \texttt{BETWEEN} could be reported as violated when the fill
-value never occurs. The case is now excluded by the definition of $\epsilon$ and covered by a unit
-test. CRC-32 detects accidental changes, not deliberate ones; a cryptographic hash can replace it.
+\paragraph{Optimizations.} Analysis results are attached to a three-address IR. \emph{Check
+elimination} removes checks of proven contracts; \emph{no-effect elimination} removes a
+\texttt{FILL\_NULL} on a column without missing values, a \texttt{FILTER} that is always true, a
+\texttt{GRAYSCALE} of 1-channel images, a \texttt{RESIZE} to the size every image has;
+\emph{column pruning} loads only live columns. All of them keep the output exact; the one
+approximate rewrite (merging two resizes) runs only on request. Contracts proven by reading values
+(\texttt{UNIQUE}, \texttt{REFERENCES}, \texttt{MATCH\_RATE}) keep a check that runs only when an
+input differs from the compiled one.
 
 \section{Data Certificates}\label{sec:cert}
 
-The fingerprint guard is sound but strict: a preparation pipeline usually runs again on tomorrow's
-file, which has the same layout and different values, and the guard refuses it. Most facts of the
-compiled file are not needed by any proof, though. In the running example the data has marks in
-$[35,95]$, but the only proof about marks is \texttt{BETWEEN 0 AND 100}, which needs $[0,100]$.
-
-\textbf{Certificate.} A certificate is an input state $\sigma_C$ in which every column is inexact
-($\epsilon$ false, Section~\ref{sec:state}): a set of tables, not one table. An input $T$ is
-\emph{admitted} if $T \in \gamma(\sigma_C)$: every certified column has the type the compiler would
-infer for it, no missing values where $\sigma_C$ says \textit{none}, and values inside the
-certified interval. Let
-$\Pi(\sigma)$ be the proven contracts and removed operations the analysis derives from input state
-$\sigma$, leaving out contracts proven by reading the values (\texttt{UNIQUE},
-\texttt{REFERENCES}, \texttt{MATCH\_RATE}).
+Let $\sigma_0$ be the input state of the compiled files with every exactness flag cleared, so that it
+describes a set of files rather than one. For an input state $\iota$, let $\Pi(\iota)$ be the set of
+\emph{obligations} the analysis discharges from it: proven contracts and no-effect facts (each
+identified by its statement and target), leaving out proofs that read the values, plus the absence
+of compile errors. Order input states pointwise: $\textit{none} \sqsubseteq \textit{maybe}$,
+interval inclusion, a fixed type, and for images per-file shapes inside boxes.
 
 \begin{lemma}[Monotonicity]\label{lem:mono}
-Order states pointwise ($\textit{none} \sqsubseteq \textit{maybe}$, interval inclusion, $\epsilon$
-false). For every statement, $\sigma' \sqsubseteq \sigma$ implies $f_s(\sigma') \sqsubseteq
-f_s(\sigma)$, and every proof and removal decided in $\sigma$ is also decided in $\sigma'$.
+If $\iota' \sqsubseteq \iota$, then $\Pi(\iota') \supseteq \Pi(\iota)$.
 \end{lemma}
-\begin{IEEEproof}[Proof sketch]
-The decisions are inclusions of the state in a fixed predicate ($[l,u] \subseteq [a,b]$,
-$\nu = \textit{none}$, a comparison true on all of $[l,u]$ without missing values), which a smaller
-state keeps. Transfer functions are joins and meets with constants, except where a decision changes
-the path: a \texttt{FILTER} that is always true in $\sigma'$ leaves $\sigma'$ unchanged, and
-$\sigma' \sqsubseteq \sigma \sqcap \textit{cond} = f_s(\sigma)$ because $\sigma'$ already satisfies
-the condition; a contract proven in $\sigma'$ but deferred in $\sigma$ leaves $\sigma'$, and
-$\sigma' \sqsubseteq \sigma \sqcap \varphi$ likewise. \texttt{FILL\_NULL} adds $v$ only when
-$\nu = \textit{maybe}$, which is monotone because $[l,u] \subseteq [l,u] \sqcup [v,v]$.
-\end{IEEEproof}
+\begin{proof}[Proof sketch]
+Every decision is the inclusion of the state in a fixed predicate ($[l,u] \subseteq [a,b]$,
+$\nu = \textit{none}$, a comparison true on all of $[l,u]$), which a smaller state keeps. Transfer
+functions are joins and meets with constants; where a decision changes the path (a filter always
+true in $\iota'$ but not in $\iota$, a contract proven in $\iota'$ but deferred in $\iota$), the
+state of $\iota'$ is below the refined state of $\iota$ because it already satisfies the condition.
+With exactness cleared, no verdict depends on a bound occurring in the data.
+\end{proof}
+
+A \emph{certificate} for a set of obligations $O$ is an input state $\cert{O}$ with
+$O \subseteq \Pi(\cert{O})$. An input $T$ \emph{fits} it if $\alpha(T) \sqsubseteq \cert{O}$, where
+$\alpha(T)$ is $T$'s own inexact state: every certified column has the type the compiler would infer,
+no missing values where the certificate says \textit{none}, values inside the certified interval,
+and every image file inside its box.
 
 \begin{theorem}[Certificate soundness]\label{thm:cert}
-If $\Pi(\sigma_C) \supseteq \Pi(\sigma_0)$ and an input $T$ is admitted, every removal and every
-proof the compiled program relies on is valid for $T$.
+If $T$ fits $\cert{O}$, every obligation in $O$ holds for $T$.
 \end{theorem}
-\begin{IEEEproof}
-Let $\alpha(T)$ be the inexact state of $T$; admission means $\alpha(T) \sqsubseteq \sigma_C$. By
-Lemma~\ref{lem:mono}, $\Pi(\alpha(T)) \supseteq \Pi(\sigma_C) \supseteq \Pi(\sigma_0)$, and by
-Lemma~\ref{lem:init}, Theorem~\ref{thm:transfer} and Theorem~\ref{thm:verdict} applied to
-$\alpha(T)$, each of these proofs holds for $T$ and each removed operation does nothing on $T$.
-Checks of contracts proven from the values are kept in the generated program and run whenever an
-input differs from the compiled one.
-\end{IEEEproof}
+\begin{proof}
+$\Pi(\alpha(T)) \supseteq \Pi(\cert{O}) \supseteq O$ by Lemma~\ref{lem:mono}; by
+Lemma~\ref{lem:sound}, each proof derived from $\alpha(T)$ holds for $T$ at its program point, and
+each removed operation does nothing there.
+\end{proof}
 
-\textbf{Finding the certificate.} The compiler starts from $\sigma_0$ with every $\epsilon$
-cleared and first checks that this still gives $\Pi(\sigma_0)$; otherwise only the exact files are
-accepted. Then it tries to weaken one fact at a time and analyses the whole program again: missing
-values are allowed; a lower bound is replaced by $-\infty$, or else by the loosest program constant
-below it that works, first as a closed bound ($\geq k$) and then as an open one ($> k$, given to the
-analysis as the next double above $k$); likewise for the upper bound. A weakening is kept when
-$\Pi$ is unchanged. The analysis compares intervals only with the program's constants (contract
-bounds, comparison values, fill values), so no other bound can keep more proofs; the result is
-1-minimal: no remaining fact can be weakened on its own. A rejected weakening tells which proofs need
-the fact, and the certificate lists them, so a refused input is explained by the row and the proof:
+\paragraph{Counterfactual re-analysis.} The certifier starts from $\sigma_0$ (first checking that it
+still discharges what the compiled program used; otherwise only the exact files are admitted) and
+weakens one fact at a time, running the whole analysis again: missing values are allowed; a lower
+bound becomes $-\infty$, or else the loosest program constant below it that works, first as a closed
+bound ($\geq k$) and then as an open one ($> k$); likewise upper bounds; a column the program only
+carries to its output may be absent; image boxes gain channel counts and size ranges, again up to the
+program's constants. A weakening is kept if the criterion still holds. The analysis compares intervals
+only with the program's constants, so no other bound can keep more; the result is 1-minimal (no
+remaining fact can be weakened on its own), and a rejected weakening tells which obligations need the
+fact. The search uses the analysis as a black box, so it needs only a monotone forward analyzer, not
+backward operators~\cite{mine2014}. Each run reads no data: tables are replaced by their facts and
+image folders by \emph{corner images}, one per combination of the extreme sizes, channel counts and
+depths of the box. Every image decision is a universal or existential test over files of a
+conjunction of one-dimensional conditions, so a folder inside the box passes whenever its corners do.
 
-\begin{lstlisting}[language={},numbers=none]
-marks is 104 in data row 4, above 100; the compiled
-program relies on this for line 5: EXPECT
-students.marks BETWEEN 0 AND 100
+\paragraph{Every column.} The weakening runs over every column of the file, not only those the
+optimized program loads: once \texttt{EXPECT t.id NOT\_NULL} is proven and pruning drops \texttt{id},
+the certificate still requires it, and the generated program reads \texttt{id} only to check it.
+
+\section{Selective Deoptimization}\label{sec:deopt}
+
+The full certificate $\full = \cert{\Pi(\sigma_0)}$ treats every removal alike, so a batch that breaks
+the fact behind one removed check is refused, although running that check would decide the batch
+correctly. Dynamic compilers face the same choice with speculative code and resolve it by
+deoptimization~\cite{holzle1992}. \PL applies it per batch and per removal.
+
+\paragraph{Speculative removal.} The optimizer keeps every removed check and operation in the IR,
+marked speculative (with the comparisons a removed \texttt{FILTER} needs). The certifier then finds,
+one after the other and each starting from the previous result:
+\begin{enumerate}
+\item the \emph{full certificate} $\full$, for all of $\Pi(\sigma_0)$;
+\item the \emph{admission certificate} $\adm$, for the obligations no run-time code can stand in
+for: the absence of compile errors, contracts without a run-time check (types, image contracts),
+and removals that cannot be re-enabled (a check of a column pruning dropped);
+\item an \emph{item certificate} $\cert{i}$ for every speculative removal $i$, for the obligation
+$\{i\}$ and the absence of errors, starting from $\full$.
+\end{enumerate}
+An item certificate is stored as the facts it needs beyond $\adm$; one that needs none is removed for
+good. The generated program refuses a batch $T$ that does not fit $\adm$ (naming the fact and the
+obligation), computes the missing-value count, minimum and maximum of the columns item certificates
+mention (or the header facts of image folders), and runs each speculative instruction $i$ only if
+$T$ does not fit $\cert{i}$:
+\begin{lstlisting}[language=Python,numbers=none]
+if deopt("2:1:s..marks"):
+    if not df_s["marks"].dropna().between(0, 100).all():
+        raise ContractError("line 2: s.marks has values outside 0 to 100")
 \end{lstlisting}
+For the compiled file, \texttt{deopt} is false without looking at the data.
 
-\textbf{Columns the program does not read.} The weakening runs over \emph{every} column of the
-file. A proof can depend on a column the optimized program never loads: once
-\texttt{EXPECT t.id NOT\_NULL} is proven its check is removed, and column pruning then drops
-\texttt{id}. Such a column stays in the certificate, and the generated program loads it only to
-check it on a new input. Its type is required only if changing it to any other type loses a proof.
+\begin{theorem}[Exact selective deoptimization]\label{thm:deopt}
+Let $T$ fit $\adm$ and let $D = \{\, i \mid T \text{ does not fit } \cert{i} \,\}$. The generated
+program with the removals outside $D$ skipped and those in $D$ run computes on $T$ exactly what the
+source program computes: the same outputs, or a stop at the same check.
+\end{theorem}
+\begin{proof}
+For $i \notin D$, $\alpha(T) \sqsubseteq \cert{i}$ and $i \in \Pi(\cert{i})$, so by
+Lemma~\ref{lem:mono} $i \in \Pi(\alpha(T))$, and since $T$ fits $\adm$ no compile error occurs; by
+Lemma~\ref{lem:sound} instruction $i$ does nothing at the state the source program reaches there on
+$T$. Removing instructions that do nothing along a run does not change the run: by induction on the
+program, the state before every remaining instruction is the same. The instructions in $D$ and all
+others run as in the source program.
+\end{proof}
 
-\textbf{Columns that may be missing.} A new batch often lacks a column the compiled one had: the
-Kaggle test file has no \texttt{Survived}. A column that no instruction of the optimized program
-names, and that the program only carries to its output, is made optional if the analysis without
-it keeps every proof, both alone and together with the columns already found optional; the output
-of such a run then lacks the column, as the output of a fresh compilation would.
+\begin{corollary}[Agreement with a fresh compilation]
+If a fresh compilation of $T$ succeeds, its program computes the same as the source program on $T$
+(Lemma~\ref{lem:sound}), hence as the deoptimized program. If it reports a contract as violated, the
+removal of that contract's check is not in $\Pi(\alpha(T))$, so it is in $D$ or was never removed,
+and the deoptimized program stops at that check.
+\end{corollary}
 
-\textbf{Image folders.} A folder is certified as one box per file extension: the channel counts,
-the width and height ranges and the bit depths its files may have, and whether files whose header
-cannot be read are allowed. The analysis cannot be given a box directly, because its image state is
-a list of files; it is given the box's \emph{corner images}, one for every combination of the
-extreme widths and heights, the channel counts and the depths, plus a broken file if allowed.
+So a batch is refused only for facts that no run-time code stands in for. Item certificates are
+weaker than $\full$ in the directions their removal does not care about: the check on line~2 of
+Fig.~\ref{fig:students} needs no lower bound of 10 and allows missing marks.
 
-\begin{lemma}[Corners]\label{lem:corners}
-Every image decision of the analysis is a universal or existential test over the files, of a
-conjunction of conditions on single dimensions (all files are $w\times h$, all have one channel,
-some file has four channels and becomes a JPEG, all are at least $k$ wide). For such a test, a
-folder inside the box passes whenever the corner images pass.
-\end{lemma}
-\begin{IEEEproof}[Proof sketch]
-A universal test of a conjunction of one-dimensional interval or membership conditions holds for
-every point of a product box iff it holds at the box's extreme values in each dimension; an
-existential failure condition holds for some file of the folder only if it holds for some corner,
-since each of its conjuncts is again one-dimensional.
-\end{IEEEproof}
+\paragraph{Mechanization.} We mechanized Theorem~\ref{thm:deopt} in Lean~4~\cite{lean4} for an
+abstract setting (\texttt{proofs/Deopt.lean}, \LeanLines{} lines, no axioms beyond Lean's core): a
+program is a list of partial state transformers; an analysis is any function from abstract inputs to
+discharged obligations that is monotone and whose no-effect proofs are sound for admitted inputs;
+item certificates are abstract inputs on which the analysis discharges their removal; and the
+run-time check is sound for $\sqsubseteq$. The development also proves that the greedy search ends
+only on certificates the re-analysis accepted and that it only weakens, and the composition theorem of
+Section~\ref{sec:compose}. Monotonicity and soundness of \PL's own analysis are assumptions of the
+mechanization; we test them with randomized property tests that compare deoptimization decisions
+with fresh compilations (Section~\ref{sec:soundtest}).
 
-Channel counts are widened one at a time (from 1, 3 and 4, the counts the decoder produces) and
-sizes like column bounds, to the program's \texttt{RESIZE} sizes and \texttt{MIN\_WIDTH} or
-\texttt{MIN\_HEIGHT} limits. The generated program reads the header of every file of a new folder,
-decoding no pixel, and admits the folder if every header fits its box. Bit depths are fixed, because
-they decide the pixel type the generated code assumes.
+\section{Composing Pipeline Stages}\label{sec:compose}
 
-Each weakening costs one analysis, which reads no data: tables are replaced by their facts and image
-folders by their corner images. For the traffic pipeline of Section~\ref{sec:eval} the certificate
-takes 64 analyses, and compiling it, certificate included, takes 0.03\,s.
+Pipelines have stages: a cleaning stage writes a table that a feature stage reads. Each compiled
+stage records, for every table it saves, the state the analysis computes at the \texttt{SAVE} when
+its inputs are given the admission certificate: the stage's \emph{guarantee} $G$. Because selective
+deoptimization keeps the source program's semantics (Theorem~\ref{thm:deopt}) and the analysis is
+monotone, every file the stage writes for an admitted batch has its facts inside $G$; facts of
+deferred contracts and of re-enabled checks hold because the run passed them.
+
+\begin{theorem}[Composition]\label{thm:compose}
+Let stage~2 read the table written by stage~1. If $G \sqsubseteq \cert{i}$ for a removal $i$ of
+stage~2, stage~2 never deoptimizes $i$ for an output of stage~1 on an admitted batch; if
+$G \sqsubseteq \adm_2$ on value facts, stage~2 never refuses such an output for its values.
+\end{theorem}
+
+The theorem is transitivity of $\sqsubseteq$ once the facts survive the file between the stages;
+values and missing values do, while a type can change in a CSV round trip (a column whose values are
+all missing reads back as text), so composition covers value facts and types are still checked on
+admission, from metadata. \texttt{tools/contracts.py} reads the contract file every compilation
+writes (\texttt{preplang\_contract.json}) and reports, for each fact stage~2 relies on, whether $G$
+implies it; for each fact it does not, it writes the \texttt{EXPECT} statement that stage~1 would
+need before its \texttt{SAVE}. Given several consumers of one table, it computes the conjunction of
+their requirements: a \emph{producer contract}, synthesized from the consumers' code, under which no
+consumer ever refuses or deoptimizes. Assume-guarantee reasoning is standard for component
+contracts~\cite{benveniste2018}, and schema registries check the containment of writer and reader
+schemas~\cite{avro}; here the contracts on both sides are derived from the stages' proofs.
 
 \section{Lifting pandas Scripts}\label{sec:lift}
 
-Certificates are most useful for code that already exists. A second front end
-(\texttt{frontend/pandas2prep.py}) parses a pandas script with Python's own parser, follows every
-DataFrame read with \texttt{pd.read\_csv(path)}, and translates, in program order, the statements
-that change a followed DataFrame in a way PrepLang expresses: \texttt{fillna} with a constant, a
-dictionary of constants, or the column's \texttt{mean()}, \texttt{median()} or \texttt{mode()[0]};
-\texttt{dropna}, also with \texttt{subset}; \texttt{drop} of columns, also \texttt{inplace};
-column selection; boolean-mask filters with \texttt{\&}, \texttt{|} and \texttt{\~}; min--max and
-z-score normalization written out as arithmetic; \texttt{assert} with \texttt{between},
-\texttt{notna} or \texttt{is\_unique}; and \texttt{to\_csv}. Statements that only read a DataFrame
-(printing, plotting, model training) are skipped; a path held in a module-level variable is
-followed. Lifting stops at the first statement that changes a DataFrame in another way (a new
-column, \texttt{map}, \texttt{apply}, \texttt{get\_dummies}): the result is the longest prefix of
-the script's cleaning that PrepLang expresses exactly, and the DataFrame is saved where the prefix
-ends. Because only these lifted statements are needed, they can also be run on their own as the
-ground truth for the compiled program (RQ9); a chained \texttt{df["c"].fillna(v, inplace=True)},
-which changed \texttt{df} in pandas~1 and~2 but not under the copy-on-write of pandas~3, is run as
-\texttt{df["c"] = df["c"].fillna(v)}, as its author meant.
-
-\section{State-Driven Optimization}\label{sec:opt}
-
-Analysis results are attached to a three-address intermediate representation in which wildcards
-are already expanded per table. Three passes and the code generator use them.
-\textbf{No-effect elimination} removes operations the state proves useless: \texttt{FILL\_NULL} on
-a column without missing values, a \texttt{FILTER} that is always true, \texttt{GRAYSCALE} on
-1-channel images, \texttt{CONVERT} to the current format.
-\textbf{Check elimination} removes checks of proven contracts (Corollary~\ref{cor:checks}); the
-check of a contract proven from the values stays, guarded so that it runs only when an input is not
-the compiled file (Section~\ref{sec:cert}).
-\textbf{Dead-code elimination} removes unused temporaries and image operations after the last save.
-\textbf{Dead-store elimination and column pruning} run a backward liveness analysis over columns;
-\texttt{LOAD} reads only live columns, and \texttt{DROP\_NULL} counts as reading every column,
-since pruning a column before it would change which rows are removed.
-\textbf{Image streaming} turns all image operations up to a save into one loop that decodes,
-transforms and writes one image at a time; this is exact because the operations act on each image
-independently.
-
-All of these preserve the output exactly. \textbf{RESIZE fusion}, which replaces two consecutive
-resizes by one, does not: interpolation makes $\mathit{resize}_{224} \circ \mathit{resize}_{512}$
-differ slightly from $\mathit{resize}_{224}$. PrepLang reports it as a suggestion and applies it
-only with \texttt{--approx}: a preprocessing compiler should not change training data silently.
+Certificates are most useful for code that already exists. A second front end parses a pandas script
+with Python's own parser, follows every DataFrame read with \texttt{pd.read\_csv(path)}, and
+translates, in order, the statements that change a followed DataFrame in a way \PL expresses:
+\texttt{fillna} with a constant or the column's \texttt{mean()}, \texttt{median()} or
+\texttt{mode()[0]}; \texttt{dropna}; \texttt{drop} of columns; column selection; boolean-mask
+filters; min--max and z-score normalization written as arithmetic; \texttt{assert} with
+\texttt{between}, \texttt{notna} or \texttt{is\_unique}; and \texttt{to\_csv}. Statements that only
+read a DataFrame are skipped. Lifting stops at the first statement that changes a DataFrame in
+another way (a new column, \texttt{map}, \texttt{get\_dummies}): the result is the longest prefix of
+the script's cleaning that \PL expresses exactly. The lifted statements, run on their own, are the
+ground truth for the compiled program in Section~\ref{sec:eval}.
 
 \section{Implementation}
+The compiler is about \SrcLines{} lines of C++17 without external libraries: lexer, parser, schema
+provider (parallel CSV scanner, a Thrift compact-protocol reader for Parquet footers, PNG and JPEG
+header readers), semantic analyzer, IR, pass manager, certifier, and an execution planner over the
+pandas and OpenCV code generators. Every compilation writes the generated program, a manifest, and the
+contract file. The front end for pandas, the composition tool and the evaluation harness are Python;
+the unit tests (\TestCount{} checks in 9 suites) include the randomized soundness tests.
 
-The compiler is written in C++17 without external libraries: lexer, parser, AST printer and
-Graphviz export, schema provider (CSV inference, a Thrift compact-protocol reader for Parquet
-footers, PNG/JPEG header reading, CRC-32), semantic analyzer with selector resolver and contract
-analyzer, lineage tracker, IR builder, pass manager, and an execution planner that merges the
-pandas and OpenCV code generators in program order. Flags print every phase; \texttt{--explain}
-prints the execution plan and \texttt{--dry-run} the files a run would read and write, without
-running anything. The generated program writes a manifest with inputs, fingerprints, contract
-verdicts, operations and outputs.
+\input{evaluation}
 
-The CSV reader reads a file once and cuts it at line breaks into one piece per core. Each thread
-splits its lines in place (\texttt{std::string\_view}), infers cell types and parses numbers in one
-pass, using Clinger's exact fast path~\cite{clinger1990} when the digits and the power of ten are
-exact doubles; the CRC-32 (slicing-by-8) runs on its own thread. Pieces are merged in file order,
-keeping the first problem and the first cell that makes a column \textsc{String}, so the result
-equals a sequential pass; a test compares both on files cut into 1 to 16 pieces, and a
-differential test against the earlier sequential reader found no difference on 60 random files of
-up to 250,000 rows with injected errors.
-
-\section{Evaluation}\label{sec:eval}
-
-We ask nine questions. \textbf{RQ1:} Does compiling against the data find injected mistakes before
-any data is processed? \textbf{RQ2:} How many contracts are decided at compile time?
-\textbf{RQ3:} What do the optimizations gain at run time? \textbf{RQ4:} What does analyzing the
-data at compile time cost? \textbf{RQ5:} How early are mistakes reported on large inputs?
-\textbf{RQ6:} How many real data-preparation failures would PrepLang report?
-\textbf{RQ7:} Can a compiled program be reused on new batches? \textbf{RQ8:} On real data that
-changes from month to month? \textbf{RQ9:} For real pandas scripts?
-
-\textbf{Setup.} Intel Core i5-12450H (8 cores), 16\,GB RAM, Windows~11; MSVC (toolset 14.44,
-Release); Python 3.14, pandas 3.0, NumPy 2.5, OpenCV 5.0, pyarrow 25. Times are medians of three
-runs and include starting Python, as a user experiences them.
-
-\textbf{Baselines.} A \emph{script-style interpreter} executes PrepLang programs statement by
-statement with pandas and OpenCV, with default type inference, images held in memory, and each
-\texttt{EXPECT} as an assertion. For image pipelines we add a \emph{hand-written streaming script}
-(\texttt{eval/handwritten.py}) that processes one image at a time, as a careful programmer would.
-
-\subsection{RQ1: Injected mistakes}
-
-We injected 24 mistakes into the five example programs, one per mutant, in the spirit of mutation
-testing~\cite{jia2011}: \emph{name} (misspelled columns), \emph{type} (normalizing text, comparing a
-number with text, text into an integer column, zero-size resize), \emph{lifecycle} (use after
-removal, a table operation on images), \emph{contract} (range, not-null, foreign key, schema,
-channels, width, match rate), \emph{validity} (a broken image) and \emph{value} (well-typed programs
-with silently wrong output, detected by oracles). The unmodified programs are controls.
-
-\begin{table}[t]
-\caption{When each injected mistake is found (24 mutants)}
-\label{tab:rq1}
-\centering
-\footnotesize
-\begin{tabular}{@{}lrrr@{}}
-\toprule
-& & \multicolumn{2}{c}{Script-style baseline} \\
-\cmidrule(l){3-4}
-Class & Mutants & Crash while running & Silent wrong output \\
-\midrule
-name       & 3 & 3 & 0 \\
-type       & 5 & 4 & 1 \\
-lifecycle  & 3 & 3 & 0 \\
-contract   & 9 & 9 & 0 \\
-validity   & 1 & 1 & 0 \\
-value      & 3 & 0 & 3 \\
-\midrule
-total      & 24 & 20 & 4 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-PrepLang reports all 24 at compile time (23 errors, one warning) and nothing on the controls; the
-baseline crashes part-way on 20 and completes 4 with wrong output (Table~\ref{tab:rq1}): text
-filled into an integer column, a threshold on a normalized column that removes every row (PrepLang:
-``FILTER removes every row: the condition is never true''), and two pipelines that write black
-images. Compilation took \RqOneMsMin--\RqOneMsMax\,ms (median \RqOneMsMed\,ms). The mutants are our
-own, so RQ1 shows which kinds of mistakes are caught; RQ6 measures how often real ones are.
-
-\subsection{RQ2: Contracts decided at compile time}
-
-The controls declare 16 contracts. PrepLang proves 15 (94\%) and defers one: in
-\texttt{students.prep}, \texttt{EXPECT marks BETWEEN 60 AND 100} follows a filter that guarantees
-only $[50, 95]$.
-
-\subsection{RQ3: Run-time effect of the optimizations}
-
-Table~\ref{tab:rq3} shows three pipelines: a 200,000-row, 40-column CSV (58\,MB) with two contracts,
-a filter and a selection of four columns, where the optimizer proves both contracts and reads five
-columns; 1,000 images resized to $224\times224$, made gray and saved as JPG; and the same images
-resized twice and saved as PNG, with and without \texttt{--approx}.
-
-\begin{table}[t]
-\caption{Run-time effect of the optimizations}
-\label{tab:rq3}
-\centering
-\footnotesize
-\begin{tabular}{@{}lrr@{}}
-\toprule
-\multicolumn{3}{@{}l}{\emph{Table pipeline, 200k rows $\times$ 40 columns}} \\
-Variant & Columns read, checks & Time (s) \\
-\midrule
-PrepLang, optimized & 5, 0 & \TabOpt \\
-PrepLang, \texttt{--O0} & 40, 2 & \TabOz \\
-Script-style baseline & 40, 2 & \TabBase \\
-\midrule
-\multicolumn{3}{@{}l}{\emph{Image pipeline, 1,000 images}} \\
-Variant & Peak memory (MiB) & Time (s) \\
-\midrule
-PrepLang (streaming) & \ImgPlMem & \ImgPl \\
-Hand-written streaming script & \ImgHwMem & \ImgHw \\
-Script-style baseline (all in memory) & \ImgBaseMem & \ImgBase \\
-\midrule
-\multicolumn{3}{@{}l}{\emph{RESIZE fusion, 1,000 images}} \\
-Variant & PSNR vs.\ exact (dB) & Time (s) \\
-\midrule
-Exact (default) & -- & \FusExact \\
-\texttt{--approx} & \FusPsnr{} (min.\ \FusPsnrMin) & \FusApprox \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-For the table, both variants write byte-identical output. Starting Python and importing pandas
-takes \TabStart\,s of every run; without it, the optimized program processes the data in
-\TabProcOpt\,s instead of \TabProcOz\,s (\TabCut\% less). For images, PrepLang's streaming matches
-the memory of the careful hand-written script and is \ImgBaseMem/\ImgPlMem{} MiB below loading all
-images; the benefit over a careful programmer is that streaming is automatic, not that it is
-faster. RESIZE fusion saves \FusSave\% of the time, because decoding and encoding dominate, and
-changes the output (PSNR~\cite{huynh2008} \FusPsnr\,dB): a small gain for a change to training data,
-which supports keeping it opt-in. While building these benchmarks we found and fixed two
-inefficiencies in the generated code: passing nullable types to \texttt{read\_csv} made reading six
-times slower, and defensive copies after \texttt{FILTER} and \texttt{SELECT} cost up to 0.3\,s on
-16 million rows.
-
-\subsection{RQ4: Cost of the analysis}
-
-Table~\ref{tab:rq4} shows compile time (with \texttt{--explain}, which analyzes but writes nothing)
-next to one plain read of the same data in Python.
-
-\begin{table}[t]
-\caption{Compile time vs.\ one plain read of the data (s)}
-\label{tab:rq4}
-\centering
-\footnotesize
-\begin{tabular}{@{}lrr@{}}
-\toprule
-Input & Compile & Read in Python \\
-\midrule
-CSV, 10k rows $\times$ 10 columns & \CsvTenK & \CsvTenKRead \\
-CSV, 100k rows $\times$ 10 columns & \CsvHundredK & \CsvHundredKRead \\
-CSV, 1M rows $\times$ 10 columns & \CsvMillion & \CsvMillionRead \\
-Parquet, 1M rows (\PqOneSize\,MiB) & \PqOne & \PqOneRead \\
-Parquet, 4M rows (\PqFourSize\,MiB) & \PqFour & \PqFourRead \\
-Parquet, 16M rows (\PqSixteenSize\,MiB) & \PqSixteen & \PqSixteenRead \\
-100 JPG images, $640\times480$ & \ImgHundred & \ImgHundredRead \\
-1,000 JPG images & \ImgThousand & \ImgThousandRead \\
-3,000 JPG images & \ImgThreeK & \ImgThreeKRead \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-With the parallel scanner, analysing every CSV cell of one million rows takes \CsvMillion\,s,
-\CsvSpeedup$\times$ faster than pandas' default reader reads the same file and about as fast as
-pandas with the multi-threaded pyarrow reader (\CsvArrowRead\,s, measured inside a running Python
-process, so without process start); the earlier sequential reader took 2.04\,s. Metadata-only analysis goes further: Parquet compile time
-stays at \PqSixteen\,s from one to 16 million rows, and reading image headers is \HdrRatio$\times$
-faster than decoding 3,000 images.
-
-\subsection{RQ5: Large inputs}
-
-Table~\ref{tab:rq5} compares, for injected mistakes on large inputs, when PrepLang reports them
-with when the equivalent script stops (or finishes with wrong output). The table pipeline fills,
-normalizes, filters and selects 16 million Parquet rows; the image pipeline resizes, converts to
-gray and saves 3,000 images, compared with the hand-written streaming script.
-
-\begin{table}[t]
-\caption{Time until a mistake is reported (s)}
-\label{tab:rq5}
-\centering
-\footnotesize
-\begin{tabular}{@{}lrr@{}}
-\toprule
-Case & PrepLang & Script \\
-\midrule
-16M rows: misspelled column in the last step & \ScTabNamePl & \ScTabNameScript \\
-16M rows: range contract broken by the data & \ScTabContractPl & \ScTabContractScript \\
-3,000 images: broken file, sorted last & \ScImgBrokenPl & \ScImgBrokenScript \\
-3,000 images: float pixels saved as PNG & \ScImgFloatPl & \ScImgFloatScript$^{*}$ \\
-\midrule
-16M rows, correct: compile + run & \ScTabOkPl{} + \ScTabOkRun & \ScTabOkScript \\
-3,000 images, correct: compile + run & \ScImgOkPl{} + \ScImgOkRun & \ScImgOkScript \\
-\bottomrule
-\multicolumn{3}{@{}l}{$^{*}$ finishes without an error; every written image is black}
-\end{tabular}
-\end{table}
-
-Mistakes are reported in a fraction of a second, before any row or pixel is processed, while the
-scripts fail only after the data has been read or every image processed. On correct programs,
-PrepLang's generated code is somewhat slower than the scripts, mainly because pandas' nullable
-types, which implement the missing-value semantics the analysis relies on, are slower than plain
-NumPy columns.
-
-\subsection{RQ6: Real data-preparation failures}
-
-\textbf{Protocol.} We chose 17 error messages that Python libraries print for common
-data-preparation failures (for example Pillow's \emph{cannot write mode RGBA as JPEG}, pandas'
-\emph{not in index}, scikit-learn's \emph{feature names should match}); they include failures
-PrepLang is not designed for (dates, text encodings, sample counts), so that the result measures
-coverage. For each message we searched GitHub issues and read the first 12 results in order. An
-issue qualified if the failure happened while loading, transforming or saving data files and its
-root cause was stated; we kept at most three per message, giving \RbTotal{} issues (91 other
-results were read and excluded, each with a recorded reason). Each qualifying issue was classified
-as reported at compile time, reported once the requirement is declared with \texttt{EXPECT},
-impossible in PrepLang by construction, or not covered; every positive classification was
-reproduced as a PrepLang program with data mirroring the issue and checked against the compiler
-(\RbPass{} of \RbCases{} reproductions behave as classified). This follows the practice of
-bug-characteristic studies that mine issue trackers~\cite{islam2019,humbatova2020}.
-
-\begin{table}[t]
-\caption{Real failures from GitHub issues (\RbTotal{} issues)}
-\label{tab:rq6}
-\centering
-\footnotesize
-\begin{tabular}{@{}lr@{}}
-\toprule
-Outcome & Issues \\
-\midrule
-Reported at compile time, no annotation & \RbCompile \\
-Reported at compile time with a declared \texttt{EXPECT} & \RbContract \\
-Cannot occur in a PrepLang program & \RbDesign \\
-Not covered & \RbNone \\
-\quad input format (HEIC, PDF, audio, GeoTIFF, \ldots) & \RbFormat \\
-\quad operation not in the language (groupby, pivot, \ldots) & \RbOperation \\
-\quad dates & \RbDates \\
-\quad one label file per image & \RbLabels \\
-\quad input produced during the run & \RbProduced \\
-\quad no suitable contract & \RbContractMissing \\
-\quad model code & \RbModel \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Results.} PrepLang reports \RbEarly{} of the \RbTotal{} failures (\RbEarlyPct\%) before any
-data is processed (Table~\ref{tab:rq6}). The caught ones are the failures its state was designed
-for: broken or misnamed image files, text in numeric columns, missing columns, gray or RGBA images
-where a model needs RGB, keys missing from another table, images without labels, and files that are
-not UTF-8. The study also changed the compiler: two classes were caught only after we decided image
-formats by content (a transparent PNG screenshot saved as \texttt{.jpg} had been reported as a broken
-file) and checked CSV encodings; before these fixes the rate was \RbBefore{} of \RbTotal{}
-(\RbBeforePct\%), a number we measured by running the reproductions against the earlier compiler.
-The uncovered failures point to extensions: more input formats, dates, per-image label files, and
-set-valued operations such as pivots.
-
-\subsection{RQ7: Reusing a compiled program on new data}
-
-Seven workloads are compiled once: the four table examples, the same program twice on one file
-(\texttt{optimize}), the Parquet example, the images linked to labels, and a sensor pipeline of
-20,000 rows per day. Each input table then gets new batches: other days and another season of the
-sensor process, and, for the examples, rows resampled with replacement, values moved by noise of
-0.1, 0.5 and 1.5 standard deviations, 20\% missing values in one column, and one value far out of
-range. Each batch is run by the compiled program (\texttt{table=batch.csv}) and, as ground truth,
-compiled and run fresh. We compare three admission policies: the fingerprint, the compiled file's
-own facts (type, no missing values, and $[\min,\max]$ of every column read, as a schema inferred by
-TFDV~\cite{breck2019} would require), and the certificate.
-
-\input{certtable}
-
-The certificate admits \CertAdmit{} of \CertBatches{} batches (\CertAdmitPct\%), the file's own
-facts \FactsAdmit{} (\FactsAdmitPct\%) and the fingerprint none. Every admitted run ends like the
-fresh compilation (\CertAgree{} of \CertAdmit{}: the same output files, or both stopped by the
-same contract), and no admitted run finished where the fresh compilation failed. Every refused
-batch also fails to compile fresh (\CertFalse{} refused batches would have compiled), so on these
-workloads the certificate is not only sound but loses nothing to its 1-minimal search. The sensor
-workload shows the intended use: other days and a season 12 degrees warmer are all admitted, while
-the file's own facts admit none of them.
-
-\subsection{RQ8: Real monthly batches}
-
-Three public datasets come in monthly batches: hourly traffic volume and weather on a Minnesota
-interstate (UCI, 2012--2018, 63 months of CSV), daily bike rentals in Washington (UCI, 2011--2012,
-24 months of CSV), and New York green-taxi trips (NYC TLC, 2022--2024, the 36 Parquet files as
-published, about 70,000 trips each). For each we wrote one cleaning pipeline as a data engineer
-would: range contracts on the measured quantities, \texttt{NOT\_NULL} on keys, fills, a filter that
-removes impossible readings, a normalization and a selection. Each pipeline is deployed in two ways:
-compiled on the first month and run on every later one, or compiled each month on the month before
-and run on the next. Batches are cut from the raw files line by line, so no value is reformatted, and
-each month is also compiled and run fresh as the ground truth.
-
-\input{realtable}
-
-Over \RealRuns{} runs (Table~\ref{tab:rq8}), certificates admit \RealAdmit{} (\RealAdmitPct\%), the
-compiled month's own facts \RealFacts{} and the fingerprint none. All \RealAgree{} admitted runs end
-exactly like the fresh compilation, and \RealUnsound{} differ. Every refusal names a real event in
-the data. In January and February 2014 the traffic sensor reports temperatures of 0~K; the fresh
-compilation of those months also fails the contract. In July 2016 one hour has 9,831\,mm of rain,
-and in March 2011 one day has a humidity of 0: the compiled program had removed the cleaning
-\texttt{FILTER} because the month it was compiled on had no such row, so admitting these months would
-change its output---the refusal is required, even though a fresh compilation, which keeps the
-filter, runs (4 of the \RealNeedless{} runs counted as ``refused, fresh runs''). In February 2023 the
-taxi publisher changed \texttt{passenger\_count} and \texttt{payment\_type} from double to integer;
-the program compiled on January 2022 reads them as \textsc{Float} and refuses every later month,
-naming the column (24 runs; in 7 of them the fresh compilation fails a run-time contract anyway),
-while monthly recompilation follows the change after one refused month. The remaining two refusals
-show a limit of certificates over input columns: a fare of \$2,020 in a trip the program's own filter
-removes still breaks the certified upper bound on fares at load time.
-
-\subsection{RQ9: Real pandas scripts}
-
-\textbf{Corpus.} GitHub code search for Python files containing \texttt{read\_csv},
-\texttt{fillna} and \texttt{Embarked} (the Kaggle Titanic data) returned, in its ranking order,
-\CorpusAll{} distinct files. We used the first 100 as a development set---to choose which common
-idioms the lifter handles and to debug the harness---and report the remaining \CorpusTest{}, which
-we did not look at before the final run. A script is in scope if it reads the Titanic training file
-with \texttt{pd.read\_csv(path)} at module level; the files are mapped by name to Kaggle's
-\texttt{train.csv} and \texttt{test.csv}.
-
-\textbf{Protocol.} The lifted program is compiled against \texttt{train.csv} and given eleven new
-batches: Kaggle's real test file (no \texttt{Survived}, one missing \texttt{Fare}), five bootstrap
-resamples of the training rows, and five copies with 20\% extra missing values in one column. Each
-batch is run by the compiled program and, as ground truth, by the lifted original pandas statements;
-the two cleaned tables are compared value by value.
-
-\textbf{Results.} Of the \CorpusTest{} held-out scripts, \CorpusLifted{} read the training file in
-scope and have a non-empty lifted prefix (\CorpusStatements{} of the \CorpusChanges{} statements that
-change a followed DataFrame before lifting stops; \CorpusComplete{} scripts are lifted completely),
-and \CorpusCompiled{} compile. Of their \CorpusRuns{} runs, certificates admit \CorpusAdmit{}
-(\CorpusAdmitPct\%); \CorpusSame{} reproduce the script's result exactly, \CorpusStopped{} are
-stopped by a run-time contract check, and \CorpusUnsound{} finish with a different result.
-\CorpusRefusedCrash{} refused batches also make the script itself fail, and \CorpusRefusedRuns{} are
-refused although the script runs: in all of them, the training file has no missing \texttt{Fare}, so the
-compiler removed the script's \texttt{fillna} on \texttt{Fare} and the certificate then requires
-\texttt{Fare} without missing values---the price of optimizing for the compiled data.
-
-\subsection{What the evaluation found in our implementation}
-
-Five bugs in our own first implementation were exposed by these experiments, each a case where the
-implementation did not follow the definitions above; each is fixed and has a regression test.
-\begin{enumerate}
-\item The run-time \texttt{MATCH\_RATE} check, always eliminated before certificates existed, ran for
-the first time on changed labels (RQ7) and counted broken images that \texttt{REMOVE\_CORRUPT} had
-removed before the \texttt{LINK}.
-\item The first certificate covered only the columns the optimized program loads, so a proven
-\texttt{NOT\_NULL} on a column pruned afterwards was unprotected; we noticed it while writing the taxi
-pipeline, whose \texttt{VendorID} is checked and then dropped.
-\item Admission let \textsc{Integer} data into a \textsc{Float} column and an empty column into any
-type; the randomized property test found inputs whose fresh compilation then decided differently.
-\item On the held-out RQ9 set, three scripts drop \texttt{Survived} before any use. The optimizer
-removed that \texttt{DROP}, so the column was named by no remaining instruction and had no other
-fact, and admission treated it as optional; the Kaggle test file, which lacks it, was admitted,
-although the script fails on it and so would a fresh compilation. Presence is now tested for every
-column of the file.
-\item In the same run, three scripts call \texttt{drop(columns=..., axis=1)}, which pandas rejects;
-the lifter translated it, so the compiled program ran where the script fails. The lifter now stops
-there.
-\end{enumerate}
-In the first RQ9 run, bugs~4 and~5 caused all 36 runs counted as differing from the scripts (3 and
-33). We report the run after the fixes; the first run's results are kept in the artifact. The
-randomized tests now generate missing, pruned and dropped columns and image folders.
-
-\subsection{Threats to validity}
-
-The error messages were chosen by the author, and one person classified the issues; the
-reproductions confirm the classifications of positive cases but are constructed from the issue
-text, not from the original data. GitHub's ranking favors some repositories, and 44 issues are few.
-The mutants of RQ1 are our own, the baseline interpreter is ours, and performance numbers come from
-one machine and synthetic data. Metadata-only soundness assumes truthful Parquet statistics. The
-approach needs the inputs at compile time, which holds for batch preparation, and the language has
-no joins, loops or user-defined functions. Certificates are 1-minimal, not minimum; they are facts
-about input columns, so a fact needed only after a filter is still required of every input row
-(RQ8). The joint absence of optional columns is checked for the combination found by the greedy
-search and by randomized tests, not for every subset. RQ9 uses one dataset and one task, the lifted
-prefixes are short, and the ground truth is the lifted statements, not the whole scripts; scripts
-that read their data inside functions are out of scope.
-
-\section{Related Work}
-
-\textbf{Data validation.} TensorFlow Data Validation~\cite{breck2019}, Deequ~\cite{schelter2018},
-Great Expectations~\cite{gx}, Pandera~\cite{bantilan2020} and the Data Linter~\cite{hynes2017}
-check expectations on datasets when a pipeline runs. PrepLang checks the same kinds of expectations
-at a point in the program, against the state the preceding statements produce, and moves the check
-to compile time when the state decides it.
-
-\textbf{Static analysis of data-science code.} Urban~\cite{urban2019} argues for abstract
-interpretation of data-science software, and Subotić et al.~\cite{subotic2022} built such an
-analysis for notebooks. Zhuang and Lu~\cite{zhuang2022} type-check data-frame columns by abstract
-interpretation, Lagouvardos et al.~\cite{lagouvardos2020} infer tensor shapes in TensorFlow
-programs, and mlinspect~\cite{grafberger2022} inspects pipelines by instrumenting their execution.
-Closest to our work, Gerstl et al.~\cite{gerstl2026} infer the shapes of R data frames and become
-markedly more precise when the datasets are available; they infer column names and dimensions,
-whereas PrepLang infers types, missing values and intervals for tables and per-file properties for
-images, and uses them to decide contracts and to optimize. Sihler et al.~\cite{sihler2026} make
-implicit assumptions of analysis scripts explicit so they can be checked at run time.
-
-\textbf{Contracts and hybrid checking.} Soft typing~\cite{cartwright1991} and hybrid type
-checking~\cite{flanagan2006} prove what they can statically and insert run-time checks for the rest;
-PrepLang applies this to data contracts, where the facts come from the data. Mirji~\cite{mirji2026}
-proves structural contracts for typed Spark pipelines at compile time and keeps a run-time schema
-check at the output, since data may drift after compilation; PrepLang proves value-level contracts
-from the data and handles drift by guarding the inputs, which is what allows deleting the checks.
-
-\textbf{Reusing proofs on new inputs.} Proof-carrying code~\cite{necula1997} ships a proof with a
-program so that a consumer can check it cheaply; PrepLang ships the facts its proofs depend on, and
-the generated program checks the input against them. Dynamic compilers specialize code to observed
-values behind guards and deoptimize when a guard fails~\cite{holzle1992}; progressive query
-optimization attaches validity ranges to a plan and re-optimizes outside them~\cite{markl2004},
-and parametric query optimization precomputes plans per parameter range~\cite{ioannidis1992}.
-These guards protect performance and fall back to a slower path; a certificate protects proofs of
-correctness and is derived by re-analysis rather than by cost estimates. Precondition
-inference~\cite{cousot2013} computes conditions on a program's inputs that are necessary for its
-assertions, and DeepInfer~\cite{ahmed2024} infers data preconditions of trained neural networks;
-we infer sufficient conditions on input data for a compiled pipeline's proofs and removals, by
-counterfactual re-analysis over the abstract state. TFDV~\cite{breck2019} validates new batches
-against a schema inferred from earlier data; RQ7 shows that taking all facts of the data, rather
-than the ones the program needs, refuses most new batches.
-
-\textbf{Analysing and rewriting pandas code.} Dias~\cite{baziotis2024} rewrites pandas code
-at run time into faster equivalents, and Magpie~\cite{jindal2021} translates pandas programs to
-database back ends; mlinspect~\cite{grafberger2022} instruments pipelines. Our front end instead
-lifts the cleaning prefix into a language with a data-aware static semantics, so that it can be
-verified against data and certified for new data.
-
-\textbf{Types from data, metadata and data-centric compilers.} F\# type
-providers~\cite{petricek2016} infer types from sample data at compile time. Min/max statistics per
-block are used by databases to skip data~\cite{moerkotte1998} and are stored in Parquet
-footers~\cite{parquet}; PrepLang uses them to prove contracts. Halide~\cite{ragan2013} fuses
-image-processing stages under a separate schedule, and Weld~\cite{palkar2017} optimizes analytics
-across libraries through a common IR; their optimizations are driven by the program, whereas
-PrepLang's are driven by facts about the data.
+\input{related}
 
 \section{Conclusion}
 
-For batch data preparation, treating the input data as a compile-time input pays off: an abstract
-dataset state computed from the data, or from its metadata alone, turns many data mistakes into
-compile-time errors, decides almost all declared contracts statically, and justifies optimizations
-that keep the output exact, with a fingerprint guard that keeps the proofs sound. Data
-certificates carry those proofs to new batches of tables and image folders: the compiled program
-accepts any input that has the few facts its proofs use, names the proof when it refuses one, and,
-through the pandas front end, does so for existing scripts. On real monthly data, certificates admit
-\RealAdmitPct\% of new months where the compiled data's own facts admit \RealFactsPct\%, with no
-unsound run. On real failures
-reported on GitHub, it catches about two in five before any data is processed; the rest outline
-the next steps: more input formats, dates, per-image label files and set-valued operations.
+A data-aware compiler proves facts about one batch; data certificates say which of them the compiled
+program depends on, selective deoptimization keeps the compiled program usable for batches that break
+some of them, and composition carries guarantees from one stage to the next. On real monthly data,
+the compiled program handles \RealDeoptCorrectPct\% of new months exactly as a fresh compilation
+would, without recompiling, where validators set up on the same data refuse most months or let wrong
+results through; on real scripts it reproduces the scripts' results on every batch it runs. The
+refusals that remain come from facts no run-time code can replace, such as a publisher changing a
+column's type, and point to the next step: certificates that let generated code adapt to such
+changes, joins and dates in the language, and a mechanized soundness proof of the analysis itself.
 
-\begin{thebibliography}{99}
-
-\bibitem{sculley2015}
-D. Sculley, G. Holt, D. Golovin, E. Davydov, T. Phillips, D. Ebner, V. Chaudhary, M. Young, J.-F.
-Crespo, and D. Dennison, ``Hidden technical debt in machine learning systems,'' in \emph{Advances
-in Neural Information Processing Systems (NeurIPS)}, 2015, pp. 2503--2511.
-
-\bibitem{polyzotis2018}
-N. Polyzotis, S. Roy, S. E. Whang, and M. Zinkevich, ``Data lifecycle challenges in production
-machine learning: A survey,'' \emph{ACM SIGMOD Record}, vol. 47, no. 2, pp. 17--28, 2018.
-
-\bibitem{mckinney2010}
-W. McKinney, ``Data structures for statistical computing in Python,'' in \emph{Proc. 9th Python in
-Science Conf. (SciPy)}, 2010, pp. 56--61.
-
-\bibitem{bradski2000}
-G. Bradski, ``The OpenCV library,'' \emph{Dr. Dobb's Journal of Software Tools}, 2000.
-
-\bibitem{breck2019}
-E. Breck, N. Polyzotis, S. Roy, S. E. Whang, and M. Zinkevich, ``Data validation for machine
-learning,'' in \emph{Proc. Conf. on Machine Learning and Systems (MLSys)}, 2019.
-
-\bibitem{schelter2018}
-S. Schelter, D. Lange, P. Schmidt, M. Celikel, F. Biessmann, and A. Grafberger, ``Automating
-large-scale data quality verification,'' \emph{Proc. VLDB Endowment}, vol. 11, no. 12,
-pp. 1781--1794, 2018.
-
-\bibitem{bantilan2020}
-N. Bantilan, ``pandera: Statistical data validation of pandas dataframes,'' in \emph{Proc. 19th
-Python in Science Conf. (SciPy)}, 2020, pp. 116--124.
-
-\bibitem{gx}
-Great Expectations, ``Great Expectations: data quality testing,'' \url{https://greatexpectations.io}.
-
-\bibitem{hynes2017}
-N. Hynes, D. Sculley, and M. Terry, ``The Data Linter: Lightweight, automated sanity checking for
-ML data sets,'' in \emph{NIPS Workshop on Machine Learning Systems}, 2017.
-
-\bibitem{urban2019}
-C. Urban, ``Static analysis of data science software,'' in \emph{Static Analysis Symposium (SAS)},
-LNCS 11822, 2019, pp. 17--23.
-
-\bibitem{subotic2022}
-P. Suboti\'{c}, L. Miliki\'{c}, and M. Stoji\'{c}, ``A static analysis framework for data science
-notebooks,'' in \emph{Proc. 44th Int. Conf. on Software Engineering: Software Engineering in
-Practice (ICSE-SEIP)}, 2022, pp. 13--22.
-
-\bibitem{zhuang2022}
-Y. Y. Zhuang and M.-Y. Lu, ``Enabling type checking on columns in data frame libraries by abstract
-interpretation,'' \emph{IEEE Access}, vol. 10, 2022.
-
-\bibitem{lagouvardos2020}
-S. Lagouvardos, J. Dolby, N. Grech, A. Antoniadis, and Y. Smaragdakis, ``Static analysis of shape in
-TensorFlow programs,'' in \emph{Proc. 34th European Conf. on Object-Oriented Programming (ECOOP)},
-LIPIcs vol. 166, 2020, pp. 15:1--15:29.
-
-\bibitem{grafberger2022}
-S. Grafberger, P. Groth, J. Stoyanovich, and S. Schelter, ``Data distribution debugging in machine
-learning pipelines,'' \emph{The VLDB Journal}, vol. 31, pp. 1103--1126, 2022.
-
-\bibitem{gerstl2026}
-O. Gerstl, F. Sihler, and M. Tichy, ``Inferring the shape of data frames in R programs using
-abstract interpretation,'' arXiv:2607.03889, 2026.
-
-\bibitem{sihler2026}
-F. Sihler, L. Pfrenger, O. Gerstl, and M. Tichy, ``Towards automatically inferring constraints to
-identify implicit assumptions in data analysis,'' arXiv:2607.03114, 2026.
-
-\bibitem{mirji2026}
-V. Mirji, ``Shift schema drift left: Policy-aware compile-time contracts for typed JVM and Spark
-pipelines,'' arXiv:2604.16986, 2026.
-
-\bibitem{petricek2016}
-T. Petricek, G. Guerra, and D. Syme, ``Types from data: Making structured data first-class citizens
-in F\#,'' in \emph{Proc. 37th ACM SIGPLAN Conf. on Programming Language Design and Implementation
-(PLDI)}, 2016, pp. 477--490.
-
-\bibitem{flanagan2006}
-C. Flanagan, ``Hybrid type checking,'' in \emph{Proc. 33rd ACM SIGPLAN-SIGACT Symp. on Principles
-of Programming Languages (POPL)}, 2006, pp. 245--256.
-
-\bibitem{cartwright1991}
-R. Cartwright and M. Fagan, ``Soft typing,'' in \emph{Proc. ACM SIGPLAN Conf. on Programming
-Language Design and Implementation (PLDI)}, 1991, pp. 278--292.
-
-\bibitem{cousot1977}
-P. Cousot and R. Cousot, ``Abstract interpretation: A unified lattice model for static analysis of
-programs by construction or approximation of fixpoints,'' in \emph{Proc. 4th ACM Symp. on
-Principles of Programming Languages (POPL)}, 1977, pp. 238--252.
-
-\bibitem{cousot1976}
-P. Cousot and R. Cousot, ``Static determination of dynamic properties of programs,'' in \emph{Proc.
-2nd Int. Symp. on Programming}, Paris, 1976, pp. 106--130.
-
-\bibitem{codd1979}
-E. F. Codd, ``Extending the database relational model to capture more meaning,'' \emph{ACM Trans.
-Database Systems}, vol. 4, no. 4, pp. 397--434, 1979.
-
-\bibitem{moerkotte1998}
-G. Moerkotte, ``Small materialized aggregates: A light weight index structure for data
-warehousing,'' in \emph{Proc. 24th Int. Conf. on Very Large Data Bases (VLDB)}, 1998, pp. 476--487.
-
-\bibitem{melnik2010}
-S. Melnik, A. Gubarev, J. J. Long, G. Romer, S. Shivakumar, M. Tolton, and T. Vassilakis, ``Dremel:
-Interactive analysis of web-scale datasets,'' \emph{Proc. VLDB Endowment}, vol. 3, no. 1--2,
-pp. 330--339, 2010.
-
-\bibitem{parquet}
-Apache Parquet, ``File format,'' \url{https://parquet.apache.org/docs/file-format/}.
-
-\bibitem{ragan2013}
-J. Ragan-Kelley, C. Barnes, A. Adams, S. Paris, F. Durand, and S. Amarasinghe, ``Halide: A language
-and compiler for optimizing parallelism, locality, and recomputation in image processing
-pipelines,'' in \emph{Proc. 34th ACM SIGPLAN Conf. on Programming Language Design and
-Implementation (PLDI)}, 2013, pp. 519--530.
-
-\bibitem{palkar2017}
-S. Palkar, J. J. Thomas, A. Shanbhag, D. Narayanan, H. Pirk, M. Schwarzkopf, S. Amarasinghe, and
-M. Zaharia, ``Weld: A common runtime for high performance data analytics,'' in \emph{Proc. Conf. on
-Innovative Data Systems Research (CIDR)}, 2017.
-
-\bibitem{jia2011}
-Y. Jia and M. Harman, ``An analysis and survey of the development of mutation testing,'' \emph{IEEE
-Trans. Software Engineering}, vol. 37, no. 5, pp. 649--678, 2011.
-
-\bibitem{islam2019}
-M. J. Islam, G. Nguyen, R. Pan, and H. Rajan, ``A comprehensive study on deep learning bug
-characteristics,'' in \emph{Proc. 27th ACM Joint Meeting on European Software Engineering Conf. and
-Symp. on the Foundations of Software Engineering (ESEC/FSE)}, 2019, pp. 510--520.
-
-\bibitem{humbatova2020}
-N. Humbatova, G. Jahangirova, G. Bavota, V. Riccio, A. Stocco, and P. Tonella, ``Taxonomy of real
-faults in deep learning systems,'' in \emph{Proc. 42nd Int. Conf. on Software Engineering (ICSE)},
-2020, pp. 1110--1121.
-
-\bibitem{huynh2008}
-Q. Huynh-Thu and M. Ghanbari, ``Scope of validity of PSNR in image/video quality assessment,''
-\emph{Electronics Letters}, vol. 44, no. 13, pp. 800--801, 2008.
-
-\bibitem{necula1997}
-G. C. Necula, ``Proof-carrying code,'' in \emph{Proc. 24th ACM SIGPLAN-SIGACT Symp. on Principles of
-Programming Languages (POPL)}, 1997, pp. 106--119.
-
-\bibitem{holzle1992}
-U. H\"olzle, C. Chambers, and D. Ungar, ``Debugging optimized code with dynamic deoptimization,'' in
-\emph{Proc. ACM SIGPLAN Conf. on Programming Language Design and Implementation (PLDI)}, 1992,
-pp. 32--43.
-
-\bibitem{markl2004}
-V. Markl, V. Raman, D. Simmen, G. Lohman, H. Pirahesh, and M. Cilimdzic, ``Robust query processing
-through progressive optimization,'' in \emph{Proc. ACM SIGMOD Int. Conf. on Management of Data},
-2004, pp. 659--670.
-
-\bibitem{ioannidis1992}
-Y. E. Ioannidis, R. T. Ng, K. Shim, and T. K. Sellis, ``Parametric query optimization,'' in
-\emph{Proc. 18th Int. Conf. on Very Large Data Bases (VLDB)}, 1992, pp. 103--114.
-
-\bibitem{cousot2013}
-P. Cousot, R. Cousot, M. F\"ahndrich, and F. Logozzo, ``Automatic inference of necessary
-preconditions,'' in \emph{Proc. 14th Int. Conf. on Verification, Model Checking, and Abstract
-Interpretation (VMCAI)}, LNCS 7737, 2013, pp. 128--148.
-
-\bibitem{ahmed2024}
-S. Ahmed, H. Gao, and H. Rajan, ``Inferring data preconditions from deep learning models for
-trustworthy prediction in deployment,'' in \emph{Proc. 46th Int. Conf. on Software Engineering
-(ICSE)}, 2024.
-
-\bibitem{clinger1990}
-W. D. Clinger, ``How to read floating point numbers accurately,'' in \emph{Proc. ACM SIGPLAN Conf.
-on Programming Language Design and Implementation (PLDI)}, 1990, pp. 92--101.
-
-\bibitem{baziotis2024}
-S. Baziotis, D. Kang, and C. Mendis, ``Dias: Dynamic rewriting of pandas code,'' \emph{Proc. ACM
-on Management of Data (SIGMOD)}, vol. 2, no. 1, 2024.
-
-\bibitem{jindal2021}
-A. Jindal, K. V. Emani, M. Daum, O. Poppe, B. Haynes, A. Pavlenko, A. Gupta, K. Ramachandra,
-C. Curino, A. Mueller, W. Wu, and H. Patel, ``Magpie: Python at speed and scale using cloud
-backends,'' in \emph{Proc. Conf. on Innovative Data Systems Research (CIDR)}, 2021.
-
-\end{thebibliography}
+\input{references}
 
 \end{document}

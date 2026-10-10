@@ -177,3 +177,63 @@ def run_validators(anchor, batches, columns, out_json, tools=("pandera", "gx", "
             decisions[f"{tool}/{scope}"] = {str(Path(b).resolve()): by_path.get(str(Path(b).resolve()), {}).get("admit")
                                             for b in batches}
     return decisions
+
+
+def run_validator_jobs(jobs, work, tools=("pandera", "gx", "tfdv"), workers=6):
+    """The validators for many anchors at once. jobs: [{"anchor", "batches", "columns"}]. pandera runs in
+    one process, gx in `workers` parallel processes (its profiler is slow), tfdv in one WSL process.
+    Returns {"tool/scope": {(anchor, batch): admit or None}}."""
+    import json
+    root = Path(__file__).resolve().parent.parent
+    venv = root / "eval" / ".venv-baselines" / "Scripts" / "python.exe"
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    linux = lambda p: "/mnt/" + str(Path(p).resolve())[0].lower() + str(Path(p).resolve())[2:].replace("\\", "/")  # noqa: E731
+    jobs = [dict(j, anchor=str(Path(j["anchor"]).resolve()), batches=[str(Path(b).resolve()) for b in j["batches"]])
+            for j in jobs]
+    processes = []  # (tool, scope, process, output path, path mapping)
+    for scope in ("all", "read"):
+        for tool in tools:
+            if tool == "tfdv":
+                if not shutil.which("wsl"):
+                    continue
+                mapped = [dict(j, anchor=linux(j["anchor"]), batches=[linux(b) for b in j["batches"]]) for j in jobs]
+                jobs_file = work / f"jobs.{scope}.tfdv.json"
+                jobs_file.write_text(json.dumps(mapped), encoding="utf-8")
+                out = work / f"out.{scope}.tfdv.json"
+                command = ["wsl", "-d", "Ubuntu", "--", "bash", "-lc",
+                           " ".join(["~/tfdv/bin/python", repr(linux(root / "eval" / "baselines.py")), "--jobs",
+                                     repr(linux(jobs_file)), repr(linux(out)), "tfdv", scope])]
+                back = {linux(p): p for j in jobs for p in [j["anchor"], *j["batches"]]}
+                processes.append((tool, scope, subprocess.Popen(command, stdout=subprocess.DEVNULL,
+                                                                stderr=subprocess.DEVNULL), [out], back))
+                continue
+            parts = workers if tool == "gx" else 1
+            outs = []
+            for part in range(parts):
+                chunk = jobs[part::parts]
+                if not chunk:
+                    continue
+                jobs_file = work / f"jobs.{scope}.{tool}.{part}.json"
+                jobs_file.write_text(json.dumps(chunk), encoding="utf-8")
+                out = work / f"out.{scope}.{tool}.{part}.json"
+                outs.append(out)
+                processes.append((tool, scope, subprocess.Popen(
+                    [str(venv), str(root / "eval" / "baselines.py"), "--jobs", str(jobs_file), str(out), tool, scope],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL), [out], {}))
+    for _, _, process, _, _ in processes:
+        process.wait()
+    decisions = {}
+    for tool, scope, _, outs, back in processes:
+        found = decisions.setdefault(f"{tool}/{scope}", {})
+        for out in outs:
+            if not out.exists():
+                continue
+            report = json.loads(out.read_text(encoding="utf-8")).get(tool, {})
+            for anchor, results in report.items():
+                anchor = back.get(anchor, anchor)
+                if "error" in results:
+                    continue
+                for batch, result in results.items():
+                    found[(anchor, back.get(batch, batch))] = result.get("admit")
+    return decisions

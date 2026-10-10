@@ -90,8 +90,29 @@ def tfdv_tool(anchor, batches):
 TOOLS = {"pandera": pandera_tool, "gx": gx_tool, "tfdv": tfdv_tool}
 
 
+def run_jobs(jobs_file, out, tools, columns_scope):
+    """Many anchors in one process: jobs_file holds [{"anchor": path, "batches": [...], "columns": [...]}].
+    Writes {tool: {anchor: {batch: result}}}."""
+    jobs = json.loads(Path(jobs_file).read_text(encoding="utf-8"))
+    report = {tool: {} for tool in tools}
+    for job in jobs:
+        columns = job["columns"] if columns_scope == "read" else None
+        anchor = read(job["anchor"], columns)
+        batches = {path: read(path, columns) for path in job["batches"]}
+        for tool in tools:
+            try:
+                report[tool][job["anchor"]] = TOOLS[tool](anchor, batches)
+            except Exception as error:
+                report[tool][job["anchor"]] = {"error": f"{type(error).__name__}: {error}"[:500]}
+        print("done", Path(job["anchor"]).name, file=sys.stderr, flush=True)
+    Path(out).write_text(json.dumps(report, indent=1), encoding="utf-8")
+
+
 def main():
     args = sys.argv[1:]
+    if args and args[0] == "--jobs":  # --jobs JOBS.json OUT.json TOOLS all|read
+        run_jobs(args[1], args[2], args[3].split(","), args[4])
+        return
     tools, columns = ["pandera", "gx"], None
     if "--tools" in args:
         i = args.index("--tools")

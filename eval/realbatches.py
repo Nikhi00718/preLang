@@ -30,7 +30,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import (OUTCOMES, compile_variants, file_facts_admit, run_fresh, run_program,  # noqa: E402
-                      run_validators, score)
+                      run_validator_jobs, run_validators, score)
 
 ROOT = Path(__file__).resolve().parent.parent
 REAL = ROOT / "eval" / "data" / "real"
@@ -192,21 +192,24 @@ def main(compiler):
 
 
 def add_validators(rows):
-    """The data-validation tools, set up on each anchor month, decide on the later months."""
+    """The data-validation tools, set up on each anchor file, decide on the later batches."""
+    from collections import defaultdict
     groups = defaultdict(list)
     for r in rows:
         if r["fresh"] is not None:
-            groups[(r["workload"], r["anchor_path"])].append(r)
-    for (workload, anchor), items in groups.items():
-        decisions = run_validators(anchor, [r["batch_path"] for r in items], items[0]["columns"],
-                                   WORK / workload / "validators.json")
+            groups[r["anchor_path"]].append(r)
+    jobs = [{"anchor": anchor, "batches": sorted({r["batch_path"] for r in items}), "columns": items[0]["columns"]}
+            for anchor, items in groups.items()]
+    decisions = run_validator_jobs(jobs, WORK / "validators")
+    key = lambda path: str(Path(path).resolve())  # noqa: E731
+    for anchor, items in groups.items():
         for r in items:
-            r["validators"] = {tool: admits.get(r["batch_path"]) for tool, admits in decisions.items()}
+            r["validators"] = {tool: found.get((key(anchor), key(r["batch_path"])))
+                               for tool, found in decisions.items()}
             for tool, admit in r["validators"].items():
                 if admit is not None:
                     r["outcome"][tool] = outcome_of(admit, r)
-            r["outcome"]["file facts"] = outcome_of(r["file_facts_admit"], r)
-        print("validators", workload, Path(anchor).stem, len(items), flush=True)
+    print("validators:", {tool: sum(v is not None for v in found.values()) for tool, found in decisions.items()})
 
 
 def outcome_of(admits, r):

@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from policies import compile_variants, run_fresh, run_program, run_validators, score  # noqa: E402
+from policies import compile_variants, run_fresh, run_program, run_validator_jobs, run_validators, score  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "eval" / "work" / "certificates"
@@ -233,19 +233,24 @@ def outcome_of(admits, r):
 
 
 def add_validators(rows):
+    """The data-validation tools, set up on each anchor file, decide on the later batches."""
     from collections import defaultdict
     groups = defaultdict(list)
     for r in rows:
-        groups[(r["workload"], r["anchor_path"])].append(r)
-    for (workload, anchor), items in groups.items():
-        decisions = run_validators(anchor, [r["batch_path"] for r in items], items[0]["columns"],
-                                   WORK / f"validators_{workload}_{Path(anchor).stem}.json")
+        if r["fresh"] is not None:
+            groups[r["anchor_path"]].append(r)
+    jobs = [{"anchor": anchor, "batches": sorted({r["batch_path"] for r in items}), "columns": items[0]["columns"]}
+            for anchor, items in groups.items()]
+    decisions = run_validator_jobs(jobs, WORK / "validators")
+    key = lambda path: str(Path(path).resolve())  # noqa: E731
+    for anchor, items in groups.items():
         for r in items:
-            r["validators"] = {tool: admits.get(r["batch_path"]) for tool, admits in decisions.items()}
+            r["validators"] = {tool: found.get((key(anchor), key(r["batch_path"])))
+                               for tool, found in decisions.items()}
             for tool, admit in r["validators"].items():
                 if admit is not None:
                     r["outcome"][tool] = outcome_of(admit, r)
-        print("validators", workload, Path(anchor).name, len(items), flush=True)
+    print("validators:", {tool: sum(v is not None for v in found.values()) for tool, found in decisions.items()})
 
 
 def fresh_run(source_folder, program, relative, batch_path, fresh):
