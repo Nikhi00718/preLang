@@ -434,6 +434,10 @@ py -3 eval/bench.py
   compiles them, and compares the compiled program with the script's own pandas statements on new
   batches (paper RQ5; `py -3 eval/pandas_corpus.py collect [titanic|houses]` first, which needs `gh`
   signed in).
+- `eval/drift_corpus.py traffic|bikes|hours` lifts other people's scripts for the UCI traffic and
+  bike-sharing data (second lifter version, with dates and derived columns), compiles each on the
+  first real month and runs it on every later month (paper RQ5; `collect` first). With `--derived`,
+  `eval/pandas_corpus.py` lifts the Titanic and House Prices scripts with the second version too.
 - `eval/composition.py` runs two compiled stages over the real months and checks stage 1's guarantee
   against stage 2's certificates with `tools/contracts.py` (paper RQ6).
 - `eval/overhead.py`, `eval/certcost.py` and `eval/certsize.py` measure the run-time cost of admission
@@ -470,8 +474,10 @@ through, TFDV's 66, and Great Expectations refuses 106 that a fresh compilation 
 monthly batches, selective deoptimization handles 221 (93%) exactly as a fresh compilation would and
 none wrongly; the 17 refusals are one event (the taxi publisher changed two column types).
 Great Expectations and pandera refuse 92-93% of the months; TFDV admits 27 on which the optimized
-program does not do what a fresh compilation does. On 124 held-out Titanic scripts, 1,357 of 1,364
-runs reproduce the scripts' results and none differ. Across 196 months through two compiled stages,
+program does not do what a fresh compilation does. On 292 held-out Titanic and House Prices scripts,
+3,198 of 3,212 runs reproduce the scripts' results and none differ; 72 scripts written by others for
+the traffic and bike data, compiled on the first month, reproduce their results on all 3,255 later
+months. Across 196 months through two compiled stages,
 no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission with deoptimization costs
 nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
 `eval/results/*.md`.

@@ -406,6 +406,16 @@ def corpora(numbers):
         rows.append((name, prefix))
     numbers.update(CorpusBothScripts=both_scripts, CorpusBothRuns=both_runs, CorpusBothSame=both_same,
                    CorpusBothLifted=both_lifted)
+    # The same held-out scripts lifted again with the second lifter version (dates, derived columns).
+    derived = {"Runs": 0, "Same": 0, "Unsound": 0, "Statements": 0, "Compiled": 0, "Deopted": 0}
+    for file, prefix, held in (("pandas_corpus_derived.json", "CorpusDer", 100),
+                               ("pandas_corpus_houses_derived.json", "HousesDer", 0)):
+        if (RESULTS / file).exists():
+            corpus_numbers(load(file), prefix, numbers, held)
+            for key in derived:
+                derived[key] += numbers[prefix + key]
+    numbers.update({"CorpusBothDer" + key: value for key, value in derived.items()})
+    numbers["CorpusBothStatements"] = numbers.get("CorpusStatements", 0) + numbers.get("HousesStatements", 0)
     lines = [r"\begin{table}[t]", r"\caption{Real pandas scripts from GitHub (RQ5): held-out scripts, lifted, "
              r"compiled once on the training file and run on new batches; the ground truth is the lifted pandas "
              r"statements run on the same batch.}", r"\label{tab:rq-corpus}", r"\centering", r"\footnotesize",
