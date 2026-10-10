@@ -33,3 +33,6 @@ paper/*.aux
 paper/*.log
 paper/*.out
 paper/build_log.txt
+
+# Lean build output
+proofs/.lake/

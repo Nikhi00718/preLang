@@ -59,7 +59,7 @@ the proofs and removals depend on. \emph{Selective deoptimization} keeps every r
 operation in the generated program with its own item certificate: a new batch runs the optimized
 program, and only the removals whose certificates it breaks run again; a batch is refused only for
 facts no run-time code can stand in for, such as a column's type. We prove this exact for every
-admitted batch and mechanize the theorem in Lean~4. \emph{Composition} lets a compiled stage
+admitted batch and mechanize the proof in Lean~4, end to end for a core of the language. \emph{Composition} lets a compiled stage
 publish a guarantee for each table it writes; checking it against the next stage's certificates
 shows which downstream checks can never fire and writes the upstream contracts that would close
 the gap. On \RealRuns{} real monthly batches of three public datasets, selective deoptimization
@@ -123,7 +123,8 @@ instructions \emph{speculatively}; the compiler derives an admission certificate
 run-time code can stand in for) and an item certificate for every removal. On a new batch the
 generated program re-enables exactly the removals whose item certificates the batch breaks. We
 prove that this computes exactly what the source program computes on every admitted batch, and
-mechanize the theorem in Lean~4~\cite{lean4}.
+mechanize the proof in Lean~4~\cite{lean4}: for any monotone, sound analysis, and end to end, with the
+analysis itself, for a core of \PL.
 \item \textbf{Composition} (Section~\ref{sec:compose}): every compiled stage publishes a guarantee
 for each table it writes. An assume-guarantee check against the next stage's certificates shows
 which of its checks can never fire, and synthesizes the contract a producer must meet so that none
@@ -394,17 +395,24 @@ So a batch is refused only for facts that no run-time code stands in for. Item c
 weaker than $\full$ in the directions their removal does not care about: the check on line~2 of
 Fig.~\ref{fig:students} needs no lower bound of 10 and allows missing marks.
 
-\paragraph{Mechanization.} We mechanized Theorem~\ref{thm:deopt} in Lean~4~\cite{lean4} for an
-abstract setting (\texttt{proofs/Deopt.lean}, \LeanLines{} lines of Lean's core language, no Mathlib;
-the theorems use no axiom but propositional extensionality): a
-program is a list of partial state transformers; an analysis is any function from abstract inputs to
-discharged obligations that is monotone and whose no-effect proofs are sound for admitted inputs;
-item certificates are abstract inputs on which the analysis discharges their removal; and the
-run-time check is sound for $\sqsubseteq$. The development also proves that the greedy search ends
-only on certificates the re-analysis accepted and that it only weakens, and the composition theorem of
-Section~\ref{sec:compose}. Monotonicity and soundness of \PL's own analysis are assumptions of the
-mechanization; we test them with randomized property tests that compare deoptimization decisions
-with fresh compilations (Section~\ref{sec:soundtest}).
+\paragraph{Mechanization.} We mechanized the theorem in Lean~4~\cite{lean4} in two layers
+(\texttt{proofs/}, \LeanLines{} lines of Lean's core language, no Mathlib; the theorems use only the axioms
+\texttt{propext} and \texttt{Quot.sound}, which gives function extensionality, and no classical choice). \texttt{Deopt.lean} proves
+Theorem~\ref{thm:deopt} for an abstract setting: a program is a list of partial state transformers; an
+analysis is any function from abstract inputs to discharged obligations that is monotone and whose
+no-effect proofs are sound for admitted inputs; item certificates are abstract inputs on which the
+analysis discharges their removal; and the run-time check is sound for $\sqsubseteq$. It also proves
+that the greedy search ends only on certificates the re-analysis accepted and that it only weakens.
+\texttt{Core.lean} instantiates the setting with the analysis of a core of \PL: numeric columns
+abstracted by $\nu$ and an interval, \texttt{FILL\_NULL}, \texttt{FILTER} with $\geq$ and $\leq$,
+\texttt{DROP\_NULL}, and \texttt{BETWEEN} and \texttt{NOT\_NULL} contracts. For this core it proves the
+transfer functions sound and every \textsc{Proven} verdict and no-effect proof valid
+(Lemma~\ref{lem:sound}), monotonicity (Lemma~\ref{lem:mono}), the run-time check of the generated code
+(missing values and bounds of the certified columns) sound and complete for a certificate, and from
+these Theorem~\ref{thm:deopt} and the composition theorem of Section~\ref{sec:compose} end to end. For
+the rest of the language (types, text, normalization, images, contracts proven by reading values) the
+two lemmas remain assumptions, which we test with randomized property tests that compare
+deoptimization decisions with fresh compilations (Section~\ref{sec:soundtest}).
 
 \section{Composing Pipeline Stages}\label{sec:compose}
 
@@ -469,7 +477,8 @@ would, without recompiling, where validators set up on the same data refuse most
 results through; on real scripts it reproduces the scripts' results on every batch it runs. The
 refusals that remain come from facts no run-time code can replace, such as a publisher changing a
 column's type, and point to the next step: certificates that let generated code adapt to such
-changes, joins and dates in the language, and a mechanized soundness proof of the analysis itself.
+changes, joins and dates in the language, and the mechanized soundness proof extended from the core
+to the whole analysis.
 
 \paragraph{Artifact.} The compiler, the Lean development, the pandas front end, the composition tool,
 the evaluation scripts with their pinned baseline environments, and the raw results are kept in one

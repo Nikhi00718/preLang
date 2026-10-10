@@ -3,23 +3,23 @@
 \label{tab:rq-corpus}
 \centering
 \footnotesize
-\begin{tabular}{@{}lr@{}}
+\begin{tabular}{@{}lrr@{}}
 \toprule
-& Titanic \\
+& Titanic & House Prices \\
 \midrule
-Held-out scripts & 272 \\
-Lifted, in scope & 130 \\
-Compiled & 124 \\
-Runs on new batches & 1364 \\
-\emph{Full certificate:} admitted & 1347 \\
-\quad identical to the script & 1347 \\
-\quad refused, script runs & 10 \\
-\emph{With deoptimization:} admitted & 1357 \\
-\quad identical to the script & 1357 \\
-\quad stopped by a check & 0 \\
-\quad different (unsound) & 0 \\
-\quad refused, script runs & 0 \\
-\quad ran with removals re-enabled & 10 \\
+Held-out scripts & 272 & 461 \\
+Lifted, in scope & 130 & 168 \\
+Compiled & 124 & 168 \\
+Runs on new batches & 1364 & 1848 \\
+\emph{Full certificate:} admitted & 1347 & 1838 \\
+\quad identical to the script & 1347 & 1838 \\
+\quad refused, script runs & 10 & 3 \\
+\emph{With deoptimization:} admitted & 1357 & 1841 \\
+\quad identical to the script & 1357 & 1841 \\
+\quad stopped by a check & 0 & 0 \\
+\quad different (unsound) & 0 & 0 \\
+\quad refused, script runs & 0 & 0 \\
+\quad ran with removals re-enabled & 10 & 3 \\
 \bottomrule
 \end{tabular}
 \end{table}

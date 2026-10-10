@@ -91,7 +91,9 @@ def main():
     soundness_tests(numbers)
 
     numbers["TestCount"] = test_count()
-    numbers["LeanLines"] = len((ROOT / "proofs" / "Deopt.lean").read_text(encoding="utf-8").splitlines())
+    lean = {name: len((ROOT / "proofs" / f"{name}.lean").read_text(encoding="utf-8").splitlines())
+            for name in ("Deopt", "Core")}
+    numbers.update(LeanLines=sum(lean.values()), LeanDeoptLines=lean["Deopt"], LeanCoreLines=lean["Core"])
     numbers["SrcLines"] = f"{sum(len(f.read_text(encoding='utf-8').splitlines()) for f in (ROOT / 'src').rglob('*.[ch]pp')):,}"
     numbers["RealDeoptCorrectPct"] = numbers.get("RealDeoptCorrectPct", "--")
 

@@ -21,7 +21,8 @@
   certificate of stage 2, stage 2 never runs that removed instruction for an
   output of stage 1.
 
-  Lean 4 core only (no Mathlib). Check with: lean proofs/Deopt.lean
+  Lean 4 core only (no Mathlib). Build with `lake build` in proofs/; Core.lean
+  instantiates this setting with the analysis of a core of PrepLang.
 -/
 
 namespace PrepLang
