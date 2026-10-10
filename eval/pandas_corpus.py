@@ -6,8 +6,9 @@
 Two corpora, each from GitHub code search in GitHub's ranking order, without duplicates:
   * titanic  Python files with read_csv, fillna and Embarked (the Kaggle Titanic data)
   * houses   Python files with read_csv, fillna and LotFrontage (Kaggle House Prices; its
-             files mark missing values with the text NA, which pandas reads as missing:
-             eval/data/houses/train.csv and test.csv are written with empty cells instead,
+             files mark missing values with the text NA, and a category is called None, both of which
+             pandas reads as missing: eval/data/houses/train.csv and test.csv are written with
+             empty cells wherever pandas reads a missing value,
              PrepLang's notation, from the Kaggle files kaggle_train.csv and kaggle_test.csv) The scripts are never run as a whole: frontend/pandas2prep.py lifts
 the part of their cleaning that PrepLang expresses, and only those lifted
 statements are run as the ground truth.
@@ -61,10 +62,12 @@ WORK = ROOT / "eval" / "work" / ("pandas_corpus" if NAME == "titanic" else f"pan
 
 
 def prepare_houses():
-    """train.csv and test.csv with empty cells where the Kaggle files write NA (pandas reads both as missing)."""
+    """train.csv and test.csv with an empty cell wherever pandas' read_csv reads a missing value: the Kaggle
+    files write NA, and MasVnrType has the category None, which pandas also reads as missing."""
+    from pandas._libs.parsers import STR_NA_VALUES
     for name in ("train.csv", "test.csv"):
         frame = pd.read_csv(DATA / f"kaggle_{name}", dtype=str, keep_default_na=False)
-        frame = frame.replace({"NA": ""})
+        frame = frame.replace({token: "" for token in STR_NA_VALUES})
         frame.to_csv(DATA / name, index=False)
 
 # A file name with "test" means the Kaggle Titanic test file; with "titanic" or "train",

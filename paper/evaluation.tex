@@ -150,8 +150,12 @@ files. We used the first 100 Titanic scripts as a development set, to choose whi
 handles; the remaining \CorpusTest{} and all House Prices scripts are held out: we did not look at them
 before the final run, and the lifter was not changed for House Prices. A script is in scope if it reads
 the training file with \texttt{pd.read\_csv(path)} at module level. The House Prices files mark missing
-values with the text \texttt{NA}, which pandas reads as missing; we give both sides the same files with
-empty cells instead, \PL's notation.
+values with the text \texttt{NA}, and one column has a category called \texttt{None}; pandas reads both
+as missing. We give both sides the same files, with an empty cell, \PL's notation, wherever pandas reads
+a missing value. Our first run replaced only \texttt{NA}: two scripts then differed from pandas on every
+batch, the training file included, because \PL read \texttt{None} as a value that the scripts fill.
+That is a difference of CSV notation, independent of reuse; an exact lifter must carry pandas' list of
+missing-value strings into \texttt{LOAD}.
 
 \paragraph{Protocol.} The lifted program is compiled against the training file and given eleven new
 batches: Kaggle's real test file (no target column, and missing values in columns where the training
@@ -164,10 +168,14 @@ pandas statements; the cleaned tables are compared value by value.
 \paragraph{Results.} With deoptimization, \CorpusSame{} Titanic runs and \HousesSame{} House Prices
 runs reproduce the scripts' results exactly, and none differ (Table~\ref{tab:rq-corpus}). The
 difference to the full certificate is the price of optimizing for the compiled data: the training
-files have no missing \texttt{Fare} (Titanic) or \texttt{MSZoning}, \texttt{KitchenQual} and other
-columns (House Prices), so the compiler removes the scripts' \texttt{fillna} on them, and the full
-certificate then refuses every batch with missing values there, including Kaggle's own test files.
-Deoptimization runs the removed \texttt{fillna} again for exactly those batches.
+files have no missing \texttt{Fare} (Titanic) or \texttt{MSZoning} and \texttt{GarageCars} (House
+Prices), so the compiler removes the scripts' \texttt{fillna} on them, and the full certificate then
+refuses every batch with missing values there, including Kaggle's own test files. Deoptimization runs
+the removed \texttt{fillna} again for exactly those batches (\CorpusDeopted{} Titanic and
+\HousesDeopted{} House Prices runs). Most House Prices scripts fill columns that already have missing
+values in the training file, such as \texttt{LotFrontage}; those fills are never removed, and the
+certificate does not constrain them. The remaining refusals are batches the scripts crash on too:
+Kaggle's test files have no target column.
 
 \subsection{RQ6: Composing stages}\label{sec:rq-compose}
 

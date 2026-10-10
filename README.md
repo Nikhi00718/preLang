@@ -404,12 +404,21 @@ py -3 eval/bench.py
   (`py -3 eval/datasets.py scale` first).
 - `eval/run_realbugs.py` runs the study of real GitHub issues (`eval/realbugs_catalog.py`).
 - `eval/certificates.py` gives compiled programs new batches of data and compares each run with a
-  fresh compilation for that batch (RQ7).
+  fresh compilation for that batch (paper RQ3); `py -3 eval/certificates.py validators` adds pandera,
+  Great Expectations and TFDV (`eval/baselines.py`, set up in `eval/.venv-baselines` and WSL).
+- `eval/imagebatches.py` reuses a compiled image pipeline on 30 new folders (paper RQ3).
 - `eval/realbatches.py` does the same with real monthly data: UCI traffic and bike-sharing data and
-  NYC green-taxi Parquet files (RQ8; `py -3 eval/realbatches.py download` first).
-- `eval/pandas_corpus.py` lifts real Titanic scripts from GitHub, compiles them, and compares the
-  compiled program with the script's own pandas statements on new batches (RQ9;
-  `py -3 eval/pandas_corpus.py collect` first, which needs `gh` signed in).
+  NYC green-taxi Parquet files (paper RQ4; `py -3 eval/realbatches.py download` first, then
+  `py -3 eval/realbatches.py validators`).
+- `eval/pandas_corpus.py [titanic|houses]` lifts real Titanic or House Prices scripts from GitHub,
+  compiles them, and compares the compiled program with the script's own pandas statements on new
+  batches (paper RQ5; `py -3 eval/pandas_corpus.py collect [titanic|houses]` first, which needs `gh`
+  signed in).
+- `eval/composition.py` runs two compiled stages over the real months and checks stage 1's guarantee
+  against stage 2's certificates with `tools/contracts.py` (paper RQ6).
+- `eval/overhead.py`, `eval/certcost.py` and `eval/certsize.py` measure the run-time cost of admission
+  and deoptimization, the compile-time cost of certification, and the size of the certificates
+  (paper RQ7).
 - `eval/paper_numbers.py` writes `paper/numbers.tex`, so every number in the paper comes from
   `eval/results/`.
 
@@ -434,16 +443,21 @@ runs 8.5 s and writes 3,000 black images.
 before any data is processed; all 21 reproductions behave as classified. Details:
 `eval/results/realbugs.md`.
 
-**RQ8 (real monthly batches)** and **RQ9 (real pandas scripts):** see
-`eval/results/realbatches.md` and `eval/results/pandas_corpus.md`.
+**Reusing compiled programs (paper RQ3-RQ7).** Every new batch is also compiled fresh as the ground
+truth. On 244 edited batches both certificates handle every batch correctly; selective deoptimization
+runs 35 of them with removed checks re-enabled, while pandera's inferred schema lets 41 wrong runs
+through, TFDV's 66, and Great Expectations refuses 106 that a fresh compilation runs. On 238 real
+monthly batches, selective deoptimization handles 221 (93%) exactly as a fresh compilation would and
+none wrongly; the 17 refusals are one event (the taxi publisher changed two column types).
+Great Expectations and pandera refuse 92-93% of the months; TFDV admits 27 on which the optimized
+program does not do what a fresh compilation does. On 124 held-out Titanic scripts, 1,357 of 1,364
+runs reproduce the scripts' results and none differ. Across 196 months through two compiled stages,
+no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission with deoptimization costs
+nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
+`eval/results/*.md`.
 
-**RQ7 (data certificates):** seven compiled programs get 244 new batches, and each batch is also
-compiled fresh as the ground truth. The certificate admits 209 (86%), the compiled file's own facts
-(a TFDV-style schema) 96 (39%), the fingerprint none. All 209 admitted runs end exactly like the
-fresh compilation, and every refused batch also fails a fresh compilation. Details:
-`eval/results/certificates.md`.
-
-The paper is `paper/preplang.tex` with `paper/numbers.tex` (IEEE format; upload both to Overleaf).
+The paper is `paper/preplang.tex` (ACM `acmart`), with its sections, tables and figures in `paper/`
+and every number in `paper/numbers.tex`; build it with three runs of `pdflatex preplang.tex`.
 What is new compared with existing work is in [NOVELTY.md](NOVELTY.md).
 
 ## Project layout
