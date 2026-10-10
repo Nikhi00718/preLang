@@ -10,6 +10,8 @@
 // Other:         --dot       also write the AST as output/ast.dot (Graphviz)
 //                --O0        turn the optimizer off
 //                --approx    also apply approximate rewrites (RESIZE fusion)
+//                --no-deopt  remove proven-useless instructions outright (no deoptimization):
+//                            a new input must then satisfy the full data certificate
 
 #include "ast/AST.h"
 #include "ast/ASTDot.h"
@@ -46,6 +48,7 @@ struct Options {
     bool source = false, tokens = false, ast = false, schema = false, semantic = false, lineage = false;
     bool ir = false, certificate = false, python = false;
     bool explain = false, dryRun = false, run = false, dot = false, noOptimize = false, approximate = false;
+    bool noDeopt = false;
 };
 
 bool parseArguments(int argc, char* argv[], Options& options) {
@@ -58,6 +61,7 @@ bool parseArguments(int argc, char* argv[], Options& options) {
     const std::vector<std::pair<std::string, bool*>> otherFlags = {
         {"--explain", &options.explain}, {"--dry-run", &options.dryRun}, {"--run", &options.run},
         {"--dot", &options.dot},         {"--O0", &options.noOptimize},  {"--approx", &options.approximate},
+        {"--no-deopt", &options.noDeopt},
     };
     bool anyStage = false;
     for (int i = 1; i < argc; ++i) {
@@ -120,7 +124,7 @@ int main(int argc, char* argv[]) {
     if (!parseArguments(argc, argv, options)) {
         std::cerr << "usage: preplang <file.prep> [--source] [--tokens] [--ast] [--schema] [--semantic]\n"
                   << "                            [--lineage] [--ir] [--certificate] [--python] [--explain]\n"
-                  << "                            [--dry-run] [--run] [--dot] [--O0] [--approx]\n";
+                  << "                            [--dry-run] [--run] [--dot] [--O0] [--approx] [--no-deopt]\n";
         return 2;
     }
 
@@ -206,7 +210,7 @@ int main(int argc, char* argv[]) {
 
     // Phase 5: optimization
     const std::vector<double> constants = programConstants(ir);  // before the optimizer removes instructions
-    const OptimizationReport report = PassManager({!options.noOptimize, options.approximate}).run(ir);
+    const OptimizationReport report = PassManager({!options.noOptimize, options.approximate, !options.noDeopt}).run(ir);
     if (options.ir) {
         printHeader("OPTIMIZATION REPORT (PassManager)");
         printReport(std::cout, report);

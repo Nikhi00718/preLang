@@ -15,4 +15,5 @@ public:
 
 private:
     void fitColumnLists(IRProgram& program, OptimizationReport& report);
+    void dropUnloadedChecks(IRProgram& program, OptimizationReport& report);
 };

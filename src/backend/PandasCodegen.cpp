@@ -89,12 +89,16 @@ std::string exactNumber(double value) {
 PandasCodegen::PandasCodegen(std::filesystem::path outputFolder, const Certificate& certificate)
     : outputFolder_(std::move(outputFolder)), certificate_(certificate) {}
 
-// {"marks": {"type": "INTEGER", "max": 100, "max_for": "line 5: ..."}, ...}
 std::string PandasCodegen::certificateDict(const std::string& key) const {
     const TableCertificate* table = certificate_.table(key);
     if (certificate_.exactOnly || !table) {
         return "None";  // only the compiled file is accepted
     }
+    return columnsDict(*table);
+}
+
+std::string PandasCodegen::columnsDict(const TableCertificate& certificate) {
+    const TableCertificate* table = &certificate;
     const auto join = [](const std::vector<std::string>& items) {
         std::string text;
         for (const std::string& item : items) {
@@ -186,6 +190,36 @@ def admit(table, path, frame, certificate, empty_is_text):
     print(f"Admitted {path} for {table}: it satisfies the data certificate")
 
 
+def column_facts(frame, columns):
+    """Missing values and range of the columns some item certificate is about."""
+    facts = {}
+    for column in columns:
+        if column in frame.columns:
+            values = frame[column]
+            present = values.dropna()
+            numeric = pd.api.types.is_numeric_dtype(values.dtype) and not pd.api.types.is_bool_dtype(values.dtype)
+            facts[column] = {"missing": int(values.isna().sum()),
+                             "min": present.min() if numeric and len(present) else None,
+                             "max": present.max() if numeric and len(present) else None}
+    return facts
+
+
+def table_problem(facts, certificate):
+    """Why a new input breaks the item certificate of a removed check or operation; "" if it does not."""
+    for column, fact in certificate.items():
+        found = facts.get(column)
+        if found is None:
+            continue
+        if "not_null" in fact and found["missing"]:
+            return f"{column} has {found['missing']} missing values"
+        low, high = found["min"], found["max"]
+        if "min" in fact and low is not None and (low <= fact["min"] if fact.get("min_strict") else low < fact["min"]):
+            return f"{column} goes down to {low}, " + ("at or below " if fact.get("min_strict") else "below ") + str(fact["min"])
+        if "max" in fact and high is not None and (high >= fact["max"] if fact.get("max_strict") else high > fact["max"]):
+            return f"{column} goes up to {high}, " + ("at or above " if fact.get("max_strict") else "above ") + str(fact["max"])
+    return ""
+
+
 )";
     if (csv) {
         code += R"(def read_csv_checked(table, path, fingerprint, columns, dtypes, certificate):
@@ -205,6 +239,7 @@ def admit(table, path, frame, certificate, empty_is_text):
     frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns or column in (certificate or {}),
                         keep_default_na=False, na_values=[""], dtype=text, dtype_backend="numpy_nullable")
     admit(table, path, frame, certificate, True)
+    input_facts[table] = column_facts(frame, ITEM_COLUMNS.get(table, ()))
     present = [column for column in columns if column in frame.columns]
     return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
 
@@ -230,6 +265,7 @@ def admit(table, path, frame, certificate, empty_is_text):
     present = [column for column in wanted if column in pyarrow.parquet.read_schema(path).names]
     frame = pd.read_parquet(path, columns=present, dtype_backend="numpy_nullable")
     admit(table, path, frame, certificate, False)
+    input_facts[table] = column_facts(frame, ITEM_COLUMNS.get(table, ()))
     present = [column for column in columns if column in frame.columns]
     return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
 

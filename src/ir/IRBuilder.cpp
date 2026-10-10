@@ -72,6 +72,7 @@ Instruction IRBuilder::make(Opcode op, const Target& target) const {
     const auto found = analysis_.noEffect.find({statement_, targetKey(target)});
     if (found != analysis_.noEffect.end()) {
         instruction.noEffect = found->second;
+        instruction.proofKey = proofKey(*statement_, targetKey(target));
     }
     const auto values = analysis_.valueProofs.find({statement_, targetKey(target)});
     if (values != analysis_.valueProofs.end()) {
@@ -356,6 +357,7 @@ void printIR(std::ostream& out, const IRProgram& program) {
     for (size_t i = 0; i < program.code.size(); ++i) {
         const Instruction& instruction = program.code[i];
         out << std::right << std::setw(3) << i + 1 << "  " << std::left << std::setw(62)
-            << instructionText(instruction) << "  ; line " << instruction.line << '\n';
+            << instructionText(instruction) << "  ; line " << instruction.line
+            << (instruction.speculative ? "  (speculative: runs only if deoptimized)" : "") << '\n';
     }
 }

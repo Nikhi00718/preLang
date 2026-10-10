@@ -6,6 +6,7 @@
 #include "sema/AnalysisResult.h"
 
 #include <filesystem>
+#include <functional>
 #include <limits>
 #include <ostream>
 #include <string>
@@ -18,24 +19,37 @@
 // proofs for the exact files it was compiled with (the fingerprint guard), so a
 // new batch of data with the same layout would need a new compilation.
 //
-// The certificate is the part of those facts that the proofs really need. It is
+// A certificate is the part of those facts that the proofs really need. It is
 // found by *counterfactual re-analysis*: the semantic analysis is run again with
 // a weaker fact about one column (missing values allowed, no lower bound, a
 // lower bound that is only a constant of the program, ...) or about one image
 // folder (another channel count, a wider size range, broken files allowed), and
-// the weaker fact is kept if every proof and every removed operation of the
-// program survives. Because every transfer function of the analysis is
-// monotone, any input whose facts are inside the certified ones gets at least
-// the same proofs, so the compiled program is correct for it unchanged.
+// the weaker fact is kept if the proofs that matter survive. Because every
+// transfer function of the analysis is monotone, any input whose facts are
+// inside the certified ones gets at least the same proofs.
 //
-// The generated program admits an input that differs from the compiled one if
-// it satisfies the certificate; contracts that were proven by reading the
-// values themselves (UNIQUE, REFERENCES, MATCH_RATE) are then checked again.
+// Three certificates are found, one after the other, each starting from the
+// facts of the one before:
+//   * the full certificate keeps every proof and every removed operation. An
+//     input inside it runs the optimized program unchanged.
+//   * the admission certificate keeps only what no run-time code can replace:
+//     the absence of compile errors, and contracts that have no run-time check
+//     (column types, image contracts). An input outside it is refused.
+//   * one item certificate per speculatively removed check or operation keeps
+//     that one removal. For an admitted input that breaks it, the generated
+//     program runs that instruction after all (deoptimization); every other
+//     removal stays justified, because the analysis of that input, which is
+//     below the item certificates it satisfies, still proves it.
+// Without speculative removals (--no-deopt) the admission certificate is the
+// full one, as in earlier versions.
+//
+// Contracts that were proven by reading the values themselves (UNIQUE,
+// REFERENCES, MATCH_RATE) are checked again whenever an input changed.
 
 struct ColumnFacts {
     std::string name;
     bool read = true;                      // the optimized program loads it; otherwise it is loaded only to
-                                           // check it, because a proof depends on it (e.g. a removed check)
+                                           // check it, because a proof depends on it
     ColumnType type = ColumnType::String;
     bool typeFixed = true;                 // the type is required: always for a column the program reads
     std::vector<std::string> typeFor;      // for a column it does not read: the proofs that need the type
@@ -76,15 +90,33 @@ struct ImageCertificate {
     std::vector<ImageGroupFacts> groups;
 };
 
-struct Certificate {
+// The facts one speculatively removed instruction needs beyond the admission
+// certificate. Only value facts appear: missing values and bounds of columns
+// (type and presence are part of admission), and channels, sizes and broken files
+// of image folders. Columns and groups without such a fact are left out.
+struct ItemCertificate {
+    std::string key;          // proofKey of the instructions it guards
+    std::string description;  // "line 5: EXPECT students.marks BETWEEN 0 AND 100"
     std::vector<TableCertificate> tables;
     std::vector<ImageCertificate> images;
+    // Nothing beyond admission: every admitted input keeps the removal, so the
+    // instruction is removed outright.
+    bool empty() const { return tables.empty() && images.empty(); }
+};
+
+struct Certificate {
+    std::vector<TableCertificate> tables;  // admission: an input outside is refused
+    std::vector<ImageCertificate> images;
+    std::vector<ItemCertificate> items;    // one per speculatively removed instruction (proofKey)
+    std::vector<TableCertificate> fullTables;  // every proof, i.e. the certificate without deoptimization
+    std::vector<ImageCertificate> fullImages;
     std::vector<std::string> recheckedIfChanged;  // contracts proven from the values
     int analysisRuns = 0;                         // how many times the program was analysed again
     bool exactOnly = false;                       // no certificate: only the compiled files are accepted
 
     const TableCertificate* table(const std::string& key) const;
     const ImageCertificate* image(const std::string& dataset) const;
+    const ItemCertificate* item(const std::string& key) const;
 };
 
 class Certifier {
@@ -92,36 +124,46 @@ public:
     // `schemas` must be the provider of the first analysis: it keeps the image headers it read.
     Certifier(const Program& program, SchemaProvider& schemas, std::filesystem::path baseFolder);
 
-    // `optimized` gives the columns each LOAD reads; `constants` are the numbers in
-    // the program (programConstants of the IR before optimization), the only places
-    // where widening a range can change a decision of the analysis.
+    // `optimized` gives the columns each LOAD reads and the speculative instructions;
+    // `constants` are the numbers in the program (programConstants of the IR before
+    // optimization), the only places where widening a range can change a decision.
     Certificate certify(const IRProgram& optimized, const AnalysisResult& analysis, const std::vector<double>& constants);
 
 private:
-    // What a run of the analysis proved: proven contracts and removed operations,
-    // each with a description. Proofs that read the values are left out: they are
-    // checked again at run time whenever an input changed.
+    // What a run of the analysis proved, each with a description: "contract ..."
+    // for contracts without a run-time check, "removed <proofKey>" for no-effect
+    // facts. Proofs that read the values are left out: they are checked again at
+    // run time whenever an input changed.
     struct Proofs {
         std::string error;  // the first error, e.g. "line 3: 1 of 4 files ... cannot be decoded"; empty if none
         std::map<std::string, std::string> items;  // stable key -> description
     };
+    // What a run broke that the current certificate must keep; empty if nothing.
+    using Criterion = std::function<std::vector<std::string>(const Proofs&)>;
 
     const Program& program_;
     SchemaProvider& schemas_;
     std::filesystem::path baseFolder_;
     std::map<std::string, TableSchema> facts_;          // table override key -> the facts the next run uses
     std::map<std::string, ImageSetSchema> imageFacts_;  // image key -> the files the next run uses
+    std::map<std::string, std::string> overrideOf_;     // table key -> its key in facts_
+    Criterion criterion_;
     int runs_ = 0;
 
     Proofs analyse();
+    std::vector<std::string> broken() { return criterion_(analyse()); }
     static Proofs proofsOf(const AnalysisResult& result, const std::string& error);
-    // The proofs of `base` that `run` lost; empty if it kept all of them.
+    // The proofs of `base` that `run` lost, and the error of `run`; empty if it kept all of them.
     static std::vector<std::string> lost(const Proofs& base, const Proofs& run);
 
-    void certifyTable(const Instruction& load, const IRProgram& optimized, const Proofs& base,
-                      const std::vector<double>& constants, Certificate& certificate);
-    void certifyImages(const std::string& dataset, const ImageSetSchema& schema, const Proofs& base,
-                       const std::vector<int>& sizes, Certificate& certificate);
+    TableCertificate certifyTable(const Instruction& load, const IRProgram& optimized,
+                                  const std::vector<double>& constants);
+    // Widens only the value facts of a certificate found before (missing values, bounds).
+    TableCertificate widenTableValues(const TableCertificate& start, const std::vector<double>& constants);
+    void widenValues(ColumnInfo& info, ColumnFacts& column, const std::vector<double>& constants);
+    // From the compiled files if `start` is null, else from a certificate found before.
+    ImageCertificate certifyImages(const std::string& dataset, const ImageSetSchema& schema,
+                                   const ImageCertificate* start);
     std::vector<int> imageConstants() const;
 };
 
@@ -138,6 +180,7 @@ std::vector<double> programConstants(const IRProgram& program);
 
 // Why an input with these facts may not be given to the compiled program; empty if
 // the certificate admits it. Used by the tests; the generated program checks the same.
+// For the tables of an item certificate it says why the removal is not justified.
 std::vector<std::string> admissionProblems(const TableCertificate& certificate, const TableSchema& input);
 std::vector<std::string> admissionProblems(const ImageCertificate& certificate, const ImageSetSchema& input);
 

@@ -45,6 +45,7 @@ std::string manifestCode(const IRProgram& program, const AnalysisResult& analysi
     }
     code << "    ],\n"
          << "    \"admitted_by_certificate\": [name for name, same in same_input.items() if not same],\n"
+         << "    \"deoptimized\": deoptimized,\n"
          << "    \"outputs\": outputs,\n}\n"
          << "(HERE / \"preplang_manifest.json\").write_text(json.dumps(manifest, indent=2), encoding=\"utf-8\")\n"
          << "print(\"Wrote\", HERE / \"preplang_manifest.json\")\n";

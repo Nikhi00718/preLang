@@ -62,6 +62,11 @@ struct Instruction {
     // runs only if one of them is not the file the compiler read (see certify/).
     std::vector<std::string> provenFromValuesOf;
     bool onlyIfInputChanged = false;
+    // proofKey of the analysis fact that justifies removing it (see sema/AnalysisResult.h).
+    std::string proofKey;
+    // Removed speculatively: the generated program skips it, unless a new input
+    // breaks the item certificate of proofKey; then it runs after all (deoptimization).
+    bool speculative = false;
 };
 
 struct IRProgram {

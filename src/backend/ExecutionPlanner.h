@@ -26,6 +26,8 @@ private:
     std::filesystem::path outputFolder_;
     std::string sourceName_;
     const Certificate& certificate_;
+
+    std::string deoptimization(const IRProgram& program) const;
 };
 
 // Whether the OpenCV backend handles this instruction.

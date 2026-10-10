@@ -40,6 +40,14 @@ std::string OpenCVCodegen::certificateDict(const std::string& dataset) const {
     if (certificate_.exactOnly || !image || image->fixed) {
         return "None";  // only the compiled folder is accepted
     }
+    return imageDict(*image);
+}
+
+std::string OpenCVCodegen::imageDict(const ImageCertificate& certificate) {
+    if (certificate.fixed) {
+        return "{\"fixed\": True}";
+    }
+    const ImageCertificate* image = &certificate;
     const auto join = [](const std::vector<std::string>& items) {
         std::string text;
         for (const std::string& item : items) {
@@ -120,7 +128,7 @@ def admit_images(name, path, folder, names, certificate):
         refuse(path, "the compiled program's proofs depend on the exact files of its folder", "")
     if not names:
         refuse(path, "it has no PNG or JPG images", "")
-    broken, depths = [], set()
+    broken, depths, groups = [], set(), {}
     for file in names:
         header = read_image_header(folder / file)
         if header is None:
@@ -131,6 +139,11 @@ def admit_images(name, path, folder, names, certificate):
         width, height, channels, bits = header
         depths.add(16 if bits > 8 else 8)
         suffix = Path(file).suffix.lower()
+        facts = groups.setdefault("png" if suffix == ".png" else "jpg",
+                                  {"channels": set(), "width": [width, width], "height": [height, height]})
+        facts["channels"].add(channels)
+        facts["width"] = [min(facts["width"][0], width), max(facts["width"][1], width)]
+        facts["height"] = [min(facts["height"][0], height), max(facts["height"][1], height)]
         group = certificate["groups"].get("png" if suffix == ".png" else "jpg")
         if group is None:
             refuse(path, f"{file} is a {suffix} file, which the compiled folder had none of", "")
@@ -143,7 +156,28 @@ def admit_images(name, path, folder, names, certificate):
     if depths and sorted(depths) != certificate["depths"]:
         refuse(path, f"its bit depths {sorted(depths)} differ from the compiled {certificate['depths']}", "")
     print(f"Admitted {path} for {name}: every image header satisfies the data certificate")
+    image_facts[name] = {"broken": len(broken), "groups": groups}
     return broken
+
+
+def image_problem(facts, certificate):
+    """Why a new folder breaks the item certificate of a removed operation; "" if it does not."""
+    if certificate.get("fixed"):
+        return "the folder is not the compiled one"
+    if facts["broken"] and not certificate["broken_allowed"]:
+        return f"{facts['broken']} files cannot be read"
+    for extension, found in facts["groups"].items():
+        group = certificate["groups"].get(extension)
+        if group is None:
+            continue
+        other = sorted(found["channels"] - set(group["channels"]))
+        if other:
+            return f"a .{extension} image has {other[0]} channels"
+        for what in ("width", "height"):
+            (low, high), (least, most) = group[what], found[what]
+            if least < low or most > high:
+                return f".{extension} images have {what}s {least} to {most}, outside {low} to {high}"
+    return ""
 
 
 def list_images_checked(name, path, recursive, single, fingerprint, broken, certificate):
@@ -214,10 +248,12 @@ def write_image(path, img, quality):
     return code;
 }
 
-std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program) {
+std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program, const std::string& guard) {
     Pipeline& pipeline = pipelines_[in.dataset];
     const std::string images = variable(in.dataset);
     const std::string origin = "  # line " + std::to_string(in.line);
+    // A speculatively removed step runs only for a folder that breaks its item certificate.
+    const std::string when = guard.empty() ? "" : "if deopt(" + pythonString(guard) + "): ";
 
     switch (in.op) {
         case Opcode::LoadImages: {
@@ -238,13 +274,13 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program)
         case Opcode::Resize: {
             const std::string width = std::to_string(in.numbers[0]);
             const std::string height = std::to_string(in.numbers[1]);
-            pipeline.steps.push_back(in.numbers[2] ? "img = letterbox(img, " + width + ", " + height + ")" + origin
-                                                   : "img = cv2.resize(img, (" + width + ", " + height +
-                                                         "), interpolation=cv2.INTER_AREA)" + origin);
+            pipeline.steps.push_back(when + (in.numbers[2] ? "img = letterbox(img, " + width + ", " + height + ")"
+                                                           : "img = cv2.resize(img, (" + width + ", " + height +
+                                                                 "), interpolation=cv2.INTER_AREA)") + origin);
             break;
         }
         case Opcode::Grayscale:
-            pipeline.steps.push_back("img = to_gray(img)" + origin);
+            pipeline.steps.push_back(when + "img = to_gray(img)" + origin);
             break;
         case Opcode::NormalizeImages: {
             // Maps the known source range [from, to] onto [low, high].
@@ -253,14 +289,18 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program)
             const double from = std::stod(in.values[2].value);
             const double to = std::stod(in.values[3].value);
             const double scale = (high - low) / (to - from);
-            pipeline.steps.push_back("img = img.astype(np.float32) * " + number(scale) + " + " +
+            pipeline.steps.push_back(when + "img = img.astype(np.float32) * " + number(scale) + " + " +
                                      number(low - from * scale) + origin);
             break;
         }
         case Opcode::Compress:
-            pipeline.quality = in.numbers[0];
+            pipeline.quality = guard.empty() ? std::to_string(in.numbers[0])
+                                             : "(" + std::to_string(in.numbers[0]) + " if deopt(" + pythonString(guard) +
+                                                   ") else " + pipeline.quality + ")";
             break;
         case Opcode::Convert:
+            pipeline.formatBefore = guard.empty() ? "" : pipeline.format;
+            pipeline.formatGuard = guard;
             pipeline.format = in.text;
             break;
         case Opcode::RemoveCorrupt:
@@ -298,12 +338,16 @@ std::string OpenCVCodegen::saveLoop(const Instruction& in) {
     const std::string images = variable(in.dataset);
     const bool single = in.numbers[0] == 1;
     static const std::map<std::string, std::string> suffixes = {{"JPG", ".jpg"}, {"PNG", ".png"}, {"NPY", ".npy"}};
-    const auto suffix = suffixes.find(pipeline.format);
     const std::string destination = "HERE / " + pythonString(in.text);
-
-    std::string output = single ? "target" : "target / name";
-    if (suffix != suffixes.end()) {
-        output = "(" + output + ").with_suffix(" + pythonString(suffix->second) + ")";
+    const auto outputFor = [&](const std::string& format) {
+        const auto suffix = suffixes.find(format);
+        const std::string path = single ? "target" : "target / name";
+        return suffix == suffixes.end() ? path : "(" + path + ").with_suffix(" + pythonString(suffix->second) + ")";
+    };
+    std::string output = outputFor(pipeline.format);
+    if (!pipeline.formatGuard.empty()) {  // a speculative CONVERT
+        output = "(" + output + " if deopt(" + pythonString(pipeline.formatGuard) + ") else " +
+                 outputFor(pipeline.formatBefore) + ")";
     }
     std::string code = "target = " + destination + "\nwritten = skipped = 0\nfor name in " + images + "_files:\n" +
                        "    img = read_image(" + images + "_folder / name)\n    if img is None:\n";
@@ -312,7 +356,7 @@ std::string OpenCVCodegen::saveLoop(const Instruction& in) {
     for (const std::string& step : pipeline.steps) {
         code += "    " + step + "\n";
     }
-    code += "    write_image(" + output + ", img, " + std::to_string(pipeline.quality) + ")\n    written += 1\n";
+    code += "    write_image(" + output + ", img, " + pipeline.quality + ")\n    written += 1\n";
     code += "outputs.append({\"" + std::string(single ? "file" : "folder") + "\": " + pythonString(in.text) +
             ", \"images\": written, \"skipped\": skipped})\n";
     code += "print(\"Saved\", written, \"image(s) to\", target, f\"({skipped} skipped)\" if skipped else \"\")\n";

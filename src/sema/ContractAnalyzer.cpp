@@ -38,7 +38,8 @@ ContractAnalyzer::ContractAnalyzer(Diagnostics& diagnostics, AnalysisResult& res
 
 void ContractAnalyzer::proven(const ExpectStmt& node, const std::string& contract, const std::string& reason,
                               const Target* runtimeTarget, const std::vector<std::string>& valueTables) {
-    result_.contracts.push_back({node.location.line, contract, Verdict::Proven, reason, !valueTables.empty()});
+    result_.contracts.push_back(
+        {node.location.line, contract, Verdict::Proven, reason, !valueTables.empty(), runtimeTarget != nullptr});
     result_.log.push_back("line " + std::to_string(node.location.line) + ": EXPECT " + contract + ": PROVEN, " + reason);
     if (runtimeTarget) {
         result_.noEffect[{&node, targetKey(*runtimeTarget)}] = "contract proven at compile time: " + reason;

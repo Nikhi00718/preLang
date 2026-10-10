@@ -84,17 +84,95 @@ def refuse(path, problem, needed_by):
     if (images) {
         out << OpenCVCodegen::helpers(letterbox, grayscale);
     }
-    out << "outputs = []\n\n";
+    out << deoptimization(program) << "outputs = []\n\n";
 
     PandasCodegen pandas(outputFolder_, certificate_);
     OpenCVCodegen opencv(outputFolder_, certificate_);
     for (const Instruction& instruction : program.code) {
-        out << "# line " << instruction.line << ": " << instructionText(instruction) << '\n'
-            << (isImageInstruction(instruction) ? opencv.code(instruction, program) : pandas.code(instruction, program))
-            << '\n';
+        out << "# line " << instruction.line << ": " << instructionText(instruction);
+        if (!instruction.speculative) {
+            out << '\n'
+                << (isImageInstruction(instruction) ? opencv.code(instruction, program)
+                                                    : pandas.code(instruction, program))
+                << '\n';
+            continue;
+        }
+        // Removed speculatively: it runs only for an admitted input that breaks its
+        // item certificate. One that every admitted input keeps is not written at all.
+        const ItemCertificate* item = certificate_.item(instruction.proofKey);
+        if (!item || item->empty()) {
+            out << "  (removed: proven for every admitted input)\n\n";
+            continue;
+        }
+        out << "  (removed unless deoptimized)\n";
+        if (isImageInstruction(instruction)) {
+            out << opencv.code(instruction, program, instruction.proofKey) << '\n';
+            continue;
+        }
+        std::istringstream lines(pandas.code(instruction, program));
+        out << "if deopt(" << pythonString(instruction.proofKey) << "):\n";
+        for (std::string line; std::getline(lines, line);) {
+            out << "    " << line << '\n';
+        }
+        out << '\n';
     }
     out << manifestCode;
     return out.str();
+}
+
+// The item certificates of the speculatively removed instructions and deopt(),
+// which decides once per instruction whether a new input needs it after all.
+std::string ExecutionPlanner::deoptimization(const IRProgram& program) const {
+    std::string items;
+    for (const ItemCertificate& item : certificate_.items) {
+        const bool used = std::any_of(program.code.begin(), program.code.end(), [&](const Instruction& in) {
+            return in.speculative && in.proofKey == item.key;
+        });
+        if (item.empty() || !used) {
+            continue;
+        }
+        std::string tables, images;
+        for (const TableCertificate& table : item.tables) {
+            tables += (tables.empty() ? "" : ", ") + pythonString(table.key) + ": " + PandasCodegen::columnsDict(table);
+        }
+        for (const ImageCertificate& image : item.images) {
+            images += (images.empty() ? "" : ", ") + pythonString(image.dataset) + ": " + OpenCVCodegen::imageDict(image);
+        }
+        items += "    " + pythonString(item.key) + ": {\"description\": " + pythonString(item.description) +
+                 ",\n        \"tables\": {" + tables + "},\n        \"images\": {" + images + "}},\n";
+    }
+    return "# Speculatively removed checks and operations, with the facts each needs beyond\n"
+           "# admission (its item certificate). An admitted input that breaks them runs them after all.\n"
+           "ITEMS = {\n" + items + "}\n" + R"(ITEM_COLUMNS = {}
+for _item in ITEMS.values():
+    for _table, _columns in _item["tables"].items():
+        ITEM_COLUMNS.setdefault(_table, set()).update(_columns)
+input_facts = {}  # new table input -> facts of the columns ITEMS is about
+image_facts = {}  # new image folder -> facts of its headers
+deoptimized = []  # what ran after all, and why
+deopt_cache = {}
+
+
+def deopt(key):
+    """True if an admitted input other than the compiled one breaks the item
+    certificate of this removed check or operation, which then runs after all.
+    Every other removal stays justified (see the data certificate)."""
+    if key not in deopt_cache:
+        item, problem = ITEMS[key], ""
+        for table, certificate in item["tables"].items():
+            if not same_input.get(table, True) and not problem:
+                problem = table_problem(input_facts[table], certificate)
+        for name, certificate in item["images"].items():
+            if not same_input.get(name, True) and not problem:
+                problem = image_problem(image_facts[name], certificate)
+        deopt_cache[key] = bool(problem)
+        if problem:
+            deoptimized.append(f"{item['description']}: {problem}")
+            print(f"Deoptimized {item['description']}: {problem}")
+    return deopt_cache[key]
+
+
+)";
 }
 
 std::vector<std::string> ExecutionPlanner::imagePasses(const IRProgram& program) {
@@ -102,6 +180,7 @@ std::vector<std::string> ExecutionPlanner::imagePasses(const IRProgram& program)
     std::map<std::string, std::string> format;
     std::vector<std::string> passes;
     for (const Instruction& in : program.code) {
+        const std::string mark = in.speculative ? " (if deoptimized)" : "";
         switch (in.op) {
             case Opcode::LoadImages:
                 steps[in.dataset].clear();
@@ -109,19 +188,20 @@ std::vector<std::string> ExecutionPlanner::imagePasses(const IRProgram& program)
                 break;
             case Opcode::Resize:
                 steps[in.dataset].push_back("RESIZE " + std::to_string(in.numbers[0]) + "x" +
-                                            std::to_string(in.numbers[1]) + (in.numbers[2] ? " KEEP_ASPECT" : ""));
+                                            std::to_string(in.numbers[1]) + (in.numbers[2] ? " KEEP_ASPECT" : "") +
+                                            mark);
                 break;
             case Opcode::Grayscale:
-                steps[in.dataset].push_back("GRAYSCALE");
+                steps[in.dataset].push_back("GRAYSCALE" + mark);
                 break;
             case Opcode::NormalizeImages:
-                steps[in.dataset].push_back("NORMALIZE " + in.values[0].value + ".." + in.values[1].value);
+                steps[in.dataset].push_back("NORMALIZE " + in.values[0].value + ".." + in.values[1].value + mark);
                 break;
             case Opcode::RemoveCorrupt:
                 steps[in.dataset].push_back("skip broken files");
                 break;
             case Opcode::Convert:
-                format[in.dataset] = in.text;
+                format[in.dataset] = in.text + mark;
                 break;
             case Opcode::Compress:
                 format[in.dataset] += " quality " + std::to_string(in.numbers[0]);

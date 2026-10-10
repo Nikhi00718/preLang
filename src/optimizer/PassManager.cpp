@@ -9,7 +9,7 @@
 
 PassManager::PassManager(OptimizerOptions options) : options_(options) {
     if (options_.enabled) {
-        passes_.push_back(std::make_unique<RedundantOpPass>(options_.approximate));
+        passes_.push_back(std::make_unique<RedundantOpPass>(options_.approximate, options_.speculate));
         passes_.push_back(std::make_unique<DeadOpPass>());
         passes_.push_back(std::make_unique<ColumnPruningPass>());
     }
@@ -21,7 +21,10 @@ OptimizationReport PassManager::run(IRProgram& program) {
     for (const std::unique_ptr<Pass>& pass : passes_) {
         pass->run(program, report);
     }
-    report.instructionsAfter = static_cast<int>(program.code.size());
+    report.instructionsAfter = 0;  // the instructions that run while no input breaks a certificate
+    for (const Instruction& instruction : program.code) {
+        report.instructionsAfter += !instruction.speculative;
+    }
     return report;
 }
 

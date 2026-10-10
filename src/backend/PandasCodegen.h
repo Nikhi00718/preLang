@@ -28,6 +28,9 @@ public:
     // For a CHECK that runs only when an input changed: the Python condition
     // "one of its tables is not the compiled file".
     static std::string inputChanged(const Instruction& instruction);
+    // The facts of one table certificate as a Python dict:
+    // {"marks": {"type": "INTEGER", "max": 100, "max_for": "line 5: ..."}, ...}
+    static std::string columnsDict(const TableCertificate& table);
 
 private:
     std::filesystem::path outputFolder_;

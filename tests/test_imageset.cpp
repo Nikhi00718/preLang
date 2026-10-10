@@ -96,9 +96,11 @@ const Diagnostic* reported(const Compiled& c, Phase phase, const std::string& te
     return nullptr;
 }
 
+// Instructions that run for the compiled input; speculatively removed ones run only if deoptimized.
 int countOf(const IRProgram& ir, Opcode op) {
-    return static_cast<int>(std::count_if(ir.code.begin(), ir.code.end(),
-                                          [op](const Instruction& instruction) { return instruction.op == op; }));
+    return static_cast<int>(std::count_if(ir.code.begin(), ir.code.end(), [op](const Instruction& instruction) {
+        return instruction.op == op && !instruction.speculative;
+    }));
 }
 
 const ImageShape* shape(const Compiled& c, const std::string& path) {

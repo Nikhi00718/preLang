@@ -27,6 +27,13 @@ inline std::string targetKey(const Target& target) {
     return target.dataset + "." + target.table + "." + target.column;
 }
 
+// A stable name for one no-effect fact (statement, target), the same in every run of
+// the analysis: "line:column:dataset.table.column". The IR, the certificate and the
+// generated program use it to refer to one removed check or operation.
+inline std::string proofKey(const Stmt& statement, const std::string& target) {
+    return std::to_string(statement.location.line) + ":" + std::to_string(statement.location.column) + ":" + target;
+}
+
 enum class Verdict { Proven, Violated, Deferred };
 
 struct ContractRecord {
@@ -36,6 +43,8 @@ struct ContractRecord {
     std::string reason;
     bool fromValues = false;  // proven by reading the values (UNIQUE, REFERENCES, MATCH_RATE),
                               // so the proof holds for those exact files only
+    bool runtimeCheck = false;  // a run-time check exists for it (proven: the check was removed);
+                                // type and image contracts have none
 };
 
 // Everything semantic analysis hands to the later phases.

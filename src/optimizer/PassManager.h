@@ -24,6 +24,8 @@ public:
 struct OptimizerOptions {
     bool enabled = true;       // --O0 turns every pass off
     bool approximate = false;  // --approx also applies rewrites that change pixels slightly
+    bool speculate = true;     // keep proven-useless instructions, guarded, for deoptimization;
+                               // --no-deopt removes them outright, as earlier versions did
 };
 
 // Runs the passes in order. Exact passes never change the program's output;

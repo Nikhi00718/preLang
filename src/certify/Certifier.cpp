@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
+#include <optional>
 #include <set>
 #include <utility>
 
@@ -43,6 +44,80 @@ int depthOf(const ImageInfo& image) {
     return image.bitDepth > 8 ? 16 : 8;
 }
 
+// "students.marks" for the target key "students..marks", "company.staff.age" for "company.staff.age"
+std::string targetName(const std::string& key) {
+    const size_t first = key.find('.');
+    const size_t last = key.rfind('.');
+    if (first == std::string::npos || first == last) {
+        return key;
+    }
+    const std::string table = key.substr(first + 1, last - first - 1);
+    return key.substr(0, first) + (table.empty() ? "" : "." + table) + key.substr(last);
+}
+
+// The value facts of `item` that `admission` does not already require; nullopt if none.
+std::optional<ColumnFacts> beyond(const ColumnFacts& item, const ColumnFacts* admission) {
+    ColumnFacts facts;
+    facts.name = item.name;
+    facts.read = item.read;
+    facts.type = item.type;
+    facts.typeFixed = false;  // type and presence are checked on admission
+    facts.required = false;
+    bool any = false;
+    if (item.notNull && !(admission && admission->notNull)) {
+        facts.notNull = true;
+        facts.notNullFor = item.notNullFor;
+        any = true;
+    }
+    if (!std::isinf(item.min) &&
+        (!admission || item.min > admission->min ||
+         (item.min == admission->min && item.minStrict && !admission->minStrict))) {
+        facts.min = item.min;
+        facts.minStrict = item.minStrict;
+        facts.minFor = item.minFor;
+        any = true;
+    }
+    if (!std::isinf(item.max) &&
+        (!admission || item.max < admission->max ||
+         (item.max == admission->max && item.maxStrict && !admission->maxStrict))) {
+        facts.max = item.max;
+        facts.maxStrict = item.maxStrict;
+        facts.maxFor = item.maxFor;
+        any = true;
+    }
+    return any ? std::optional<ColumnFacts>(facts) : std::nullopt;
+}
+
+// True if the image certificate `item` admits less than `admission` in some fact.
+bool narrower(const ImageCertificate& item, const ImageCertificate& admission) {
+    if (item.fixed && !admission.fixed) {
+        return true;
+    }
+    if (item.fixed || admission.fixed) {
+        return false;
+    }
+    if (admission.brokenAllowed && !item.brokenAllowed) {
+        return true;
+    }
+    for (const ImageGroupFacts& group : item.groups) {
+        const auto other = std::find_if(admission.groups.begin(), admission.groups.end(),
+                                        [&](const ImageGroupFacts& g) { return g.extension == group.extension; });
+        if (other == admission.groups.end()) {
+            continue;
+        }
+        for (int channels : other->channels) {
+            if (std::find(group.channels.begin(), group.channels.end(), channels) == group.channels.end()) {
+                return true;
+            }
+        }
+        if (group.minWidth > other->minWidth || group.maxWidth < other->maxWidth ||
+            group.minHeight > other->minHeight || group.maxHeight < other->maxHeight) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 std::string imageExtension(const std::string& path) {
@@ -71,6 +146,15 @@ const ImageCertificate* Certificate::image(const std::string& dataset) const {
     return nullptr;
 }
 
+const ItemCertificate* Certificate::item(const std::string& key) const {
+    for (const ItemCertificate& certificate : items) {
+        if (certificate.key == key) {
+            return &certificate;
+        }
+    }
+    return nullptr;
+}
+
 Certifier::Certifier(const Program& program, SchemaProvider& schemas, std::filesystem::path baseFolder)
     : program_(program), schemas_(schemas), baseFolder_(std::move(baseFolder)) {}
 
@@ -93,20 +177,30 @@ Certifier::Proofs Certifier::analyse() {
 Certifier::Proofs Certifier::proofsOf(const AnalysisResult& result, const std::string& error) {
     Proofs proofs;
     proofs.error = error;
+    // Contracts without a run-time check (column types, image contracts): if one is
+    // lost, no code of the generated program can stand in for the proof.
     for (const ContractRecord& contract : result.contracts) {
-        if (contract.verdict == Verdict::Proven && !contract.fromValues) {
+        if (contract.verdict == Verdict::Proven && !contract.fromValues && !contract.runtimeCheck) {
             proofs.items["contract " + std::to_string(contract.line) + " " + contract.contract] =
                 "line " + std::to_string(contract.line) + ": EXPECT " + contract.contract;
         }
     }
-    // Removed operations. The removed check of a proven contract is already
-    // covered by the contract itself.
+    // Removed checks and operations, keyed like the IR instructions they remove.
     for (const auto& [key, reason] : result.noEffect) {
-        if (!dynamic_cast<const ExpectStmt*>(key.first)) {
-            const std::string where = std::to_string(reinterpret_cast<std::uintptr_t>(key.first));
-            proofs.items["removed " + where + " " + key.second] =
-                "line " + std::to_string(key.first->location.line) + ": removed because " + reason;
+        if (result.valueProofs.count(key) != 0) {
+            continue;  // proven from the values: checked again whenever an input changed
         }
+        const int line = key.first->location.line;
+        std::string description = "line " + std::to_string(line) + ": removed because " + reason;
+        if (dynamic_cast<const ExpectStmt*>(key.first)) {
+            const std::string name = targetName(key.second);
+            for (const ContractRecord& contract : result.contracts) {
+                if (contract.line == line && contract.contract.rfind(name + " ", 0) == 0) {
+                    description = "line " + std::to_string(line) + ": EXPECT " + contract.contract;
+                }
+            }
+        }
+        proofs.items["removed " + proofKey(*key.first, key.second)] = description;
     }
     return proofs;
 }
@@ -160,19 +254,113 @@ Certificate Certifier::certify(const IRProgram& optimized, const AnalysisResult&
     const Proofs compiled = proofsOf(analysis, "");
     if (!lost(base, compiled).empty() || !lost(compiled, base).empty()) {
         certificate.exactOnly = true;
-    } else {
-        for (const Instruction& in : optimized.code) {
-            if (in.op == Opcode::Load) {
-                certifyTable(in, optimized, base, constants, certificate);
-            } else if (in.op == Opcode::LoadImages) {
-                certifyImages(in.dataset, optimized.images.at(in.dataset), base, imageConstants(), certificate);
-            }
+        certificate.analysisRuns = runs_;
+        schemas_.setOverrides({});
+        schemas_.setImageOverrides({});
+        return certificate;
+    }
+    for (const ContractRecord& contract : analysis.contracts) {
+        if (contract.fromValues) {
+            certificate.recheckedIfChanged.push_back("line " + std::to_string(contract.line) + ": EXPECT " +
+                                                     contract.contract);
         }
-        for (const ContractRecord& contract : analysis.contracts) {
-            if (contract.fromValues) {
-                certificate.recheckedIfChanged.push_back("line " + std::to_string(contract.line) + ": EXPECT " +
-                                                         contract.contract);
+    }
+
+    // 1. The full certificate: every proof and every removed operation.
+    criterion_ = [&base](const Proofs& run) { return lost(base, run); };
+    for (const Instruction& in : optimized.code) {
+        if (in.op == Opcode::Load) {
+            certificate.fullTables.push_back(certifyTable(in, optimized, constants));
+        } else if (in.op == Opcode::LoadImages) {
+            certificate.fullImages.push_back(certifyImages(in.dataset, optimized.images.at(in.dataset), nullptr));
+        }
+    }
+
+    // The speculative removals, by proofKey (the condition of a FILTER shares its key).
+    std::map<std::string, std::string> speculative;
+    for (const Instruction& in : optimized.code) {
+        const auto found = base.items.find("removed " + in.proofKey);
+        if (in.speculative && in.result == 0 && found != base.items.end()) {
+            speculative[in.proofKey] = found->second;
+        }
+    }
+    if (speculative.empty()) {
+        certificate.tables = certificate.fullTables;
+        certificate.images = certificate.fullImages;
+    } else {
+        const std::map<std::string, TableSchema> fullFacts = facts_;
+        const std::map<std::string, ImageSetSchema> fullImageFacts = imageFacts_;
+
+        // 2. Admission: no compile error, and every proof that no code of the generated
+        // program can stand in for: contracts without a run-time check, and removals
+        // that are not speculative (e.g. a check whose column is not loaded).
+        criterion_ = [&base, &speculative](const Proofs& run) {
+            std::vector<std::string> problems;
+            if (!run.error.empty()) {
+                problems.push_back(run.error + " (compile error)");
             }
+            for (const auto& [key, description] : base.items) {
+                const bool deoptimizable = key.rfind("removed ", 0) == 0 && speculative.count(key.substr(8)) != 0;
+                if (!deoptimizable && run.items.count(key) == 0) {
+                    problems.push_back(description);
+                }
+            }
+            return problems;
+        };
+        for (const TableCertificate& full : certificate.fullTables) {
+            certificate.tables.push_back(widenTableValues(full, constants));
+        }
+        for (const ImageCertificate& full : certificate.fullImages) {
+            certificate.images.push_back(certifyImages(full.dataset, optimized.images.at(full.dataset), &full));
+        }
+
+        // 3. One item certificate per removal, each found from the full certificate.
+        for (const auto& [key, description] : speculative) {
+            facts_ = fullFacts;
+            imageFacts_ = fullImageFacts;
+            const std::string itemKey = "removed " + key;
+            const std::string what = description;
+            criterion_ = [itemKey, what](const Proofs& run) {
+                std::vector<std::string> problems;
+                if (!run.error.empty()) {
+                    problems.push_back(run.error + " (compile error)");
+                }
+                if (run.items.count(itemKey) == 0) {
+                    problems.push_back(what);
+                }
+                return problems;
+            };
+            ItemCertificate item;
+            item.key = key;
+            item.description = description;
+            for (const TableCertificate& full : certificate.fullTables) {
+                const TableCertificate found = widenTableValues(full, constants);
+                const TableCertificate* admission = certificate.table(full.key);
+                TableCertificate extra;
+                extra.key = found.key;
+                extra.file = found.file;
+                for (const ColumnFacts& column : found.columns) {
+                    const ColumnFacts* admitted = nullptr;
+                    for (const ColumnFacts& other : admission->columns) {
+                        if (other.name == column.name) {
+                            admitted = &other;
+                        }
+                    }
+                    if (const std::optional<ColumnFacts> facts = beyond(column, admitted)) {
+                        extra.columns.push_back(*facts);
+                    }
+                }
+                if (!extra.columns.empty()) {
+                    item.tables.push_back(extra);
+                }
+            }
+            for (const ImageCertificate& full : certificate.fullImages) {
+                const ImageCertificate found = certifyImages(full.dataset, optimized.images.at(full.dataset), &full);
+                if (narrower(found, *certificate.image(full.dataset))) {
+                    item.images.push_back(found);
+                }
+            }
+            certificate.items.push_back(item);
         }
     }
     certificate.analysisRuns = runs_;
@@ -183,13 +371,95 @@ Certificate Certifier::certify(const IRProgram& optimized, const AnalysisResult&
 
 // ---------- Tables ----------
 
-void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized, const Proofs& base,
-                             const std::vector<double>& constants, Certificate& certificate) {
+// Widens a column's missing-value and bound facts, in facts_, as far as criterion_
+// allows. `column` must hold the current facts and gets the widened ones.
+void Certifier::widenValues(ColumnInfo& info, ColumnFacts& column, const std::vector<double>& constants) {
+    // Missing values: allow them, and keep "no missing values" only if the criterion needs it.
+    if (info.missingCount == 0 && info.missingKnown) {
+        info.missingKnown = false;
+        column.notNullFor = broken();
+        if (!column.notNullFor.empty()) {
+            info.missingKnown = true;
+        }
+    }
+    column.notNull = info.missingCount == 0 && info.missingKnown;
+    if (!column.notNull) {
+        column.notNullFor.clear();
+    }
+
+    // A bound is widened to the loosest value that keeps the proofs: first no
+    // bound at all, then each program constant from the loosest one on, as a
+    // closed bound (>= k) and then as an open one (> k, for FILTER c > k). The
+    // analysis compares ranges only with these constants, so no other value
+    // could do better. An open bound is given to the analysis as the next
+    // double past k. `neededBy` gets what dropping the bound breaks.
+    struct Candidate {
+        double value;  // what the analysis is given
+        double shown;  // the constant
+        bool strict;
+    };
+    const auto widen = [&](double& bound, const std::vector<Candidate>& looser, double& shown, bool& strict,
+                           std::vector<std::string>& neededBy) {
+        const double original = bound;
+        for (size_t k = 0; k < looser.size(); ++k) {
+            bound = looser[k].value;
+            const std::vector<std::string> problems = broken();
+            if (k == 0) {
+                neededBy = problems;
+            }
+            if (problems.empty()) {
+                shown = looser[k].shown;
+                strict = looser[k].strict;
+                return;
+            }
+        }
+        bound = original;  // `shown` and `strict` keep the current bound
+    };
+    if (isNumeric(info.type) && info.hasRange) {
+        const double infinity = std::numeric_limits<double>::infinity();
+        if (!std::isinf(info.min)) {
+            std::vector<Candidate> lower = {{-infinity, -infinity, false}};
+            for (double constant : constants) {  // constants are sorted
+                if (constant < info.min) {
+                    lower.push_back({constant, constant, false});
+                    if (std::nextafter(constant, infinity) <= info.min) {
+                        lower.push_back({std::nextafter(constant, infinity), constant, true});
+                    }
+                }
+            }
+            widen(info.min, lower, column.min, column.minStrict, column.minFor);
+        }
+        if (!std::isinf(info.max)) {
+            std::vector<Candidate> upper = {{infinity, infinity, false}};
+            for (auto it = constants.rbegin(); it != constants.rend(); ++it) {
+                if (*it > info.max) {
+                    upper.push_back({*it, *it, false});
+                    if (std::nextafter(*it, -infinity) >= info.max) {
+                        upper.push_back({std::nextafter(*it, -infinity), *it, true});
+                    }
+                }
+            }
+            widen(info.max, upper, column.max, column.maxStrict, column.maxFor);
+        }
+    }
+    if (std::isinf(column.min)) {
+        column.minFor.clear();
+        column.minStrict = false;
+    }
+    if (std::isinf(column.max)) {
+        column.maxFor.clear();
+        column.maxStrict = false;
+    }
+}
+
+TableCertificate Certifier::certifyTable(const Instruction& load, const IRProgram& optimized,
+                                         const std::vector<double>& constants) {
     TableCertificate table;
     table.key = tableKey(load.dataset, load.table);
     const TableSchema& schema = optimized.tables.at(table.key);
     table.file = schema.file;
-    TableSchema& facts = facts_[SchemaProvider::overrideKey(schema.file, schema.name)];
+    overrideOf_[table.key] = SchemaProvider::overrideKey(schema.file, schema.name);
+    TableSchema& facts = facts_[overrideOf_[table.key]];
     // Every column of the file, not only the ones the optimized program reads:
     // a proof may depend on a column whose check was removed and which is then
     // not loaded at all (EXPECT t.id NOT_NULL, and id is never used again).
@@ -210,82 +480,17 @@ void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized
                 }
                 info.type = other;
                 info.hasRange = isNumeric(other) && original.hasRange;
-                addAll(column.typeFor, lost(base, analyse()));
+                addAll(column.typeFor, broken());
                 info = original;
             }
             column.typeFixed = !column.typeFor.empty();
         }
 
-        // Missing values: allow them, and keep "no missing values" only if a proof needs it.
-        if (info.missingCount == 0 && info.missingKnown) {
-            info.missingKnown = false;
-            column.notNullFor = lost(base, analyse());
-            if (!column.notNullFor.empty()) {
-                info.missingKnown = true;
-            }
-        }
-        column.notNull = info.missingCount == 0 && info.missingKnown;
-
-        // A bound is widened to the loosest value that keeps every proof: first
-        // no bound at all, then each program constant from the loosest one on,
-        // as a closed bound (>= k) and then as an open one (> k, for FILTER c > k).
-        // The analysis compares ranges only with these constants, so no other
-        // value could do better. An open bound is given to the analysis as the
-        // next double past k. `neededBy` gets what dropping the bound breaks.
-        struct Candidate {
-            double value;  // what the analysis is given
-            double shown;  // the constant
-            bool strict;
-        };
-        const auto widen = [&](double& bound, const std::vector<Candidate>& looser, double& shown, bool& strict,
-                               std::vector<std::string>& neededBy) {
-            const double original = bound;
-            for (size_t k = 0; k < looser.size(); ++k) {
-                bound = looser[k].value;
-                const std::vector<std::string> broken = lost(base, analyse());
-                if (k == 0) {
-                    neededBy = broken;
-                }
-                if (broken.empty()) {
-                    shown = looser[k].shown;
-                    strict = looser[k].strict;
-                    return;
-                }
-            }
-            bound = shown = original;
-        };
         if (isNumeric(info.type) && info.hasRange) {
-            const double infinity = std::numeric_limits<double>::infinity();
-            std::vector<Candidate> lower = {{-infinity, -infinity, false}};
-            std::vector<Candidate> upper = {{infinity, infinity, false}};
-            for (double constant : constants) {  // constants are sorted
-                if (constant < info.min) {
-                    lower.push_back({constant, constant, false});
-                    if (std::nextafter(constant, infinity) <= info.min) {
-                        lower.push_back({std::nextafter(constant, infinity), constant, true});
-                    }
-                }
-            }
-            for (auto it = constants.rbegin(); it != constants.rend(); ++it) {
-                if (*it > info.max) {
-                    upper.push_back({*it, *it, false});
-                    if (std::nextafter(*it, -infinity) >= info.max) {
-                        upper.push_back({std::nextafter(*it, -infinity), *it, true});
-                    }
-                }
-            }
-            widen(info.min, lower, column.min, column.minStrict, column.minFor);
-            widen(info.max, upper, column.max, column.maxStrict, column.maxFor);
-            if (std::isinf(column.min)) {
-                column.minFor.clear();
-            }
-            if (std::isinf(column.max)) {
-                column.maxFor.clear();
-            }
+            column.min = info.min;
+            column.max = info.max;
         }
-        if (!column.notNull) {
-            column.notNullFor.clear();
-        }
+        widenValues(info, column, constants);
         const bool needed = column.typeFixed || column.notNull || !std::isinf(column.min) || !std::isinf(column.max);
         if (column.read || needed) {
             table.columns.push_back(column);
@@ -321,7 +526,7 @@ void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized
                 facts.columns.push_back(info);
             }
         }
-        return lost(base, analyse());
+        return broken();
     };
     // Every column of the file is tested, also the ones without other facts: a
     // statement the optimizer removed can still name it (DROP t [c] before c is
@@ -358,7 +563,20 @@ void Certifier::certifyTable(const Instruction& load, const IRProgram& optimized
         found->requiredFor = neededBy;
     }
     facts.columns = all;  // later runs see every column again
-    certificate.tables.push_back(table);
+    return table;
+}
+
+TableCertificate Certifier::widenTableValues(const TableCertificate& start, const std::vector<double>& constants) {
+    TableCertificate table = start;
+    TableSchema& facts = facts_.at(overrideOf_.at(start.key));
+    for (ColumnFacts& column : table.columns) {
+        for (ColumnInfo& info : facts.columns) {
+            if (info.name == column.name) {
+                widenValues(info, column, constants);
+            }
+        }
+    }
+    return table;
 }
 
 // ---------- Image folders ----------
@@ -381,69 +599,72 @@ std::vector<int> Certifier::imageConstants() const {
     return sizes;
 }
 
-void Certifier::certifyImages(const std::string& dataset, const ImageSetSchema& schema, const Proofs& base,
-                              const std::vector<int>& sizes, Certificate& certificate) {
+ImageCertificate Certifier::certifyImages(const std::string& dataset, const ImageSetSchema& schema,
+                                          const ImageCertificate* start) {
+    const std::string key = SchemaProvider::imageKey(schema.root, schema.singleFile, schema.recursive);
+    if (start && start->fixed) {
+        return *start;  // the folder stays exactly as compiled: nothing to widen
+    }
     ImageCertificate image;
     image.dataset = dataset;
     image.root = schema.root;
-    const std::string key = SchemaProvider::imageKey(schema.root, schema.singleFile, schema.recursive);
     const auto keepFixed = [&](std::vector<std::string> reason) {
         image.fixed = true;
         image.fixedFor = std::move(reason);
         image.groups.clear();
         imageFacts_[key] = schema;
         imageFacts_[key].namesKnown = false;
-        certificate.images.push_back(image);
+        return image;
     };
-    if (schema.singleFile) {
-        keepFixed({"a single image file (LOAD_IMAGE) is not certified"});
-        return;
-    }
-
-    // The box of each extension, from the files.
-    std::map<std::string, ImageGroupFacts> groups;
-    std::map<std::string, std::set<int>> channels;
-    std::set<int> depths;
-    for (const ImageInfo& file : schema.images) {
-        if (file.corrupt) {
-            image.brokenAllowed = true;
-            continue;
-        }
-        const std::string extension = imageExtension(file.path);
-        ImageGroupFacts& group = groups[extension];
-        if (channels[extension].empty()) {
-            group.extension = extension;
-            group.minWidth = group.maxWidth = file.width;
-            group.minHeight = group.maxHeight = file.height;
-        }
-        group.minWidth = std::min(group.minWidth, file.width);
-        group.maxWidth = std::max(group.maxWidth, file.width);
-        group.minHeight = std::min(group.minHeight, file.height);
-        group.maxHeight = std::max(group.maxHeight, file.height);
-        channels[extension].insert(file.channels);
-        depths.insert(depthOf(file));
-    }
-    if (groups.empty()) {
-        keepFixed({"no file of the folder can be read"});
-        return;
-    }
-    image.depths.assign(depths.begin(), depths.end());
-    for (auto& [extension, group] : groups) {
-        group.channels.assign(channels[extension].begin(), channels[extension].end());
-        image.groups.push_back(group);
-    }
-
     const auto run = [&] {
         imageFacts_[key] = cornerImages(image, schema);
-        return lost(base, analyse());
+        return broken();
     };
-    // The box itself must keep the proofs: it also stands for folders that mix
-    // the properties of the compiled files differently.
-    const std::vector<std::string> boxLost = run();
-    if (!boxLost.empty()) {
-        keepFixed(boxLost);
-        return;
+    if (start) {
+        image = *start;
+    } else {
+        if (schema.singleFile) {
+            return keepFixed({"a single image file (LOAD_IMAGE) is not certified"});
+        }
+        // The box of each extension, from the files.
+        std::map<std::string, ImageGroupFacts> groups;
+        std::map<std::string, std::set<int>> channels;
+        std::set<int> depths;
+        for (const ImageInfo& file : schema.images) {
+            if (file.corrupt) {
+                image.brokenAllowed = true;
+                continue;
+            }
+            const std::string extension = imageExtension(file.path);
+            ImageGroupFacts& group = groups[extension];
+            if (channels[extension].empty()) {
+                group.extension = extension;
+                group.minWidth = group.maxWidth = file.width;
+                group.minHeight = group.maxHeight = file.height;
+            }
+            group.minWidth = std::min(group.minWidth, file.width);
+            group.maxWidth = std::max(group.maxWidth, file.width);
+            group.minHeight = std::min(group.minHeight, file.height);
+            group.maxHeight = std::max(group.maxHeight, file.height);
+            channels[extension].insert(file.channels);
+            depths.insert(depthOf(file));
+        }
+        if (groups.empty()) {
+            return keepFixed({"no file of the folder can be read"});
+        }
+        image.depths.assign(depths.begin(), depths.end());
+        for (auto& [extension, group] : groups) {
+            group.channels.assign(channels[extension].begin(), channels[extension].end());
+            image.groups.push_back(group);
+        }
+        // The box itself must keep the proofs: it also stands for folders that mix
+        // the properties of the compiled files differently.
+        const std::vector<std::string> boxLost = run();
+        if (!boxLost.empty()) {
+            return keepFixed(boxLost);
+        }
     }
+    const std::vector<int> sizes = imageConstants();
 
     if (!image.brokenAllowed) {
         image.brokenAllowed = true;
@@ -457,11 +678,11 @@ void Certifier::certifyImages(const std::string& dataset, const ImageSetSchema& 
                 continue;
             }
             allowed.push_back(count);
-            const std::vector<std::string> broken = run();
-            if (!broken.empty()) {
+            const std::vector<std::string> problems = run();
+            if (!problems.empty()) {
                 image.groups[g].channels.erase(std::find(image.groups[g].channels.begin(),
                                                          image.groups[g].channels.end(), count));
-                addAll(image.groups[g].channelsFor, broken);
+                addAll(image.groups[g].channelsFor, problems);
             }
         }
         std::sort(image.groups[g].channels.begin(), image.groups[g].channels.end());
@@ -470,6 +691,9 @@ void Certifier::certifyImages(const std::string& dataset, const ImageSetSchema& 
         const auto widen = [&](int ImageGroupFacts::*bound, int loosest, bool lower,
                                std::vector<std::string> ImageGroupFacts::*neededBy) {
             const int original = image.groups[g].*bound;
+            if (original == loosest) {
+                return;
+            }
             std::vector<int> looser = {loosest};
             for (int size : sizes) {
                 if (lower ? size < original : size > original) {
@@ -481,11 +705,11 @@ void Certifier::certifyImages(const std::string& dataset, const ImageSetSchema& 
             }
             for (size_t k = 0; k < looser.size(); ++k) {
                 image.groups[g].*bound = looser[k];
-                const std::vector<std::string> broken = run();
+                const std::vector<std::string> problems = run();
                 if (k == 0) {
-                    image.groups[g].*neededBy = broken;
+                    image.groups[g].*neededBy = problems;
                 }
-                if (broken.empty()) {
+                if (problems.empty()) {
                     if (k == 0) {
                         (image.groups[g].*neededBy).clear();
                     }
@@ -500,7 +724,7 @@ void Certifier::certifyImages(const std::string& dataset, const ImageSetSchema& 
         widen(&ImageGroupFacts::maxHeight, 65535, false, &ImageGroupFacts::maxHeightFor);
     }
     imageFacts_[key] = cornerImages(image, schema);
-    certificate.images.push_back(image);
+    return image;
 }
 
 ImageSetSchema cornerImages(const ImageCertificate& certificate, const ImageSetSchema& original) {
@@ -645,14 +869,10 @@ std::vector<std::string> admissionProblems(const ImageCertificate& certificate, 
     return problems;
 }
 
-void printCertificate(std::ostream& out, const Certificate& certificate) {
-    if (certificate.exactOnly) {
-        out << "The proofs depend on the exact values of the input files, so the generated program\n"
-            << "accepts only the files it was compiled with.\n";
-        return;
-    }
-    out << "The compiled program stays correct for any input with these facts\n"
-        << "(found by analysing the program " << certificate.analysisRuns << " more times with weaker facts):\n";
+
+namespace {
+
+void printTables(std::ostream& out, const std::vector<TableCertificate>& tables, bool items) {
     const auto factLines = [&](size_t indent, const std::vector<std::pair<std::string, std::string>>& facts) {
         for (size_t i = 0; i < facts.size(); ++i) {
             if (i > 0) {
@@ -661,8 +881,9 @@ void printCertificate(std::ostream& out, const Certificate& certificate) {
             out << std::left << std::setw(20) << facts[i].first << "<- " << facts[i].second << '\n';
         }
     };
-    for (const TableCertificate& table : certificate.tables) {
-        out << '\n' << table.key << "  (compiled with " << table.file << ")\n";
+    const std::string pad = items ? "    " : "  ";
+    for (const TableCertificate& table : tables) {
+        out << (items ? "  " : "\n") << table.key << "  (compiled with " << table.file << ")\n";
         size_t width = 8;
         for (const ColumnFacts& column : table.columns) {
             width = std::max(width, column.name.size() + 2);
@@ -678,32 +899,40 @@ void printCertificate(std::ostream& out, const Certificate& certificate) {
             if (!std::isinf(column.max)) {
                 facts.emplace_back((column.maxStrict ? "< " : "<= ") + formatNumber(column.max), join(column.maxFor));
             }
-            if (!column.typeFixed) {
-                out << "  " << std::left << std::setw(static_cast<int>(width)) << column.name << std::setw(9)
-                    << "any type";
-            } else {
-                out << "  " << std::left << std::setw(static_cast<int>(width)) << column.name << std::setw(9)
-                    << columnTypeName(column.type);
+            out << pad << std::left << std::setw(static_cast<int>(width)) << column.name;
+            if (!items) {
+                out << std::setw(9) << (column.typeFixed ? columnTypeName(column.type) : "any type");
             }
-            if (!column.read) {
+            if (!items && !column.read) {
                 facts.insert(facts.begin(), {"(not read)", "loaded only to check the facts below"});
             }
-            if (!column.required) {
+            if (!items && !column.required) {
                 facts.emplace_back("may be missing", "only carried to the output");
-            } else if (!column.read && !column.requiredFor.empty()) {
+            } else if (!items && !column.read && !column.requiredFor.empty()) {
                 facts.emplace_back("must exist", join(column.requiredFor));
             }
-            if (!column.read && column.typeFixed && !column.typeFor.empty()) {
+            if (!items && !column.read && column.typeFixed && !column.typeFor.empty()) {
                 facts.emplace_back("its type", join(column.typeFor));
             }
             if (facts.empty()) {
                 out << "(any values)\n";
             }
-            factLines(width + 11, facts);
+            factLines(width + pad.size() + (items ? 0 : 9), facts);
         }
     }
-    for (const ImageCertificate& image : certificate.images) {
-        out << '\n' << image.dataset << "  (compiled with " << image.root << ")\n";
+}
+
+void printImages(std::ostream& out, const std::vector<ImageCertificate>& images, bool items) {
+    const auto factLines = [&](size_t indent, const std::vector<std::pair<std::string, std::string>>& facts) {
+        for (size_t i = 0; i < facts.size(); ++i) {
+            if (i > 0) {
+                out << std::string(indent, ' ');
+            }
+            out << std::left << std::setw(20) << facts[i].first << "<- " << facts[i].second << '\n';
+        }
+    };
+    for (const ImageCertificate& image : images) {
+        out << (items ? "  " : "\n") << image.dataset << "  (compiled with " << image.root << ")\n";
         if (image.fixed) {
             out << "  must stay exactly as compiled <- " << join(image.fixedFor) << '\n';
             continue;
@@ -728,6 +957,31 @@ void printCertificate(std::ostream& out, const Certificate& certificate) {
             }
             out << "  ." << std::left << std::setw(6) << group.extension;
             factLines(9, facts);
+        }
+    }
+}
+
+}  // namespace
+
+void printCertificate(std::ostream& out, const Certificate& certificate) {
+    if (certificate.exactOnly) {
+        out << "The proofs depend on the exact values of the input files, so the generated program\n"
+            << "accepts only the files it was compiled with.\n";
+        return;
+    }
+    out << "The generated program admits any input with these facts (found by analysing the\n"
+        << "program " << certificate.analysisRuns << " more times with weaker facts); it refuses any other input:\n";
+    printTables(out, certificate.tables, false);
+    printImages(out, certificate.images, false);
+    if (!certificate.items.empty()) {
+        out << "\nSpeculatively removed, and run again for an admitted input that breaks these facts:\n";
+        for (const ItemCertificate& item : certificate.items) {
+            out << "\n" << item.description << "\n";
+            if (item.empty()) {
+                out << "  holds for every admitted input: removed\n";
+            }
+            printTables(out, item.tables, true);
+            printImages(out, item.images, true);
         }
     }
     if (!certificate.recheckedIfChanged.empty()) {

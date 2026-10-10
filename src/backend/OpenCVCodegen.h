@@ -19,17 +19,23 @@ public:
     OpenCVCodegen(std::filesystem::path outputFolder, const Certificate& certificate);
 
     // The Python statements for one image instruction (or a MATCH_RATE check).
-    std::string code(const Instruction& instruction, const IRProgram& program);
+    // `guard` is the proofKey of a speculatively removed operation: it then runs
+    // only if deopt(guard) says a new folder breaks its item certificate.
+    std::string code(const Instruction& instruction, const IRProgram& program, const std::string& guard = "");
 
     // Helper functions; only the ones the program needs are included.
     static std::string helpers(bool letterbox, bool grayscale);
+    // The facts of one image certificate as a Python dict, as admit_images reads it.
+    static std::string imageDict(const ImageCertificate& image);
 
 private:
     struct Pipeline {
         std::vector<std::string> steps;  // Python statements applied to `img`
         bool skipBroken = false;         // REMOVE_CORRUPT: skip files that fail to decode
         std::string format = "SOURCE";   // output format
-        int quality = 0;                 // JPG quality, 0 for the default
+        std::string formatGuard;         // a speculative CONVERT: format applies only if deopt(formatGuard)
+        std::string formatBefore;        // the format otherwise
+        std::string quality = "0";       // JPG quality, 0 for the default (a Python expression)
     };
 
     std::filesystem::path outputFolder_;

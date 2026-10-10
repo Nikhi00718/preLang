@@ -60,9 +60,11 @@ Compiled compile(const std::string& body, OptimizerOptions options = {true, fals
     return compiled;
 }
 
+// Instructions that run for the compiled input; speculatively removed ones run only if deoptimized.
 int countOf(const IRProgram& ir, Opcode op) {
-    return static_cast<int>(std::count_if(ir.code.begin(), ir.code.end(),
-                                          [op](const Instruction& instruction) { return instruction.op == op; }));
+    return static_cast<int>(std::count_if(ir.code.begin(), ir.code.end(), [op](const Instruction& instruction) {
+        return instruction.op == op && !instruction.speculative;
+    }));
 }
 
 std::vector<std::string> loadedColumns(const IRProgram& ir) {

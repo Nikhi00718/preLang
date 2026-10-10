@@ -74,6 +74,12 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
                 break;
 
             case Opcode::Check:
+                // A speculatively removed check does not keep its column loaded: if the
+                // column is pruned, the check is removed for good (see dropUnloadedChecks)
+                // and its proof becomes part of the admission certificate.
+                if (instruction.speculative) {
+                    break;
+                }
                 if (instruction.text == "MATCH_RATE") {  // reads the file-name column of the labels
                     live[instruction.columns[1]].insert(instruction.columns[2]);
                     break;
@@ -124,6 +130,24 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
     report.changes.insert(report.changes.end(), changes.rbegin(), changes.rend());
     removeMarked(program, remove);
     fitColumnLists(program, report);
+    dropUnloadedChecks(program, report);
+}
+
+// A speculatively removed CHECK of a column that is no longer loaded could not
+// run if deoptimized, so it is removed for good: a new input must then keep its
+// proof to be admitted at all.
+void ColumnPruningPass::dropUnloadedChecks(IRProgram& program, OptimizationReport& report) {
+    const std::vector<std::vector<std::string>> before = columnsBefore(program);
+    std::vector<bool> remove(program.code.size(), false);
+    for (size_t i = 0; i < program.code.size(); ++i) {
+        const Instruction& instruction = program.code[i];
+        if (instruction.op == Opcode::Check && instruction.speculative && !contains(before[i], instruction.column)) {
+            remove[i] = true;
+            report.changes.push_back("column pruning: " + describe(instruction) + " stays removed, '" +
+                                     instruction.column + "' is not loaded (its proof is required on admission)");
+        }
+    }
+    removeMarked(program, remove);
 }
 
 // After pruning, SELECT and DROP may name columns that are no longer loaded.
