@@ -23,6 +23,8 @@ public:
     void visit(const FilterStmt& node) override;
     void visit(const SelectStmt& node) override;
     void visit(const DropStmt& node) override;
+    void visit(const ParseDateStmt& node) override;
+    void visit(const DeriveStmt& node) override;
     void visit(const SaveStmt& node) override;
     void visit(const ExpectStmt& node) override;
     void visit(const ResizeStmt& node) override;

@@ -180,6 +180,22 @@ void IRBuilder::visit(const DropStmt&) {
     }
 }
 
+void IRBuilder::visit(const ParseDateStmt&) {
+    for (const Target& target : targets()) {
+        emit(make(Opcode::ParseDate, target));
+    }
+}
+
+void IRBuilder::visit(const DeriveStmt& node) {
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::Derive, target);
+        instruction.columns = valueColumns(*node.value);
+        instruction.text = valueText(*node.value);
+        instruction.value = node.value;
+        emit(std::move(instruction));
+    }
+}
+
 void IRBuilder::visit(const SaveStmt& node) {
     for (const Target& target : targets()) {
         if (node.kind == DataKind::Image || node.kind == DataKind::ImageSet) {
@@ -331,6 +347,10 @@ std::string instructionText(const Instruction& in) {
             return "DROP " + table + " " + listText(in.columns);
         case Opcode::Save:
             return "SAVE " + table + " -> \"" + in.text + "\"";
+        case Opcode::ParseDate:
+            return "PARSE_DATE " + target;
+        case Opcode::Derive:
+            return "DERIVE " + target + " = " + in.text;
         case Opcode::LoadImages:
             return "LOAD_IMAGES " + in.dataset + " <- \"" + in.text + "\"";
         case Opcode::Resize:

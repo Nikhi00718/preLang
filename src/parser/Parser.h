@@ -32,6 +32,8 @@ private:
     std::unique_ptr<Stmt> filterStatement();
     std::unique_ptr<Stmt> selectStatement();
     std::unique_ptr<Stmt> dropStatement();
+    std::unique_ptr<Stmt> parseDateStatement();
+    std::unique_ptr<Stmt> deriveStatement();
     std::unique_ptr<Stmt> saveStatement(DataKind kind);
     std::unique_ptr<Stmt> expectStatement();
     std::unique_ptr<Stmt> resizeStatement();
@@ -46,6 +48,12 @@ private:
     std::unique_ptr<Expr> andExpression();
     std::unique_ptr<Expr> notExpression();
     std::unique_ptr<Expr> primary();
+
+    // DERIVE values, from lowest to highest precedence
+    std::shared_ptr<const ValueExpr> sum();
+    std::shared_ptr<const ValueExpr> product();
+    std::shared_ptr<const ValueExpr> unary();
+    std::shared_ptr<const ValueExpr> operand();
 
     // Selectors
     Selector tableRef();

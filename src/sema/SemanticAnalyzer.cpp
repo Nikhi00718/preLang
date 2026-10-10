@@ -1,10 +1,12 @@
 #include "sema/SemanticAnalyzer.h"
 
 #include "ast/ASTPrinter.h"
+#include "common/Dates.h"
 #include "dataset/DatasetLinker.h"
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <utility>
 
 namespace {
@@ -104,6 +106,56 @@ TableState makeTable(TableSchema schema) {
     }
     table.schema = std::move(schema);
     return table;
+}
+
+// What DERIVE knows about a value: its type, whether it may be missing, its range.
+struct ValueFacts {
+    ColumnType type = ColumnType::Integer;
+    bool nullable = false;
+    Range range;
+};
+
+// Interval arithmetic. An infinite bound times 0, or a finite one over an
+// infinite one, is 0: the other end points then give the bound that matters.
+double times(double a, double b) { return a == 0 || b == 0 ? 0 : a * b; }
+double over(double a, double b) { return std::isinf(b) ? 0 : a / b; }
+
+Range combine(const std::string& op, const Range& a, const Range& b) {
+    if (op == "+") {
+        return {a.min + b.min, a.max + b.max};
+    }
+    if (op == "-") {
+        return {a.min - b.max, a.max - b.min};
+    }
+    const auto apply = [&](double x, double y) { return op == "*" ? times(x, y) : over(x, y); };
+    const double ends[] = {apply(a.min, b.min), apply(a.min, b.max), apply(a.max, b.min), apply(a.max, b.max)};
+    return {*std::min_element(std::begin(ends), std::end(ends)), *std::max_element(std::begin(ends), std::end(ends))};
+}
+
+// The range of a part of the dates in [dates.min, dates.max]. A part is narrower
+// than its full range only when both dates fall in the same year, month or day
+// (or week, for WEEKDAY), so a wider date range never gives a narrower part.
+Range datePartRange(const std::string& part, const Range& dates) {
+    const bool known = !std::isinf(dates.min) && !std::isinf(dates.max);
+    if (part == "YEAR") {
+        return {std::isinf(dates.min) ? dates.min : static_cast<double>(civilFromSeconds(dates.min).year),
+                std::isinf(dates.max) ? dates.max : static_cast<double>(civilFromSeconds(dates.max).year)};
+    }
+    const CivilTime a = civilFromSeconds(known ? dates.min : 0);
+    const CivilTime b = civilFromSeconds(known ? dates.max : 0);
+    const bool sameYear = known && a.year == b.year;
+    if (part == "MONTH") {
+        return sameYear ? Range{double(a.month), double(b.month)} : Range{1, 12};
+    }
+    if (part == "DAY") {
+        return sameYear && a.month == b.month ? Range{double(a.day), double(b.day)} : Range{1, 31};
+    }
+    if (part == "HOUR") {
+        return known && a.days == b.days ? Range{double(a.hour), double(b.hour)} : Range{0, 23};
+    }
+    // WEEKDAY
+    return known && b.days - a.days < 7 && a.weekday <= b.weekday ? Range{double(a.weekday), double(b.weekday)}
+                                                                   : Range{0, 6};
 }
 
 ImageState makeImageState(const ImageSetSchema& set) {
@@ -576,6 +628,159 @@ void SemanticAnalyzer::visit(const DropStmt& node) {
         diagnostics_.warning(Phase::Semantic, node.location, "DROP has no effect: no table has these columns");
     }
     log(node, "DROP " + (removed.empty() ? "has no effect" : "removes " + join(removed)));
+}
+
+// PARSE_DATE reads the dates in a STRING column. Whether every value is a date,
+// and the first and last date, are facts of the file: they decide the statement
+// before any data is processed, and a data certificate can require them.
+void SemanticAnalyzer::visit(const ParseDateStmt& node) {
+    std::optional<ColumnResolution> resolution = resolver_.columns(node.target, "PARSE_DATE");
+    if (!resolution) {
+        return;
+    }
+    DatasetSymbol& dataset = *resolution->dataset;
+    std::vector<std::string> parsed;
+    std::vector<std::string> idle;
+    for (const ColumnMatch& match : resolution->matched) {
+        ColumnState& column = *match.column;
+        TableState& table = *match.table;
+        const std::string name = columnDisplayName(dataset, table, column.name);
+        const Target target = tableTarget(dataset, table, column.name);
+        if (column.type == ColumnType::DateTime) {
+            addTarget(node, target, name + " is already DATETIME");
+            idle.push_back(name);
+            continue;
+        }
+        const auto info = std::find_if(table.schema.columns.begin(), table.schema.columns.end(),
+                                       [&](const ColumnInfo& c) { return c.name == column.name; });
+        if (column.type != ColumnType::String || column.valuesChanged || info == table.schema.columns.end()) {
+            diagnostics_.error(Phase::Type, node.target.location,
+                               "PARSE_DATE needs a STRING column of dates as the file has it, but " + name +
+                                   (column.valuesChanged ? " was changed after LOAD"
+                                                         : " is " + std::string(columnTypeName(column.type))),
+                               column.valuesChanged ? "put PARSE_DATE before the statements that change it" : "");
+            continue;
+        }
+        if (!info->datesKnown) {
+            if (table.schema.format != TableFormat::Csv || !table.schema.valuesKnown) {
+                diagnostics_.error(Phase::Schema, node.target.location,
+                                   "PARSE_DATE needs the values of " + name + ", but only the footer of " +
+                                       table.schema.file + " is read at compile time",
+                                   "Parquet files keep dates in DATETIME columns, which need no PARSE_DATE");
+                continue;
+            }
+            readDateFacts(table.schema, *info);
+        }
+        if (!info->allDates) {
+            diagnostics_.error(Phase::Contract, node.target.location,
+                               name + " has values that are not dates" +
+                                   (info->notDateReason.empty() ? std::string() : ": " + info->notDateReason),
+                               "PARSE_DATE reads YYYY-MM-DD, YYYY-MM-DD HH:MM or YYYY-MM-DD HH:MM:SS, "
+                               "in the same layout in every row");
+            continue;
+        }
+        column.type = ColumnType::DateTime;
+        column.range = info->hasDates ? Range{info->dateMin, info->dateMax} : Range{};
+        column.valuesChanged = true;  // the values are dates now, not the text of the file
+        recordColumn(dataset, table, column, node.location.line, "PARSE_DATE");
+        addTarget(node, target);
+        parsed.push_back(name + (info->hasDates ? " (" + dateText(info->dateMin) + " to " +
+                                                       dateText(info->dateMax) + ")"
+                                                 : ""));
+    }
+    log(node, "PARSE_DATE " + (parsed.empty() ? "has no effect" : join(parsed)) +
+                  (idle.empty() || parsed.empty() ? "" : "; no effect on " + join(idle)));
+}
+
+// DERIVE computes a new column (or replaces one) from other columns of the same
+// table. Its facts follow from theirs: interval arithmetic for + - * /, and the
+// calendar for the parts of a date. A division by a value that can be 0 here is
+// an error: pandas would write inf or a missing value without saying so.
+void SemanticAnalyzer::visit(const DeriveStmt& node) {
+    Selector tableSelector = node.target;
+    tableSelector.parts.pop_back();
+    std::optional<TableResolution> resolution = resolver_.singleTable(tableSelector, "DERIVE");
+    if (!resolution) {
+        return;
+    }
+    DatasetSymbol& dataset = *resolution->dataset;
+    TableState& table = *resolution->tables.front();
+    const std::string columnName = node.target.parts.back();
+    const int errorsBefore = diagnostics_.errorCount();
+
+    const std::function<ValueFacts(const ValueExpr&)> facts = [&](const ValueExpr& expr) -> ValueFacts {
+        ValueFacts result;
+        switch (expr.kind) {
+            case ValueKind::Number: {
+                const double value = std::stod(expr.text);
+                result.type = expr.text.find('.') == std::string::npos ? ColumnType::Integer : ColumnType::Float;
+                result.range = {value, value};
+                return result;
+            }
+            case ValueKind::Column: {
+                const ColumnState* column = resolver_.column(dataset, table, expr.text, expr.location);
+                if (column && !isNumeric(column->type)) {
+                    diagnostics_.error(Phase::Type, expr.location,
+                                       "DERIVE computes with numeric columns, but '" + expr.text + "' is " +
+                                           columnTypeName(column->type),
+                                       column->type == ColumnType::DateTime
+                                           ? "take a part of it: YEAR, MONTH, DAY, HOUR or WEEKDAY(" + expr.text + ")"
+                                           : valueHint(*column));
+                }
+                if (column) {
+                    result = {column->type, column->nullable, column->range};
+                }
+                return result;
+            }
+            case ValueKind::DatePart: {
+                const ColumnState* column = resolver_.column(dataset, table, expr.left->text, expr.left->location);
+                if (column && column->type != ColumnType::DateTime) {
+                    diagnostics_.error(Phase::Type, expr.left->location,
+                                       expr.text + " needs a DATETIME column, but '" + expr.left->text + "' is " +
+                                           columnTypeName(column->type),
+                                       column->type == ColumnType::String ? "PARSE_DATE it first" : "");
+                }
+                if (column) {
+                    result = {ColumnType::Integer, column->nullable, datePartRange(expr.text, column->range)};
+                }
+                return result;
+            }
+            case ValueKind::Binary: {
+                const ValueFacts left = facts(*expr.left);
+                const ValueFacts right = facts(*expr.right);
+                if (expr.text == "/" && right.range.min <= 0 && right.range.max >= 0) {
+                    diagnostics_.error(Phase::Contract, expr.right->location,
+                                       "DERIVE divides by " + valueText(*expr.right) + ", which can be 0 here (" +
+                                           (right.range.isKnown() ? "it is in " + right.range.text()
+                                                                  : "its range is not known") + ")",
+                                       "FILTER the rows where it is 0 first, or EXPECT it BETWEEN two bounds above 0");
+                }
+                result.type = expr.text == "/" || left.type == ColumnType::Float || right.type == ColumnType::Float
+                                  ? ColumnType::Float
+                                  : ColumnType::Integer;
+                result.nullable = left.nullable || right.nullable;
+                result.range = combine(expr.text, left.range, right.range);
+                return result;
+            }
+        }
+        return result;
+    };
+    const ValueFacts value = facts(*node.value);
+    if (diagnostics_.errorCount() > errorsBefore) {
+        return;
+    }
+    const ColumnState state{columnName, value.type, value.nullable, value.range, false, true, ""};
+    ColumnState* existing = table.column(columnName);
+    if (existing) {
+        *existing = state;
+    } else {
+        table.columns.push_back(state);
+    }
+    table.removedAt.erase(columnName);
+    recordColumn(dataset, table, state, node.location.line, "DERIVE " + valueText(*node.value));
+    addTarget(node, tableTarget(dataset, table, columnName));
+    log(node, "DERIVE " + columnDisplayName(dataset, table, columnName) + " = " + valueText(*node.value) + ": " +
+                  state.typeText() + (existing ? " (replaces the column)" : ""));
 }
 
 void SemanticAnalyzer::visit(const SaveStmt& node) {

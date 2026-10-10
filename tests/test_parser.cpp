@@ -243,6 +243,39 @@ void testWholeNumbers() {
 
 }  // namespace
 
+void testDerive() {
+    Diagnostics diagnostics;
+    const Program program = parse("DERIVE t.c = a + b * 2 - (c - d) / 4;\nDERIVE t.h = hour(stamp);\n"
+                                  "DERIVE ts.x.n = -a - -3;\nPARSE_DATE t.stamp;\n",
+                                  diagnostics);
+    const auto* first = statementAs<DeriveStmt>(program, 0);
+    const auto* second = statementAs<DeriveStmt>(program, 1);
+    const auto* third = statementAs<DeriveStmt>(program, 2);
+    check(!diagnostics.hasErrors() && first && second && third && statementAs<ParseDateStmt>(program, 3),
+          "DERIVE and PARSE_DATE parse");
+    check(first && valueText(*first->value) == "a + b * 2 - (c - d) / 4" && first->value->text == "-",
+          "* and / bind tighter than + and -, both left to right");
+    check(second && second->value->kind == ValueKind::DatePart && second->value->text == "HOUR" &&
+              second->value->left->text == "stamp",
+          "a date part is a name followed by '(' (any case), not a keyword");
+    check(third && third->target.parts.size() == 3 && valueText(*third->value) == "0 - a - -3",
+          "unary minus: -3 is a number, -a is 0 - a");
+}
+
+void testDeriveErrors() {
+    Diagnostics unknown;
+    parse("DERIVE t.c = sqrt(a);", unknown);
+    Diagnostics noColumn;
+    parse("DERIVE t = 1;", noColumn);
+    Diagnostics compare;
+    parse("FILTER t WHERE a = 1;", compare);
+    check(unknown.hasErrors() && unknown.all()[0].message.find("unknown function 'sqrt'") != std::string::npos,
+          "an unknown function is named");
+    check(noColumn.hasErrors(), "DERIVE needs table.column");
+    check(compare.hasErrors() && compare.all()[0].hint.find("==") != std::string::npos,
+          "a FILTER comparing with '=' is told to use '=='");
+}
+
 int main() {
     std::cout << "Parser tests\n";
     testAllStatements();
@@ -263,6 +296,8 @@ int main() {
     testImageStatements();
     testDatasetContracts();
     testWholeNumbers();
+    testDerive();
+    testDeriveErrors();
 
     std::cout << (failures == 0 ? "All parser tests passed.\n" : "Some parser tests FAILED.\n");
     return failures == 0 ? 0 : 1;

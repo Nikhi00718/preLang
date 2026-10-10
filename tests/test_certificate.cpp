@@ -394,6 +394,95 @@ void testSoundness(const std::string& source, const std::string& title) {
                                  std::to_string(unsoundDeopt) + " did not)");
 }
 
+// ---------- Dates and derived columns ----------
+
+// Trips from March to June 2024; fares 7 to 30, distances 1 to 8.
+const char* const trips = "day,fare,km\n2024-03-05,12,3\n2024-04-10,30,8\n2024-06-20,7,1\n2024-05-02,25,6\n";
+
+const std::string tripProgram = "LOAD \"test_certificate_trips.csv\" AS t;\n"  // line 1
+                                "PARSE_DATE t.day;\n"                            // line 2: needs dates (admission)
+                                "DERIVE t.month = MONTH(day);\n"                 // line 3
+                                "FILTER t WHERE month >= 3;\n"                   // line 4: removed, needs dates Mar-Dec of one year
+                                "DERIVE t.per_km = fare / km;\n"                 // line 5: needs km > 0 (admission)
+                                "EXPECT t.per_km BETWEEN 0 AND 100;\n"           // line 6: proven from fare and km
+                                "FILL_NULL t.fare WITH 0;\n"                     // line 7: removed, needs fare without missing values
+                                "SAVE t AS \"out.csv\";\n";
+
+// The facts of a batch file as the compiler would see them, with the date facts of `day`.
+TableSchema tripFacts(const std::string& file) {
+    Diagnostics diagnostics;
+    TableSchema facts = *SchemaProvider(diagnostics).readTable(file, "t", {});
+    for (ColumnInfo& column : facts.columns) {
+        if (column.name == "day" && column.type == ColumnType::String) {
+            readDateFacts(facts, column);
+        }
+    }
+    return facts;
+}
+
+void testDateFacts() {
+    writeFile("test_certificate_trips.csv", trips);
+    Compiled c;
+    compile(tripProgram, c);
+    const ColumnFacts* day = fact(c.certificate, "t", "day");
+    const ColumnFacts* km = fact(c.certificate, "t", "km");
+    check(!c.diagnostics.hasErrors() && day && day->dates && std::isinf(day->dateMin) && std::isinf(day->dateMax),
+          "admission requires dates in day (PARSE_DATE fails without them), but no date range");
+    check(km && km->min == 0 && km->minStrict, "admission requires km > 0: line 5 divides by it");
+    const ItemCertificate* filter = nullptr;
+    for (const ItemCertificate& item : c.certificate.items) {
+        filter = item.description.find("line 4") == 0 ? &item : filter;
+    }
+    const ColumnFacts* bounds = filter ? factIn(filter->tables, "t", "day") : nullptr;
+    check(bounds && dateText(bounds->dateMin) == "2024-03-01 00:00:00" &&
+              dateText(bounds->dateMax) == "2024-12-31 23:59:59",
+          "the FILTER on MONTH needs dates from 1 March to 31 December of the same year");
+}
+
+void testDateSoundness() {
+    std::cout << "Soundness on 400 random inputs, with dates and derived columns\n";
+    writeFile("test_certificate_trips.csv", trips);
+    Compiled base;
+    compile(tripProgram, base);
+    std::string batchProgram = tripProgram;
+    batchProgram.replace(batchProgram.find("test_certificate_trips.csv"), 26, "test_certificate_rtrips.csv");
+
+    std::mt19937 random(2027);
+    int admitted = 0, deopts = 0, unsound = 0, notDates = 0;
+    for (int round = 0; round < 400; ++round) {
+        std::string text = "day,fare,km\n";
+        const int year = 2023 + static_cast<int>(random() % 3);
+        const bool oneYear = random() % 2 == 0;
+        const int rows = 1 + static_cast<int>(random() % 5);
+        for (int i = 0; i < rows; ++i) {
+            char day[16];
+            std::snprintf(day, sizeof day, "%04d-%02d-%02d", oneYear ? year : 2023 + static_cast<int>(random() % 3),
+                          1 + static_cast<int>(random() % 12), 1 + static_cast<int>(random() % 28));
+            const int kind = static_cast<int>(random() % 40);
+            text += std::string(kind == 0 ? "soon" : kind == 1 ? "" : day) + "," +
+                    (random() % 20 == 0 ? "" : std::to_string(random() % 150)) + "," + std::to_string(random() % 10) +
+                    "\n";
+        }
+        writeFile("test_certificate_rtrips.csv", text);
+        const TableSchema facts = tripFacts("test_certificate_rtrips.csv");
+        notDates += !facts.columns[0].allDates;
+        if (!admissionProblems(*base.certificate.table("t"), facts).empty()) {
+            continue;
+        }
+        ++admitted;
+        Compiled again;
+        compile(batchProgram, again);
+        const std::vector<std::string> deopt = deoptimized(base.certificate, {{"t", facts}});
+        deopts += !deopt.empty();
+        unsound += !deoptSound(base, again, deopt);
+    }
+    check(admitted >= 40 && notDates > 0,
+          std::to_string(admitted) + " of 400 random inputs admitted with deoptimization, " + std::to_string(deopts) +
+              " of them deoptimize something");
+    check(unsound == 0, "every admitted input compiles without errors and keeps every removal it does not deoptimize (" +
+                            std::to_string(unsound) + " did not)");
+}
+
 // ---------- Image folders ----------
 
 std::string bigEndian(unsigned value, int bytes) {
@@ -572,6 +661,8 @@ int main() {
     // without that column would not compile: it must exist.
     testSoundness("LOAD \"test_certificate_students.csv\" AS s;\nDROP s [city];\nSAVE s AS \"out.csv\";\n",
                   "Soundness on 400 random inputs, with a dropped column that some inputs lack");
+    testDateFacts();
+    testDateSoundness();
     testImageFacts();
     testImageSoundness();
     std::cout << (failures == 0 ? "All certificate tests passed\n"

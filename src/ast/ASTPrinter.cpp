@@ -1,5 +1,7 @@
 #include "ast/ASTPrinter.h"
 
+#include <algorithm>
+
 namespace {
 
 std::string listText(const std::vector<std::string>& names) {
@@ -64,6 +66,49 @@ std::string literalText(const Literal& literal) {
     return literal.kind == LiteralKind::String ? "\"" + literal.value + "\"" : literal.value;
 }
 
+std::string valueText(const ValueExpr& expr) {
+    switch (expr.kind) {
+        case ValueKind::Number:
+        case ValueKind::Column:
+            return expr.text;
+        case ValueKind::DatePart:
+            return expr.text + "(" + expr.left->text + ")";
+        case ValueKind::Binary: {
+            // Parentheses only where the tree needs them: a - (b - c), a * (b + c), a / (b * c)
+            const bool multiplies = expr.text == "*" || expr.text == "/";
+            const auto operand = [&](const ValueExpr& side, bool right) {
+                if (side.kind != ValueKind::Binary) {
+                    return valueText(side);
+                }
+                const bool sideAdds = side.text == "+" || side.text == "-";
+                const bool needs = (multiplies && sideAdds) ||
+                                   (right && (expr.text == "-" || expr.text == "/") && multiplies == !sideAdds);
+                return needs ? "(" + valueText(side) + ")" : valueText(side);
+            };
+            return operand(*expr.left, false) + " " + expr.text + " " + operand(*expr.right, true);
+        }
+    }
+    return "";
+}
+
+std::vector<std::string> valueColumns(const ValueExpr& expr) {
+    std::vector<std::string> columns;
+    const std::function<void(const ValueExpr&)> collect = [&](const ValueExpr& node) {
+        if (node.kind == ValueKind::Column &&
+            std::find(columns.begin(), columns.end(), node.text) == columns.end()) {
+            columns.push_back(node.text);
+        }
+        if (node.left) {
+            collect(*node.left);
+        }
+        if (node.right) {
+            collect(*node.right);
+        }
+    };
+    collect(expr);
+    return columns;
+}
+
 ASTPrinter::ASTPrinter(std::ostream& out) : out_(out) {}
 
 void ASTPrinter::print(const Program& program) {
@@ -118,6 +163,14 @@ void ASTPrinter::visit(const SelectStmt& node) {
 
 void ASTPrinter::visit(const DropStmt& node) {
     printNode("Drop", {"tables: " + selectorText(node.target), "columns: " + listText(node.columns)});
+}
+
+void ASTPrinter::visit(const ParseDateStmt& node) {
+    printNode("ParseDate", {"column: " + selectorText(node.target)});
+}
+
+void ASTPrinter::visit(const DeriveStmt& node) {
+    printNode("Derive", {"column: " + node.target.text(), "value: " + valueText(*node.value)});
 }
 
 void ASTPrinter::visit(const SaveStmt& node) {

@@ -84,6 +84,14 @@ void ASTDot::visit(const DropStmt& node) {
     addStatement("Drop", fields);
 }
 
+void ASTDot::visit(const ParseDateStmt& node) {
+    addStatement("ParseDate", {selectorText(node.target)});
+}
+
+void ASTDot::visit(const DeriveStmt& node) {
+    addStatement("Derive", {node.target.text(), valueText(*node.value)});
+}
+
 void ASTDot::visit(const SaveStmt& node) {
     addStatement("Save " + dataKindName(node.kind), {node.target.text(), "\"" + node.path + "\""});
 }

@@ -16,6 +16,8 @@ struct NormalizeStmt;
 struct FilterStmt;
 struct SelectStmt;
 struct DropStmt;
+struct ParseDateStmt;
+struct DeriveStmt;
 struct SaveStmt;
 struct ExpectStmt;
 struct ResizeStmt;
@@ -41,6 +43,8 @@ public:
     virtual void visit(const FilterStmt& node) = 0;
     virtual void visit(const SelectStmt& node) = 0;
     virtual void visit(const DropStmt& node) = 0;
+    virtual void visit(const ParseDateStmt& node) = 0;
+    virtual void visit(const DeriveStmt& node) = 0;
     virtual void visit(const SaveStmt& node) = 0;
     virtual void visit(const ExpectStmt& node) = 0;
     virtual void visit(const ResizeStmt& node) = 0;
@@ -197,6 +201,44 @@ struct SelectStmt : Stmt {
 struct DropStmt : Stmt {
     Selector target;
     std::vector<std::string> columns;
+    void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
+};
+
+// PARSE_DATE trips.pickup;   (a STRING column of ISO dates becomes DATETIME)
+struct ParseDateStmt : Stmt {
+    Selector target;
+    void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
+};
+
+// The value of a new column in DERIVE: arithmetic over numeric columns and
+// numbers, or a part of a DATETIME column. One node type for every kind keeps
+// the tree small; IR instructions share it, so it is immutable.
+enum class ValueKind { Number, Column, Binary, DatePart };
+
+struct ValueExpr {
+    ValueKind kind = ValueKind::Number;
+    SourceLocation location;
+    std::string text;  // Number: "273.15"; Column: its name; Binary: + - * /; DatePart: HOUR, DAY, ...
+    std::shared_ptr<const ValueExpr> left;   // Binary: left operand; DatePart: the DATETIME column
+    std::shared_ptr<const ValueExpr> right;  // Binary: right operand
+};
+
+// The parts of a date DERIVE can take, as pandas' .dt accessors name them.
+inline const std::vector<std::string>& dateParts() {
+    static const std::vector<std::string> parts = {"YEAR", "MONTH", "DAY", "HOUR", "WEEKDAY"};
+    return parts;
+}
+
+// "temp - 273.15", "HOUR(date_time)", "(a + b) / 2"
+std::string valueText(const ValueExpr& expr);
+
+// The columns a value reads, each once, in order of appearance.
+std::vector<std::string> valueColumns(const ValueExpr& expr);
+
+// DERIVE weather.temp_c = temp - 273.15;   DERIVE traffic.hour = HOUR(date_time);
+struct DeriveStmt : Stmt {
+    Selector target;  // the table, with the new (or replaced) column as the last part
+    std::shared_ptr<const ValueExpr> value;
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
 

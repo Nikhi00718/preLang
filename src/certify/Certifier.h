@@ -62,6 +62,13 @@ struct ColumnFacts {
     bool maxStrict = false;  // values must be < max
     // The proofs that need each fact, e.g. "line 5: EXPECT students.marks BETWEEN 0 AND 100"
     std::vector<std::string> notNullFor, minFor, maxFor;
+    // A STRING column that PARSE_DATE reads: every value a date (required like a type),
+    // and the first and last date (value facts, in seconds since 1970-01-01).
+    bool dates = false;
+    std::vector<std::string> datesFor;
+    double dateMin = -std::numeric_limits<double>::infinity();
+    double dateMax = std::numeric_limits<double>::infinity();
+    std::vector<std::string> dateMinFor, dateMaxFor;
 };
 
 struct TableCertificate {

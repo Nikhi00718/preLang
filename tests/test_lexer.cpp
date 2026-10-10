@@ -97,10 +97,12 @@ void testUnterminatedString() {
 }
 
 void testSingleEquals() {
+    // '=' assigns in DERIVE; a FILTER that compares with it is a syntax error (see test_parser).
     Diagnostics diagnostics;
-    Lexer("marks = 50", diagnostics).tokenize();
-    check(diagnostics.all().size() == 1 && diagnostics.all()[0].hint.find("==") != std::string::npos,
-          "single '=' suggests '=='");
+    const std::vector<Token> tokens = Lexer("DERIVE t.c = a + b / 2", diagnostics).tokenize();
+    check(diagnostics.all().empty() && tokens[4].type == TokenType::EQUAL && tokens[6].type == TokenType::PLUS &&
+              tokens[8].type == TokenType::SLASH,
+          "'=', '+' and '/' are tokens for DERIVE");
 }
 
 }  // namespace

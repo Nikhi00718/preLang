@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Dates.h"
 #include "common/Diagnostics.h"
 #include "schema/ImageSchema.h"
 #include "schema/TableSchema.h"

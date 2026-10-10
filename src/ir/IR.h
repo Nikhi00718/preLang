@@ -15,6 +15,7 @@
 //   t1 = s.marks >= 50;  t2 = s.passed == TRUE;  t3 = t1 AND t2;  FILTER s IF t3
 enum class Opcode {
     Load, Check, FillNull, DropNull, Normalize, Compare, And, Or, Not, Filter, Select, Drop, Save,
+    ParseDate, Derive,
     LoadImages, Resize, Grayscale, NormalizeImages, Compress, Convert, RemoveCorrupt, SaveImages,
 };
 
@@ -35,6 +36,9 @@ enum class Opcode {
 //   FILTER        dataset, table, uses = [condition]
 //   SELECT, DROP  dataset, table, columns
 //   SAVE          dataset, table, text = file
+//   PARSE_DATE    dataset, table, column
+//   DERIVE        dataset, table, column = the new column, columns = the columns it reads,
+//                 text = the value as written, value = its tree
 //   LOAD_IMAGES   dataset, text = folder or file
 //   RESIZE        dataset, numbers = [width, height, keep aspect (0 or 1)]
 //   GRAYSCALE     dataset
@@ -53,6 +57,7 @@ struct Instruction {
     std::vector<std::string> columns;
     std::string text;
     std::vector<Literal> values;
+    std::shared_ptr<const ValueExpr> value;  // DERIVE
     std::vector<int> numbers;
     int result = 0;         // temporary t<result> this instruction defines; 0 if none
     std::vector<int> uses;  // temporaries this instruction reads

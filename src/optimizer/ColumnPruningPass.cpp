@@ -27,6 +27,8 @@ std::vector<std::vector<std::string>> columnsBefore(const IRProgram& program) {
         result.push_back(columns);
         if (instruction.op == Opcode::Load || instruction.op == Opcode::Select) {
             columns = instruction.columns;
+        } else if (instruction.op == Opcode::Derive && !contains(columns, instruction.column)) {
+            columns.push_back(instruction.column);
         } else if (instruction.op == Opcode::Drop) {
             columns.erase(std::remove_if(columns.begin(), columns.end(),
                                          [&](const std::string& c) { return contains(instruction.columns, c); }),
@@ -60,8 +62,20 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
                 }
                 break;
 
+            case Opcode::Derive:  // defines its column from the columns it reads
+                if (liveColumns.count(instruction.column) == 0) {
+                    remove[i] = true;
+                    changes.push_back("dead store elimination: removed " + describe(instruction) + ", '" +
+                                      instruction.column + "' is never read or saved afterwards");
+                    break;
+                }
+                liveColumns.erase(instruction.column);
+                liveColumns.insert(instruction.columns.begin(), instruction.columns.end());
+                break;
+
             case Opcode::FillNull:
             case Opcode::Normalize:
+            case Opcode::ParseDate:
                 if (liveColumns.count(instruction.column) == 0) {
                     remove[i] = true;
                     changes.push_back("dead store elimination: removed " + describe(instruction) + ", '" +

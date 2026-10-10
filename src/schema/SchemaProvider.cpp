@@ -1,5 +1,6 @@
 #include "schema/SchemaProvider.h"
 
+#include "common/Dates.h"
 #include "schema/Checksum.h"
 #include "schema/CsvScanner.h"
 #include "schema/ParquetFooter.h"
@@ -306,6 +307,36 @@ std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path
     set.fingerprint = crc32(listing);
     images_[key] = set;
     return set;
+}
+
+// The date facts of a STRING column, from its values in the file: whether every
+// present value is an ISO date in one layout, and the first and last date.
+void readDateFacts(const TableSchema& schema, ColumnInfo& info) {
+    info.datesKnown = true;
+    info.allDates = true;
+    info.hasDates = false;
+    DateLayout first = DateLayout::None;
+    const std::vector<std::string> values = readColumnValues(schema, info.name);
+    for (size_t i = 0; i < values.size(); ++i) {
+        if (values[i].empty()) {
+            continue;
+        }
+        double seconds = 0;
+        const DateLayout layout = parseIsoDate(values[i], seconds);
+        if (layout == DateLayout::None || (first != DateLayout::None && layout != first)) {
+            info.allDates = false;
+            info.hasDates = false;
+            info.notDateReason = "row " + std::to_string(i + 1) + " has \"" + values[i] + "\"" +
+                                 (layout == DateLayout::None ? std::string()
+                                                             : ", not " + std::string(dateLayoutText(first)) +
+                                                                   " like the rows before");
+            return;
+        }
+        first = layout;
+        info.dateMin = info.hasDates ? std::min(info.dateMin, seconds) : seconds;
+        info.dateMax = info.hasDates ? std::max(info.dateMax, seconds) : seconds;
+        info.hasDates = true;
+    }
 }
 
 std::vector<std::string> readColumnValues(const TableSchema& table, const std::string& column) {

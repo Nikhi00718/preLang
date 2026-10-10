@@ -10,7 +10,7 @@
 enum class TokenType {
     // Statement keywords: every statement starts with one of these
     LOAD, LOAD_TABLES, LOAD_IMAGE, LOAD_IMAGES,
-    DROP_NULL, FILL_NULL, NORMALIZE, FILTER, SELECT, DROP,
+    DROP_NULL, FILL_NULL, NORMALIZE, FILTER, SELECT, DROP, PARSE_DATE, DERIVE,
     SAVE, SAVE_TABLES, SAVE_IMAGE, SAVE_IMAGES, EXPECT,
     RESIZE, GRAYSCALE, COMPRESS, CONVERT, REMOVE_CORRUPT, LINK,
 
@@ -26,6 +26,9 @@ enum class TokenType {
 
     // Comparison operators
     EQUAL_EQUAL, NOT_EQUAL, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
+
+    // Arithmetic (DERIVE) and assignment
+    PLUS, SLASH, EQUAL,
 
     // Punctuation
     DOT, COMMA, SEMICOLON, LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, MINUS, STAR, PERCENT,

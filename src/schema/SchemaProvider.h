@@ -54,5 +54,9 @@ private:
 // Empty for a Parquet file, whose values are not read at compile time.
 std::vector<std::string> readColumnValues(const TableSchema& table, const std::string& column);
 
+// The date facts of a STRING column of a CSV file (ColumnInfo::allDates, dateMin, ...), from
+// its values. Read on demand for PARSE_DATE.
+void readDateFacts(const TableSchema& table, ColumnInfo& column);
+
 void printTableSchema(std::ostream& out, const std::string& title, const TableSchema& table);
 void printImageSetSchema(std::ostream& out, const std::string& title, const ImageSetSchema& images);

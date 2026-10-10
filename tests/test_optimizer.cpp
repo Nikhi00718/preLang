@@ -139,6 +139,15 @@ void testDropNullBlocksPruning() {
           "DROP_NULL reads every column, so nothing is pruned before it");
 }
 
+void testDerive() {
+    const Compiled dead = compile("DERIVE s.x = marks * 2;\nDROP s [x];");
+    const Compiled live = compile("DERIVE s.x = marks * 2 + age;\nSELECT s [x];");
+    check(dead.ok && countOf(dead.ir, Opcode::Derive) == 0, "a DERIVE whose column is never used is removed");
+    check(live.ok && countOf(live.ir, Opcode::Derive) == 1 &&
+              loadedColumns(live.ir) == std::vector<std::string>{"age", "marks"},
+          "a kept DERIVE loads the columns it reads, and only those");
+}
+
 void testOptimizerOff() {
     const Compiled c = compile("FILTER s WHERE marks > 0;", {false, false});
     check(c.ok && countOf(c.ir, Opcode::Filter) == 1 && c.report.instructionsBefore == c.report.instructionsAfter,
@@ -161,6 +170,7 @@ int main() {
     testFilterColumnsStayLive();
     testDropNullBlocksPruning();
     testOptimizerOff();
+    testDerive();
 
     std::cout << (failures == 0 ? "All optimizer tests passed.\n" : "Some optimizer tests FAILED.\n");
     return failures == 0 ? 0 : 1;

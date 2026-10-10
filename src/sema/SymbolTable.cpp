@@ -9,6 +9,8 @@ std::string ColumnState::typeText() const {
     std::string text = std::string(columnTypeName(type)) + (nullable ? "?" : "");
     if (isNumeric(type) && range.isKnown()) {
         text += " " + range.text();
+    } else if (type == ColumnType::DateTime && range.isKnown()) {
+        text += " [" + dateText(range.min) + ", " + dateText(range.max) + "]";
     }
     return text;
 }

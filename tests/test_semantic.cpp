@@ -238,6 +238,62 @@ void testNotUtf8() {
     check(rejected && named && accepted, "a CSV file that is not UTF-8 is reported with its line and byte");
 }
 
+// Dates: from 2024-03-30 22:00 to 2024-04-02 06:30, one missing.
+void testDates() {
+    std::ofstream("test_semantic_dates.csv") << "stamp,day,amount\n2024-03-30 22:00:00,2024-03-30,5\n"
+                                                ",2024-03-31,7\n2024-04-02 06:30:00,2024-04-02,9\n";
+    Analysis a;
+    analyze("SAVE s AS \"o.csv\";\nLOAD \"test_semantic_dates.csv\" AS d;\nPARSE_DATE d.stamp;\nPARSE_DATE d.day;\n"
+            "DERIVE d.year = YEAR(day);\nDERIVE d.month = MONTH(stamp);\nDERIVE d.dom = DAY(day);\n"
+            "DERIVE d.hour = HOUR(stamp);\nDERIVE d.weekday = WEEKDAY(day);\nDERIVE d.cents = amount * 100 + 1;\n"
+            "DERIVE d.half = amount / 2;\nFILTER d WHERE year == 2024;\nSAVE d AS \"d.csv\";",
+            a);
+    TableState& d = a.symbols.lookup("d")->tables.front();
+    const auto range = [&](const std::string& name) { return d.column(name)->range; };
+    check(!a.diagnostics.hasErrors() && d.column("stamp")->type == ColumnType::DateTime && d.column("stamp")->nullable,
+          "PARSE_DATE makes a column of dates DATETIME; missing values stay missing");
+    check(range("year").min == 2024 && range("year").max == 2024 && range("month").min == 3 &&
+              range("month").max == 4 && range("dom").min == 1 && range("dom").max == 31,
+          "YEAR and MONTH follow the dates; DAY spans 1-31 across a month boundary");
+    check(range("hour").min == 0 && range("hour").max == 23 && range("weekday").min == 0 && range("weekday").max == 6,
+          "HOUR across days is 0-23; WEEKDAY from Saturday to Tuesday wraps around the week, so 0-6");
+    check(d.column("cents")->type == ColumnType::Integer && range("cents").min == 501 && range("cents").max == 901 &&
+              d.column("half")->type == ColumnType::Float && range("half").min == 2.5,
+          "interval arithmetic: INTEGER for + - *, FLOAT for /");
+    check(hasNoEffect(a, 12), "a FILTER on a part of the dates can be proven to have no effect");
+}
+
+void testDateAndDivisionErrors() {
+    std::ofstream("test_semantic_dates2.csv") << "when,size,zero\n2024-01-05,3,0\nsoon,4,2\n";
+    Analysis a;
+    analyze("SAVE s AS \"o.csv\";\nLOAD \"test_semantic_dates2.csv\" AS d;\nPARSE_DATE d.when;\n"
+            "DERIVE d.r = size / zero;\nDERIVE d.q = size / (zero + 1);\nDERIVE d.h = HOUR(size);\n"
+            "PARSE_DATE d.size;\nSAVE d AS \"d.csv\";",
+            a);
+    check(reported(a, Severity::Error, Phase::Contract, "row 2 has \"soon\""),
+          "PARSE_DATE of a column with text that is not a date names the row");
+    check(reported(a, Severity::Error, Phase::Contract, "divides by zero, which can be 0 here (it is in [0, 2])") &&
+              !reported(a, Severity::Error, Phase::Contract, "divides by zero + 1"),
+          "a division by a column that can be 0 is an error; by zero + 1 it is not");
+    check(reported(a, Severity::Error, Phase::Type, "HOUR needs a DATETIME column") &&
+              reported(a, Severity::Error, Phase::Type, "PARSE_DATE needs a STRING column"),
+          "date parts need DATETIME, and PARSE_DATE needs text");
+}
+
+void testDeriveReplacesAndDefines() {
+    Analysis a;
+    analyze("DERIVE s.marks = marks - 40;\nDERIVE s.total = marks + age;\nEXPECT s.total NOT_NULL;\nSAVE s AS \"o.csv\";", a);
+    const ColumnState* marks = column(a, "marks");
+    const ColumnState* total = column(a, "total");
+    check(!a.diagnostics.hasErrors() && marks && marks->range.min == 2 && marks->range.max == 51 && !marks->exact,
+          "DERIVE can replace a column; the new values are not exact");
+    bool deferred = false;
+    for (const ContractRecord& contract : a.result.contracts) {
+        deferred = deferred || (contract.contract == "s.total NOT_NULL" && contract.verdict == Verdict::Deferred);
+    }
+    check(total && deferred, "a derived value may be missing where an operand is (age has a missing value)");
+}
+
 }  // namespace
 
 int main() {
@@ -263,6 +319,9 @@ int main() {
     testNeverSaved();
     testScientificNotation();
     testNotUtf8();
+    testDates();
+    testDateAndDivisionErrors();
+    testDeriveReplacesAndDefines();
 
     std::cout << (failures == 0 ? "All semantic tests passed.\n" : "Some semantic tests FAILED.\n");
     return failures == 0 ? 0 : 1;

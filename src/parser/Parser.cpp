@@ -1,5 +1,6 @@
 #include "parser/Parser.h"
 
+#include <algorithm>
 #include <cctype>
 #include <utility>
 
@@ -11,7 +12,7 @@ struct ParseError {};
 
 const std::vector<std::string> statementKeywords = {
     "LOAD", "LOAD_TABLES", "LOAD_IMAGE", "LOAD_IMAGES", "DROP_NULL", "FILL_NULL", "NORMALIZE", "FILTER",
-    "SELECT", "DROP", "SAVE", "SAVE_TABLES", "SAVE_IMAGE", "SAVE_IMAGES", "EXPECT", "RESIZE", "GRAYSCALE",
+    "SELECT", "DROP", "PARSE_DATE", "DERIVE", "SAVE", "SAVE_TABLES", "SAVE_IMAGE", "SAVE_IMAGES", "EXPECT", "RESIZE", "GRAYSCALE",
     "COMPRESS", "CONVERT", "REMOVE_CORRUPT", "LINK"};
 
 // How a token is shown in "found ..." messages.
@@ -57,6 +58,8 @@ std::unique_ptr<Stmt> Parser::statement() {
         case TokenType::FILTER:         return filterStatement();
         case TokenType::SELECT:         return selectStatement();
         case TokenType::DROP:           return dropStatement();
+        case TokenType::PARSE_DATE:     return parseDateStatement();
+        case TokenType::DERIVE:         return deriveStatement();
         case TokenType::SAVE:           return saveStatement(DataKind::Table);
         case TokenType::SAVE_TABLES:    return saveStatement(DataKind::TableSet);
         case TokenType::SAVE_IMAGE:     return saveStatement(DataKind::Image);
@@ -174,6 +177,29 @@ std::unique_ptr<Stmt> Parser::dropStatement() {
     node->target = tableSelector();
     node->columns = columnList();
     optionalIfExists(node->target);
+    endStatement();
+    return node;
+}
+
+// parse_date -> PARSE_DATE column_selector ;
+std::unique_ptr<Stmt> Parser::parseDateStatement() {
+    auto node = std::make_unique<ParseDateStmt>();
+    node->location = advance().location;
+    node->target = columnSelector();
+    endStatement();
+    return node;
+}
+
+// derive -> DERIVE path = sum ;          path: table.column or tableset.table.column
+std::unique_ptr<Stmt> Parser::deriveStatement() {
+    auto node = std::make_unique<DeriveStmt>();
+    node->location = advance().location;
+    node->target = path();
+    if (node->target.parts.size() < 2 || node->target.parts.size() > 3) {
+        errorAt(node->target.location, "DERIVE needs table.column: the table and the name of the new column");
+    }
+    consume(TokenType::EQUAL, "'=' after the new column");
+    node->value = sum();
     endStatement();
     return node;
 }
@@ -385,10 +411,107 @@ std::unique_ptr<Expr> Parser::primary() {
         case TokenType::GREATER_EQUAL:
             node->op = advance().lexeme;
             break;
+        case TokenType::EQUAL:
+            errorAt(peek().location, "expected a comparison operator, found '='", "use '==' to compare values");
         default:
             errorExpected("a comparison operator (==, !=, <, <=, >, >=)");
     }
     node->value = literal();
+    return node;
+}
+
+// ---------- DERIVE values ----------
+// Precedence from lowest to highest: + and -, * and /, unary -, operands.
+
+// sum -> product { ( + | - ) product }
+std::shared_ptr<const ValueExpr> Parser::sum() {
+    std::shared_ptr<const ValueExpr> left = product();
+    while (check(TokenType::PLUS) || check(TokenType::MINUS)) {
+        auto node = std::make_shared<ValueExpr>();
+        node->kind = ValueKind::Binary;
+        node->location = peek().location;
+        node->text = advance().lexeme;
+        node->left = left;
+        node->right = product();
+        left = node;
+    }
+    return left;
+}
+
+// product -> unary { ( * | / ) unary }
+std::shared_ptr<const ValueExpr> Parser::product() {
+    std::shared_ptr<const ValueExpr> left = unary();
+    while (check(TokenType::STAR) || check(TokenType::SLASH)) {
+        auto node = std::make_shared<ValueExpr>();
+        node->kind = ValueKind::Binary;
+        node->location = peek().location;
+        node->text = advance().lexeme;
+        node->left = left;
+        node->right = unary();
+        left = node;
+    }
+    return left;
+}
+
+// unary -> - unary | operand        (-5 is a number; -x is 0 - x)
+std::shared_ptr<const ValueExpr> Parser::unary() {
+    if (!check(TokenType::MINUS)) {
+        return operand();
+    }
+    const SourceLocation location = advance().location;
+    std::shared_ptr<const ValueExpr> inner = unary();
+    if (inner->kind == ValueKind::Number && inner->text.front() != '-') {
+        auto negative = std::make_shared<ValueExpr>(*inner);
+        negative->text = "-" + inner->text;
+        return negative;
+    }
+    auto zero = std::make_shared<ValueExpr>();
+    zero->text = "0";
+    zero->location = location;
+    auto node = std::make_shared<ValueExpr>();
+    node->kind = ValueKind::Binary;
+    node->location = location;
+    node->text = "-";
+    node->left = zero;
+    node->right = inner;
+    return node;
+}
+
+// operand   -> NUMBER_LITERAL | IDENTIFIER | date_part ( IDENTIFIER ) | ( sum )
+// date_part -> YEAR | MONTH | DAY | HOUR | WEEKDAY     (names, not keywords: a column may be called hour)
+std::shared_ptr<const ValueExpr> Parser::operand() {
+    if (match(TokenType::LEFT_PAREN)) {
+        std::shared_ptr<const ValueExpr> inner = sum();
+        consume(TokenType::RIGHT_PAREN, "')'");
+        return inner;
+    }
+    auto node = std::make_shared<ValueExpr>();
+    node->location = peek().location;
+    if (check(TokenType::NUMBER_LITERAL)) {
+        node->text = advance().lexeme;
+        return node;
+    }
+    node->kind = ValueKind::Column;
+    node->text = identifier("a column name, a number or '('");
+    if (!match(TokenType::LEFT_PAREN)) {
+        return node;
+    }
+    std::string part;
+    for (char c : node->text) {
+        part += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    }
+    if (std::find(dateParts().begin(), dateParts().end(), part) == dateParts().end()) {
+        errorAt(node->location, "unknown function '" + node->text + "'",
+                "DERIVE knows YEAR, MONTH, DAY, HOUR and WEEKDAY of a DATETIME column");
+    }
+    auto column = std::make_shared<ValueExpr>();
+    column->kind = ValueKind::Column;
+    column->location = peek().location;
+    column->text = identifier("a DATETIME column");
+    consume(TokenType::RIGHT_PAREN, "')'");
+    node->kind = ValueKind::DatePart;
+    node->text = part;
+    node->left = column;
     return node;
 }
 

@@ -17,7 +17,8 @@ const std::unordered_map<std::string, TokenType>& keywordTable() {
         {"LOAD_IMAGE", TokenType::LOAD_IMAGE}, {"LOAD_IMAGES", TokenType::LOAD_IMAGES},
         {"DROP_NULL", TokenType::DROP_NULL}, {"FILL_NULL", TokenType::FILL_NULL},
         {"NORMALIZE", TokenType::NORMALIZE}, {"FILTER", TokenType::FILTER}, {"SELECT", TokenType::SELECT},
-        {"DROP", TokenType::DROP}, {"SAVE", TokenType::SAVE}, {"SAVE_TABLES", TokenType::SAVE_TABLES},
+        {"DROP", TokenType::DROP}, {"PARSE_DATE", TokenType::PARSE_DATE}, {"DERIVE", TokenType::DERIVE},
+        {"SAVE", TokenType::SAVE}, {"SAVE_TABLES", TokenType::SAVE_TABLES},
         {"SAVE_IMAGE", TokenType::SAVE_IMAGE}, {"SAVE_IMAGES", TokenType::SAVE_IMAGES},
         {"EXPECT", TokenType::EXPECT}, {"RESIZE", TokenType::RESIZE}, {"GRAYSCALE", TokenType::GRAYSCALE},
         {"COMPRESS", TokenType::COMPRESS}, {"CONVERT", TokenType::CONVERT},
@@ -68,6 +69,9 @@ std::string typeName(TokenType type) {
         case TokenType::LESS_EQUAL:     return "LESS_EQUAL";
         case TokenType::GREATER:        return "GREATER";
         case TokenType::GREATER_EQUAL:  return "GREATER_EQUAL";
+        case TokenType::PLUS:           return "PLUS";
+        case TokenType::SLASH:          return "SLASH";
+        case TokenType::EQUAL:          return "EQUAL";
         case TokenType::DOT:            return "DOT";
         case TokenType::COMMA:          return "COMMA";
         case TokenType::SEMICOLON:      return "SEMICOLON";
@@ -100,6 +104,9 @@ const char* categoryName(TokenType type) {
         case TokenType::GREATER:
         case TokenType::GREATER_EQUAL:
         case TokenType::MINUS:
+        case TokenType::PLUS:
+        case TokenType::SLASH:
+        case TokenType::EQUAL:
             return "OPERATOR";
         case TokenType::END_OF_FILE:
             return "END";
@@ -167,19 +174,16 @@ void Lexer::scanToken() {
         case '(': addToken(TokenType::LEFT_PAREN); return;
         case ')': addToken(TokenType::RIGHT_PAREN); return;
         case '-': addToken(TokenType::MINUS); return;
+        case '+': addToken(TokenType::PLUS); return;
+        case '/': addToken(TokenType::SLASH); return;
         case '*': addToken(TokenType::STAR); return;
         case '%': addToken(TokenType::PERCENT); return;
 
         // Longest match: "<=" is one token, not "<" followed by "=".
         case '<': addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS); return;
         case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); return;
-        case '=':
-            if (match('=')) {
-                addToken(TokenType::EQUAL_EQUAL);
-            } else {
-                report("unexpected character '='", "use '==' to compare values");
-            }
-            return;
+        // '=' assigns in DERIVE; a FILTER that uses it to compare is reported by the parser.
+        case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL); return;
         case '!':
             if (match('=')) {
                 addToken(TokenType::NOT_EQUAL);

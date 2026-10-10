@@ -1,5 +1,7 @@
 #include "backend/PandasCodegen.h"
 
+#include "common/Dates.h"
+
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -49,6 +51,27 @@ std::string hex(std::uint64_t value) {
     std::ostringstream text;
     text << "0x" << std::hex << std::uppercase << std::setw(8) << std::setfill('0') << value;
     return text.str();
+}
+
+// A DERIVE value as a pandas expression over the columns of `table`.
+std::string pandasValue(const ValueExpr& expr, const std::string& table) {
+    switch (expr.kind) {
+        case ValueKind::Number:
+            return expr.text;
+        case ValueKind::Column:
+            return table + "[" + pythonString(expr.text) + "]";
+        case ValueKind::Binary:
+            return "(" + pandasValue(*expr.left, table) + " " + expr.text + " " + pandasValue(*expr.right, table) + ")";
+        case ValueKind::DatePart: {
+            std::string part;
+            for (char c : expr.text) {
+                part += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
+            // INTEGER, with missing values where the date is missing
+            return table + "[" + pythonString(expr.left->text) + "].dt." + part + ".astype(\"Int64\")";
+        }
+    }
+    return "";
 }
 
 }  // namespace
@@ -122,6 +145,17 @@ std::string PandasCodegen::columnsDict(const TableCertificate& certificate) {
             code += ", \"max\": " + exactNumber(column.max) + (column.maxStrict ? ", \"max_strict\": True" : "") +
                     ", \"max_for\": " + join(column.maxFor);
         }
+        if (column.dates) {
+            code += ", \"dates\": " + join(column.datesFor);
+        }
+        if (!std::isinf(column.dateMin)) {
+            code += ", \"date_min\": " + pythonString(dateText(column.dateMin)) + ", \"date_min_for\": " +
+                    join(column.dateMinFor);
+        }
+        if (!std::isinf(column.dateMax)) {
+            code += ", \"date_max\": " + pythonString(dateText(column.dateMax)) + ", \"date_max_for\": " +
+                    join(column.dateMaxFor);
+        }
         code += "}";
     }
     return code + "}";
@@ -153,6 +187,25 @@ std::string PandasCodegen::helpers(bool csv, bool parquet) {
 def first_row(mask):
     """1-based number of the first data row where mask is true."""
     return int(mask.fillna(False).to_numpy().argmax()) + 1
+
+
+DATE_LAYOUTS = {10: "%Y-%m-%d", 16: "%Y-%m-%d %H:%M", 19: "%Y-%m-%d %H:%M:%S"}
+
+
+def as_dates(values):
+    """The dates in a column of text, as PARSE_DATE reads them: every present value in
+    the ISO layout of the first one. None if a value is not such a date."""
+    present = values.dropna().astype(str)
+    if present.empty:
+        return pd.Series(pd.NaT, index=values.index, dtype="datetime64[ns]")
+    first = present.iloc[0]
+    layout = DATE_LAYOUTS.get(len(first), "")
+    if len(first) == 19 and first[10] == "T":
+        layout = "%Y-%m-%dT%H:%M:%S"
+    dates = pd.to_datetime(values, format=layout or None, errors="coerce") if layout else None
+    if dates is None or (present.str.len() != len(first)).any() or dates[values.notna()].isna().any():
+        return None
+    return dates
 
 
 def admit(table, path, frame, certificate, empty_is_text):
@@ -187,6 +240,14 @@ def admit(table, path, frame, certificate, empty_is_text):
                 row = first_row(high)
                 limit = ("at or above " if fact.get("max_strict") else "above ") + str(fact["max"])
                 refuse(path, f"{column} is {values.iloc[row - 1]} in data row {row}, {limit}", fact["max_for"])
+        if "dates" in fact or "date_min" in fact or "date_max" in fact:
+            dates = as_dates(values)
+            if dates is None:
+                refuse(path, f"{column} has values that are not dates in one ISO layout", fact.get("dates", ""))
+            if "date_min" in fact and (dates < pd.Timestamp(fact["date_min"])).any():
+                refuse(path, f"{column} has dates before {fact['date_min']}", fact["date_min_for"])
+            if "date_max" in fact and (dates > pd.Timestamp(fact["date_max"])).any():
+                refuse(path, f"{column} has dates after {fact['date_max']}", fact["date_max_for"])
     print(f"Admitted {path} for {table}: it satisfies the data certificate")
 
 
@@ -201,6 +262,9 @@ def column_facts(frame, columns):
             facts[column] = {"missing": int(values.isna().sum()),
                              "min": present.min() if numeric and len(present) else None,
                              "max": present.max() if numeric and len(present) else None}
+            dates = None if numeric else as_dates(values)
+            if dates is not None and dates.notna().any():
+                facts[column].update(date_min=dates.min(), date_max=dates.max())
     return facts
 
 
@@ -217,6 +281,10 @@ def table_problem(facts, certificate):
             return f"{column} goes down to {low}, " + ("at or below " if fact.get("min_strict") else "below ") + str(fact["min"])
         if "max" in fact and high is not None and (high >= fact["max"] if fact.get("max_strict") else high > fact["max"]):
             return f"{column} goes up to {high}, " + ("at or above " if fact.get("max_strict") else "above ") + str(fact["max"])
+        if "date_min" in fact and "date_min" in found and found["date_min"] < pd.Timestamp(fact["date_min"]):
+            return f"{column} goes back to {found['date_min']}, before {fact['date_min']}"
+        if "date_max" in fact and "date_max" in found and found["date_max"] > pd.Timestamp(fact["date_max"]):
+            return f"{column} goes up to {found['date_max']}, after {fact['date_max']}"
     return ""
 
 
@@ -361,6 +429,10 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             return table + " = " + table + "[t" + std::to_string(in.uses[0]) + "]\n";
         case Opcode::Select:
             return table + " = " + table + "[" + pythonList(in.columns) + "]\n";
+        case Opcode::ParseDate:  // the compiler checked that every value is a date in one ISO layout
+            return column + " = pd.to_datetime(" + column + ")\n";
+        case Opcode::Derive:
+            return column + " = " + pandasValue(*in.value, table) + "\n";
         case Opcode::Drop:
             return table + " = " + table + ".drop(columns=" + pythonList(in.columns) + ")\n";
         case Opcode::Save:

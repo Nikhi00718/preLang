@@ -16,6 +16,14 @@ struct ColumnInfo {
     double max = 0;
     bool boundsExact = true;        // min and max are values in the data, not just bounds
     std::string stringReason;       // for STRING columns with other values too: e.g. line 4 has "abc"
+    // Dates, for a STRING column that PARSE_DATE reads. They are computed from the values
+    // only for such a column (no other program pays for them); a certificate may weaken them.
+    bool datesKnown = false;        // the date facts below are set
+    bool allDates = false;          // every present value is a date in one ISO layout
+    bool hasDates = false;          // a value is present: dateMin and dateMax are bounds of the dates
+    double dateMin = 0;             // seconds since 1970-01-01 (no time zone)
+    double dateMax = 0;
+    std::string notDateReason;      // e.g. row 5 has "n/a"
 };
 
 // CSV files are read completely at compile time. For a Parquet file only the

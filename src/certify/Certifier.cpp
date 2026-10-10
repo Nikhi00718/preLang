@@ -1,5 +1,6 @@
 #include "certify/Certifier.h"
 
+#include "common/Dates.h"
 #include "common/Diagnostics.h"
 #include "sema/SemanticAnalyzer.h"
 #include "sema/SymbolTable.h"
@@ -84,6 +85,16 @@ std::optional<ColumnFacts> beyond(const ColumnFacts& item, const ColumnFacts* ad
         facts.max = item.max;
         facts.maxStrict = item.maxStrict;
         facts.maxFor = item.maxFor;
+        any = true;
+    }
+    if (!std::isinf(item.dateMin) && (!admission || item.dateMin > admission->dateMin)) {
+        facts.dateMin = item.dateMin;
+        facts.dateMinFor = item.dateMinFor;
+        any = true;
+    }
+    if (!std::isinf(item.dateMax) && (!admission || item.dateMax < admission->dateMax)) {
+        facts.dateMax = item.dateMax;
+        facts.dateMaxFor = item.dateMaxFor;
         any = true;
     }
     return any ? std::optional<ColumnFacts>(facts) : std::nullopt;
@@ -457,6 +468,54 @@ void Certifier::widenValues(ColumnInfo& info, ColumnFacts& column, const std::ve
             widen(info.max, upper, column.max, column.maxStrict, column.maxFor);
         }
     }
+    // The first and last date of a column PARSE_DATE reads. Dates are compared only
+    // through their parts (YEAR, MONTH, DAY, HOUR, WEEKDAY), whose ranges change only
+    // where the dates cross a calendar boundary. So a bound is widened to no bound at
+    // all, or else to the start (or end) of its year, month or day, the loosest first.
+    if (info.datesKnown && info.allDates && info.hasDates) {
+        const double infinity = std::numeric_limits<double>::infinity();
+        const auto widenDate = [&](double& bound, const std::vector<double>& looser, double& kept,
+                                   std::vector<std::string>& neededBy) {
+            const double original = bound;
+            for (size_t k = 0; k < looser.size(); ++k) {
+                bound = looser[k];
+                const std::vector<std::string> problems = broken();
+                if (k == 0) {
+                    neededBy = problems;
+                }
+                if (problems.empty()) {
+                    kept = looser[k];
+                    return;
+                }
+            }
+            bound = original;
+            kept = original;
+        };
+        if (!std::isinf(info.dateMin)) {
+            std::vector<double> lower = {-infinity};
+            for (const char* unit : {"YEAR", "MONTH", "DAY"}) {
+                if (startOf(unit, info.dateMin) < info.dateMin && startOf(unit, info.dateMin) > lower.back()) {
+                    lower.push_back(startOf(unit, info.dateMin));
+                }
+            }
+            widenDate(info.dateMin, lower, column.dateMin, column.dateMinFor);
+        }
+        if (!std::isinf(info.dateMax)) {
+            std::vector<double> upper = {infinity};
+            for (const char* unit : {"YEAR", "MONTH", "DAY"}) {
+                if (endOf(unit, info.dateMax) > info.dateMax && endOf(unit, info.dateMax) < upper.back()) {
+                    upper.push_back(endOf(unit, info.dateMax));
+                }
+            }
+            widenDate(info.dateMax, upper, column.dateMax, column.dateMaxFor);
+        }
+    }
+    if (std::isinf(column.dateMin)) {
+        column.dateMinFor.clear();
+    }
+    if (std::isinf(column.dateMax)) {
+        column.dateMaxFor.clear();
+    }
     if (std::isinf(column.min)) {
         column.minFor.clear();
         column.minStrict = false;
@@ -501,12 +560,27 @@ TableCertificate Certifier::certifyTable(const Instruction& load, const IRProgra
             column.typeFixed = !column.typeFor.empty();
         }
 
+        // That every value is a date matters only to a PARSE_DATE of the column, which
+        // fails without it: then it is required on admission, like a type.
+        if (info.datesKnown && info.allDates) {
+            const ColumnInfo original = info;
+            info.allDates = false;
+            info.hasDates = false;
+            column.datesFor = broken();
+            column.dates = !column.datesFor.empty();
+            info = column.dates ? original : info;
+        }
+        if (info.datesKnown && info.allDates && info.hasDates) {
+            column.dateMin = info.dateMin;
+            column.dateMax = info.dateMax;
+        }
         if (isNumeric(info.type) && info.hasRange) {
             column.min = info.min;
             column.max = info.max;
         }
         widenValues(info, column, constants);
-        const bool needed = column.typeFixed || column.notNull || !std::isinf(column.min) || !std::isinf(column.max);
+        const bool needed = column.typeFixed || column.notNull || !std::isinf(column.min) || !std::isinf(column.max) ||
+                            column.dates || !std::isinf(column.dateMin) || !std::isinf(column.dateMax);
         if (column.read || needed) {
             table.columns.push_back(column);
         }
@@ -788,7 +862,21 @@ ImageSetSchema cornerImages(const ImageCertificate& certificate, const ImageSetS
 
 std::vector<double> programConstants(const IRProgram& program) {
     std::vector<double> constants;
+    const std::function<void(const ValueExpr&)> numbersOf = [&](const ValueExpr& expr) {
+        if (expr.kind == ValueKind::Number) {
+            constants.push_back(std::stod(expr.text));
+        }
+        if (expr.left) {
+            numbersOf(*expr.left);
+        }
+        if (expr.right) {
+            numbersOf(*expr.right);
+        }
+    };
     for (const Instruction& in : program.code) {
+        if (in.op == Opcode::Derive) {
+            numbersOf(*in.value);
+        }
         const bool numbers = in.op == Opcode::Compare || in.op == Opcode::FillNull ||
                              (in.op == Opcode::Check && in.text == "BETWEEN");
         for (const Literal& value : in.values) {
@@ -835,6 +923,18 @@ std::vector<std::string> admissionProblems(const TableCertificate& certificate, 
             problems.push_back(column.name + " has " + formatNumber(info.max) + ", above " +
                                (column.maxStrict ? "or at " : "") + formatNumber(column.max) + "; needed by " +
                                join(column.maxFor));
+        }
+        const bool dates = info.datesKnown && info.allDates;
+        if (column.dates && !dates) {
+            problems.push_back(column.name + " has values that are not dates; needed by " + join(column.datesFor));
+        }
+        if (dates && info.hasDates && info.dateMin < column.dateMin) {
+            problems.push_back(column.name + " has " + dateText(info.dateMin) + ", before " + dateText(column.dateMin) +
+                               "; needed by " + join(column.dateMinFor));
+        }
+        if (dates && info.hasDates && info.dateMax > column.dateMax) {
+            problems.push_back(column.name + " has " + dateText(info.dateMax) + ", after " + dateText(column.dateMax) +
+                               "; needed by " + join(column.dateMaxFor));
         }
     }
     return problems;
@@ -893,7 +993,8 @@ void printTables(std::ostream& out, const std::vector<TableCertificate>& tables,
             if (i > 0) {
                 out << std::string(indent, ' ');
             }
-            out << std::left << std::setw(20) << facts[i].first << "<- " << facts[i].second << '\n';
+            out << std::left << std::setw(20) << facts[i].first << (facts[i].first.size() < 20 ? "<- " : " <- ")
+                << facts[i].second << '\n';
         }
     };
     const std::string pad = items ? "    " : "  ";
@@ -913,6 +1014,15 @@ void printTables(std::ostream& out, const std::vector<TableCertificate>& tables,
             }
             if (!std::isinf(column.max)) {
                 facts.emplace_back((column.maxStrict ? "< " : "<= ") + formatNumber(column.max), join(column.maxFor));
+            }
+            if (column.dates) {
+                facts.emplace_back("dates", join(column.datesFor));
+            }
+            if (!std::isinf(column.dateMin)) {
+                facts.emplace_back("from " + dateText(column.dateMin), join(column.dateMinFor));
+            }
+            if (!std::isinf(column.dateMax)) {
+                facts.emplace_back("until " + dateText(column.dateMax), join(column.dateMaxFor));
             }
             out << pad << std::left << std::setw(static_cast<int>(width)) << column.name;
             if (!items) {
@@ -1059,6 +1169,17 @@ std::string columnsJson(const TableCertificate& table, const std::string& indent
         if (!std::isinf(c.max)) {
             text += ", \"max\": " + jsonNumber(c.max) + ", \"max_strict\": " + (c.maxStrict ? "true" : "false") +
                     ", \"max_for\": " + jsonList(c.maxFor);
+        }
+        if (c.dates) {
+            text += ", \"dates\": true, \"dates_for\": " + jsonList(c.datesFor);
+        }
+        if (!std::isinf(c.dateMin)) {
+            text += ", \"date_min\": " + jsonString(dateText(c.dateMin)) + ", \"date_min_for\": " +
+                    jsonList(c.dateMinFor);
+        }
+        if (!std::isinf(c.dateMax)) {
+            text += ", \"date_max\": " + jsonString(dateText(c.dateMax)) + ", \"date_max_for\": " +
+                    jsonList(c.dateMaxFor);
         }
         text += "}";
     }
