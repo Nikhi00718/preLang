@@ -372,7 +372,12 @@ What a reviewer at a top venue would raise, and what was done about it:
 - **"The pipelines of the real-data experiment are the authors' own."** GitHub scripts for the same UCI
   traffic and bike-sharing data, lifted with the second lifter version (traffic scripts as the
   development set, bike scripts held out), compiled on the first real month and run on every later
-  month against the scripts' own pandas statements (`eval/drift_corpus.py`).
+  month against the scripts' own pandas statements (`eval/drift_corpus.py`). Result: 72 scripts
+  compile on the first month (80 DERIVE, 52 PARSE_DATE statements lifted); all 3,255 runs on later
+  months end as the scripts' own statements do, none refused, none wrong. Only 4 programs have a
+  removal that can run again; two traffic scripts filter impossible readings themselves (temp > 0,
+  rain_1h < 500), and those removed filters run again in exactly the three months with 0 K or
+  9,831 mm of rain, where the full certificate would refuse the month.
 
 Still open: joins; a proof for the full C++ analysis; showing reuse saving time (compilation is cheap,
 so the paper does not claim it).
