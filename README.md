@@ -33,7 +33,7 @@ images.
 
 **What is new** compared with existing work (F# type providers, data-frame abstract interpretation,
 compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
-[NOVELTY.md](NOVELTY.md).
+[docs/NOVELTY.md](docs/NOVELTY.md).
 
 ## Contents
 
@@ -75,7 +75,7 @@ compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
    line, a caret and a hint.
 
 For the image examples, first create the sample images once:
-`py -3 eval/datasets.py examples`.
+`py -3 eval/compilation/datasets.py examples`.
 
 ## Run it from a terminal
 
@@ -300,7 +300,7 @@ What the certificate covers:
 Contracts that were proven by reading the values (`UNIQUE`, `REFERENCES`, `MATCH_RATE`) keep their
 check, which runs only when an input changed. Because every transfer function is monotone, an input
 inside the certificate gets at least the compiled proofs; `tests/test_certificate.cpp` checks this
-on 400 random inputs, and `eval/certificates.py` on 244 new batches against a fresh compilation of
+on 400 random inputs, and `eval/reuse/certificates.py` on 244 new batches against a fresh compilation of
 each.
 
 **4b. Selective deoptimization.** The optimizer does not delete a proven-useless check or operation:
@@ -405,42 +405,42 @@ cmake --build build --config Release
 ```
 
 ```bash
-py -3 eval/run_eval.py build/Release/preplang.exe
+py -3 eval/compilation/run_eval.py build/Release/preplang.exe
 ```
 
 ```bash
-py -3 eval/datasets.py benchmark
+py -3 eval/compilation/datasets.py benchmark
 ```
 
 ```bash
-py -3 eval/bench.py
+py -3 eval/compilation/bench.py
 ```
 
-- `eval/mutants.py` injects 24 realistic mistakes into the example programs (wrong names, wrong
+- `eval/compilation/mutants.py` injects 24 realistic mistakes into the example programs (wrong names, wrong
   types, use after removal, broken contracts, broken files, silently wrong values).
-- `eval/baseline.py` runs the same programs the way a hand-written script would: statement by
+- `eval/compilation/baseline.py` runs the same programs the way a hand-written script would: statement by
   statement with pandas and OpenCV, with `EXPECT` as `assert`.
-- `eval/scale.py` compares time-to-first-error on 16M-row Parquet tables and 3,000 images
-  (`py -3 eval/datasets.py scale` first).
-- `eval/run_realbugs.py` runs the study of real GitHub issues (`eval/realbugs_catalog.py`).
-- `eval/certificates.py` gives compiled programs new batches of data and compares each run with a
-  fresh compilation for that batch (paper RQ3); `py -3 eval/certificates.py validators` adds pandera,
-  Great Expectations and TFDV (`eval/baselines.py`, set up in `eval/.venv-baselines` and WSL).
-- `eval/imagebatches.py` reuses a compiled image pipeline on 30 new folders (paper RQ3).
-- `eval/realbatches.py` does the same with real monthly data: UCI traffic and bike-sharing data and
-  NYC green-taxi Parquet files (paper RQ4; `py -3 eval/realbatches.py download` first, then
-  `py -3 eval/realbatches.py validators`).
-- `eval/pandas_corpus.py [titanic|houses]` lifts real Titanic or House Prices scripts from GitHub,
+- `eval/compilation/scale.py` compares time-to-first-error on 16M-row Parquet tables and 3,000 images
+  (`py -3 eval/compilation/datasets.py scale` first).
+- `eval/compilation/run_realbugs.py` runs the study of real GitHub issues (`eval/compilation/realbugs_catalog.py`).
+- `eval/reuse/certificates.py` gives compiled programs new batches of data and compares each run with a
+  fresh compilation for that batch (paper RQ3); `py -3 eval/reuse/certificates.py validators` adds pandera,
+  Great Expectations and TFDV (`eval/reuse/baselines.py`, set up in `eval/.venv-baselines` and WSL).
+- `eval/reuse/imagebatches.py` reuses a compiled image pipeline on 30 new folders (paper RQ3).
+- `eval/reuse/realbatches.py` does the same with real monthly data: UCI traffic and bike-sharing data and
+  NYC green-taxi Parquet files (paper RQ4; `py -3 eval/reuse/realbatches.py download` first, then
+  `py -3 eval/reuse/realbatches.py validators`).
+- `eval/reuse/pandas_corpus.py [titanic|houses]` lifts real Titanic or House Prices scripts from GitHub,
   compiles them, and compares the compiled program with the script's own pandas statements on new
-  batches (paper RQ5; `py -3 eval/pandas_corpus.py collect [titanic|houses]` first, which needs `gh`
+  batches (paper RQ5; `py -3 eval/reuse/pandas_corpus.py collect [titanic|houses]` first, which needs `gh`
   signed in).
-- `eval/drift_corpus.py traffic|bikes|hours` lifts other people's scripts for the UCI traffic and
+- `eval/reuse/drift_corpus.py traffic|bikes|hours` lifts other people's scripts for the UCI traffic and
   bike-sharing data (second lifter version, with dates and derived columns), compiles each on the
   first real month and runs it on every later month (paper RQ5; `collect` first). With `--derived`,
-  `eval/pandas_corpus.py` lifts the Titanic and House Prices scripts with the second version too.
-- `eval/composition.py` runs two compiled stages over the real months and checks stage 1's guarantee
+  `eval/reuse/pandas_corpus.py` lifts the Titanic and House Prices scripts with the second version too.
+- `eval/reuse/composition.py` runs two compiled stages over the real months and checks stage 1's guarantee
   against stage 2's certificates with `tools/contracts.py` (paper RQ6).
-- `eval/overhead.py`, `eval/certcost.py` and `eval/certsize.py` measure the run-time cost of admission
+- `eval/reuse/overhead.py`, `eval/reuse/certcost.py` and `eval/reuse/certsize.py` measure the run-time cost of admission
   and deoptimization, the compile-time cost of certification, and the size of the certificates
   (paper RQ7).
 - `eval/paper_numbers.py` writes `paper/numbers.tex`, so every number in the paper comes from
@@ -482,31 +482,40 @@ no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission wit
 nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
 `eval/results/*.md`.
 
-The paper is `paper/preplang.tex` (ACM `acmart`), with its sections, tables and figures in `paper/`
-and every number in `paper/numbers.tex`; build it with three runs of `pdflatex preplang.tex`.
-What is new compared with existing work is in [NOVELTY.md](NOVELTY.md).
+The paper is `paper/preplang.tex` (ACM `acmart`), built as `paper/PrepLang_Paper.pdf`; every number
+and table it shows is in `paper/generated/`, written by `eval/paper_numbers.py` (see `paper/README.md`).
+What is new compared with existing work is in [docs/NOVELTY.md](docs/NOVELTY.md).
 
 ## Project layout
 
 ```text
-src/common      source text, diagnostics (line, caret, hint, notes), did-you-mean
-src/lexer       tokens and the DFA-style lexer
-src/parser      recursive-descent parser with error recovery
-src/ast         AST, tree printer, Graphviz export
-src/schema      parallel CSV scanner, Parquet footers, PNG/JPEG headers, CRC-32 fingerprints
-src/sema        abstract dataset state, selectors, contracts, the semantic analyzer
-src/dataset     lineage and image-label linking
-src/ir          three-address IR
-src/optimizer   pass manager and the optimization passes
-src/certify     data certificates (full, admission, one per removal) by counterfactual re-analysis,
-                admission, output guarantees and the contract file
-frontend/       pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
-src/backend     pandas code, OpenCV code, deoptimization guards, and the planner that joins them
-src/explain     --explain, --dry-run, --lineage and the run manifest
-tools/          contracts.py: composes compiled stages and synthesizes producer contracts
-proofs/         Deopt.lean: selective deoptimization and composition, mechanized in Lean 4
-tests/          unit tests, with randomized soundness tests of certificates and deoptimization
-examples/       example programs and data
-eval/           mutants, baselines (pandera, Great Expectations, TFDV), benchmarks, real data, results
-paper/          the paper (LaTeX, ACM format; preplang_ieee_v1.tex is the earlier IEEE draft)
+src/                 the compiler (C++17, no external libraries)
+  common/            diagnostics (line, caret, hint, notes), did-you-mean, ISO dates
+  lexer/ parser/     tokens, the lexer, the recursive-descent parser with error recovery
+  ast/               AST, tree printer, Graphviz export
+  schema/            parallel CSV scanner, Parquet footers, PNG/JPEG headers, CRC-32 fingerprints
+  sema/              abstract dataset state, selectors, contracts, the semantic analyzer
+  dataset/           lineage and image-label linking
+  ir/ optimizer/     three-address IR, pass manager and the optimization passes
+  certify/           data certificates (full, admission, one per removal), output guarantees,
+                     the contract file
+  backend/           pandas and OpenCV code, deoptimization guards, the planner that joins them
+  explain/           --explain, --dry-run, --lineage and the run manifest
+tests/               unit tests (9 suites), with randomized soundness tests
+proofs/              Lean 4: Deopt.lean (the theorems) and Core.lean (a core analysis, proven)
+frontend/            pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
+tools/               contracts.py: composes compiled stages, synthesizes producer contracts
+examples/            example programs and data (tables, table sets, images, errors)
+output/              the program generated for examples/tabular/students.prep, as an example
+eval/                the evaluation
+  compilation/       RQ1-RQ2: injected mistakes, script baselines, benchmarks, real GitHub failures
+  reuse/             RQ3-RQ7: certificates, validators, real months, pandas corpora, composition, cost
+  results/           every result as .json and .md (the paper's numbers come only from here)
+  paper_numbers.py   writes paper/generated/ from eval/results/
+paper/               the paper (LaTeX, ACM format) and PrepLang_Paper.pdf
+  sections/ figures/ hand-written parts;  generated/: numbers and tables;  archive/: IEEE draft
+docs/                NOVELTY.md (novelty and prior work), review2/ and review3/ (course reports)
+demo/ studio/        the live demo with slides, and PrepLang Studio (a local editor app)
 ```
+
+Each of `eval/`, `paper/`, `proofs/` and `docs/` has a short README of its own.

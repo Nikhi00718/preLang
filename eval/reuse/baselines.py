@@ -1,6 +1,6 @@
 """Data-validation tools as admission baselines.
 
-    python eval/baselines.py OUT.json ANCHOR BATCH... [--tools pandera,gx,tfdv] [--columns a,b,c]
+    python eval/reuse/baselines.py OUT.json ANCHOR BATCH... [--tools pandera,gx,tfdv] [--columns a,b,c]
 
 Each tool infers what valid data looks like from the anchor file (the file the
 pipeline was compiled with), the way a data engineer would set it up, and then
@@ -13,7 +13,7 @@ setting that favours the tools; without it they see the whole file.
     tfdv     TensorFlow Data Validation: infer_schema + validate_statistics
 
 pandera and gx run in eval/.venv-baselines (Python 3.11); tfdv runs in Docker
-(see eval/tfdv.Dockerfile), because it has no Windows build. Writes one JSON
+(see eval/reuse/tfdv.Dockerfile), because it has no Windows build. Writes one JSON
 object: {tool: {batch path: {"admit": bool, "problems": [...], "seconds": s}}}.
 """
 import json

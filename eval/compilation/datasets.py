@@ -1,8 +1,8 @@
 """Synthetic data for the PrepLang examples and the evaluation.
 
-    py -3 eval/datasets.py examples     # rebuilds examples/images/
-    py -3 eval/datasets.py benchmark    # writes eval/data/ (large, not committed)
-    py -3 eval/datasets.py scale        # Parquet tables and a broken image folder, also in eval/data/
+    py -3 eval/compilation/datasets.py examples     # rebuilds examples/images/
+    py -3 eval/compilation/datasets.py benchmark    # writes eval/data/ (large, not committed)
+    py -3 eval/compilation/datasets.py scale        # Parquet tables and a broken image folder, also in eval/data/
 
 Everything is generated from fixed seeds, so the files are the same on every run.
 """
@@ -13,7 +13,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def synthetic_image(width, height, channels, seed):
@@ -148,4 +148,4 @@ if __name__ == "__main__":
     elif sys.argv[1:] == ["scale"]:
         make_scale_data()
     else:
-        sys.exit("usage: py -3 eval/datasets.py examples|benchmark|scale")
+        sys.exit("usage: py -3 eval/compilation/datasets.py examples|benchmark|scale")

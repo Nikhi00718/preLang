@@ -1,6 +1,6 @@
 # RQ10: composing certificates across pipeline stages
 
-Stage 1 cleans a month (eval/realbatches.py), stage 2 builds features from its output. Both are compiled once on the first month; tools/contracts.py compares what stage 2 relies on with stage 1's guarantee. *Strengthened*: stage 1 with the EXPECT statements the tool suggested.
+Stage 1 cleans a month (eval/reuse/realbatches.py), stage 2 builds features from its output. Both are compiled once on the first month; tools/contracts.py compares what stage 2 relies on with stage 1's guarantee. *Strengthened*: stage 1 with the EXPECT statements the tool suggested.
 
 | Workload | Stage 1 | Facts stage 2 relies on | Guaranteed | Months through both | Stage 2 refused | Stage 2 deoptimized | ... by a guaranteed fact | Stage 1 stopped | Stage 2 like fresh |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|

@@ -1,7 +1,7 @@
 """Data certificates for real pandas scripts (RQ9).
 
-    py -3 eval/pandas_corpus.py collect [titanic|houses]    # once: scripts from GitHub (needs gh, signed in)
-    py -3 eval/pandas_corpus.py [titanic|houses] [--derived] [path/to/preplang.exe]
+    py -3 eval/reuse/pandas_corpus.py collect [titanic|houses]    # once: scripts from GitHub (needs gh, signed in)
+    py -3 eval/reuse/pandas_corpus.py [titanic|houses] [--derived] [path/to/preplang.exe]
 
 With --derived the second lifter version (PARSE_DATE and DERIVE) is used, and the results go
 to eval/results/pandas_corpus[_houses]_derived.json and .md; without it, the first version.
@@ -43,7 +43,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "frontend"))
 from pandas2prep import lift  # noqa: E402
 

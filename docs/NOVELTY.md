@@ -203,7 +203,7 @@ top-venue paper (the language is small, one person classified the issues, and 44
   `src/schema/SchemaProvider.h` (`setOverrides`), `admit` in `src/backend/PandasCodegen.cpp`,
   `onlyIfInputChanged` in `src/optimizer/RedundantOpPass.cpp`.
 - **Evidence.** `tests/test_certificate.cpp`: 400 random inputs; every admitted one, compiled on
-  its own, keeps every proof. `eval/certificates.py` (RQ7): seven compiled programs were given 244 new batches (other days and a warmer season of a sensor process; resampled rows, drifting values, missing values and out-of-range values for the examples). The certificate admits 209 (86%); all facts of the compiled file, as a TFDV-style schema, admit 96 (39%); the fingerprint admits 0. All 209 admitted runs end exactly like a fresh compilation of that batch, and every refused batch also fails a fresh compilation. See `eval/results/certificates.md`.
+  its own, keeps every proof. `eval/reuse/certificates.py` (RQ7): seven compiled programs were given 244 new batches (other days and a warmer season of a sensor process; resampled rows, drifting values, missing values and out-of-range values for the examples). The certificate admits 209 (86%); all facts of the compiled file, as a TFDV-style schema, admit 96 (39%); the fingerprint admits 0. All 209 admitted runs end exactly like a fresh compilation of that batch, and every refused batch also fails a fresh compilation. See `eval/results/certificates.md`.
 
 ### N8. A compile-time CSV analysis faster than reading the file with pandas
 
@@ -372,7 +372,7 @@ What a reviewer at a top venue would raise, and what was done about it:
 - **"The pipelines of the real-data experiment are the authors' own."** GitHub scripts for the same UCI
   traffic and bike-sharing data, lifted with the second lifter version (traffic scripts as the
   development set, bike scripts held out), compiled on the first real month and run on every later
-  month against the scripts' own pandas statements (`eval/drift_corpus.py`). Result: 72 scripts
+  month against the scripts' own pandas statements (`eval/reuse/drift_corpus.py`). Result: 72 scripts
   compile on the first month (80 DERIVE, 52 PARSE_DATE statements lifted); all 3,255 runs on later
   months end as the scripts' own statements do, none refused, none wrong. Only 4 programs have a
   removal that can run again; two traffic scripts filter impossible readings themselves (temp > 0,

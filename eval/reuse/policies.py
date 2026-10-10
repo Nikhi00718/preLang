@@ -136,10 +136,10 @@ def file_facts_admit(original, batch, columns):
 
 
 def run_validators(anchor, batches, columns, out_json, tools=("pandera", "gx", "tfdv")):
-    """Runs eval/baselines.py for `tools` (pandera and gx in eval/.venv-baselines,
+    """Runs eval/reuse/baselines.py for `tools` (pandera and gx in eval/.venv-baselines,
     tfdv in WSL) and returns {tool: {batch path: admit or None}} for both the
     whole files (scope "all") and only `columns` (scope "read")."""
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parents[2]
     venv = root / "eval" / ".venv-baselines" / "Scripts" / "python.exe"
     decisions = {}
     for scope, extra in (("all", []), ("read", ["--columns", ",".join(columns)])):
@@ -147,18 +147,18 @@ def run_validators(anchor, batches, columns, out_json, tools=("pandera", "gx", "
         reports = {}
         if local and venv.exists():
             target = Path(out_json).with_suffix(f".{scope}.local.json")
-            subprocess.run([str(venv), str(root / "eval" / "baselines.py"), str(target), str(anchor),
+            subprocess.run([str(venv), str(root / "eval" / "reuse" / "baselines.py"), str(target), str(anchor),
                             *map(str, batches), "--tools", ",".join(local), *extra],
                            capture_output=True, text=True)
             if target.exists():
                 reports.update(__import__("json").loads(target.read_text(encoding="utf-8")))
         if "tfdv" in tools and shutil.which("wsl"):
             # TFDV has no Windows build: it runs in WSL (Ubuntu, a Python 3.12 venv in ~/tfdv;
-            # eval/tfdv.Dockerfile sets up the same with Docker).
+            # eval/reuse/tfdv.Dockerfile sets up the same with Docker).
             target = Path(out_json).with_suffix(f".{scope}.tfdv.json")
             linux = lambda p: "/mnt/" + str(Path(p).resolve())[0].lower() + str(Path(p).resolve())[2:].replace("\\", "/")  # noqa: E731
             subprocess.run(["wsl", "-d", "Ubuntu", "--", "bash", "-lc",
-                            " ".join(["~/tfdv/bin/python", repr(linux(root / "eval" / "baselines.py")), repr(linux(target)),
+                            " ".join(["~/tfdv/bin/python", repr(linux(root / "eval" / "reuse" / "baselines.py")), repr(linux(target)),
                                       repr(linux(anchor)), *[repr(linux(b)) for b in batches], "--tools", "tfdv",
                                       *extra])],
                            capture_output=True, text=True)
@@ -184,7 +184,7 @@ def run_validator_jobs(jobs, work, tools=("pandera", "gx", "tfdv"), workers=6):
     one process, gx in `workers` parallel processes (its profiler is slow), tfdv in one WSL process.
     Returns {"tool/scope": {(anchor, batch): admit or None}}."""
     import json
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parents[2]
     venv = root / "eval" / ".venv-baselines" / "Scripts" / "python.exe"
     work = Path(work)
     work.mkdir(parents=True, exist_ok=True)
@@ -202,7 +202,7 @@ def run_validator_jobs(jobs, work, tools=("pandera", "gx", "tfdv"), workers=6):
                 jobs_file.write_text(json.dumps(mapped), encoding="utf-8")
                 out = work / f"out.{scope}.tfdv.json"
                 command = ["wsl", "-d", "Ubuntu", "--", "bash", "-lc",
-                           " ".join(["~/tfdv/bin/python", repr(linux(root / "eval" / "baselines.py")), "--jobs",
+                           " ".join(["~/tfdv/bin/python", repr(linux(root / "eval" / "reuse" / "baselines.py")), "--jobs",
                                      repr(linux(jobs_file)), repr(linux(out)), "tfdv", scope])]
                 back = {linux(p): p for j in jobs for p in [j["anchor"], *j["batches"]]}
                 processes.append((tool, scope, subprocess.Popen(command, stdout=subprocess.DEVNULL,
@@ -219,7 +219,7 @@ def run_validator_jobs(jobs, work, tools=("pandera", "gx", "tfdv"), workers=6):
                 out = work / f"out.{scope}.{tool}.{part}.json"
                 outs.append(out)
                 processes.append((tool, scope, subprocess.Popen(
-                    [str(venv), str(root / "eval" / "baselines.py"), "--jobs", str(jobs_file), str(out), tool, scope],
+                    [str(venv), str(root / "eval" / "reuse" / "baselines.py"), "--jobs", str(jobs_file), str(out), tool, scope],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL), [out], {}))
     for _, _, process, _, _ in processes:
         process.wait()

@@ -69,7 +69,7 @@ table gets new batches: other days and a warmer season of the sensor process, an
 rows resampled with replacement, values moved by noise of 0.1, 0.5 and 1.5 standard deviations, 20\%
 missing values in one column, and one value far out of range (\CertBatches{} batches).
 
-\input{certtable}
+\input{generated/certtable}
 
 Both certificates handle every batch correctly (Table~\ref{tab:rq-edits}): the full certificate by
 refusing exactly the batches whose fresh compilation fails, selective deoptimization by running them
@@ -111,9 +111,9 @@ and compiled on the month before each month (\RealRuns{} runs; twice the month b
 0\,K, fails to compile itself, and leaves nothing to deploy). Batches are cut from the raw
 files, so no value is reformatted.
 
-\input{realtable}
-\input{figure-policies}
-\input{figure-timeline}
+\input{generated/realtable}
+\input{figures/figure-policies}
+\input{generated/figure-timeline}
 
 Over \RealRuns{} runs (Table~\ref{tab:rq-real}, Figs.~\ref{fig:policies} and~\ref{fig:timeline}), selective deoptimization
 handles \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
@@ -163,7 +163,7 @@ file has none), five bootstrap resamples of the training rows, and five copies w
 values in one column. Each batch is run by the compiled program and, as ground truth, by the lifted
 pandas statements; the cleaned tables are compared value by value.
 
-\input{corpustable}
+\input{generated/corpustable}
 
 \paragraph{Results.} With deoptimization, \CorpusSame{} Titanic runs and \HousesSame{} House Prices
 runs reproduce the scripts' results exactly, and none differ (Table~\ref{tab:rq-corpus}). The
@@ -181,7 +181,7 @@ statements of the same held-out scripts instead of \CorpusBothStatements{}; the 
 (\CorpusBothDerSame{} of \CorpusBothDerRuns{} identical to the scripts, \CorpusBothDerUnsound{}
 different).
 
-\input{drifttable}
+\input{generated/drifttable}
 
 \paragraph{Other people's pipelines on real monthly data.} The pipelines of RQ4 are ours, and most
 Kaggle batches above are made, not observed. GitHub code search for Python files that read the UCI
@@ -209,7 +209,7 @@ what stage~1 writes for the anchor month), and \texttt{tools/contracts.py} compa
 with what stage~2 relies on. Every later month runs through both compiled stages, and stage~2 is also
 compiled and run fresh on stage~1's output.
 
-\input{comptable}
+\input{generated/comptable}
 
 The composition shows that stage~1 already guarantees most of what stage~2 relies on
 (\ComposeGuaranteed{} of \ComposeFacts{} facts across the three workloads), so stage~2's checks of

@@ -18,7 +18,7 @@ import cv2
 import numpy as np
 import pandas as pd
 
-EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
+EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 
 SEEDS = {
     "students": EXAMPLES / "tabular" / "students.prep",

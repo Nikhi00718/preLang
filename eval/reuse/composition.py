@@ -1,8 +1,8 @@
 """Do certificates compose across pipeline stages? (RQ10)
 
-    py -3 eval/composition.py [path/to/preplang.exe]
+    py -3 eval/reuse/composition.py [path/to/preplang.exe]
 
-Each real workload of eval/realbatches.py (the cleaning stage) gets a second
+Each real workload of eval/reuse/realbatches.py (the cleaning stage) gets a second
 stage that reads its output, as a feature or model-input step would. Both
 stages are compiled once: stage 1 on the first month, stage 2 on what stage 1
 writes for that month. tools/contracts.py then compares statically what stage 2
@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import compile_variants, run_fresh, run_program, same_outputs, score  # noqa: E402
 from realbatches import BIKES, REAL, TAXI, TRAFFIC  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "composition"
 RESULTS = ROOT / "eval" / "results"
 PYTHON = sys.executable
@@ -162,7 +162,7 @@ def main(compiler):
 
 def write_markdown(results):
     lines = ["# RQ10: composing certificates across pipeline stages", "",
-             "Stage 1 cleans a month (eval/realbatches.py), stage 2 builds features from its output. Both are "
+             "Stage 1 cleans a month (eval/reuse/realbatches.py), stage 2 builds features from its output. Both are "
              "compiled once on the first month; tools/contracts.py compares what stage 2 relies on with stage 1's "
              "guarantee. *Strengthened*: stage 1 with the EXPECT statements the tool suggested.", "",
              "| Workload | Stage 1 | Facts stage 2 relies on | Guaranteed | Months through both | Stage 2 refused | "

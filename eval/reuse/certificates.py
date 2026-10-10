@@ -1,6 +1,6 @@
 """Can a compiled program be reused on new data? (RQ7: data certificates)
 
-    py -3 eval/certificates.py [path/to/preplang.exe]
+    py -3 eval/reuse/certificates.py [path/to/preplang.exe]
 
 Each workload is compiled once. It then gets new batches of its input tables:
 other days of the same process, and edits real pipelines see (rows resampled,
@@ -11,7 +11,7 @@ values drifting, values missing, values out of range). For every batch:
   * fresh:          the batch is put in place of the file, compiled and run
                     (the ground truth: what compiling for this batch gives)
 
-The admission policies of eval/policies.py are compared on the same batches
+The admission policies of eval/reuse/policies.py are compared on the same batches
 (fingerprint, file facts, the full certificate, the certificate with
 deoptimization; `certificates.py validators` adds pandera, Great Expectations
 and TFDV), each scored against the fresh run.
@@ -32,7 +32,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import compile_variants, run_fresh, run_program, run_validator_jobs, run_validators, score  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "certificates"
 RESULTS = ROOT / "eval" / "results"
 COMPILER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 and sys.argv[1] != "validators" else \

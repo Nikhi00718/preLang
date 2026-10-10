@@ -1,6 +1,6 @@
 """Real-bug study (RQ6): reproduces the issues of realbugs_catalog.py and checks the compiler.
 
-    py -3 eval/run_realbugs.py [preplang.exe] [preplang.exe before the study's fixes]
+    py -3 eval/compilation/run_realbugs.py [preplang.exe] [preplang.exe before the study's fixes]
 
 Every issue with the verdict compile, contract or design has a reproduction below: a small
 PrepLang program and data that recreate the situation described in the issue. The expected
@@ -19,7 +19,7 @@ import numpy as np
 
 from realbugs_catalog import EXCLUDED, ISSUES, SIGNATURES
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "realbugs"
 RESULTS = ROOT / "eval" / "results"
 COMPILER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "build" / "Release" / "preplang.exe"

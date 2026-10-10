@@ -15,7 +15,7 @@
 \renewcommand\footnotetextcopyrightpermission[1]{}
 
 % Every measured number comes from eval/results/ through eval/paper_numbers.py.
-\input{numbers}
+\input{generated/numbers}
 
 \lstdefinelanguage{PrepLang}{
   morekeywords={LOAD,LOAD_TABLES,LOAD_IMAGE,LOAD_IMAGES,SAVE,SAVE_TABLES,SAVE_IMAGE,SAVE_IMAGES,
@@ -150,7 +150,7 @@ compose the resulting certificates across pipeline stages (Section~\ref{sec:rela
 
 \section{Overview}\label{sec:overview}
 
-\input{figure-arch}
+\input{figures/figure-arch}
 
 Fig.~\ref{fig:students} cleans a table of students. Compiled against a file whose marks lie in
 $[35,95]$ and whose names are all present, \PL proves the contracts on lines~2--3, finds that
@@ -487,9 +487,9 @@ pandas and OpenCV code generators. Every compilation writes the generated progra
 contract file. The front end for pandas, the composition tool and the evaluation harness are Python;
 the unit tests (\TestCount{} checks in 9 suites) include the randomized soundness tests.
 
-\input{evaluation}
+\input{sections/evaluation}
 
-\input{related}
+\input{sections/related}
 
 \section{Conclusion}
 
@@ -510,6 +510,6 @@ the evaluation scripts with their pinned baseline environments, and the raw resu
 repository; \texttt{eval/paper\_numbers.py} regenerates every number, table and data figure of this
 paper from the results.
 
-\input{references}
+\input{sections/references}
 
 \end{document}

@@ -1,6 +1,6 @@
 # RQ8: reusing a compiled pipeline on real monthly batches
 
-Each pipeline is compiled on one month (the first, or the month before) and given the next months with `name=file`; each month is also compiled and run fresh as the ground truth. Every policy is scored against that fresh run (see eval/policies.py): *correct* = it ran and wrote the fresh files, or it stopped where the fresh run stops; *needless* = it refused a month the fresh compilation runs; *unsound* = it finished with other files than the fresh run, or where the fresh run fails.
+Each pipeline is compiled on one month (the first, or the month before) and given the next months with `name=file`; each month is also compiled and run fresh as the ground truth. Every policy is scored against that fresh run (see eval/reuse/policies.py): *correct* = it ran and wrote the fresh files, or it stopped where the fresh run stops; *needless* = it refused a month the fresh compilation runs; *unsound* = it finished with other files than the fresh run, or where the fresh run fails.
 
 | Workload | Anchor | Months | fingerprint | file facts | gx/all | gx/read | pandera/all | pandera/read | tfdv/all | tfdv/read | full | deopt |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|

@@ -6,7 +6,7 @@ images loaded into memory, and EXPECT contracts as run-time assertions. There
 is no static analysis, so every mistake surfaces only while the data is being
 processed (as an exception), or not at all (a silently wrong output).
 
-    py -3 eval/baseline.py program.prep output_folder
+    py -3 eval/compilation/baseline.py program.prep output_folder
 """
 import re
 import sys

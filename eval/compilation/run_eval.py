@@ -1,6 +1,6 @@
 """Fault benchmark (RQ1) and contract statistics (RQ2).
 
-    py -3 eval/run_eval.py [path/to/preplang.exe]
+    py -3 eval/compilation/run_eval.py [path/to/preplang.exe]
 
 For every program (the original examples as controls, plus every mutant):
   * PrepLang compiles it (--explain, nothing is executed);
@@ -19,7 +19,7 @@ from pathlib import Path
 from baseline import Runner
 from mutants import programs
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "mutants"
 RESULTS = ROOT / "eval" / "results"
 COMPILER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "build" / "Debug" / "preplang.exe"

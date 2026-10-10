@@ -1,6 +1,6 @@
 """A hand-written image script, written the careful way: one image at a time.
 
-    py -3 eval/handwritten.py <input folder> <output folder> jpg|float-png
+    py -3 eval/compilation/handwritten.py <input folder> <output folder> jpg|float-png
 
 jpg        resize to 224x224, make gray, save as JPG (the pipeline the benchmarks use)
 float-png  the same, but the pixels are scaled to floats in [0, 1] and saved as PNG,

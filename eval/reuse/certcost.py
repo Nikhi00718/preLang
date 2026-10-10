@@ -1,8 +1,8 @@
 """What does certification cost at compile time? (part of RQ7)
 
-    py -3 eval/certcost.py [path/to/preplang.exe]
+    py -3 eval/reuse/certcost.py [path/to/preplang.exe]
 
-For the example programs and the real pipelines of eval/realbatches.py (compiled on their first
+For the example programs and the real pipelines of eval/reuse/realbatches.py (compiled on their first
 month), the number of re-analyses the certifier runs and the compile time (median of 5), with
 deoptimization (full, admission and item certificates) and with --no-deopt (the full certificate).
 Writes eval/results/certcost.json and .md.
@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from realbatches import WORKLOADS, prepare  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "certcost"
 RESULTS = ROOT / "eval" / "results"
 

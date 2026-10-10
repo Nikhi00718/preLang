@@ -1,7 +1,7 @@
 """Performance of the optimizations (RQ3) and the cost of compiling (RQ4).
 
-    py -3 eval/datasets.py benchmark          # once: writes eval/data/
-    py -3 eval/bench.py [path/to/preplang.exe]
+    py -3 eval/compilation/datasets.py benchmark          # once: writes eval/data/
+    py -3 eval/compilation/bench.py [path/to/preplang.exe]
 
 Writes eval/results/rq3.json and eval/results/rq3.md. Times are the median of
 REPEAT runs and include starting Python, as a user would run the program.
@@ -18,7 +18,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "eval" / "data"
 WORK = ROOT / "eval" / "work" / "bench"
 RESULTS = ROOT / "eval" / "results"
@@ -75,7 +75,7 @@ SAVE wide AS "wide_clean.csv";
     result = {
         "optimized_s": median_time([PYTHON, "output/generated.py"], optimized),
         "O0_s": median_time([PYTHON, "output/generated.py"], unoptimized),
-        "baseline_s": median_time([PYTHON, str(ROOT / "eval" / "baseline.py"), "program.prep", "out"],
+        "baseline_s": median_time([PYTHON, str(ROOT / "eval" / "compilation" / "baseline.py"), "program.prep", "out"],
                                   WORK / "table_baseline"),
         "same_output": filecmp.cmp(optimized / "output" / "wide_clean.csv",
                                    unoptimized / "output" / "wide_clean.csv", shallow=False),
@@ -99,7 +99,7 @@ SAVE_IMAGES imgs TO "small/";
     baseline = WORK / "images_baseline"
     baseline.mkdir(exist_ok=True)
     (baseline / "program.prep").write_text(program, encoding="utf-8")
-    baseline_command = [str(ROOT / "eval" / "baseline.py"), "program.prep", "out"]
+    baseline_command = [str(ROOT / "eval" / "compilation" / "baseline.py"), "program.prep", "out"]
 
     names = sorted(p.name for p in (folder / "output" / "small").glob("*.jpg"))[:20]
     subprocess.run([PYTHON, *baseline_command], cwd=baseline, check=True, capture_output=True)
@@ -107,7 +107,7 @@ SAVE_IMAGES imgs TO "small/";
                                    cv2.imread(str(baseline / "out" / "small" / n), cv2.IMREAD_UNCHANGED))
                     for n in names)
     # A careful hand-written script also streams: the fair comparison for memory.
-    handwritten = [str(ROOT / "eval" / "handwritten.py"), str(DATA / "images_1000"), "out_handwritten", "jpg"]
+    handwritten = [str(ROOT / "eval" / "compilation" / "handwritten.py"), str(DATA / "images_1000"), "out_handwritten", "jpg"]
     return {
         "images": 1000,
         "preplang_s": median_time([PYTHON, "output/generated.py"], folder),
@@ -176,7 +176,7 @@ def compile_cost():
 
 def main():
     if not DATA.exists():
-        sys.exit("run  py -3 eval/datasets.py benchmark  first")
+        sys.exit("run  py -3 eval/compilation/datasets.py benchmark  first")
     WORK.mkdir(parents=True, exist_ok=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
     results = {}
@@ -210,7 +210,7 @@ def write_markdown(r):
         "|---|---:|---:|",
         f"| PrepLang (streaming) | {s['preplang_s']:.2f} | {s['preplang_peak_mib']:.0f} |",
         f"| Script-style baseline (all in memory) | {s['baseline_s']:.2f} | {s['baseline_peak_mib']:.0f} |",
-        f"| Hand-written streaming script (eval/handwritten.py) | {s['handwritten_s']:.2f} | "
+        f"| Hand-written streaming script (eval/compilation/handwritten.py) | {s['handwritten_s']:.2f} | "
         f"{s['handwritten_peak_mib']:.0f} |",
         "",
         f"Same pixels in a sample of 20 outputs: {s['same_pixels_in_sample']}",

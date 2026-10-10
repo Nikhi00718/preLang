@@ -1,8 +1,8 @@
 """What does reusing a compiled program cost? (RQ11)
 
-    py -3 eval/overhead.py [path/to/preplang.exe]
+    py -3 eval/reuse/overhead.py [path/to/preplang.exe]
 
-For the real workloads of eval/realbatches.py, compiled on the first month, every
+For the real workloads of eval/reuse/realbatches.py, compiled on the first month, every
 later month is run (median of REPEAT runs, nothing else running):
     trusted   the optimized program on the month, with no admission check (the floor)
     full      with admission against the full certificate (--no-deopt)
@@ -10,7 +10,7 @@ later month is run (median of REPEAT runs, nothing else running):
     compile   a fresh compilation of the month (preplang --python), without running it
     fresh     a fresh compilation and run
 The admission overhead is (deopt - trusted) / trusted; recompiling instead costs
-compile. The validators' own validation time comes from eval/baselines.py.
+compile. The validators' own validation time comes from eval/reuse/baselines.py.
 Writes eval/results/overhead.json and .md.
 """
 import json
@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import compile_variants, run_program  # noqa: E402
 from realbatches import WORKLOADS, prepare  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "overhead"
 RESULTS = ROOT / "eval" / "results"
 REPEAT = 3

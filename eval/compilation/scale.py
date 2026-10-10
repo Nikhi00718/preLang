@@ -1,12 +1,12 @@
 """How long until a mistake is reported, on large inputs (RQ5).
 
-    py -3 eval/datasets.py benchmark     # once: images
-    py -3 eval/datasets.py scale         # once: Parquet tables, broken image folder
-    py -3 eval/scale.py [path/to/preplang.exe]
+    py -3 eval/compilation/datasets.py benchmark     # once: images
+    py -3 eval/compilation/datasets.py scale         # once: Parquet tables, broken image folder
+    py -3 eval/compilation/scale.py [path/to/preplang.exe]
 
 Each case is run by PrepLang (compile; run the generated program if it compiles)
 and by a script that performs the same pipeline: the script-style baseline for
-tables, and eval/handwritten.py, which streams images one at a time, for images.
+tables, and eval/compilation/handwritten.py, which streams images one at a time, for images.
 Writes eval/results/scale.json and eval/results/scale.md.
 """
 import json
@@ -21,7 +21,7 @@ from pathlib import Path
 import cv2
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "eval" / "data"
 WORK = ROOT / "eval" / "work" / "scale"
 RESULTS = ROOT / "eval" / "results"
@@ -110,7 +110,7 @@ def table_cases():
     program = TABLE_PROGRAM.format(path=(DATA / "events_16000000.parquet").as_posix())
 
     def baseline(folder):
-        return [PYTHON, str(ROOT / "eval" / "baseline.py"), "program.prep", "out"]
+        return [PYTHON, str(ROOT / "eval" / "compilation" / "baseline.py"), "program.prep", "out"]
 
     cases = [
         ("tables: correct program", program),
@@ -126,7 +126,7 @@ def image_cases():
 
     def script(images, mode):
         def command(folder):
-            return [PYTHON, str(ROOT / "eval" / "handwritten.py"), str(DATA / images), "out", mode]
+            return [PYTHON, str(ROOT / "eval" / "compilation" / "handwritten.py"), str(DATA / images), "out", mode]
         return command
 
     return [
@@ -140,7 +140,7 @@ def image_cases():
 
 def main():
     if not (DATA / "events_16000000.parquet").exists():
-        sys.exit("run  py -3 eval/datasets.py benchmark  and  py -3 eval/datasets.py scale  first")
+        sys.exit("run  py -3 eval/compilation/datasets.py benchmark  and  py -3 eval/compilation/datasets.py scale  first")
     WORK.mkdir(parents=True, exist_ok=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
     results = {}

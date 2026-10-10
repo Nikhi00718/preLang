@@ -216,7 +216,7 @@ def run_program(relative, choices):
 
 
 def plain_script(relative):
-    """The same steps as a plain pandas/OpenCV script, without any checks (eval/baseline.py)."""
+    """The same steps as a plain pandas/OpenCV script, without any checks (eval/compilation/baseline.py)."""
     path = inside(relative)
     out = path.parent / "output" / "plain_script"
     if out.exists():

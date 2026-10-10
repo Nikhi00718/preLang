@@ -1,7 +1,7 @@
 """Other people's pandas scripts on real monthly data (part of RQ5).
 
-    py -3 eval/drift_corpus.py collect traffic|bikes|hours    # once: scripts from GitHub (needs gh, signed in)
-    py -3 eval/drift_corpus.py traffic|bikes|hours [path/to/preplang.exe]
+    py -3 eval/reuse/drift_corpus.py collect traffic|bikes|hours    # once: scripts from GitHub (needs gh, signed in)
+    py -3 eval/reuse/drift_corpus.py traffic|bikes|hours [path/to/preplang.exe]
 
 The pipelines of RQ4 are ours; these are not. GitHub code search returns Python files that read the
 UCI Metro Interstate traffic file, or the UCI bike-sharing day.csv or hour.csv, in GitHub's ranking
@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "frontend"))
 from pandas2prep import lift  # noqa: E402
 

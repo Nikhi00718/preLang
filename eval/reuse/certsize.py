@@ -1,8 +1,8 @@
 """How large are the certificates? (part of RQ7)
 
-    py -3 eval/certsize.py [path/to/preplang.exe]
+    py -3 eval/reuse/certsize.py [path/to/preplang.exe]
 
-For the table programs of eval/certcost.py (the examples and the real pipelines, compiled on their
+For the table programs of eval/reuse/certcost.py (the examples and the real pipelines, compiled on their
 first month), counts the facts in the contract file every compilation writes: the full certificate
 (--no-deopt), the admission certificate, and each item certificate's facts beyond admission. A fact
 is a column's type, its having no missing values, a lower bound or an upper bound. Image programs are
@@ -15,9 +15,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "certsize"
-SOURCE = ROOT / "eval" / "work" / "certcost"  # the copies eval/certcost.py compiled
+SOURCE = ROOT / "eval" / "work" / "certcost"  # the copies eval/reuse/certcost.py compiled
 RESULTS = ROOT / "eval" / "results"
 FACTS = ("type", "not_null", "min", "max")
 

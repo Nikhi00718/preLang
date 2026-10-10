@@ -16,7 +16,7 @@ Speedup of the optimizer: 1.21x; optimized and --O0 outputs identical: True
 |---|---:|---:|
 | PrepLang (streaming) | 3.52 | 10 |
 | Script-style baseline (all in memory) | 4.01 | 922 |
-| Hand-written streaming script (eval/handwritten.py) | 3.54 | 12 |
+| Hand-written streaming script (eval/compilation/handwritten.py) | 3.54 | 12 |
 
 Same pixels in a sample of 20 outputs: True
 

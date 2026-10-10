@@ -36,3 +36,6 @@ paper/build_log.txt
 
 # Lean build output
 proofs/.lake/
+
+# pdflatex output; the committed copy is paper/PrepLang_Paper.pdf
+paper/preplang.pdf

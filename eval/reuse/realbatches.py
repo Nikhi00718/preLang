@@ -1,8 +1,8 @@
 """Data certificates on real data that changes over time (RQ8).
 
-    py -3 eval/realbatches.py download     # once: public datasets into eval/data/real/
-    py -3 eval/realbatches.py [path/to/preplang.exe]
-    py -3 eval/realbatches.py validators   # then: pandera, Great Expectations and TFDV on the same months
+    py -3 eval/reuse/realbatches.py download     # once: public datasets into eval/data/real/
+    py -3 eval/reuse/realbatches.py [path/to/preplang.exe]
+    py -3 eval/reuse/realbatches.py validators   # then: pandera, Great Expectations and TFDV on the same months
 
 Three public datasets with real monthly batches:
   * traffic  UCI Metro Interstate Traffic Volume, hourly 2012-2018, one CSV per month
@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import (OUTCOMES, compile_variants, file_facts_admit, run_fresh, run_program,  # noqa: E402
                       run_validator_jobs, run_validators, score)
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 REAL = ROOT / "eval" / "data" / "real"
 WORK = ROOT / "eval" / "work" / "realbatches"
 RESULTS = ROOT / "eval" / "results"
@@ -226,7 +226,7 @@ def write_markdown(rows):
     lines = ["# RQ8: reusing a compiled pipeline on real monthly batches", "",
              "Each pipeline is compiled on one month (the first, or the month before) and given the next months "
              "with `name=file`; each month is also compiled and run fresh as the ground truth. Every policy is scored "
-             "against that fresh run (see eval/policies.py): *correct* = it ran and wrote the fresh files, or it "
+             "against that fresh run (see eval/reuse/policies.py): *correct* = it ran and wrote the fresh files, or it "
              "stopped where the fresh run stops; *needless* = it refused a month the fresh compilation runs; "
              "*unsound* = it finished with other files than the fresh run, or where the fresh run fails.", "",
              "| Workload | Anchor | Months | " + " | ".join(policies) + " |",

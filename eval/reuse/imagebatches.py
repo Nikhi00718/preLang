@@ -1,6 +1,6 @@
 """Reusing a compiled image pipeline on new folders (part of RQ3).
 
-    py -3 eval/imagebatches.py [path/to/preplang.exe]
+    py -3 eval/reuse/imagebatches.py [path/to/preplang.exe]
 
 The pipeline makes images gray and 64x64 and saves them as PNG. It is compiled on a folder of
 gray 64x64 images, so the optimizer removes GRAYSCALE and RESIZE speculatively. New folders, five
@@ -21,7 +21,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import compile_variants, run_fresh, run_program, score  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "eval" / "work" / "imagebatches"
 RESULTS = ROOT / "eval" / "results"
 PROGRAM = """# Gray 64x64 PNG images for a small classifier.
