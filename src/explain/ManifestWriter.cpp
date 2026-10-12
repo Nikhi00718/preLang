@@ -30,8 +30,8 @@ std::string manifestCode(const IRProgram& program, const AnalysisResult& analysi
          << "    \"compiler\": \"PrepLang 1.0\",\n    \"inputs\": [\n";
     for (const auto& [key, table] : program.tables) {
         code << "        {\"table\": " << pythonString(key) << ", \"path\": "
-             << pythonString(pathFrom(outputFolder, table.file)) << ", \"fingerprint\": \"" << hex(table.fingerprint)
-             << "\"},\n";
+             << pythonString(pathFrom(outputFolder, table.file)) << ", \"fingerprint\": "
+             << (table.released ? "None" : "\"" + hex(table.fingerprint) + "\"") << "},\n";
     }
     for (const auto& [name, images] : program.images) {
         code << "        {\"images\": " << pythonString(name) << ", \"path\": "

@@ -381,3 +381,83 @@ What a reviewer at a top venue would raise, and what was done about it:
 
 Still open: joins; a proof for the full C++ analysis; showing reuse saving time (compilation is cheap,
 so the paper does not claim it).
+
+## Added in October 2026 (third round): compiling against data you cannot see
+
+### How the idea was chosen
+
+Two strict reviewers (one as a PLDI/OOPSLA PC member, one as a SIGMOD/VLDB/MLSys PC member) rated
+the project as it stood at **5/10 for novelty**, lower than the 6.5 above, and named three ancestors
+that were not cited: semantic query optimization with soft constraints that hold in the current data
+(Godfrey, Gryz and Zuzarte, SIGMOD 2001), BHUNT (Brown and Haas, VLDB 2003), and verified speculation
+and deoptimization (Barrière et al., POPL 2021). All three are now cited. Eight candidate ideas were
+checked against prior work; the scores were: robustness margins 4, library-upgrade safety 4, engine
+divergence certificates 4 (6-8 strengthened), drift repair 4, row-level partitioned execution 3,
+prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and **private
+compilation 6-8**, the highest.
+
+### N12. Private compilation
+
+- **Problem.** A data-aware compiler leaks its data through what it writes: the generated program
+  embeds the file's checksum (which confirms a guessed file), every removal states a fact (no missing
+  `age`, no mark below 10), a violated contract names a row, the contract file records bounds. Yet in
+  validation servers and data clean rooms the analyst who writes the pipeline may not see the data.
+- **Observation.** The exactness theorem of selective deoptimization has no hypothesis about the facts
+  the compiler starts from (in Lean, `deopt_correct` quantifies over arbitrary removals and
+  certificates). The facts only decide which instructions are removed speculatively and which
+  certificates guard them; the generated program checks the certificates on the real batch. So the
+  compiler may start from facts that are wrong: a wrong fact costs a deoptimization, never a wrong
+  result.
+- **What.** The data owner runs `preplang --queries` (the public schema and the numbers written in the
+  program) and `tools/release_facts.py`, which answers only threshold questions at those numbers (how
+  many values are missing, below k, above k) with AboveThreshold, the canonical sparse vector technique,
+  one question sequence per column and side. The analyst compiles with `--facts`; the compiler opens no
+  input file, treats nothing as exact (no contract is reported violated; contracts that read values are
+  checked at run time), embeds no checksum, and warns "likely violated" where the released evidence
+  shows a contract broken.
+- **Guarantees.** (1) Everything the compiler writes is epsilon-differentially private (AboveThreshold,
+  sequential composition over question sequences that depend only on the program and the public
+  schema, post-processing). (2) Every run on every admitted batch is exact, for any facts file, true,
+  noisy or false. (3) With thresholds set from beta, with probability 1 - beta every "likely violated"
+  warning names a real violation, and for programs without `DERIVE` the private compilation removes at
+  least what a normal compilation of the same file removes (the analysis compares bounds only with the
+  program's numbers, so bounds at those numbers decide every proof exact bounds decide).
+- **Why it is new, to our knowledge.** The rule that a hint may be wrong if it is cheap to check is
+  Lampson's (1983), and JIT guards apply it to speculation (Hölzle 1992; Flückiger 2018; Barrière 2021).
+  Differential privacy has been used to answer an analyst's queries (PrivateSQL, elastic sensitivity,
+  APEx), to plan secure joins from noisy synopses (SPECIAL, PVLDB 18), to choose DP algorithms (Pythia),
+  to profile deployed software (Zhang et al., OOPSLA 2020), and in languages that prove a program DP
+  (Fuzz, Fuzzi, Duet). In query planning noise can only change cost, because a plan choice does not
+  change a query's result. We found no work in which differentially private facts about the data decide
+  which checks and operations a compiler *removes*, which could change results, with guards that keep
+  every run exact, and with the questions chosen by the program at its own numbers.
+- **Code.** `src/schema/ReleasedFacts.{h,cpp}`, `SchemaProvider::setReleased`, `--queries` and `--facts`
+  in `src/main.cpp`, `likelyViolated` in `src/sema/ContractAnalyzer.cpp`, `tools/release_facts.py`,
+  `tests/test_private.cpp`, `eval/reuse/private.py`.
+- **Evidence** (`eval/results/private.md`, `eval/results/private_diagnostics.md`, paper RQ8).
+  - 1,176 private compilations (RQ4 pipelines on real months and 184 lifted Titanic scripts; facts
+    from the release at epsilon 0.1-100, without noise, absent, and random true-or-false facts) were run
+    16,200 times; none was unsound. The only refusals of months a fresh compilation runs are the taxi
+    schema change, which the normal compilation refuses too.
+  - Without noise, the questions at the program's numbers give exactly the normal removals. With
+    noise, what is learned depends on how many rows a fact concerns: the traffic months (about 800 rows)
+    keep 29%, 71% and 100% of the normal removals at epsilon 0.1, 1 and 10; the 31-row bike months only
+    at epsilon 100; the taxi months (about 60,000 trips) 100% at every epsilon. False facts show up as
+    deoptimizations on the compiled file itself (85 of 184 Titanic programs at epsilon 1, mostly fills of
+    `Age`, whose 177 missing values are below the threshold at that budget, and of `Embarked`, whose two
+    missing values no release can reveal; 74 at epsilon 10, mostly `Embarked`).
+  - On a 1,000,000-row file with a mistake injected into m rows, every private compilation warns that
+    the broken contract is likely violated from m = 10,000 at epsilon 0.1, m = 1,000 at epsilon 1,
+    m = 100 at epsilon 10 (and m = 1 without noise); 0 false warnings in 288 compilations.
+  - `tests/test_private.cpp`: 300 random facts files with random inputs, 0 runs that differ from the
+    source program.
+- **Found by this evaluation in the existing compiler.** A fill of a column dropped right after was
+  removed both as a dead store and as having no effect, and the certifier kept "no missing values" as an
+  admission fact of a column the program never loads, so batches were refused for nothing. A dead store
+  is now removed without any data fact (regression test `testDeadStoreNeedsNoFact`). The earlier RQs
+  were measured before this fix, which only removes admission facts.
+- **Limits.** Column names and types are public. The guarantee covers what the compiler writes, not the
+  data owner's run logs or run time (a deoptimization message names a row; JIT timing channels are
+  known). Small tables give little at small epsilon, by design. Images, `LOAD_TABLES` and `PARSE_DATE`
+  are not supported in a private compilation. The Lean development is unchanged; the privacy theorem is
+  on paper.

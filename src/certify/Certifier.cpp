@@ -266,13 +266,20 @@ Certificate Certifier::certify(const IRProgram& optimized, const AnalysisResult&
         files.namesKnown = false;
         imageFacts_[SchemaProvider::imageKey(schema.root, schema.singleFile, schema.recursive)] = files;
     }
-    const Proofs base = analyse();
+    Proofs base = analyse();
 
     Certificate certificate;
     // The facts as bounds must give exactly the proofs the compiled program uses
     // (only proofs that read the values may need the exact inputs). If they do
     // not, no other input can be admitted safely.
-    const Proofs compiled = proofsOf(analysis, "");
+    Proofs compiled = proofsOf(analysis, "");
+    // A dead store is removed whatever the data, so the fact that also made it useless
+    // is no obligation: without this, a fill of a column dropped later would make
+    // "no missing values" an admission fact of a column the program never reads.
+    for (const std::string& key : optimized.deadKeys) {
+        base.items.erase("removed " + key);
+        compiled.items.erase("removed " + key);
+    }
     if (!lost(base, compiled).empty() || !lost(compiled, base).empty()) {
         certificate.exactOnly = true;
         certificate.guarantees = analysis.saved;  // only the compiled files are admitted

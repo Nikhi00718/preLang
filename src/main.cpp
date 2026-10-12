@@ -12,6 +12,11 @@
 //                --approx    also apply approximate rewrites (RESIZE fusion)
 //                --no-deopt  remove proven-useless instructions outright (no deoptimization):
 //                            a new input must then satisfy the full data certificate
+// Private compilation (schema/ReleasedFacts.h):
+//                --queries        for the data owner: write output/preplang_queries.tsv, what the
+//                                 program asks about its data, for tools/release_facts.py
+//                --facts <file>   compile from the facts the data owner released, without
+//                                 opening any input file
 
 #include "ast/AST.h"
 #include "ast/ASTDot.h"
@@ -27,14 +32,18 @@
 #include "lexer/Lexer.h"
 #include "optimizer/PassManager.h"
 #include "parser/Parser.h"
+#include "schema/ReleasedFacts.h"
 #include "schema/SchemaProvider.h"
 #include "sema/SemanticAnalyzer.h"
 #include "sema/SymbolTable.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,6 +58,8 @@ struct Options {
     bool ir = false, certificate = false, python = false;
     bool explain = false, dryRun = false, run = false, dot = false, noOptimize = false, approximate = false;
     bool noDeopt = false;
+    bool queries = false;
+    std::string facts;  // --facts <file>: a private compilation
 };
 
 bool parseArguments(int argc, char* argv[], Options& options) {
@@ -61,11 +72,18 @@ bool parseArguments(int argc, char* argv[], Options& options) {
     const std::vector<std::pair<std::string, bool*>> otherFlags = {
         {"--explain", &options.explain}, {"--dry-run", &options.dryRun}, {"--run", &options.run},
         {"--dot", &options.dot},         {"--O0", &options.noOptimize},  {"--approx", &options.approximate},
-        {"--no-deopt", &options.noDeopt},
+        {"--no-deopt", &options.noDeopt}, {"--queries", &options.queries},
     };
     bool anyStage = false;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
+        if (arg == "--facts") {
+            if (++i == argc) {
+                return false;
+            }
+            options.facts = argv[i];
+            continue;
+        }
         bool known = false;
         for (const auto& [name, flag] : stageFlags) {
             if (arg == name) {
@@ -83,7 +101,7 @@ bool parseArguments(int argc, char* argv[], Options& options) {
             return false;
         }
     }
-    if (!anyStage && !options.explain && !options.dryRun) {
+    if (!anyStage && !options.explain && !options.dryRun && !options.queries) {
         options.source = options.tokens = options.ast = options.schema = options.semantic = true;
         options.ir = options.certificate = options.python = true;
     }
@@ -106,6 +124,36 @@ int finish(const Diagnostics& diagnostics, const SourceManager& source) {
     return diagnostics.hasErrors() ? 1 : 0;
 }
 
+// What --queries asks about: every number written in the program (a number after a
+// minus sign also as a negative one), which are the only places the analysis compares
+// values with, and the names it uses (range questions are asked only about named
+// columns, or about all of them if a selector uses *).
+struct ProgramWords {
+    std::vector<double> numbers;
+    std::set<std::string> names;
+    bool anyColumn = false;
+};
+
+ProgramWords programWords(const std::vector<Token>& tokens) {
+    ProgramWords words;
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        if (tokens[i].type == TokenType::NUMBER_LITERAL) {
+            const double value = std::stod(tokens[i].lexeme);
+            words.numbers.push_back(value);
+            if (i > 0 && tokens[i - 1].type == TokenType::MINUS) {
+                words.numbers.push_back(-value);
+            }
+        } else if (tokens[i].type == TokenType::IDENTIFIER) {
+            words.names.insert(tokens[i].lexeme);
+        } else if (tokens[i].type == TokenType::STAR) {
+            words.anyColumn = true;
+        }
+    }
+    std::sort(words.numbers.begin(), words.numbers.end());
+    words.numbers.erase(std::unique(words.numbers.begin(), words.numbers.end()), words.numbers.end());
+    return words;
+}
+
 int runPython(const std::filesystem::path& script) {
 #ifdef _WIN32
     const std::string command = "py -3 \"" + script.string() + "\"";
@@ -124,7 +172,8 @@ int main(int argc, char* argv[]) {
     if (!parseArguments(argc, argv, options)) {
         std::cerr << "usage: preplang <file.prep> [--source] [--tokens] [--ast] [--schema] [--semantic]\n"
                   << "                            [--lineage] [--ir] [--certificate] [--python] [--explain]\n"
-                  << "                            [--dry-run] [--run] [--dot] [--O0] [--approx] [--no-deopt]\n";
+                  << "                            [--dry-run] [--run] [--dot] [--O0] [--approx] [--no-deopt]\n"
+                  << "                            [--queries] [--facts <file>]\n";
         return 2;
     }
 
@@ -149,6 +198,7 @@ int main(int argc, char* argv[]) {
     if (diagnostics.hasErrors()) {
         return finish(diagnostics, source);
     }
+    const ProgramWords words = programWords(tokens);  // for --queries
 
     // Phase 2: syntax analysis
     const Program program = Parser(std::move(tokens), diagnostics).parse();
@@ -172,6 +222,18 @@ int main(int argc, char* argv[]) {
     SymbolTable symbols;
     SchemaProvider schemas(diagnostics);
     const std::filesystem::path programFolder = std::filesystem::path(options.file).parent_path();
+    if (!options.facts.empty()) {
+        // A private compilation: the compiler knows the data only through the released facts.
+        std::string problem;
+        std::optional<ReleasedFacts> facts = readReleasedFacts(options.facts, programFolder, problem);
+        if (!facts) {
+            std::cerr << "error: " << problem << '\n';
+            return 1;
+        }
+        std::cout << "Private compilation: no input file is opened; the facts are the data owner's released "
+                     "answers (" << facts->mechanism << ").\n";
+        schemas.setReleased(std::move(facts->tables));
+    }
     const AnalysisResult analysis = SemanticAnalyzer(symbols, schemas, programFolder, diagnostics).analyze(program);
     if (options.schema) {
         printHeader("SCHEMA (SchemaProvider)");
@@ -196,6 +258,38 @@ int main(int argc, char* argv[]) {
     if (options.lineage) {
         printHeader("LINEAGE (LineageTracker)");
         printLineage(std::cout, analysis.lineage);
+    }
+    if (options.queries) {
+        // The data owner's side: what a private compilation of this program asks about
+        // the data, for tools/release_facts.py. It needs only the public schema and the
+        // program's numbers, so errors the data causes (a violated contract) do not stop
+        // it; they are the owner's to see, and are not written.
+        std::vector<QueryTable> tables;
+        for (const std::unique_ptr<Stmt>& statement : program.statements) {
+            const auto* load = dynamic_cast<const LoadStmt*>(statement.get());
+            if (!load) {
+                continue;
+            }
+            const DatasetSymbol* dataset = symbols.lookup(load->dataset);
+            if (load->kind != DataKind::Table || !dataset || dataset->tables.empty()) {
+                std::cerr << "error: line " << load->location.line
+                          << ": a private compilation can only LOAD tables, and this one could not be read\n";
+                return 1;
+            }
+            QueryTable table{load->path, load->dataset, dataset->tables.front().schema, {}};
+            for (const ColumnInfo& column : table.schema.columns) {
+                if (words.anyColumn || words.names.count(column.name) != 0) {
+                    table.ranged.insert(column.name);
+                }
+            }
+            tables.push_back(table);
+        }
+        std::filesystem::create_directories(outputFolder);
+        std::ofstream queries(outputFolder / "preplang_queries.tsv");
+        writeQueries(queries, tables, words.numbers);
+        std::cout << "Wrote " << (outputFolder / "preplang_queries.tsv").generic_string()
+                  << ": give it to tools/release_facts.py to release facts for a private compilation.\n";
+        return 0;
     }
     if (diagnostics.hasErrors()) {
         return finish(diagnostics, source);

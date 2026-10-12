@@ -154,6 +154,16 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& path, co
         table.name = name;
         return table;
     }
+    if (private_) {
+        const auto released = released_.find(overrideKey(path, name));
+        if (released == released_.end()) {
+            diagnostics_.error(Phase::Schema, location, "the facts file has no table '" + name + "' from '" + path + "'",
+                               "release facts for this program: preplang <file.prep> --queries, then "
+                               "tools/release_facts.py");
+            return std::nullopt;
+        }
+        return released->second;
+    }
     if (toLower(fs::path(path).extension().string()) != ".parquet") {
         return readCsv(path, name, location);
     }
@@ -213,6 +223,11 @@ std::optional<TableSchema> SchemaProvider::readCsv(const std::string& csvPath, c
 }
 
 std::optional<TableSetSchema> SchemaProvider::readTableFolder(const std::string& folder, SourceLocation location) {
+    if (private_) {
+        diagnostics_.error(Phase::Schema, location, "a private compilation (--facts) cannot load the folder '" +
+                           folder + "': its files are not known without opening it", "LOAD each table instead");
+        return std::nullopt;
+    }
     std::error_code error;
     if (!fs::is_directory(folder, error)) {
         diagnostics_.error(Phase::Schema, location, "cannot open table folder '" + folder + "'",
@@ -253,6 +268,11 @@ std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path
     const auto known = images_.find(key);
     if (known != images_.end()) {
         return known->second;
+    }
+    if (private_) {
+        diagnostics_.error(Phase::Schema, location, "a private compilation (--facts) cannot load images",
+                           "facts are released for tables only");
+        return std::nullopt;
     }
     ImageSetSchema set;
     set.root = path;

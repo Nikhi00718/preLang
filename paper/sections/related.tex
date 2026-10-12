@@ -37,11 +37,36 @@ the facts behind correctness proofs, decides once per batch on statistics the pr
 anyway, re-enables exactly the removals whose certificates break, and is exact
 (Theorem~\ref{thm:deopt}).
 
-\paragraph{Validity ranges.} Progressive query optimization attaches validity ranges to the operators
-of a plan and re-optimizes when a cardinality leaves them~\cite{markl2004}; parametric query
-optimization precomputes plans per parameter range~\cite{ioannidis1992}. Item certificates are
-validity ranges for correctness obligations, derived by re-analysis rather than cost estimates, and
-leaving them re-enables one instruction rather than the whole plan.
+Barrière et al.~\cite{barriere2021} verify speculation and deoptimization in a JIT compiler in Coq;
+our mechanization covers a much smaller setting. That a hint may be wrong if it is cheap to check
+and has a fallback is Lampson's old rule~\cite{lampson1983}; private compilation
+(Section~\ref{sec:private}) applies it to facts about data that are released under differential
+privacy, where the guards are what make noisy facts safe to optimize with.
+
+\paragraph{Validity ranges and constraints that hold in the data.} Progressive query optimization
+attaches validity ranges to the operators of a plan and re-optimizes when a cardinality leaves
+them~\cite{markl2004}; parametric query optimization precomputes plans per parameter
+range~\cite{ioannidis1992}. Semantic query optimization with soft constraints mines constraints that
+hold in the current data and uses them to rewrite queries, dropping them when the data stops
+satisfying them~\cite{godfrey2001}; BHUNT~\cite{brown2003} mines fuzzy constraints, runs the rewritten
+query and evaluates the original one on the exception rows. These are the closest ancestors of
+removing work because the data allows it. Item certificates are validity ranges for correctness
+obligations, derived by re-analysis rather than mined or estimated, and leaving them re-enables one
+instruction rather than the whole plan.
+
+\paragraph{Differential privacy.} PrivateSQL~\cite{kotsogiannis2019}, elastic
+sensitivity~\cite{johnson2018} and APEx~\cite{ge2019} answer an analyst's queries over data they may
+not see; validation servers let analysts develop code on synthetic data and run it on the confidential
+data~\cite{barrientos2018}; PrivateClean~\cite{krishnan2016} cleans locally private data. SPECIAL uses
+differentially private synopses to plan secure joins~\cite{wang2024special}: there, noise can only
+change cost, because a plan choice does not change a query's result. In a private compilation the
+noisy facts decide which checks and operations are \emph{removed}, which could change results;
+selective deoptimization is what makes that safe (Theorem~\ref{thm:anyfacts}). The questions are
+chosen by the program, at its own numbers, and answered with the canonical sparse vector
+technique~\cite{dwork2014,lyu2017}. Differentially private profiling collects facts about how deployed
+software runs~\cite{zhang2020profiling}; languages such as Fuzz~\cite{reed2010} prove that a program is
+itself differentially private. Here the program is not private; only the facts the compiler starts from
+are.
 
 \paragraph{Residual checks and hybrid checking.} Soft typing~\cite{cartwright1991} and hybrid type
 checking~\cite{flanagan2006} discharge what they can statically and check the rest at run time;

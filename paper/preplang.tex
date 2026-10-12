@@ -70,7 +70,11 @@ which checks no numeric ranges, admits months on which the optimized program doe
 compilation does. Pandas scripts from GitHub, lifted into \PL, reproduce their own
 results on new batches: \CorpusBothSame{} of \CorpusBothRuns{} runs of \CorpusBothLifted{} held-out
 scripts for two Kaggle tasks, and all \DriftRuns{} monthly runs of \DriftCompiled{} scripts written by
-others for the traffic and bike data; none differ.
+others for the traffic and bike data; none differ. Because selective deoptimization never relies on
+the compile-time facts being true, \PL can also compile against data the analyst may not see: from
+differentially private answers to threshold questions at the program's own numbers, everything the
+compiler writes is $\varepsilon$-differentially private, and \PrivRuns{} runs of \PrivCompilations{}
+private compilations, from noisy, absent or random facts, were all exact.
 \end{abstract}
 
 \keywords{data-aware compilation, abstract interpretation, data validation, speculative
@@ -130,13 +134,19 @@ analysis itself, for a core of \PL.
 for each table it writes. An assume-guarantee check against the next stage's certificates shows
 which of its checks can never fire, and synthesizes the contract a producer must meet so that none
 of its consumers ever refuses or deoptimizes.
+\item \textbf{Private compilation} (Section~\ref{sec:private}): since the exactness theorem holds for
+any facts the compiler starts from, it can compile against data it may not see. The data owner answers
+only threshold questions at the program's own numbers, with the sparse vector technique; everything the
+analyst sees is $\varepsilon$-differentially private, every run on the real data stays exact, and with
+probability $1-\beta$ every ``likely violated'' warning is true and no removal of a normal compilation
+is lost. Noise costs deoptimizations, never correctness.
 \item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
 monthly batches of three public datasets, scored against fresh compilations and against
 pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothLifted{}
 held-out pandas scripts for two Kaggle tasks, lifted into \PL by a second front end, and
 \DriftCompiled{} scripts by others run on the real months; two-stage
-pipelines; injected mistakes and \RbTotal{} real failures from GitHub issues; and the cost of all of
-it.
+pipelines; private compilations from noisy, absent and random facts; injected mistakes and
+\RbTotal{} real failures from GitHub issues; and the cost of all of it.
 \end{itemize}
 
 Each ingredient has a precedent: speculation with a fallback path in data
@@ -461,6 +471,96 @@ consumer ever refuses or deoptimizes. Assume-guarantee reasoning is standard for
 contracts~\cite{benveniste2018}, and schema registries check the containment of writer and reader
 schemas~\cite{avro}; here the contracts on both sides are derived from the stages' proofs.
 
+\section{Compiling Against Data You Cannot See}\label{sec:private}
+
+A data-aware compiler leaks its data through what it writes. The generated program embeds the
+checksum of the compiled file, which confirms a guessed file; every removal states a fact about it
+(no value of \texttt{age} is missing, no mark is below~10); a violated contract names a row; the
+contract file records bounds. Yet programs travel further than data: in validation servers and data
+clean rooms an analyst writes a pipeline for confidential tables that only the data owner may
+read, and the owner runs it~\cite{barrientos2018}. The analyst needs exactly what a data-aware
+compiler gives (which fills are needed, which contracts the data breaks, which filters do nothing)
+and may not see the data that produces it.
+
+Theorem~\ref{thm:deopt} has no hypothesis about the facts the compiler starts from. Those facts
+decide which instructions are removed speculatively and which certificates guard them; the
+certificates are verified by re-analysis, and the generated program checks them on the batch. In
+Lean, \texttt{deopt\_correct} quantifies over arbitrary removals and certificates. So the compiler may
+start from facts that are \emph{wrong}: a wrong fact costs a deoptimization, never a wrong result.
+\PL uses this to compile from differentially private facts.
+
+\paragraph{The questions.} The data owner runs the compiler with \texttt{--queries}, which writes
+the public schema (names and types of the columns, treated as public like a header) and the numbers
+written in the program. The analysis compares bounds only with these numbers
+(Section~\ref{sec:cert}), so for a program without \texttt{DERIVE} the tightest bounds \emph{at the
+program's numbers} decide every proof the exact bounds decide. Each such fact is a threshold count
+of sensitivity~1 for adding or removing a row: how many values are missing, below $k$, at or below
+$k$, above $k$, at or above $k$. \texttt{tools/release\_facts.py} answers them with
+AboveThreshold, the canonical sparse vector technique~\cite{dwork2014,lyu2017}: per column, one
+sequence for missing values, one for the lower bound (``$<k_1$?'', ``$\le k_1$?'', ``$<k_2$?'', \ldots\
+for the numbers in increasing order, whose counts only grow) and one for the upper bound. Only the
+question at which a sequence stops is released. The bound is the question before it; the stop
+itself is evidence that values below (or above) that number exist.
+
+\begin{theorem}[Privacy]\label{thm:private}
+The facts file is $\varepsilon$-differentially private for adding or removing one row of any input
+table, and so is everything the compiler writes for the analyst: the generated program, the
+certificates, the contract file, the manifest and every message.
+\end{theorem}
+\begin{proof}
+AboveThreshold with noise $\mathrm{Lap}(2/\varepsilon_c)$ on the threshold and
+$\mathrm{Lap}(4/\varepsilon_c)$ on each answer is $\varepsilon_c$-differentially private for counting
+questions~\cite[Thm.~3.23]{dwork2014}. Which questions are asked depends only on the program and the
+public schema, never on earlier answers, so the file is a sequential composition of the sequences, with
+$\sum \varepsilon_c = \varepsilon$. The compiler reads the facts file, the program and the public
+schema, and never opens an input file (\texttt{--facts} fails rather than read a table without
+released facts); its outputs are post-processing.
+\end{proof}
+
+\begin{theorem}[Exactness for any facts]\label{thm:anyfacts}
+For any facts file, true, noisy or false, the generated program computes on every batch it admits
+exactly what the source program computes.
+\end{theorem}
+\begin{proof}
+Without a checksum, no batch is treated as the compiled one: every batch, including the file the
+facts describe, is checked against the admission and item certificates. Theorem~\ref{thm:deopt}
+applies unchanged.
+\end{proof}
+
+The thresholds are set from a failure probability $\beta$: a sequence of $m$ questions with budget
+$\varepsilon_c$ and share $\beta_c$ of $\beta$ uses
+$T = \frac{4}{\varepsilon_c}\ln\frac{m}{\beta_c} + \frac{2}{\varepsilon_c}\ln\frac{1}{\beta_c} + \frac12$.
+
+\begin{lemma}[What the analyst learns]\label{lem:utility}
+With probability at least $1-\beta$ over the noise: (i) every sequence stops at a question whose
+true count is at least~1, so every ``likely violated'' warning names a contract the data breaks; and
+(ii) no released bound is looser than the tightest true bound at the program's numbers, and no column
+is released as missing values unless it has some. For a program without \texttt{DERIVE}, a private
+compilation whose released intervals are non-empty therefore removes at least what a normal
+compilation of the same file removes.
+\end{lemma}
+\begin{proof}[Proof sketch]
+By the Laplace tails and a union bound, with probability $1-\beta_c$ no answer noise exceeds
+$\frac{4}{\varepsilon_c}\ln\frac{m}{\beta_c}$ and the threshold noise is not below
+$-\frac{2}{\varepsilon_c}\ln\frac{1}{\beta_c}$; a question then reaches the threshold only if its count
+is at least $\frac12$. A zero count never stops a sequence, so the released bound is at or beyond the
+last question with count zero. The removals follow from Lemma~\ref{lem:mono}, because decisions compare
+bounds only with the program's numbers.
+\end{proof}
+
+The released bound may be tighter than the truth: counts below about $2T$ are taken for zero. Those
+false facts cost deoptimizations, and Theorem~\ref{thm:anyfacts} makes them harmless. A private
+compilation cannot report a contract as violated, since nothing it knows is exact and a row would name
+a person; a contract that the released evidence shows broken gets a warning instead
+(``\texttt{EXPECT s.marks BETWEEN 0 AND 100} is likely violated: the released facts report values of
+\texttt{s.marks} above 100''), and the check runs on the real data. Contracts that read the values
+(\texttt{UNIQUE}, \texttt{REFERENCES}) are always checked at run time. A fact about a few rows, such as
+two missing \texttt{Embarked} values among 891 passengers, is hidden by design: hiding what a few
+people contribute is what differential privacy is for, and the run-time check covers it. Facts that
+noise makes contradictory (a lower bound above the upper bound, as on a month of 31 daily rows) are dropped,
+which costs nothing because it uses only the released answers. Images, folders of tables and
+\texttt{PARSE\_DATE}, which read values or file lists, are not supported in a private compilation.
+
 \section{Lifting pandas Scripts}\label{sec:lift}
 
 Certificates are most useful for code that already exists. A second front end parses a pandas script
@@ -499,7 +599,10 @@ some of them, and composition carries guarantees from one stage to the next. On 
 the compiled program handles \RealDeoptCorrectPct\% of new months exactly as a fresh compilation
 would, without recompiling, where validators set up on the same data refuse most months or let wrong
 results through; on real scripts, including pipelines written by others and run on the real months, it reproduces
-the scripts' results on every batch it runs. The
+the scripts' results on every batch it runs. Because deoptimization never relies on the compile-time
+facts being true, the compiler can also work from facts it may not trust: compiled from differentially
+private answers, or from random ones, every run stayed exact, and an analyst who may not see the data
+still learns which contracts it breaks once enough rows break them. The
 refusals that remain come from facts no run-time code can replace, such as a publisher changing a
 column's type, and point to the next step: certificates that let generated code adapt to such
 changes, joins in the language, and the mechanized soundness proof extended from the core

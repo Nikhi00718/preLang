@@ -317,6 +317,25 @@ void testUnreadColumns() {
           "a batch with a missing name is refused although the program never reads name");
 }
 
+// A fill of a column that is dropped right after is a dead store, removed whatever the data. That
+// the compiled file also has no missing values in it must not become an admission fact: the
+// column is not loaded, so the fill could not run again, and a batch would be refused for nothing.
+void testDeadStoreNeedsNoFact() {
+    std::cout << "A dead store needs no fact\n";
+    writeFile("test_certificate_students.csv", students);  // marks has no missing values
+    Compiled c;
+    compile("LOAD \"test_certificate_students.csv\" AS s;\nFILL_NULL s.marks WITH 0;\nDROP s [marks];\n"
+            "SAVE s AS \"out.csv\";\n",
+            c);
+    const ColumnFacts* marks = fact(c.certificate, "s", "marks");
+    check(!marks || !marks->notNull, "marks may have missing values: the dead fill needs no fact");
+    Diagnostics diagnostics;
+    SchemaProvider schemas(diagnostics);
+    writeFile("test_certificate_batch.csv", "name,age,marks,city\nAsha,20,,Chennai\nRavi,21,40,Pune\n");
+    check(admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {})).empty(),
+          "a batch with missing marks is admitted");
+}
+
 void testValueProofs() {
     std::cout << "Proofs that read the values\n";
     writeFile("test_certificate_keys.csv", "id,city\n1,Pune\n2,Goa\n3,Pune\n");
@@ -651,6 +670,7 @@ int main() {
     testFacts();
     testAdmission();
     testUnreadColumns();
+    testDeadStoreNeedsNoFact();
     testValueProofs();
     testSoundness(program, "Soundness on 400 random inputs");
     // name and marks are not read after the SELECT, but proofs depend on them.

@@ -3,6 +3,7 @@
 #include "schema/ColumnType.h"
 
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,15 @@ struct ColumnInfo {
     double dateMin = 0;             // seconds since 1970-01-01 (no time zone)
     double dateMax = 0;
     std::string notDateReason;      // e.g. row 5 has "n/a"
+    // Private compilation: where the released answers saw values, enough of them to reach the
+    // release's threshold: below seenBelow (at or below it if seenBelowOrAt) and above seenAbove
+    // (at or above it if seenAboveOrAt); infinite if a question sequence never stopped. The
+    // answers are noisy, so this only gives warnings ("likely violated"), never a decision.
+    double seenBelow = -std::numeric_limits<double>::infinity();
+    bool seenBelowOrAt = false;
+    double seenAbove = std::numeric_limits<double>::infinity();
+    bool seenAboveOrAt = false;
+    bool seenMissing = false;
 };
 
 // CSV files are read completely at compile time. For a Parquet file only the
@@ -40,6 +50,8 @@ struct TableSchema {
     std::vector<ColumnInfo> columns;
     bool valuesKnown = true;        // false when these facts describe every file a data certificate
                                     // admits, not the values of one file
+    bool released = false;          // private compilation: the facts are the data owner's released
+                                    // answers (schema/ReleasedFacts.h); no file was read
 };
 
 // LOAD_TABLES reads every CSV and Parquet file of a folder.

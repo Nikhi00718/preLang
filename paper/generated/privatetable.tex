@@ -1,0 +1,19 @@
+\begin{table*}[t]
+\caption{Private compilation (RQ8): share of the normal compilation's removals that the private compilation also makes (recall), by kind of facts; share of compilations whose run on the compiled file itself deoptimizes (a released fact was false); and every run scored against a fresh compilation. $\varepsilon$ is the total budget. Random facts are true or false at random.}
+\label{tab:rq-private}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Facts & Traffic & Bikes & Taxi & Titanic & Compilations & Deopt.\ on file & Runs & Wrong \\
+\midrule
+no noise & 100\% & 100\% & 100\% & 100\% & 187 & 0\% & 2,331 & 0 \\
+$\varepsilon = 0.1$ & 29\% & 14\% & 100\% & -- & 9 & 33\% & 369 & 0 \\
+$\varepsilon = 1$ & 71\% & 14\% & 100\% & 100\% & 193 & 44\% & 2,577 & 0 \\
+$\varepsilon = 10$ & 100\% & 14\% & 100\% & 100\% & 193 & 38\% & 2,577 & 0 \\
+$\varepsilon = 100$ & 100\% & 100\% & 100\% & -- & 9 & 0\% & 369 & 0 \\
+random & 26\% & 30\% & 55\% & 44\% & 398 & 13\% & 5,646 & 0 \\
+none & 0\% & 0\% & 0\% & 0\% & 187 & 0\% & 2,331 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table*}

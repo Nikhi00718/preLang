@@ -34,6 +34,7 @@ struct ColumnState {
                                // true after LOAD, false once rows are removed or values are rescaled
     bool valuesChanged;        // FILL_NULL or NORMALIZE changed values, so they differ from the file
     std::string stringReason;  // why a column with numbers in it is STRING, e.g. line 4 has "abc"
+    bool rowsRemoved = false;  // a FILTER or DROP_NULL removed rows since LOAD
 
     // e.g. "INTEGER? [19, 23]"; '?' means the column may have missing values
     std::string typeText() const;

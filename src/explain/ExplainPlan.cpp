@@ -30,6 +30,10 @@ std::string inputDetails(const DatasetSymbol& dataset) {
     switch (dataset.kind) {
         case DatasetKind::Table: {
             const TableSchema& schema = dataset.tables.front().schema;
+            if (schema.released) {
+                return schema.file + ", " + std::to_string(schema.columns.size()) +
+                       " columns (released facts only; the file was not read)";
+            }
             return schema.file + ", " + std::to_string(schema.rowCount) + " rows, " +
                    std::to_string(schema.columns.size()) + " columns" +
                    (schema.format == TableFormat::Parquet ? " (footer statistics only)" : "");

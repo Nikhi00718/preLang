@@ -5,6 +5,7 @@
 The paper uses these macros instead of typed-in numbers, so it always matches the results.
 """
 import json
+import math
 import statistics
 from collections import Counter
 from pathlib import Path
@@ -89,6 +90,8 @@ def main():
         certcost(load("certcost.json"), numbers)
     if (RESULTS / "certsize.json").exists():
         certsize(load("certsize.json"), numbers)
+    if (RESULTS / "private.json").exists() and (RESULTS / "private_diagnostics.json").exists():
+        private(load("private.json"), load("private_diagnostics.json"), numbers)
     soundness_tests(numbers)
 
     numbers["TestCount"] = test_count()
@@ -99,7 +102,8 @@ def main():
     numbers["RealDeoptCorrectPct"] = numbers.get("RealDeoptCorrectPct", "--")
 
     for table, label in (("certtable", "tab:rq-edits"), ("realtable", "tab:rq-real"),
-                         ("corpustable", "tab:rq-corpus"), ("comptable", "tab:rq-compose")):
+                         ("corpustable", "tab:rq-corpus"), ("comptable", "tab:rq-compose"),
+                         ("privatetable", "tab:rq-private"), ("privatediagtable", "tab:rq-private-diag")):
         path = ROOT / "paper" / "generated" / f"{table}.tex"
         if not path.exists():  # its experiment has not run yet
             path.write_text(r"\begin{table}[t]\caption{Results pending.}\label{" + label + r"}\end{table}" + "\n",
@@ -503,6 +507,113 @@ def imagebatches(rows, numbers):
     policy_numbers(rows, "ImgB", numbers)
     numbers["ImgBTrustedUnsound"] = sum(r["outcome"]["trusted"] in ("unsound", "wrong stop") for r in rows)
     numbers["ImgBDeopted"] = sum(bool(r["deopts"]) for r in rows)
+
+
+def private(results, diagnostics, numbers):
+    """RQ8 of the paper: private compilation (eval/reuse/private.py)."""
+    import re
+    import subprocess
+    records = results["records"]
+    runs = [run for r in records for run in r["runs"]]
+    numbers.update(PrivCompilations=f"{len(records):,}", PrivRuns=f"{len(runs):,}",
+                   PrivUnsound=sum(run["outcome"] in ("unsound", "wrong stop") for run in runs),
+                   PrivNeedless=sum(run["outcome"] == "needless stop" for run in runs),
+                   PrivRandom=sum(r["kind"] == "random" for r in records),
+                   PrivRandomRuns=f"{sum(len(r['runs']) for r in records if r['kind'] == 'random'):,}",
+                   PrivTitanicScripts=len({r["item"] for r in records if r["workload"] == "titanic"}))
+
+    def recall(chosen):
+        found = sum(len(set(r["removed"]) & set(r["normal_removed"])) for r in chosen if r["compiled"])
+        total = sum(len(r["normal_removed"]) for r in chosen if r["compiled"])
+        return 100 * found / total if total else None
+
+    def pct(value):
+        return "--" if value is None else f"{value:.0f}"
+
+    numbers["PrivExactRecall"] = pct(recall([r for r in records if r["kind"] == "exact"]))
+    numbers["PrivTaxiRecallEpsOne"] = pct(recall([r for r in records if r["item"] == "taxi" and r["kind"] == "eps=1"]))
+    for kind, name in (("eps=1", "One"), ("eps=10", "Ten")):
+        numbers[f"PrivTitanicDeoptEps{name}"] = sum(any(run["anchor"] and run["deopts"] for run in r["runs"])
+                                                    for r in records if r["workload"] == "titanic" and r["kind"] == kind)
+
+    real = ROOT / "eval" / "data" / "real"
+    for name, folder in (("Traffic", "traffic"), ("Bikes", "bikes")):
+        sizes = [len(path.read_text(encoding="utf-8").splitlines()) - 1 for path in (real / folder).glob("*.csv")]
+        numbers[f"Priv{name}Rows"] = f"{statistics.median(sizes):,.0f}"
+    import pyarrow.parquet
+    sizes = [pyarrow.parquet.ParquetFile(path).metadata.num_rows for path in (real / "green").glob("*.parquet")]
+    numbers["PrivTaxiRows"] = f"{statistics.median(sizes):,.0f}"
+
+    # Table: recall of the normal removals per workload and kind of facts.
+    kinds = ["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["random", "none"]
+    names = {"exact": "no noise", "random": "random", "none": "none"}
+    workloads = [("traffic", "Traffic"), ("bikes", "Bikes"), ("taxi", "Taxi"), ("titanic", "Titanic")]
+    lines = [r"\begin{table*}[t]",
+             r"\caption{Private compilation (RQ8): share of the normal compilation's removals that the private "
+             r"compilation also makes (recall), by kind of facts; share of compilations whose run on the compiled file "
+             r"itself deoptimizes (a released fact was false); and every run scored against a fresh compilation. "
+             r"$\varepsilon$ is the total budget. Random facts are true or false at random.}",
+             r"\label{tab:rq-private}", r"\centering", r"\footnotesize",
+             r"\begin{tabular}{@{}lrrrrrrrr@{}}", r"\toprule",
+             r"Facts & Traffic & Bikes & Taxi & Titanic & Compilations & Deopt.\ on file & Runs & Wrong \\",
+             r"\midrule"]
+    for kind in kinds:
+        chosen = [r for r in records if r["kind"] == kind]
+        if not chosen:
+            continue
+        cells = []
+        for key, _ in workloads:
+            items = [r for r in chosen if (r["item"] if r["workload"] == "rq8" else r["workload"]) == key]
+            value = recall(items)
+            cells.append("--" if value is None else f"{value:.0f}\\%")
+        anchor = [any(run["anchor"] and run["deopts"] for run in r["runs"]) for r in chosen if r["compiled"]]
+        all_runs = [run for r in chosen for run in r["runs"]]
+        wrong = sum(run["outcome"] in ("unsound", "wrong stop") for run in all_runs)
+        label = names.get(kind, kind.replace("eps=", r"$\varepsilon = ") + "$")
+        lines.append(f"{label} & " + " & ".join(cells) + f" & {len(chosen):,} & "
+                     f"{100 * sum(anchor) / len(anchor):.0f}\\% & {len(all_runs):,} & {wrong} \\\\")
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
+    (ROOT / "paper" / "generated" / "privatetable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    # Warnings on the 1,000,000-row file.
+    numbers["PrivDiagRows"] = "1{,}000{,}000"
+    numbers["PrivDiagCompilations"] = len(diagnostics)
+    numbers["PrivDiagFalse"] = sum(r["false_warnings"] for r in diagnostics)
+    sizes = sorted({r["rows"] for r in diagnostics})
+
+    def always_from(epsilon):
+        """The smallest m from which every compilation warns, for every mistake and every larger m."""
+        good = [m for m in sizes if m > 0 and all(r["warned"] for r in diagnostics
+                                                  if r["epsilon"] == epsilon and r["rows"] >= m)]
+        return f"{min(good):,}" if good else "--"
+
+    numbers["PrivDiagEpsOne"], numbers["PrivDiagEpsTen"] = always_from(1), always_from(10)
+    epsilons = sorted({r["epsilon"] for r in diagnostics})
+    kinds = list(dict.fromkeys(r["kind"] for r in diagnostics))
+    lines = [r"\begin{table}[t]",
+             r"\caption{Private compilation (RQ8): share of private compilations that warn that the contract a "
+             r"mistake in $m$ of 1{,}000{,}000 rows breaks is likely violated (five seeds; one without noise).}",
+             r"\label{tab:rq-private-diag}", r"\centering", r"\footnotesize",
+             r"\begin{tabular}{@{}lr" + "r" * len(epsilons) + r"@{}}", r"\toprule",
+             "Mistake & $m$ & " + " & ".join("no noise" if math.isinf(e) else f"$\\varepsilon = {e:g}$"
+                                               for e in epsilons) + r" \\", r"\midrule"]
+    for kind in kinds:
+        for m in sizes:
+            cells = []
+            for e in epsilons:
+                found = [r for r in diagnostics if r["kind"] == kind and r["rows"] == m and r["epsilon"] == e]
+                cells.append(f"{100 * sum(r['warned'] for r in found) / len(found):.0f}\\%" if found else "--")
+            lines.append(f"{kind.replace('_', ' ')} & {m:,} & " + " & ".join(cells) + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    (ROOT / "paper" / "generated" / "privatediagtable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    test = ROOT / "build" / "Release" / "test_private.exe"
+    if test.exists():
+        text = subprocess.run([str(test)], cwd=ROOT / "build", capture_output=True, text=True).stdout
+        facts = re.search(r"(\d+) of \d+ random facts files compile", text)
+        deopt = re.search(r"(\d+) inputs admitted, (\d+) of them deoptimize", text)
+        if facts and deopt:
+            numbers.update(PrivTestFacts=facts.group(1), PrivTestDeopt=deopt.group(2))
 
 
 def soundness_tests(numbers):

@@ -258,6 +258,54 @@ itself cheap. What reuse buys is a fixed, reviewed artifact that runs unchanged 
 guarantees a downstream stage can rely on without seeing the data (\S\ref{sec:rq-compose}). Recompiling
 gives none of these: each month gets a different program and no statement about what it assumed.
 
+\subsection{RQ8: Compiling against data you cannot see}\label{sec:rq-private}
+
+\paragraph{Protocol.} For each RQ4 pipeline (compiled for its first month) and each of the
+\PrivTitanicScripts{} RQ5 Titanic scripts that compile (compiled for the training file), the data owner
+ran \texttt{--queries} and \texttt{tools/release\_facts.py} on the compiled file, and the program was
+compiled with \texttt{--facts} in a folder that holds only the program and the facts file. Facts came
+from the release at $\varepsilon \in \{0.1, 1, 10, 100\}$ (three seeds for the pipelines, one for the
+scripts; $\varepsilon$ is the total over all questions, $\beta = 0.05$), from the same questions answered
+without noise, from no facts at all, and from \emph{random} facts that are true or false at random
+(bounds at random program numbers, missing values at random). Every generated program was run on every
+batch of RQ4 or RQ5 (and on the compiled file itself) and scored against a fresh, normal compilation of
+the batch, as in RQ4.
+
+\paragraph{Exactness.} \PrivCompilations{} private compilations were run \PrivRuns{} times: \PrivUnsound{}
+runs were unsound or stopped wrongly, for every kind of facts, including the \PrivRandom{} compilations
+from random facts (\PrivRandomRuns{} runs). Every needless stop (\PrivNeedless) is a taxi month refused for
+the schema change of February 2023, which the normal compilation refuses too
+(\S\ref{sec:rq-real}). The unit test of the private compilation checks the same property on
+\PrivTestFacts{} random facts files with random inputs, \PrivTestDeopt{} of which deoptimize.
+
+\paragraph{What the analyst learns.} Table~\ref{tab:rq-private} compares the removals of each private
+compilation with those of the normal compilation of the same file. Without noise the questions at the
+program's numbers give exactly the normal removals (recall \PrivExactRecall\%), as the analysis compares
+bounds only with those numbers. With noise, what can be learned depends on how many rows a fact
+concerns. A median month has \PrivTrafficRows{} traffic rows, \PrivBikesRows{} bike rows and
+\PrivTaxiRows{} taxi trips: the taxi months keep \PrivTaxiRecallEpsOne\% of the normal removals already
+at $\varepsilon = 1$, the traffic months need $\varepsilon = 10$ for all of them, and the bike months,
+one row a day, keep most only at $\varepsilon = 100$; the budget is shared by every question about the
+file. A private compilation of a small table learns little at a small budget, by design. False
+facts are speculative removals that the run on the compiled file itself deoptimizes, never wrong
+results: on the Titanic training file, \PrivTitanicDeoptEpsOne{} of \PrivTitanicScripts{} programs
+compiled at $\varepsilon = 1$ deoptimize there, mostly a fill of \texttt{Age}, whose 177 missing values
+are below the threshold at that budget, and of \texttt{Embarked}, whose two missing values no private
+release can reveal; at $\varepsilon = 10$, \PrivTitanicDeoptEpsTen{} do, mostly for \texttt{Embarked}.
+
+\paragraph{Warnings.} On a \PrivDiagRows-row Parquet file we injected a mistake into $m$ rows (amounts
+above the contract's bound, missing values in a \texttt{NOT\_NULL} column, values below a bound) and
+compiled privately, five seeds per setting (Table~\ref{tab:rq-private-diag}). A normal compilation reports
+the broken contract for every $m > 0$; a private one warns that it is likely violated once $m$ is
+large enough for the budget: from $m = \PrivDiagEpsOne$ at $\varepsilon = 1$ and $m = \PrivDiagEpsTen$
+at $\varepsilon = 10$ in every run. Over all \PrivDiagCompilations{} private compilations there were
+\PrivDiagFalse{} warnings about a contract the data does not break, as Lemma~\ref{lem:utility}
+predicts with probability $1-\beta$. A mistake in one row is never revealed; the run-time check stops the
+program at it.
+
+\input{generated/privatetable}
+\input{generated/privatediagtable}
+
 \subsection{Testing soundness}\label{sec:soundtest}
 
 The theorems rest on monotonicity and soundness of the analysis, which are mechanized for the core
@@ -282,7 +330,13 @@ on a column pruned afterwards was unprotected. (3)~Admission let \textsc{Integer
 compilation decided differently. (4)~On the held-out Titanic set, scripts drop \texttt{Survived} before
 any use; with that \texttt{DROP} removed, admission treated the column as optional and admitted
 Kaggle's test file, on which the script fails. (5)~The lifter translated a \texttt{drop} that pandas
-rejects.
+rejects. (6)~Private compilations from false facts (RQ8) made a lifted Titanic script refuse every
+batch: a fill of \texttt{Embarked}, dropped right after, was removed both as a dead store and as having
+no effect, and the certifier kept ``no missing \texttt{Embarked}'' as an admission fact of a column the
+program never loads. A dead store is removed whatever the data, so its no-effect fact is no longer an
+obligation; a normal compilation of a file without missing \texttt{Embarked} had the same needless
+refusals waiting for the next batch. The earlier RQs were measured before this fix, which only removes
+admission facts.
 
 \subsection{Threats to validity}
 
@@ -295,4 +349,6 @@ encodes what the certificate derives. RQ5 compares with the lifted statements, n
 and the lifted prefixes are short. Metadata-only soundness assumes truthful Parquet statistics. The
 mechanization covers a core of the language; the C++ implementation is tested, not proven. The language has
 no joins, loops or user functions. Certificates are facts about input columns: a fact needed only
-after a filter is still required of every input row.
+after a filter is still required of every input row. Private compilation treats column names and types
+as public; its guarantee covers what the compiler writes, not what the data owner's runs print or how
+long they take (a deoptimization message names a row), which stay with the owner.

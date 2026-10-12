@@ -15,7 +15,7 @@ committed.
 | `run_realbugs.py` | the 44 failures from GitHub issues (`realbugs_catalog.py`) | `realbugs.*` |
 | `datasets.py` | builds the example images and the benchmark and scale data | |
 
-## `reuse/`: reusing a compiled program on new batches (RQ3 to RQ7)
+## `reuse/`: reusing a compiled program on new batches (RQ3 to RQ8)
 
 | Script | What it does | Results |
 |---|---|---|
@@ -28,6 +28,7 @@ committed.
 | `drift_corpus.py` | other people's traffic and bike scripts, run on every real month (RQ5) | `drift_corpus_*.*` |
 | `composition.py` | two compiled stages over the real months (RQ6) | `composition.*` |
 | `overhead.py`, `certcost.py`, `certsize.py` | the cost of admission and certification, and certificate sizes (RQ7) | `overhead.*`, `certcost.*`, `certsize.*` |
+| `private.py` | private compilation: released, noisy, absent and random facts on the real months and the Titanic scripts; with `diagnostics`, warnings on a 1M-row file with injected mistakes (RQ8) | `private.*`, `private_diagnostics.*` |
 
 Result files keep the numbering of earlier drafts in their names and titles (`rq3.md` is the paper's
 RQ2, for instance); the tables above give the paper's numbering. `*_firstrun.*` are earlier runs kept

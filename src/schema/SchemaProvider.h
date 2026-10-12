@@ -34,6 +34,13 @@ public:
     static std::string overrideKey(const std::string& path, const std::string& tableName) {
         return path + "|" + tableName;
     }
+    // Private compilation: from now on no input file is opened. A table is described by
+    // the data owner's released facts (schema/ReleasedFacts.h), under any override; a
+    // table without released facts, a folder of tables and images are errors.
+    void setReleased(std::map<std::string, TableSchema> released) {
+        released_ = std::move(released);
+        private_ = true;
+    }
     // The same for image inputs, keyed by imageKey.
     void setImageOverrides(std::map<std::string, ImageSetSchema> overrides) { imageOverrides_ = std::move(overrides); }
     static std::string imageKey(const std::string& path, bool singleFile, bool recursive) {
@@ -45,6 +52,8 @@ private:
 
     Diagnostics& diagnostics_;
     std::map<std::string, TableSchema> overrides_;
+    std::map<std::string, TableSchema> released_;
+    bool private_ = false;
     std::map<std::string, ImageSetSchema> imageOverrides_;
     std::map<std::string, ImageSetSchema> images_;  // image headers already read, by imageKey
 };

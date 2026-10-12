@@ -15,10 +15,27 @@ namespace {
 // or "" if it can: the values in the file are the values here, because no rows
 // were removed and no values were changed since LOAD.
 std::string valuesUnknown(const TableState& table, const ColumnState& column) {
+    if (table.schema.released) {
+        return "a private compilation sees only the released facts of " + table.schema.file;
+    }
     if (table.schema.format == TableFormat::Parquet) {
         return "only the footer of " + table.schema.file + " is read at compile time";
     }
     return column.exact && !column.valuesChanged ? "" : "rows or values changed after LOAD";
+}
+
+// Private compilation: the released facts of the column if they still describe it here
+// (no rows removed and no values changed since LOAD), else null.
+const ColumnInfo* releasedInput(const TableState& table, const ColumnState& column) {
+    if (!table.schema.released || column.rowsRemoved || column.valuesChanged) {
+        return nullptr;
+    }
+    for (const ColumnInfo& info : table.schema.columns) {
+        if (info.name == column.name) {
+            return &info;
+        }
+    }
+    return nullptr;
 }
 
 std::string rowText(size_t index) {
@@ -59,6 +76,15 @@ void ContractAnalyzer::deferred(const ExpectStmt& node, const std::string& contr
     result_.contracts.push_back({node.location.line, contract, Verdict::Deferred, reason});
     result_.log.push_back("line " + std::to_string(node.location.line) + ": EXPECT " + contract +
                           ": checked at run time, " + reason);
+}
+
+// A private compilation cannot report a contract as violated: the released answers are
+// noisy and name no row. When they say the data has many values that break it, the
+// contract stays a run-time check and the analyst gets this warning instead.
+void ContractAnalyzer::likelyViolated(const ExpectStmt& node, const std::string& contract, const std::string& evidence) {
+    diagnostics_.warning(Phase::Contract, node.target.location,
+                         "EXPECT " + contract + " is likely violated: the released facts report " + evidence,
+                         "the data owner's answers are differentially private; the check runs on the real data");
 }
 
 // ---------- Column contracts ----------
@@ -108,10 +134,14 @@ void ContractAnalyzer::columnContract(const ExpectStmt& node, const std::string&
                          "use FILL_NULL or DROP_NULL before this EXPECT");
                 return;
             }
+            if (const ColumnInfo* info = releasedInput(table, column); info && info->seenMissing) {
+                likelyViolated(node, contract, "missing values in " + name);
+            }
             column.nullable = false;  // rows only get past the run-time check if nothing is missing
             deferred(node, contract,
-                     missingKnown ? "missing values may remain after earlier statements"
-                                  : "the file's statistics do not say whether values are missing");
+                     missingKnown              ? "missing values may remain after earlier statements"
+                     : table.schema.released ? "the released facts do not say that no value is missing"
+                                               : "the file's statistics do not say whether values are missing");
             return;
         }
         case ConstraintKind::Between:
@@ -159,6 +189,17 @@ void ContractAnalyzer::between(const ExpectStmt& node, const std::string& contra
         }
         violated(node, contract, message, "every value must be between " + node.low + " and " + node.high);
     } else {
+        if (const ColumnInfo* info = releasedInput(table, column)) {
+            // values < k (or <= k) were seen: below `low` if k <= low (or k < low); likewise above
+            if (!std::isinf(info->seenBelow) && (info->seenBelowOrAt ? info->seenBelow < low : info->seenBelow <= low)) {
+                likelyViolated(node, contract, "values of " + name + (info->seenBelowOrAt ? " at or below " : " below ") +
+                                                   formatNumber(info->seenBelow));
+            } else if (!std::isinf(info->seenAbove) &&
+                       (info->seenAboveOrAt ? info->seenAbove > high : info->seenAbove >= high)) {
+                likelyViolated(node, contract, "values of " + name + (info->seenAboveOrAt ? " at or above " : " above ") +
+                                                   formatNumber(info->seenAbove));
+            }
+        }
         column.range.min = std::max(column.range.min, low);  // true after the run-time check passes
         column.range.max = std::min(column.range.max, high);
         column.exact = false;                                // but low and high need not occur

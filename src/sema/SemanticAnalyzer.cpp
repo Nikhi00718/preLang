@@ -317,8 +317,9 @@ void SemanticAnalyzer::visit(const LoadStmt& node) {
         dataset.kind = node.kind == DataKind::Table ? DatasetKind::Table : DatasetKind::TableSet;
         std::vector<std::string> summary;
         for (TableSchema& schema : *tables) {
-            summary.push_back(schema.name + " (" + std::to_string(schema.rowCount) + " rows, " +
-                              std::to_string(schema.columns.size()) + " columns)");
+            summary.push_back(schema.name + " (" +
+                              (schema.released ? std::string("released facts") : std::to_string(schema.rowCount) + " rows") +
+                              ", " + std::to_string(schema.columns.size()) + " columns)");
             dataset.tables.push_back(makeTable(std::move(schema)));
         }
         for (const TableState& table : dataset.tables) {
@@ -387,6 +388,7 @@ void SemanticAnalyzer::visit(const DropNullStmt& node) {
         for (ColumnState& column : table->columns) {
             column.nullable = column.nullable && !looksAt(column);
             column.exact = false;  // rows are removed from every column
+            column.rowsRemoved = true;
             recordColumn(dataset, *table, column, node.location.line, "DROP_NULL");
         }
         addTarget(node, tableTarget(dataset, *table));
@@ -540,6 +542,7 @@ void SemanticAnalyzer::visit(const FilterStmt& node) {
     refine(*node.condition, *filterTable_, learned);
     for (ColumnState& column : filterTable_->columns) {
         column.exact = false;
+        column.rowsRemoved = true;
         recordColumn(*filterDataset_, *filterTable_, column, node.location.line,
                      "FILTER WHERE " + exprText(*node.condition));
     }
@@ -662,6 +665,13 @@ void SemanticAnalyzer::visit(const ParseDateStmt& node) {
             continue;
         }
         if (!info->datesKnown) {
+            if (table.schema.released) {
+                diagnostics_.error(Phase::Schema, node.target.location,
+                                   "PARSE_DATE needs the values of " + name +
+                                       ", but a private compilation sees only the released facts of " +
+                                       table.schema.file);
+                continue;
+            }
             if (table.schema.format != TableFormat::Csv || !table.schema.valuesKnown) {
                 diagnostics_.error(Phase::Schema, node.target.location,
                                    "PARSE_DATE needs the values of " + name + ", but only the footer of " +

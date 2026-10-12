@@ -78,6 +78,9 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
             case Opcode::ParseDate:
                 if (liveColumns.count(instruction.column) == 0) {
                     remove[i] = true;
+                    if (!instruction.proofKey.empty()) {
+                        program.deadKeys.insert(instruction.proofKey);  // removable whatever the data
+                    }
                     changes.push_back("dead store elimination: removed " + describe(instruction) + ", '" +
                                       instruction.column + "' is never read or saved afterwards");
                 }

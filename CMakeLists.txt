@@ -16,6 +16,7 @@ add_library(preplang_core
     src/schema/Checksum.cpp
     src/schema/CsvScanner.cpp
     src/schema/ParquetFooter.cpp
+    src/schema/ReleasedFacts.cpp
     src/schema/SchemaProvider.cpp
     src/sema/SymbolTable.cpp
     src/sema/SelectorResolver.cpp
@@ -52,7 +53,7 @@ target_link_libraries(preplang PRIVATE preplang_core)
 
 # Unit tests: ctest --test-dir build -C Debug --output-on-failure
 enable_testing()
-foreach(name lexer parser semantic tableset imageset parquet optimizer scanner certificate)
+foreach(name lexer parser semantic tableset imageset parquet optimizer scanner certificate private)
     add_executable(test_${name} tests/test_${name}.cpp)
     target_link_libraries(test_${name} PRIVATE preplang_core)
     add_test(NAME ${name} COMMAND test_${name})

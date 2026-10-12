@@ -369,6 +369,37 @@ translates `fillna` (constants, dictionaries, `mean()`, `median()`, `mode()[0]`)
 py -3 frontend/pandas2prep.py my_script.py > lifted.prep
 ```
 
+**9. Compiling against data you cannot see (private compilation).** Selective deoptimization never
+relies on the compile-time facts being true: every removal is checked on the real data when the
+program runs. So the compiler can work from facts the data owner releases with differential privacy,
+for an analyst who may not see the data. The data owner writes what the program asks about the data
+(the public schema and the numbers in the program) and releases noisy answers to threshold questions
+at those numbers, with the sparse vector technique:
+
+```bash
+preplang program.prep --queries
+```
+
+```bash
+py -3 tools/release_facts.py output/preplang_queries.tsv --epsilon 1 --out facts.tsv
+```
+
+The analyst compiles from the facts alone; the compiler opens no input file, and everything it writes
+is epsilon-differentially private:
+
+```bash
+preplang program.prep --facts facts.tsv --python
+```
+
+Nothing it derives is treated as exact: no contract is reported violated (a contract the released
+facts show broken gets a "likely violated" warning), contracts that read values are checked at run
+time, and the generated program has no checksum, so every input, including the one the facts
+describe, is checked against the certificates. A wrong fact costs a deoptimization, never a wrong
+result (`tests/test_private.cpp` checks this with random facts, true or false). With probability
+1 - beta (`--beta`, default 0.05) every warning names a real violation and no removal of a normal
+compilation is lost. Tables only: images, `LOAD_TABLES` and `PARSE_DATE` read files or values and are
+refused in a private compilation.
+
 ## Optimizations
 
 | Pass | What it removes or changes | Exact? |
@@ -482,6 +513,15 @@ no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission wit
 nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
 `eval/results/*.md`.
 
+**Private compilation (paper RQ8).** 1,176 compilations from released facts (differentially private
+at epsilon 0.1-100, without noise, absent, or random and possibly false), of the three real-month
+pipelines and 184 lifted Titanic scripts, run 16,200 times on real batches: none unsound. Without
+noise the private compilation removes exactly what a normal one removes; with noise it depends on how
+many rows a fact concerns (taxi months, about 60,000 trips: every removal kept at every epsilon; the
+31-row bike months: only at epsilon 100). On a 1,000,000-row file, a contract broken in 1,000 rows is
+always reported as likely violated at epsilon 1, in 100 rows at epsilon 10, with no false warning in
+288 compilations. Details: `eval/results/private.md` and `private_diagnostics.md`.
+
 The paper is `paper/preplang.tex` (ACM `acmart`), built as `paper/PrepLang_Paper.pdf`; every number
 and table it shows is in `paper/generated/`, written by `eval/paper_numbers.py` (see `paper/README.md`).
 What is new compared with existing work is in [docs/NOVELTY.md](docs/NOVELTY.md).
@@ -493,7 +533,8 @@ src/                 the compiler (C++17, no external libraries)
   common/            diagnostics (line, caret, hint, notes), did-you-mean, ISO dates
   lexer/ parser/     tokens, the lexer, the recursive-descent parser with error recovery
   ast/               AST, tree printer, Graphviz export
-  schema/            parallel CSV scanner, Parquet footers, PNG/JPEG headers, CRC-32 fingerprints
+  schema/            parallel CSV scanner, Parquet footers, PNG/JPEG headers, CRC-32 fingerprints,
+                     released facts for a private compilation
   sema/              abstract dataset state, selectors, contracts, the semantic analyzer
   dataset/           lineage and image-label linking
   ir/ optimizer/     three-address IR, pass manager and the optimization passes
@@ -501,15 +542,17 @@ src/                 the compiler (C++17, no external libraries)
                      the contract file
   backend/           pandas and OpenCV code, deoptimization guards, the planner that joins them
   explain/           --explain, --dry-run, --lineage and the run manifest
-tests/               unit tests (9 suites), with randomized soundness tests
+tests/               unit tests (10 suites), with randomized soundness tests
 proofs/              Lean 4: Deopt.lean (the theorems) and Core.lean (a core analysis, proven)
 frontend/            pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
-tools/               contracts.py: composes compiled stages, synthesizes producer contracts
+tools/               contracts.py: composes compiled stages, synthesizes producer contracts;
+                     release_facts.py: the data owner's differentially private facts
 examples/            example programs and data (tables, table sets, images, errors)
 output/              the program generated for examples/tabular/students.prep, as an example
 eval/                the evaluation
   compilation/       RQ1-RQ2: injected mistakes, script baselines, benchmarks, real GitHub failures
-  reuse/             RQ3-RQ7: certificates, validators, real months, pandas corpora, composition, cost
+  reuse/             RQ3-RQ8: certificates, validators, real months, pandas corpora, composition, cost,
+                     private compilation
   results/           every result as .json and .md (the paper's numbers come only from here)
   paper_numbers.py   writes paper/generated/ from eval/results/
 paper/               the paper (LaTeX, ACM format) and PrepLang_Paper.pdf

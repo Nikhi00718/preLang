@@ -6,6 +6,7 @@
 #include "sema/AnalysisResult.h"
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -78,4 +79,8 @@ struct IRProgram {
     std::vector<Instruction> code;
     std::map<std::string, TableSchema> tables;     // tableKey -> the CSV file a LOAD reads
     std::map<std::string, ImageSetSchema> images;  // dataset -> the files a LOAD_IMAGE(S) reads
+    // proofKeys of instructions removed as dead stores (their result is never used). That
+    // removal holds for every input, so a certificate does not need the data fact that also
+    // made them useless.
+    std::set<std::string> deadKeys;
 };

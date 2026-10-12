@@ -47,4 +47,5 @@ private:
     Diagnostic& violated(const ExpectStmt& node, const std::string& contract, const std::string& message,
                          const std::string& hint);
     void deferred(const ExpectStmt& node, const std::string& contract, const std::string& reason);
+    void likelyViolated(const ExpectStmt& node, const std::string& contract, const std::string& evidence);
 };

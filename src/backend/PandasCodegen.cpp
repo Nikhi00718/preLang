@@ -293,11 +293,13 @@ def table_problem(facts, certificate):
         code += R"(def read_csv_checked(table, path, fingerprint, columns, dtypes, certificate):
     """Reads a CSV file. The compiler's proofs were made for the file with this
     CRC-32 checksum; any other file is admitted only if it satisfies the data
+    certificate. After a private compilation there is no checksum (None): the
+    compiler never saw the file, so every input is checked against the
     certificate. The nullable dtypes are applied after parsing: that gives the
     same values, and passing them to read_csv directly is several times slower."""
     path = Path(INPUTS[table]).resolve() if table in INPUTS else path
     data = path.read_bytes()
-    same_input[table] = zlib.crc32(data) == fingerprint or TRUST_INPUTS
+    same_input[table] = fingerprint is not None and zlib.crc32(data) == fingerprint or TRUST_INPUTS
     if same_input[table]:
         frame = pd.read_csv(io.BytesIO(data), usecols=columns, keep_default_na=False, na_values=[""],
                             dtype_backend="numpy_nullable")
@@ -325,7 +327,7 @@ def table_problem(facts, certificate):
         length = int.from_bytes(file.read(4), "little")
         file.seek(-8 - length, 2)
         footer = file.read()
-    same_input[table] = zlib.crc32(footer) == fingerprint or TRUST_INPUTS
+    same_input[table] = fingerprint is not None and zlib.crc32(footer) == fingerprint or TRUST_INPUTS
     if same_input[table]:
         return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
     import pyarrow.parquet
@@ -371,7 +373,8 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             const char* reader = schema.format == TableFormat::Parquet ? "read_parquet_checked" : "read_csv_checked";
             const std::string key = tableKey(in.dataset, in.table);
             return code + table + " = " + reader + "(\n    " + pythonString(key) + ",\n    HERE / " +
-                   pythonString(pathFrom(outputFolder_, schema.file)) + ",\n    " + hex(schema.fingerprint) +
+                   pythonString(pathFrom(outputFolder_, schema.file)) + ",\n    " +
+                   (schema.released ? std::string("None") : hex(schema.fingerprint)) +
                    ",\n    " + pythonList(in.columns) + ",\n    " + dtypes + "},\n    " + certificateDict(key) +
                    ",\n)\n";
         }
