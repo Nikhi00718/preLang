@@ -92,8 +92,8 @@ std::optional<ReleasedFacts> readReleasedFacts(const fs::path& file, const fs::p
             table = &(facts.tables[SchemaProvider::overrideKey(schema.file, schema.name)] = schema);
         } else if (f[0] == "column" && f.size() == 12 && table) {
             // column, name, type, may have missing values, lower bound, strict, upper bound, strict,
-            // and where each bound's question sequence stopped: k and "<" or "<=" (values below k
-            // were seen), k and ">" or ">=" (values above k), or "-" and "-" if it never stopped
+            // and the evidence of the occupied cells: k and "<" or "<=" (values below k were
+            // seen), k and ">" or ">=" (values above k), or "-" and "-"
             ColumnInfo column;
             column.name = f[1];
             double low = 0, high = 0;
@@ -150,7 +150,10 @@ void writeQueries(std::ostream& out, const std::vector<QueryTable>& tables, cons
             << fs::absolute(table.schema.file).generic_string() << '\n';
         for (const ColumnInfo& column : table.schema.columns) {
             out << "column\t" << column.name << '\t' << columnTypeName(column.type) << '\t'
-                << (table.ranged.count(column.name) != 0 ? "range" : "missing") << '\n';
+                << (table.ranged.count(column.name) != 0    ? "range"
+                    : table.missing.count(column.name) != 0 ? "missing"
+                                                            : "none")
+                << '\n';
         }
     }
 }

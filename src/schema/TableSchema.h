@@ -27,7 +27,7 @@ struct ColumnInfo {
     std::string notDateReason;      // e.g. row 5 has "n/a"
     // Private compilation: where the released answers saw values, enough of them to reach the
     // release's threshold: below seenBelow (at or below it if seenBelowOrAt) and above seenAbove
-    // (at or above it if seenAboveOrAt); infinite if a question sequence never stopped. The
+    // (at or above it if seenAboveOrAt); infinite if no value was seen on that side. The
     // answers are noisy, so this only gives warnings ("likely violated"), never a decision.
     double seenBelow = -std::numeric_limits<double>::infinity();
     bool seenBelowOrAt = false;

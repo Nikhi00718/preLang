@@ -510,7 +510,7 @@ def imagebatches(rows, numbers):
 
 
 def private(results, diagnostics, numbers):
-    """RQ8 of the paper: private compilation (eval/reuse/private.py)."""
+    """RQ8 of the paper: private compilation and its baselines (eval/reuse/private.py)."""
     import re
     import subprocess
     records = results["records"]
@@ -521,20 +521,53 @@ def private(results, diagnostics, numbers):
                    PrivRandom=sum(r["kind"] == "random" for r in records),
                    PrivRandomRuns=f"{sum(len(r['runs']) for r in records if r['kind'] == 'random'):,}",
                    PrivTitanicScripts=len({r["item"] for r in records if r["workload"] == "titanic"}))
+    numbers["PrivNeedlessTaxi"] = sum(run["outcome"] == "needless stop" for r in records if r["item"] == "taxi"
+                                      for run in r["runs"])
+
+    def workload(r):
+        return r["item"] if r["workload"] == "rq8" else r["workload"]
+
+    def overlap(chosen):
+        found = sum(len(set(r["removed"]) & set(r["normal_removed"])) for r in chosen if r["compiled"])
+        made = sum(len(r["removed"]) for r in chosen if r["compiled"])
+        normal = sum(len(r["normal_removed"]) for r in chosen if r["compiled"])
+        return found, made, normal
 
     def recall(chosen):
-        found = sum(len(set(r["removed"]) & set(r["normal_removed"])) for r in chosen if r["compiled"])
-        total = sum(len(r["normal_removed"]) for r in chosen if r["compiled"])
-        return 100 * found / total if total else None
+        found, _, normal = overlap(chosen)
+        return 100 * found / normal if normal else None
+
+    def precision(chosen):
+        found, made, _ = overlap(chosen)
+        return 100 * found / made if made else None
 
     def pct(value):
         return "--" if value is None else f"{value:.0f}"
 
-    numbers["PrivExactRecall"] = pct(recall([r for r in records if r["kind"] == "exact"]))
-    numbers["PrivTaxiRecallEpsOne"] = pct(recall([r for r in records if r["item"] == "taxi" and r["kind"] == "eps=1"]))
+    def of(kind, key=None):
+        return [r for r in records if r["kind"] == kind and (key is None or workload(r) == key)]
+
+    numbers["PrivExactRecall"] = pct(recall(of("exact")))
     for kind, name in (("eps=1", "One"), ("eps=10", "Ten")):
         numbers[f"PrivTitanicDeoptEps{name}"] = sum(any(run["anchor"] and run["deopts"] for run in r["runs"])
-                                                    for r in records if r["workload"] == "titanic" and r["kind"] == kind)
+                                                    for r in of(kind, "titanic"))
+        for key in ("traffic", "bikes", "taxi", "titanic"):
+            for method, prefix in (("", "Prog"), ("generic ", "Gen"), ("synthetic ", "Syn"), ("corpus ", "Corp")):
+                chosen = of(f"{method}{kind}", key)
+                if chosen:
+                    label = f"Priv{prefix}{key.capitalize()}Eps{name}"
+                    numbers[label + "Recall"] = pct(recall(chosen))
+                    numbers[label + "Precision"] = pct(precision(chosen))
+                    numbers[label + "Compiled"] = f"{sum(r['compiled'] for r in chosen)}/{len(chosen)}"
+    for kind, prefix in (("synthetic eps=1", "SynEpsOne"), ("synthetic eps=10", "SynEpsTen")):
+        chosen = of(kind)
+        numbers[f"Priv{prefix}Failed"] = sum(not r["compiled"] for r in chosen)
+        numbers[f"Priv{prefix}All"] = len(chosen)
+        numbers[f"Priv{prefix}FalseViolations"] = sum(
+            sum("contract violated" in e for e in r["errors"]) for r in chosen if not r["compiled"])
+    for kind, name in (("optimistic", "Optimistic"), ("none", "None")):
+        numbers[f"Priv{name}Recall"] = pct(recall(of(kind)))
+        numbers[f"Priv{name}Precision"] = pct(precision(of(kind)))
 
     real = ROOT / "eval" / "data" / "real"
     for name, folder in (("Traffic", "traffic"), ("Bikes", "bikes")):
@@ -544,67 +577,94 @@ def private(results, diagnostics, numbers):
     sizes = [pyarrow.parquet.ParquetFile(path).metadata.num_rows for path in (real / "green").glob("*.parquet")]
     numbers["PrivTaxiRows"] = f"{statistics.median(sizes):,.0f}"
 
-    # Table: recall of the normal removals per workload and kind of facts.
-    kinds = ["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["random", "none"]
-    names = {"exact": "no noise", "random": "random", "none": "none"}
+    # Table: recall and precision against the normal removals, per workload and kind of facts.
+    kinds = (["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["corpus eps=1", "corpus eps=10"] +
+             [f"{base} eps={e}" for base in ("generic", "synthetic") for e in ("1", "10")] +
+             ["optimistic", "random", "none"])
+    names = {"exact": "program's cells, no noise", "random": "random (true or false)", "none": "none (claims nothing)",
+             "optimistic": "optimistic (no data)"}
     workloads = [("traffic", "Traffic"), ("bikes", "Bikes"), ("taxi", "Taxi"), ("titanic", "Titanic")]
     lines = [r"\begin{table*}[t]",
-             r"\caption{Private compilation (RQ8): share of the normal compilation's removals that the private "
-             r"compilation also makes (recall), by kind of facts; share of compilations whose run on the compiled file "
-             r"itself deoptimizes (a released fact was false); and every run scored against a fresh compilation. "
-             r"$\varepsilon$ is the total budget. Random facts are true or false at random.}",
+             r"\caption{Private compilation (RQ8). Per workload, recall/precision (\%) of the compilation's removals "
+             r"against the normal compilation of the same file: recall is the share of normal removals it also "
+             r"makes, precision the share of its removals that rest on true facts. Compiled: compilations without "
+             r"errors. Deopt.\ on file: compilations whose run on the compiled file itself deoptimizes (a released "
+             r"fact was false). Every run is scored against a fresh compilation of its batch. $\varepsilon$ is the "
+             r"budget of one program; ``one release'' serves all Titanic scripts with one budget. Generic: fixed "
+             r"logarithmic bins; synthetic: a table sampled from them, compiled normally.}",
              r"\label{tab:rq-private}", r"\centering", r"\footnotesize",
-             r"\begin{tabular}{@{}lrrrrrrrr@{}}", r"\toprule",
-             r"Facts & Traffic & Bikes & Taxi & Titanic & Compilations & Deopt.\ on file & Runs & Wrong \\",
+             r"\begin{tabular}{@{}lrrrrrrrrr@{}}", r"\toprule",
+             r"Facts & Traffic & Bikes & Taxi & Titanic & Compilations & Compiled & Deopt.\ on file & Runs & Wrong \\",
              r"\midrule"]
     for kind in kinds:
-        chosen = [r for r in records if r["kind"] == kind]
+        chosen = of(kind)
         if not chosen:
             continue
         cells = []
         for key, _ in workloads:
-            items = [r for r in chosen if (r["item"] if r["workload"] == "rq8" else r["workload"]) == key]
-            value = recall(items)
-            cells.append("--" if value is None else f"{value:.0f}\\%")
-        anchor = [any(run["anchor"] and run["deopts"] for run in r["runs"]) for r in chosen if r["compiled"]]
+            items = [r for r in chosen if workload(r) == key]
+            cells.append("/".join(pct(f(items)) for f in (recall, precision)) if items else "")
+        compiled = [r for r in chosen if r["compiled"]]
+        anchor = [any(run["anchor"] and run["deopts"] for run in r["runs"]) for r in compiled]
         all_runs = [run for r in chosen for run in r["runs"]]
         wrong = sum(run["outcome"] in ("unsound", "wrong stop") for run in all_runs)
-        label = names.get(kind, kind.replace("eps=", r"$\varepsilon = ") + "$")
-        lines.append(f"{label} & " + " & ".join(cells) + f" & {len(chosen):,} & "
-                     f"{100 * sum(anchor) / len(anchor):.0f}\\% & {len(all_runs):,} & {wrong} \\\\")
+        if kind in names:
+            label = names[kind]
+        else:
+            method, epsilon = kind.rsplit(" ", 1) if " " in kind else ("program's cells", kind)
+            method = {"corpus": "one release", "generic": "generic bins",
+                      "synthetic": "synthetic data"}.get(method, method)
+            label = f"{method}, $\\varepsilon = {epsilon[4:]}$"
+        deopt = f"{100 * sum(anchor) / len(anchor):.0f}\\%" if anchor else "--"
+        lines.append(f"{label} & " + " & ".join(cells) + f" & {len(chosen):,} & {len(compiled):,} & {deopt} & "
+                     f"{len(all_runs):,} & {wrong} \\\\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
     (ROOT / "paper" / "generated" / "privatetable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    # Warnings on the 1,000,000-row file.
+    # Reports on the 1,000,000-row file.
     numbers["PrivDiagRows"] = "1{,}000{,}000"
-    numbers["PrivDiagCompilations"] = len(diagnostics)
-    numbers["PrivDiagFalse"] = sum(r["false_warnings"] for r in diagnostics)
     sizes = sorted({r["rows"] for r in diagnostics})
 
-    def always_from(epsilon):
-        """The smallest m from which every compilation warns, for every mistake and every larger m."""
-        good = [m for m in sizes if m > 0 and all(r["warned"] for r in diagnostics
-                                                  if r["epsilon"] == epsilon and r["rows"] >= m)]
-        return f"{min(good):,}" if good else "--"
+    def always_from(method, epsilon):
+        """The smallest m from which every compilation reports the broken contract, for every
+        mistake and every larger m."""
+        chosen = [r for r in diagnostics if r["method"] == method and r["epsilon"] == epsilon]
+        good = [m for m in sizes if m > 0 and all(r["warned"] for r in chosen if r["rows"] >= m)]
+        return f"{min(good):,}" if good and chosen else "never"
 
-    numbers["PrivDiagEpsOne"], numbers["PrivDiagEpsTen"] = always_from(1), always_from(10)
-    epsilons = sorted({r["epsilon"] for r in diagnostics})
+    for method, prefix in (("program", ""), ("generic", "Generic"), ("synthetic", "Synthetic")):
+        chosen = [r for r in diagnostics if r["method"] == method]
+        numbers[f"PrivDiag{prefix}Compilations"] = len(chosen)
+        numbers[f"PrivDiag{prefix}False"] = sum(r["false_warnings"] for r in chosen)
+        numbers[f"PrivDiag{prefix}FalseRuns"] = sum(r["false_warnings"] > 0 for r in chosen)
+        numbers[f"PrivDiag{prefix}EpsOne"] = always_from(method, 1)
+        numbers[f"PrivDiag{prefix}EpsTen"] = always_from(method, 10)
+    columns = sorted({(r["method"], r["epsilon"]) for r in diagnostics if r["method"] == "program"
+                      or r["epsilon"] in (1, 10)},
+                     key=lambda c: (("program", "generic", "synthetic").index(c[0]), c[1]))
     kinds = list(dict.fromkeys(r["kind"] for r in diagnostics))
-    lines = [r"\begin{table}[t]",
-             r"\caption{Private compilation (RQ8): share of private compilations that warn that the contract a "
-             r"mistake in $m$ of 1{,}000{,}000 rows breaks is likely violated (five seeds; one without noise).}",
+    lines = [r"\begin{table*}[t]",
+             r"\caption{Private compilation (RQ8): share of compilations that report the contract a mistake in $m$ "
+             r"of 1{,}000{,}000 rows breaks (program's cells: 20 seeds, one without noise; baselines: 10 seeds). A "
+             r"private compilation warns that it is likely violated; one from synthetic data reports it violated. "
+             r"In brackets: compilations that report a contract the data does not break.}",
              r"\label{tab:rq-private-diag}", r"\centering", r"\footnotesize",
-             r"\begin{tabular}{@{}lr" + "r" * len(epsilons) + r"@{}}", r"\toprule",
+             r"\begin{tabular}{@{}lr" + "r" * len(columns) + r"@{}}", r"\toprule",
+             r" & & \multicolumn{" + str(sum(c[0] == "program" for c in columns)) + r"}{c}{program's cells} & "
+             r"\multicolumn{2}{c}{generic bins} & \multicolumn{2}{c}{synthetic data} \\",
              "Mistake & $m$ & " + " & ".join("no noise" if math.isinf(e) else f"$\\varepsilon = {e:g}$"
-                                               for e in epsilons) + r" \\", r"\midrule"]
+                                               for _, e in columns) + r" \\", r"\midrule"]
     for kind in kinds:
         for m in sizes:
             cells = []
-            for e in epsilons:
-                found = [r for r in diagnostics if r["kind"] == kind and r["rows"] == m and r["epsilon"] == e]
-                cells.append(f"{100 * sum(r['warned'] for r in found) / len(found):.0f}\\%" if found else "--")
+            for method, e in columns:
+                found = [r for r in diagnostics if r["kind"] == kind and r["rows"] == m and r["epsilon"] == e
+                         and r["method"] == method]
+                share = f"{100 * sum(r['warned'] for r in found) / len(found):.0f}\\%" if found else "--"
+                false = sum(r["false_warnings"] > 0 for r in found)
+                cells.append(share + (f" ({false})" if false else ""))
             lines.append(f"{kind.replace('_', ' ')} & {m:,} & " + " & ".join(cells) + r" \\")
-    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
     (ROOT / "paper" / "generated" / "privatediagtable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     test = ROOT / "build" / "Release" / "test_private.exe"

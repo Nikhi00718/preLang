@@ -393,71 +393,90 @@ that were not cited: semantic query optimization with soft constraints that hold
 and deoptimization (Barrière et al., POPL 2021). All three are now cited. Eight candidate ideas were
 checked against prior work; the scores were: robustness margins 4, library-upgrade safety 4, engine
 divergence certificates 4 (6-8 strengthened), drift repair 4, row-level partitioned execution 3,
-prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and **private
-compilation 6-8**, the highest.
+prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and private compilation
+6-8, the highest.
 
 ### N12. Private compilation
 
 - **Problem.** A data-aware compiler leaks its data through what it writes: the generated program
   embeds the file's checksum (which confirms a guessed file), every removal states a fact (no missing
   `age`, no mark below 10), a violated contract names a row, the contract file records bounds. Yet in
-  validation servers and data clean rooms the analyst who writes the pipeline may not see the data.
-- **Observation.** The exactness theorem of selective deoptimization has no hypothesis about the facts
-  the compiler starts from (in Lean, `deopt_correct` quantifies over arbitrary removals and
-  certificates). The facts only decide which instructions are removed speculatively and which
-  certificates guard them; the generated program checks the certificates on the real batch. So the
-  compiler may start from facts that are wrong: a wrong fact costs a deoptimization, never a wrong
-  result.
-- **What.** The data owner runs `preplang --queries` (the public schema and the numbers written in the
-  program) and `tools/release_facts.py`, which answers only threshold questions at those numbers (how
-  many values are missing, below k, above k) with AboveThreshold, the canonical sparse vector technique,
-  one question sequence per column and side. The analyst compiles with `--facts`; the compiler opens no
-  input file, treats nothing as exact (no contract is reported violated; contracts that read values are
-  checked at run time), embeds no checksum, and warns "likely violated" where the released evidence
-  shows a contract broken.
-- **Guarantees.** (1) Everything the compiler writes is epsilon-differentially private (AboveThreshold,
-  sequential composition over question sequences that depend only on the program and the public
-  schema, post-processing). (2) Every run on every admitted batch is exact, for any facts file, true,
-  noisy or false. (3) With thresholds set from beta, with probability 1 - beta every "likely violated"
-  warning names a real violation, and for programs without `DERIVE` the private compilation removes at
-  least what a normal compilation of the same file removes (the analysis compares bounds only with the
-  program's numbers, so bounds at those numbers decide every proof exact bounds decide).
+  validation servers, OpenSAFELY and data clean rooms the analyst who writes the pipeline may not see
+  the data.
+- **Observation 1: guards are necessary.** The facts a data-aware compiler optimizes with are emptiness
+  facts (no value is missing, none is below k). No differentially private release can certify one: an
+  epsilon-DP mechanism says whatever it says on a clean table, with probability at least exp(-k epsilon)
+  times as often, on a table that breaks the fact in k rows. One-sided noise, which keeps Shrinkwrap and
+  SPECIAL exact when they drop padding tuples, cannot make a removal safe. A program optimized from
+  released facts must check them on the data it runs on.
+- **Observation 2: selective deoptimization provides those guards.** Its exactness theorem has no
+  hypothesis about the facts the compiler starts from (in Lean, `deopt_correct` quantifies over arbitrary
+  removals and certificates); a wrong fact costs a deoptimization, never a wrong result.
+- **What.** The data owner runs `preplang --queries` (the schema and the numbers written in the program)
+  and `tools/release_facts.py --schema-declared`. The numbers cut each column into cells (below k1,
+  exactly k1, between k1 and k2, ..., missing); every decision of the analysis depends only on which cells
+  hold some row. The tool releases one Laplace histogram per column over those cells (sensitivity 1), for
+  the columns the program names only. The analyst compiles with `--facts`; the compiler opens no input
+  file, treats nothing as exact (no contract is reported violated; contracts that read values are checked
+  at run time; a statement shown useless "probably has no effect" and stays, guarded), embeds no
+  checksum, and warns "likely violated" where the released evidence shows a contract broken. One release
+  can serve many programs over the same files.
+- **Guarantees.** (1) For a schema fixed independently of the data, everything the compiler writes is
+  epsilon-differentially private (sequential composition over columns, non-adaptive, post-processing).
+  (2) Every run on every admitted batch is exact, for any facts file, true, noisy or false; false facts can
+  also cost refusals (an admission fact with no run-time fallback), which the evaluation counts. (3) With
+  probability 1 - beta every occupied cell holds a row and every cell with at least 2t + 1 rows is
+  occupied: every "likely violated" warning names a real violation, a released fact is false only if
+  fewer than c(2t + 1) rows break it (c cells), and for programs without `DERIVE` whose columns each have
+  an occupied value cell the private compilation removes at least what a normal compilation removes.
 - **Why it is new, to our knowledge.** The rule that a hint may be wrong if it is cheap to check is
   Lampson's (1983), and JIT guards apply it to speculation (Hölzle 1992; Flückiger 2018; Barrière 2021).
-  Differential privacy has been used to answer an analyst's queries (PrivateSQL, elastic sensitivity,
-  APEx), to plan secure joins from noisy synopses (SPECIAL, PVLDB 18), to choose DP algorithms (Pythia),
-  to profile deployed software (Zhang et al., OOPSLA 2020), and in languages that prove a program DP
-  (Fuzz, Fuzzi, Duet). In query planning noise can only change cost, because a plan choice does not
-  change a query's result. We found no work in which differentially private facts about the data decide
-  which checks and operations a compiler *removes*, which could change results, with guards that keep
-  every run exact, and with the questions chosen by the program at its own numbers.
+  Differential privacy has answered an analyst's queries (PrivateSQL, elastic sensitivity, APEx, also for
+  cleaning), sized secure query processing (Shrinkwrap, SPECIAL, exact through one-sided noise), chosen DP
+  algorithms (Pythia), profiled deployed software (Zhang et al., OOPSLA 2020), and been proven of programs
+  (Fuzz, Duet). We found no work in which differentially private facts decide which checks and operations
+  a compiler removes, with guards that keep every run exact, and with the released cells chosen by the
+  program's own numbers.
 - **Code.** `src/schema/ReleasedFacts.{h,cpp}`, `SchemaProvider::setReleased`, `--queries` and `--facts`
-  in `src/main.cpp`, `likelyViolated` in `src/sema/ContractAnalyzer.cpp`, `tools/release_facts.py`,
-  `tests/test_private.cpp`, `eval/reuse/private.py`.
+  in `src/main.cpp`, `likelyViolated` in `src/sema/ContractAnalyzer.cpp`, `noEffectText` in
+  `src/sema/SemanticAnalyzer.cpp`, `tools/release_facts.py`, `tests/test_private.cpp`,
+  `eval/reuse/private.py`, `eval/reuse/private_baselines.py`.
 - **Evidence** (`eval/results/private.md`, `eval/results/private_diagnostics.md`, paper RQ8).
-  - 1,176 private compilations (RQ4 pipelines on real months and 184 lifted Titanic scripts; facts
-    from the release at epsilon 0.1-100, without noise, absent, and random true-or-false facts) were run
-    16,200 times; none was unsound. The only refusals of months a fresh compilation runs are the taxi
-    schema change, which the normal compilation refuses too.
-  - Without noise, the questions at the program's numbers give exactly the normal removals. With
-    noise, what is learned depends on how many rows a fact concerns: the traffic months (about 800 rows)
-    keep 29%, 71% and 100% of the normal removals at epsilon 0.1, 1 and 10; the 31-row bike months only
-    at epsilon 100; the taxi months (about 60,000 trips) 100% at every epsilon. False facts show up as
-    deoptimizations on the compiled file itself (85 of 184 Titanic programs at epsilon 1, mostly fills of
-    `Age`, whose 177 missing values are below the threshold at that budget, and of `Embarked`, whose two
-    missing values no release can reveal; 74 at epsilon 10, mostly `Embarked`).
-  - On a 1,000,000-row file with a mistake injected into m rows, every private compilation warns that
-    the broken contract is likely violated from m = 10,000 at epsilon 0.1, m = 1,000 at epsilon 1,
-    m = 100 at epsilon 10 (and m = 1 without noise); 0 false warnings in 288 compilations.
+  - 2,919 compilations (the RQ4 pipelines on real months and 184 lifted Titanic scripts; the release at
+    epsilon 0.1-100, one release for all scripts, no noise, and the baselines below) ran 38,409 times:
+    none unsound, no wrong stop. All 688 refusals of months a fresh compilation runs are the taxi schema
+    change, which the normal compilation refuses too.
+  - Without noise, the program's cells give exactly the normal removals. At epsilon 1 the taxi and
+    traffic pipelines keep all of them at full precision; fixed logarithmic bins with the same budget keep
+    50% (taxi) and 83% (traffic), because the program's numbers (1 and 265, 230 and 320) are not on the
+    grid. Synthetic data sampled from those bins and compiled normally fails on all 15 pipeline
+    compilations, with contracts the real data satisfies. The optimistic facts ("nothing is missing",
+    no data) reach 59% recall at 11% precision.
+  - On the Titanic training file removal precision is 17% at epsilon 1 and 31% at epsilon 10 (fixed bins
+    and synthetic data: 20%); the false facts are mostly "no missing `Embarked`" (2 of 891 rows), which no
+    release can reveal, and the run deoptimizes them. One release for all 184 scripts at a total epsilon
+    of 1 gives 16% precision, about what each script gets from its own release at epsilon 1, which
+    together spend 184 times the budget.
+  - On a 1,000,000-row file with a mistake injected into m rows, the program's cells report the broken
+    contract in every run from m = 100 at epsilon 1 and m = 10 at epsilon 10, with 0 false reports in
+    1,818 compilations. Fixed bins and synthetic data reach the same sizes in every run but less often
+    between them (at epsilon 0.3, 100 bad rows in 50-60% of runs against 80-100%).
   - `tests/test_private.cpp`: 300 random facts files with random inputs, 0 runs that differ from the
-    source program.
-- **Found by this evaluation in the existing compiler.** A fill of a column dropped right after was
-  removed both as a dead store and as having no effect, and the certifier kept "no missing values" as an
-  admission fact of a column the program never loads, so batches were refused for nothing. A dead store
-  is now removed without any data fact (regression test `testDeadStoreNeedsNoFact`). The earlier RQs
-  were measured before this fix, which only removes admission facts.
-- **Limits.** Column names and types are public. The guarantee covers what the compiler writes, not the
-  data owner's run logs or run time (a deoptimization message names a row; JIT timing channels are
-  known). Small tables give little at small epsilon, by design. Images, `LOAD_TABLES` and `PARSE_DATE`
-  are not supported in a private compilation. The Lean development is unchanged; the privacy theorem is
-  on paper.
+    source program; the reader trusts no input without a checksum.
+- **Found by this round in the existing compiler.** A fill of a column dropped right after was removed
+  both as a dead store and as having no effect, and the certifier kept "no missing values" as an
+  admission fact of a column the program never loads, so batches were refused for nothing; a dead store
+  now needs no data fact (`testDeadStoreNeedsNoFact`). The earlier RQs were measured before this fix,
+  which only removes admission facts.
+- **Strict re-review of the first version** (AboveThreshold release): PL 5.5/10 overall (from 5), private
+  compilation alone 5; DB/privacy 5/10 overall, private compilation alone 4. They found real flaws, all
+  fixed in this version: inferred column types are facts about the data (the release now requires
+  `--schema-declared`); the seed was written to the facts file; AboveThreshold was the wrong mechanism
+  (now Laplace histograms, thresholds about ten times lower); `PREPLANG_TRUST_INPUTS` bypassed the guards;
+  "has no effect" was stated as fact; the utility lemma lost a hypothesis; SPECIAL was described wrongly;
+  there were no baselines.
+- **Limits.** The schema must be declared. The unit of privacy is a row, not a person. The guarantee
+  covers what the compiler writes, not the data owner's run logs or run time. Small tables give little at
+  small epsilon, by design. Images, `LOAD_TABLES` and `PARSE_DATE` are not supported. There is no budget
+  ledger across releases. The Lean development is unchanged; the privacy theorem and the lemma are on
+  paper, and the mechanized core does not cover admission, types or compile errors.

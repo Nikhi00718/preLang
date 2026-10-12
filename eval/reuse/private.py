@@ -21,6 +21,12 @@ Each is compiled from several kinds of facts:
   * random    random facts, true or false: bounds at random program numbers, missing
               values at random (tests that correctness never depends on the facts)
   * none      facts that claim nothing (missing values everywhere, no bounds)
+  * optimistic  facts that claim no missing values anywhere, without looking at the data
+              (what a private compilation from no budget at all could do; its runs are exact too)
+  * corpus    one release for all Titanic scripts together (the budget is spent once)
+  * generic   baseline: the same budget on equal-width bins instead of the program's numbers
+              (eval/reuse/private_baselines.py)
+  * synthetic baseline: a table sampled from the generic release, compiled normally
 
 Measured:
   1. exactness: every run is scored against a fresh compilation of the batch, run
@@ -48,6 +54,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from policies import OUTCOMES, outputs, score  # noqa: E402
+from private_baselines import generic_facts, write_synthetic  # noqa: E402
 from realbatches import WORKLOADS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,12 +67,14 @@ CORPUS_WORK = ROOT / "eval" / "work" / "pandas_corpus"
 EPSILONS = (0.1, 1, 10, 100)
 
 
-def configs(epsilons, seeds, randoms):
+def configs(epsilons, seeds, randoms, baselines=(1, 10), baseline_seeds=1):
     """(name, epsilon or None, seed) for every kind of facts."""
     out = [("exact", math.inf, 0)]
     out += [(f"eps={e:g}", e, s) for e in epsilons for s in range(seeds)]
+    out += [(f"{base} eps={e:g}", e, s) for base in ("generic", "synthetic") for e in baselines
+            for s in range(baseline_seeds)]
     out += [("random", None, s) for s in range(randoms)]
-    return out + [("none", None, 0)]
+    return out + [("none", None, 0), ("optimistic", None, 0)]
 
 
 # ---------- Facts ----------
@@ -79,23 +88,26 @@ def read_queries(path):
         elif fields[0] == "table":
             tables.append((fields[1], fields[2], fields[3], []))
         elif fields[0] == "column":
-            tables[-1][3].append((fields[1], fields[2], fields[3] == "range"))
+            tables[-1][3].append((fields[1], fields[2], fields[3]))  # asked: range, missing or none
     return constants, tables
 
 
-def made_up_facts(queries_file, seed):
-    """Facts that claim nothing (seed None), or random ones that may be false."""
+def made_up_facts(queries_file, kind, seed):
+    """Facts without the data: that claim nothing (none), that claim no missing values
+    anywhere (optimistic), or random ones that may be false (random)."""
     constants, tables = read_queries(queries_file)
     anchors = sorted(set(constants) | {0.0})
     rng = random.Random(seed)
-    lines = ["preplang-facts\t1", "mechanism\t" + ("no facts" if seed is None else f"random facts, seed {seed}")]
-    for load_path, name, kind, columns in tables:
-        lines.append(f"table\t{load_path}\t{name}\t{kind}")
-        for column, ctype, ranged in columns:
+    lines = ["preplang-facts\t1", f"mechanism\t{kind} facts"]
+    for load_path, name, file_kind, columns in tables:
+        lines.append(f"table\t{load_path}\t{name}\t{file_kind}")
+        for column, ctype, asked in columns:
             missing, low, low_strict, high, high_strict = "?", "-inf", 0, "inf", 0
-            if seed is not None:
+            if kind == "optimistic":
+                missing = "0"
+            if kind == "random":
                 missing = rng.choice(("0", "?"))
-                if ctype in ("INTEGER", "FLOAT") and ranged:
+                if ctype in ("INTEGER", "FLOAT") and asked == "range":
                     a, b = rng.choice([-math.inf] + anchors), rng.choice(anchors + [math.inf])
                     a, b = min(a, b), max(a, b)
                     low, high = repr(a), repr(b)
@@ -105,14 +117,27 @@ def made_up_facts(queries_file, seed):
     return "\n".join(lines) + "\n"
 
 
-def release(owner, analyst, epsilon, seed):
-    """The data owner's side: queries (needs the data), then the facts file for the analyst."""
+def release(owner, analyst, kind, epsilon, seed, ready):
+    """The data owner's side: queries (needs the data), then the facts file for the analyst;
+    `ready` is a facts file already released for several programs at once."""
     queries = owner / "output" / "preplang_queries.tsv"
     analyst.mkdir(parents=True, exist_ok=True)
+    if ready:
+        shutil.copyfile(ready, analyst / "facts.tsv")
+        return
+    if kind.startswith("generic"):
+        (analyst / "facts.tsv").write_text(generic_facts(queries, epsilon, 0.05, seed), encoding="utf-8")
+        return
+    if kind.startswith("synthetic"):
+        write_synthetic(analyst, queries, epsilon, 0.05, seed)
+        (analyst / "facts.tsv").write_text("preplang-facts\t1\nmechanism\tsynthetic data from the generic release\n",
+                                           encoding="utf-8")  # a record only: this program is compiled normally
+        return
     if epsilon is None:
-        (analyst / "facts.tsv").write_text(made_up_facts(queries, seed if seed != "none" else None), encoding="utf-8")
+        (analyst / "facts.tsv").write_text(made_up_facts(queries, kind, seed), encoding="utf-8")
         return
     subprocess.run([PYTHON, str(RELEASE), str(queries), "--epsilon", repr(float(epsilon)), "--seed", str(seed),
+                    "--schema-declared",
                     "--out", str(analyst / "facts.tsv")], check=True, capture_output=True, text=True)
 
 
@@ -152,6 +177,17 @@ def owner_setup(compiler, owner, program, files):
         shutil.copyfile(source, owner / name)
     normal = compile_in(compiler, owner)
     subprocess.run([str(compiler), "program.prep", "--queries"], cwd=owner, capture_output=True, text=True, check=True)
+    # The data owner has one copy of each file: point the queries at it, so that a release for
+    # several programs (the corpus) sees one file and spends its budget once per column.
+    queries = owner / "output" / "preplang_queries.tsv"
+    copies = {(owner / name).resolve().as_posix(): Path(source).resolve().as_posix() for name, source in files.items()}
+    lines = []
+    for line in queries.read_text(encoding="utf-8").splitlines():
+        fields = line.split("\t")
+        if fields[0] == "table" and fields[4] in copies:
+            fields[4] = copies[fields[4]]
+        lines.append("\t".join(fields))
+    queries.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return normal
 
 
@@ -207,14 +243,14 @@ def make_truth(compiler, folder, program, files):
 
 def private_run(job):
     """One workload item and one kind of facts: release, compile privately, run every batch."""
-    compiler, workload, item, (kind, epsilon, seed), owner, batches, anchor, normal = job
+    compiler, workload, item, (kind, epsilon, seed), owner, batches, anchor, normal, ready = job
     analyst = WORK / workload / item / f"{kind}-{seed}"
     if analyst.exists():
         shutil.rmtree(analyst)
     analyst.mkdir(parents=True)
     shutil.copyfile(owner / "program.prep", analyst / "program.prep")  # the program, but no data
-    release(owner, analyst, epsilon, "none" if kind == "none" else seed)
-    compiled = compile_in(compiler, analyst, facts=True)
+    release(owner, analyst, kind, epsilon, seed, ready)
+    compiled = compile_in(compiler, analyst, facts=not kind.startswith("synthetic"))
     record = {"workload": workload, "item": item, "kind": kind, "epsilon": epsilon, "seed": seed,
               "compiled": compiled["ok"], "errors": compiled["errors"][:3],
               "warnings": compiled["warnings"], "removed": compiled["removed"], "normal_removed": normal["removed"],
@@ -300,7 +336,7 @@ def summarize(records):
 def write_markdown(rows, records):
     def pct(value):
         return "-" if value is None else f"{100 * value:.0f}%"
-    lines = ["# RQ10: private compilation", "",
+    lines = ["# RQ8: private compilation", "",
              "The analyst compiles from facts the data owner released (tools/release_facts.py), in a folder without "
              "the data; the data owner runs the generated program on every batch. Each run is scored against a fresh "
              "compilation of the batch, run (eval/reuse/policies.py). *Removals*: the removed instructions of the "
@@ -348,63 +384,86 @@ MISTAKES = {  # kind -> (the contract it breaks, the column it changes, the valu
 }
 
 
-def diagnostics(compiler, sizes=(0, 1, 10, 100, 1000, 10000), epsilons=(0.1, 1, 10, math.inf), seeds=5):
+def diagnostics(compiler, sizes=(0, 1, 10, 100, 1000, 10000), epsilons=(0.1, 0.3, 1, 3, 10, math.inf), seeds=20):
     """Does a private compilation warn about a mistake in m rows of a 1,000,000-row file,
     and does it warn about anything else? Ground truth: the normal compilation, which
     reports the broken contract as violated for every m > 0."""
+    tasks = [(compiler, kind, m, epsilons, seeds, 10) for kind in MISTAKES for m in sizes]
+    with ProcessPoolExecutor(max_workers=max(1, min(6, (os.cpu_count() or 2) - 2))) as pool:
+        return [row for found in pool.map(diagnose, tasks) for row in found]
+
+
+def diagnose(task):
+    """One mistake in m rows: the normal compilation, the private ones and the baselines."""
     import numpy as np
     import pandas as pd
+    compiler, kind, m, epsilons, seeds, baseline_seeds = task
+    contract, column, value = MISTAKES[kind]
     base = pd.read_parquet(ROOT / "eval" / "data" / "events_1000000.parquet")
     rows = []
-    for kind, (contract, column, value) in MISTAKES.items():
-        for m in sizes:
-            owner = WORK / "diagnostics" / re.sub(r"\W+", "_", kind) / str(m) / "owner"
-            if owner.exists():
-                shutil.rmtree(owner)
-            owner.mkdir(parents=True)
-            frame = base.copy()
-            changed = np.zeros(len(frame), dtype=bool)
-            changed[np.random.default_rng(m).choice(len(frame), size=m, replace=False)] = True
-            frame[column] = frame[column].where(~changed, value)
-            frame.to_parquet(owner / "events.parquet", index=False)
-            (owner / "program.prep").write_text(EVENTS_PROGRAM, encoding="utf-8")
-            normal = compile_in(compiler, owner)
-            subprocess.run([str(compiler), "program.prep", "--queries"], cwd=owner, capture_output=True, check=True)
-            for epsilon in epsilons:
-                for seed in range(1 if math.isinf(epsilon) else seeds):
-                    analyst = owner.parent / f"eps={epsilon:g}-{seed}"
-                    if analyst.exists():
-                        shutil.rmtree(analyst)
-                    analyst.mkdir()
-                    shutil.copyfile(owner / "program.prep", analyst / "program.prep")
-                    release(owner, analyst, epsilon, seed)
-                    private = compile_in(compiler, analyst, facts=True)
-                    warned = [w for w in private["warnings"] if "likely violated" in w]
-                    rows.append({"kind": kind, "rows": m, "epsilon": epsilon, "seed": seed,
-                                 "violated": any(contract in e for e in normal["errors"]),
-                                 "warned": any(contract in w for w in warned),
-                                 "false_warnings": sum(contract not in w for w in warned),
-                                 "compiled": private["ok"]})
-            print("diagnostics", kind, m)
+    owner = WORK / "diagnostics" / re.sub(r"\W+", "_", kind) / str(m) / "owner"
+    if owner.exists():
+        shutil.rmtree(owner)
+    owner.mkdir(parents=True)
+    frame = base.copy()
+    changed = np.zeros(len(frame), dtype=bool)
+    changed[np.random.default_rng(m).choice(len(frame), size=m, replace=False)] = True
+    frame[column] = frame[column].where(~changed, value)
+    frame.to_parquet(owner / "events.parquet", index=False)
+    (owner / "program.prep").write_text(EVENTS_PROGRAM, encoding="utf-8")
+    normal = compile_in(compiler, owner)
+    subprocess.run([str(compiler), "program.prep", "--queries"], cwd=owner, capture_output=True, check=True)
+    for epsilon in epsilons:
+        for seed in range(1 if math.isinf(epsilon) else seeds):
+            for method in ("program", "generic", "synthetic"):
+                if method != "program" and (math.isinf(epsilon) or seed >= baseline_seeds):
+                    continue
+                folder = owner.parent / f"{method} eps={epsilon:g}-{seed}"
+                if folder.exists():
+                    shutil.rmtree(folder)
+                folder.mkdir()
+                shutil.copyfile(owner / "program.prep", folder / "program.prep")
+                release(owner, folder, "eps" if method == "program" else method, epsilon, seed, None)
+                private = compile_in(compiler, folder, facts=method != "synthetic")
+                # A private compilation warns. An analyst with synthetic data sees what compiling it reports
+                # and, as on a validation server, what running the program on it stops at.
+                if method == "synthetic":
+                    said = [e for e in private["errors"] if "contract violated" in e]
+                    if private["ok"]:
+                        ran = run_here(folder, "generated.py", {})
+                        said += [ran["reason"]] if ran["status"] == "contract error" else []
+                else:
+                    said = [w for w in private["warnings"] if "likely violated" in w]
+                column = contract.split()[0]  # e.g. events.amount: the reports name the column
+                about = [re.search(rf"\b{re.escape(column)}\b", text) is not None for text in said]
+                rows.append({"kind": kind, "method": method, "rows": m, "epsilon": epsilon, "seed": seed,
+                             "violated": any(column in e for e in normal["errors"]),
+                             "warned": any(about),
+                             "false_warnings": sum(not hit for hit in about),
+                             "compiled": private["ok"]})
     return rows
 
 
 def write_diagnostics(rows):
-    lines = ["# RQ10: what a private compilation tells the analyst", "",
+    lines = ["# RQ8: what a private compilation tells the analyst", "",
              "A 1,000,000-row Parquet file (eval/data/events_1000000.parquet) with a mistake injected into m rows; "
              "the program has three contracts, one of which the mistake breaks. A normal compilation reports that "
-             "contract as violated for every m > 0. Cells: the share of private compilations (5 seeds; 1 without "
-             "noise) that warn that the broken contract is likely violated; in brackets, warnings about a contract "
-             "the data does not break.", ""]
-    epsilons = sorted({r["epsilon"] for r in rows})
+             "contract as violated for every m > 0. Cells: the share of compilations that report the broken "
+             "contract (a private compilation warns that it is likely violated; one from synthetic data reports it "
+             "violated); in brackets, reports about a contract the data does not break. *program*: the release at the "
+             "program's numbers (20 seeds; 1 without noise); *generic* and *synthetic*: the baselines of "
+             "eval/reuse/private_baselines.py with the same budget (10 seeds).", ""]
+    columns = sorted({(r["method"], r["epsilon"]) for r in rows},
+                     key=lambda c: (("program", "generic", "synthetic").index(c[0]), c[1]))
     sizes = sorted({r["rows"] for r in rows})
-    lines.append("| Mistake | m | " + " | ".join(f"epsilon {e:g}" for e in epsilons) + " |")
-    lines.append("|---|---:|" + "---:|" * len(epsilons))
+    lines.append("| Mistake | m | " + " | ".join(f"{method} {e:g}" for method, e in columns) + " |")
+    lines.append("|---|---:|" + "---:|" * len(columns))
     for kind in MISTAKES:
         for m in sizes:
             cells = []
-            for e in epsilons:
-                found = [r for r in rows if r["kind"] == kind and r["rows"] == m and r["epsilon"] == e]
+            for method, e in columns:
+                found = [r for r in rows if r["kind"] == kind and r["rows"] == m and r["epsilon"] == e
+                         and r["method"] == method]
                 share = sum(r["warned"] for r in found) / len(found) if found else 0
                 false = sum(r["false_warnings"] for r in found)
                 cells.append(f"{100 * share:.0f}%" + (f" ({false})" if false else ""))
@@ -412,10 +471,28 @@ def write_diagnostics(rows):
     return "\n".join(lines) + "\n"
 
 
+def corpus_releases(prepared, corpus_kinds):
+    """One release for all Titanic scripts per corpus kind: {(item, kind): facts file}."""
+    owners = [(item, owner) for workload, item, owner, *_ in prepared if workload == "titanic"]
+    ready = {}
+    for kind, epsilon, seed in corpus_kinds:
+        folder = WORK / "corpus" / f"{kind}-{seed}"
+        folder.mkdir(parents=True, exist_ok=True)
+        listing = folder / "queries.txt"  # one queries file per line, read by the release with @
+        listing.write_text("\n".join(str(owner / "output" / "preplang_queries.tsv") for _, owner in owners) + "\n",
+                           encoding="utf-8")
+        subprocess.run([PYTHON, str(RELEASE), f"@{listing}", "--epsilon", repr(float(epsilon)), "--seed", str(seed),
+                        "--schema-declared",
+                        "--out-dir", str(folder)], check=True, capture_output=True, text=True)
+        for i, (item, _) in enumerate(owners, 1):
+            ready[(item, (kind, epsilon, seed))] = folder / f"{i}.tsv"
+    return ready
+
+
 def main(compiler, quick=False):
     WORK.mkdir(parents=True, exist_ok=True)
-    kinds = {"rq8": configs(EPSILONS, 1 if quick else 3, 2 if quick else 10),
-             "titanic": configs((1, 10), 1, 2)}
+    kinds = {"rq8": configs(EPSILONS, 1 if quick else 5, 2 if quick else 10, baseline_seeds=1 if quick else 5),
+             "titanic": configs((1, 10), 1, 2) + [(f"corpus eps={e:g}", e, s) for e in (1, 10) for s in range(2)]}
     work = items()
     if quick:
         work = work[:6]
@@ -424,7 +501,8 @@ def main(compiler, quick=False):
         prepared = [p for p in pool.map(prepare_item, [(compiler, item) for item in work], chunksize=1) if p]
         print(len(prepared), "items prepared:", sum(p[0] == "rq8" for p in prepared), "RQ8 pipelines,",
               sum(p[0] == "titanic" for p in prepared), "Titanic scripts")
-        jobs = [(compiler, workload, item, config, owner, batches, anchor, normal)
+        ready = corpus_releases(prepared, [c for c in kinds["titanic"] if c[0].startswith("corpus")])
+        jobs = [(compiler, workload, item, config, owner, batches, anchor, normal, ready.get((item, config)))
                 for workload, item, owner, batches, anchor, normal in prepared for config in kinds[workload]]
         print(len(jobs), "private compilations")
         for i, record in enumerate(pool.map(private_run, jobs, chunksize=1), 1):

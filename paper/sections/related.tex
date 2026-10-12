@@ -56,14 +56,16 @@ instruction rather than the whole plan.
 
 \paragraph{Differential privacy.} PrivateSQL~\cite{kotsogiannis2019}, elastic
 sensitivity~\cite{johnson2018} and APEx~\cite{ge2019} answer an analyst's queries over data they may
-not see; validation servers let analysts develop code on synthetic data and run it on the confidential
-data~\cite{barrientos2018}; PrivateClean~\cite{krishnan2016} cleans locally private data. SPECIAL uses
-differentially private synopses to plan secure joins~\cite{wang2024special}: there, noise can only
-change cost, because a plan choice does not change a query's result. In a private compilation the
-noisy facts decide which checks and operations are \emph{removed}, which could change results;
-selective deoptimization is what makes that safe (Theorem~\ref{thm:anyfacts}). The questions are
-chosen by the program, at its own numbers, and answered with the canonical sparse vector
-technique~\cite{dwork2014,lyu2017}. Differentially private profiling collects facts about how deployed
+not see, APEx also for data cleaning; validation servers~\cite{barrientos2018} and
+OpenSAFELY~\cite{williamson2020} let analysts develop code on synthetic or dummy data and run it on the
+confidential data; PrivateClean~\cite{krishnan2016} cleans locally private data. Shrinkwrap~\cite{bater2018}
+and SPECIAL~\cite{wang2024special} use differentially private statistics to decide how many padding
+tuples secure query processing may drop, and stay exact by adding only one-sided noise, so that they never
+drop a real tuple. The facts a data-aware compiler needs are emptiness facts, which one-sided noise
+cannot certify (Section~\ref{sec:private}); a private compilation removes checks and operations on noisy
+facts and stays exact because selective deoptimization checks them on the data
+(Theorem~\ref{thm:anyfacts}). The questions are chosen by the program, at its own numbers, and answered
+with Laplace histograms~\cite{dwork2014}. Differentially private profiling collects facts about how deployed
 software runs~\cite{zhang2020profiling}; languages such as Fuzz~\cite{reed2010} prove that a program is
 itself differentially private. Here the program is not private; only the facts the compiler starts from
 are.

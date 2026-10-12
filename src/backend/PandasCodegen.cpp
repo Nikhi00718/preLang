@@ -299,7 +299,8 @@ def table_problem(facts, certificate):
     same values, and passing them to read_csv directly is several times slower."""
     path = Path(INPUTS[table]).resolve() if table in INPUTS else path
     data = path.read_bytes()
-    same_input[table] = fingerprint is not None and zlib.crc32(data) == fingerprint or TRUST_INPUTS
+    # Without a checksum (a private compilation) nothing is trusted, not even for experiments.
+    same_input[table] = fingerprint is not None and (zlib.crc32(data) == fingerprint or TRUST_INPUTS)
     if same_input[table]:
         frame = pd.read_csv(io.BytesIO(data), usecols=columns, keep_default_na=False, na_values=[""],
                             dtype_backend="numpy_nullable")
@@ -327,7 +328,7 @@ def table_problem(facts, certificate):
         length = int.from_bytes(file.read(4), "little")
         file.seek(-8 - length, 2)
         footer = file.read()
-    same_input[table] = fingerprint is not None and zlib.crc32(footer) == fingerprint or TRUST_INPUTS
+    same_input[table] = fingerprint is not None and (zlib.crc32(footer) == fingerprint or TRUST_INPUTS)
     if same_input[table]:
         return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
     import pyarrow.parquet

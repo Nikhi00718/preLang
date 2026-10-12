@@ -19,6 +19,15 @@ std::string join(const std::vector<std::string>& items) {
     return text;
 }
 
+// A statement the state shows to be useless. In a private compilation the state comes
+// from noisy released facts, so the statement is only probably useless: it stays in the
+// program, guarded, and runs if the data needs it. Saying more would mislead the analyst.
+std::string noEffectText(bool released, const std::string& statement, const std::string& why) {
+    return released ? statement + " probably has no effect: by the released facts, " + why +
+                          "; it stays in the program and runs if the data needs it"
+                    : statement + " has no effect: " + why;
+}
+
 bool contains(const std::vector<std::string>& items, const std::string& item) {
     return std::find(items.begin(), items.end(), item) != items.end();
 }
@@ -395,8 +404,10 @@ void SemanticAnalyzer::visit(const DropNullStmt& node) {
         changed.push_back(tableName + " (rows with missing " + join(nullable) + ")");
     }
     if (changed.empty()) {
+        const bool released = std::any_of(resolution->tables.begin(), resolution->tables.end(),
+                                          [](const TableState* table) { return table->schema.released; });
         diagnostics_.warning(Phase::Semantic, node.location,
-                             "DROP_NULL has no effect: no column has missing values here");
+                             noEffectText(released, "DROP_NULL", "no column has missing values here"));
     }
     log(node, "DROP_NULL " + (changed.empty() ? "has no effect" : "removes rows of " + join(changed)) +
                   (idle.empty() || changed.empty() ? "" : "; no effect on " + join(idle)));
@@ -454,10 +465,12 @@ void SemanticAnalyzer::visit(const FillNullStmt& node) {
         changed.push_back(name);
     }
     if (changed.empty() && !idle.empty()) {
+        const bool released = std::any_of(resolution->matched.begin(), resolution->matched.end(),
+                                          [](const ColumnMatch& match) { return match.table->schema.released; });
         diagnostics_.warning(Phase::Semantic, node.location,
-                             "FILL_NULL has no effect: " +
-                                 (idle.size() == 1 ? idle.front() + " has no missing values here"
-                                                   : "none of the matched columns has missing values here"));
+                             noEffectText(released, "FILL_NULL",
+                                          idle.size() == 1 ? idle.front() + " has no missing values here"
+                                                           : "none of the matched columns has missing values here"));
     }
     log(node, "FILL_NULL " + (changed.empty() ? "has no effect" : "fills " + join(changed)) +
                   (idle.empty() || changed.empty() ? "" : "; no effect on " + join(idle)));
@@ -527,14 +540,18 @@ void SemanticAnalyzer::visit(const FilterStmt& node) {
     const Target target = tableTarget(*filterDataset_, *filterTable_);
     const std::string tableName = columnDisplayName(*filterDataset_, *filterTable_, "");
     if (truth_ == Truth::AlwaysTrue) {
-        diagnostics_.warning(Phase::Semantic, node.location, "FILTER has no effect: the condition is true for every row",
+        diagnostics_.warning(Phase::Semantic, node.location,
+                             noEffectText(filterTable_->schema.released, "FILTER", "the condition is true for every row"),
                              "the compared columns have no missing values and their ranges always pass");
         addTarget(node, target, "the condition is true for every row of " + tableName);
         log(node, "FILTER " + tableName + " has no effect");
         return;
     }
     if (truth_ == Truth::NeverTrue) {
-        diagnostics_.warning(Phase::Semantic, node.location, "FILTER removes every row: the condition is never true",
+        diagnostics_.warning(Phase::Semantic, node.location,
+                             filterTable_->schema.released
+                                 ? "FILTER probably removes every row: by the released facts, the condition is never true"
+                                 : "FILTER removes every row: the condition is never true",
                              neverTrueReason_);
     }
 

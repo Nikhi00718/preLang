@@ -1,19 +1,26 @@
 \begin{table*}[t]
-\caption{Private compilation (RQ8): share of the normal compilation's removals that the private compilation also makes (recall), by kind of facts; share of compilations whose run on the compiled file itself deoptimizes (a released fact was false); and every run scored against a fresh compilation. $\varepsilon$ is the total budget. Random facts are true or false at random.}
+\caption{Private compilation (RQ8). Per workload, recall/precision (\%) of the compilation's removals against the normal compilation of the same file: recall is the share of normal removals it also makes, precision the share of its removals that rest on true facts. Compiled: compilations without errors. Deopt.\ on file: compilations whose run on the compiled file itself deoptimizes (a released fact was false). Every run is scored against a fresh compilation of its batch. $\varepsilon$ is the budget of one program; ``one release'' serves all Titanic scripts with one budget. Generic: fixed logarithmic bins; synthetic: a table sampled from them, compiled normally.}
 \label{tab:rq-private}
 \centering
 \footnotesize
-\begin{tabular}{@{}lrrrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrrr@{}}
 \toprule
-Facts & Traffic & Bikes & Taxi & Titanic & Compilations & Deopt.\ on file & Runs & Wrong \\
+Facts & Traffic & Bikes & Taxi & Titanic & Compilations & Compiled & Deopt.\ on file & Runs & Wrong \\
 \midrule
-no noise & 100\% & 100\% & 100\% & 100\% & 187 & 0\% & 2,331 & 0 \\
-$\varepsilon = 0.1$ & 29\% & 14\% & 100\% & -- & 9 & 33\% & 369 & 0 \\
-$\varepsilon = 1$ & 71\% & 14\% & 100\% & 100\% & 193 & 44\% & 2,577 & 0 \\
-$\varepsilon = 10$ & 100\% & 14\% & 100\% & 100\% & 193 & 38\% & 2,577 & 0 \\
-$\varepsilon = 100$ & 100\% & 100\% & 100\% & -- & 9 & 0\% & 369 & 0 \\
-random & 26\% & 30\% & 55\% & 44\% & 398 & 13\% & 5,646 & 0 \\
-none & 0\% & 0\% & 0\% & 0\% & 187 & 0\% & 2,331 & 0 \\
+program's cells, no noise & 100/100 & 100/100 & 100/100 & 100/100 & 187 & 187 & 0\% & 2,331 & 0 \\
+program's cells, $\varepsilon = 0.1$ & 100/100 & 14/100 & 100/100 &  & 15 & 15 & 0\% & 615 & 0 \\
+program's cells, $\varepsilon = 1$ & 100/100 & 14/100 & 100/100 & 100/17 & 199 & 199 & 37\% & 2,823 & 0 \\
+program's cells, $\varepsilon = 10$ & 100/100 & 100/100 & 100/100 & 100/31 & 199 & 199 & 16\% & 2,823 & 0 \\
+program's cells, $\varepsilon = 100$ & 100/100 & 100/100 & 100/100 &  & 15 & 15 & 0\% & 615 & 0 \\
+one release, $\varepsilon = 1$ &  &  &  & 100/16 & 368 & 368 & 40\% & 4,416 & 0 \\
+one release, $\varepsilon = 10$ &  &  &  & 100/17 & 368 & 368 & 40\% & 4,416 & 0 \\
+generic bins, $\varepsilon = 1$ & 83/100 & 14/100 & 50/100 & 100/17 & 199 & 199 & 37\% & 2,823 & 0 \\
+generic bins, $\varepsilon = 10$ & 71/100 & 86/100 & 50/100 & 100/20 & 199 & 199 & 30\% & 2,823 & 0 \\
+synthetic data, $\varepsilon = 1$ & --/-- & --/-- & --/-- & 100/17 & 199 & 184 & 40\% & 2,208 & 0 \\
+synthetic data, $\varepsilon = 10$ & --/-- & --/-- & --/-- & 100/20 & 199 & 184 & 32\% & 2,208 & 0 \\
+optimistic (no data) & 29/100 & 14/100 & 25/33 & 100/9 & 187 & 187 & 46\% & 2,331 & 0 \\
+random (true or false) & 26/100 & 30/100 & 55/58 & 44/21 & 398 & 398 & 13\% & 5,646 & 0 \\
+none (claims nothing) & 0/-- & 0/-- & 0/-- & 0/-- & 187 & 187 & 0\% & 2,331 & 0 \\
 \bottomrule
 \end{tabular}
 \end{table*}

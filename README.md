@@ -373,15 +373,16 @@ py -3 frontend/pandas2prep.py my_script.py > lifted.prep
 relies on the compile-time facts being true: every removal is checked on the real data when the
 program runs. So the compiler can work from facts the data owner releases with differential privacy,
 for an analyst who may not see the data. The data owner writes what the program asks about the data
-(the public schema and the numbers in the program) and releases noisy answers to threshold questions
-at those numbers, with the sparse vector technique:
+(the schema and the numbers in the program) and releases one noisy histogram per column over the cells
+those numbers define (Laplace mechanism). The schema is published as declared by the owner: review the
+types `--queries` writes, because a type inferred from the values is itself a fact about them.
 
 ```bash
 preplang program.prep --queries
 ```
 
 ```bash
-py -3 tools/release_facts.py output/preplang_queries.tsv --epsilon 1 --out facts.tsv
+py -3 tools/release_facts.py output/preplang_queries.tsv --epsilon 1 --schema-declared --out facts.tsv
 ```
 
 The analyst compiles from the facts alone; the compiler opens no input file, and everything it writes
@@ -513,14 +514,17 @@ no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission wit
 nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
 `eval/results/*.md`.
 
-**Private compilation (paper RQ8).** 1,176 compilations from released facts (differentially private
-at epsilon 0.1-100, without noise, absent, or random and possibly false), of the three real-month
-pipelines and 184 lifted Titanic scripts, run 16,200 times on real batches: none unsound. Without
-noise the private compilation removes exactly what a normal one removes; with noise it depends on how
-many rows a fact concerns (taxi months, about 60,000 trips: every removal kept at every epsilon; the
-31-row bike months: only at epsilon 100). On a 1,000,000-row file, a contract broken in 1,000 rows is
-always reported as likely violated at epsilon 1, in 100 rows at epsilon 10, with no false warning in
-288 compilations. Details: `eval/results/private.md` and `private_diagnostics.md`.
+**Private compilation (paper RQ8).** 2,919 compilations from released facts (differentially private
+at epsilon 0.1-100, one release for all Titanic scripts, without noise, absent, optimistic, random and
+possibly false, and two baselines), of the three real-month pipelines and 184 lifted Titanic scripts,
+run 38,409 times on real batches: none unsound. Without noise the private compilation removes exactly
+what a normal one removes. At epsilon 1 the taxi and traffic pipelines keep every removal; fixed
+logarithmic bins with the same budget keep 50% and 83%, and synthetic data sampled from them and
+compiled normally fails on every pipeline with contracts the real data satisfies. One release at a total
+epsilon of 1 serves all 184 Titanic scripts about as well as a release per script. On a 1,000,000-row
+file, a contract broken in 100 rows is reported as likely violated in every run at epsilon 1 (10 rows at
+epsilon 10), with no false warning in 1,818 compilations. Details: `eval/results/private.md` and
+`private_diagnostics.md`.
 
 The paper is `paper/preplang.tex` (ACM `acmart`), built as `paper/PrepLang_Paper.pdf`; every number
 and table it shows is in `paper/generated/`, written by `eval/paper_numbers.py` (see `paper/README.md`).

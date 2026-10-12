@@ -262,46 +262,64 @@ gives none of these: each month gets a different program and no statement about 
 
 \paragraph{Protocol.} For each RQ4 pipeline (compiled for its first month) and each of the
 \PrivTitanicScripts{} RQ5 Titanic scripts that compile (compiled for the training file), the data owner
-ran \texttt{--queries} and \texttt{tools/release\_facts.py} on the compiled file, and the program was
-compiled with \texttt{--facts} in a folder that holds only the program and the facts file. Facts came
-from the release at $\varepsilon \in \{0.1, 1, 10, 100\}$ (three seeds for the pipelines, one for the
-scripts; $\varepsilon$ is the total over all questions, $\beta = 0.05$), from the same questions answered
-without noise, from no facts at all, and from \emph{random} facts that are true or false at random
-(bounds at random program numbers, missing values at random). Every generated program was run on every
-batch of RQ4 or RQ5 (and on the compiled file itself) and scored against a fresh, normal compilation of
-the batch, as in RQ4.
+ran \texttt{--queries} and released facts about the compiled file, and the program was compiled with
+\texttt{--facts} in a folder that holds only the program and the facts file. The facts came from the
+release at the program's cells with $\varepsilon \in \{0.1, 1, 10, 100\}$ ($\varepsilon$ is the total
+budget of a program, $\beta = 0.05$; five seeds for the pipelines, one for the scripts); from one release
+for all Titanic scripts together (two seeds); from the same cells without noise; and from four baselines
+that need no knowledge of the program: \emph{generic} bins (the same budget per column on a fixed
+logarithmic grid, $[0.001, 0.01)$, \ldots, $[10^5, 10^6)$, the negative ones and the outer ones, read the
+same way), \emph{synthetic} data (a table sampled from the generic release, values uniform in occupied
+bins, compiled normally, as an analyst would who develops against differentially private synthetic or
+dummy data), \emph{optimistic} facts (no value is missing, chosen without the data), and no facts at all.
+Random facts, true or false at random, test exactness. Every generated program was run on every batch of
+RQ4 or RQ5 and on the compiled file itself, and scored against a fresh compilation of the batch.
 
-\paragraph{Exactness.} \PrivCompilations{} private compilations were run \PrivRuns{} times: \PrivUnsound{}
-runs were unsound or stopped wrongly, for every kind of facts, including the \PrivRandom{} compilations
-from random facts (\PrivRandomRuns{} runs). Every needless stop (\PrivNeedless) is a taxi month refused for
-the schema change of February 2023, which the normal compilation refuses too
+\paragraph{Exactness.} \PrivCompilations{} compilations ran \PrivRuns{} times; \PrivUnsound{} runs were
+unsound or stopped wrongly, for every kind of facts, including the \PrivRandom{} compilations from random
+facts (\PrivRandomRuns{} runs). All \PrivNeedless{} refusals of batches a fresh compilation runs are taxi
+months with the schema change of February 2023, which the normal compilation refuses too
 (\S\ref{sec:rq-real}). The unit test of the private compilation checks the same property on
 \PrivTestFacts{} random facts files with random inputs, \PrivTestDeopt{} of which deoptimize.
 
-\paragraph{What the analyst learns.} Table~\ref{tab:rq-private} compares the removals of each private
-compilation with those of the normal compilation of the same file. Without noise the questions at the
-program's numbers give exactly the normal removals (recall \PrivExactRecall\%), as the analysis compares
-bounds only with those numbers. With noise, what can be learned depends on how many rows a fact
-concerns. A median month has \PrivTrafficRows{} traffic rows, \PrivBikesRows{} bike rows and
-\PrivTaxiRows{} taxi trips: the taxi months keep \PrivTaxiRecallEpsOne\% of the normal removals already
-at $\varepsilon = 1$, the traffic months need $\varepsilon = 10$ for all of them, and the bike months,
-one row a day, keep most only at $\varepsilon = 100$; the budget is shared by every question about the
-file. A private compilation of a small table learns little at a small budget, by design. False
-facts are speculative removals that the run on the compiled file itself deoptimizes, never wrong
-results: on the Titanic training file, \PrivTitanicDeoptEpsOne{} of \PrivTitanicScripts{} programs
-compiled at $\varepsilon = 1$ deoptimize there, mostly a fill of \texttt{Age}, whose 177 missing values
-are below the threshold at that budget, and of \texttt{Embarked}, whose two missing values no private
-release can reveal; at $\varepsilon = 10$, \PrivTitanicDeoptEpsTen{} do, mostly for \texttt{Embarked}.
+\paragraph{What the analyst learns.} Table~\ref{tab:rq-private} compares the removals of each compilation
+with those of the normal compilation of the same file. Without noise, the program's cells give exactly the
+normal removals (recall \PrivExactRecall\%): the analysis compares bounds only with those numbers. Recall
+alone is cheap: the optimistic facts reach \PrivOptimisticRecall\% of it without data, at a precision of
+\PrivOptimisticPrecision\%. With the program's cells at $\varepsilon = 1$, the taxi and traffic pipelines
+keep all normal removals at full precision, while the generic bins, at the same budget, keep
+\PrivGenTaxiEpsOneRecall\% (taxi) and \PrivGenTrafficEpsOneRecall\% (traffic): the program's numbers
+(\texttt{BETWEEN 1 AND 265}, \texttt{temp BETWEEN 230 AND 320}) do not fall on the grid. Synthetic data
+compiled normally is worse: none of the \PrivSynEpsOneFailed{} compilations of the three pipelines from
+synthetic data succeeds, at $\varepsilon = 1$ or $10$; each stops with contracts the real data satisfies
+(a temperature of 867~K, sampled uniformly in its occupied bin), so the analyst gets errors where the
+private compilation gives a program. What can be
+learned depends on how many rows a fact concerns: a median month has \PrivTrafficRows{} traffic rows,
+\PrivBikesRows{} bike rows and \PrivTaxiRows{} taxi trips, and the bike months, one row a day, keep the
+range removals only at $\varepsilon = 10$. On the Titanic training file, removal precision rises from
+\PrivProgTitanicEpsOnePrecision\% at $\varepsilon = 1$ to \PrivProgTitanicEpsTenPrecision\% at
+$\varepsilon = 10$ (generic bins and synthetic data: \PrivGenTitanicEpsTenPrecision\%); the false facts
+are mostly ``no missing \texttt{Embarked}'', whose two missing values no release can reveal, and the run on
+the training file deoptimizes them. One release for all \PrivTitanicScripts{} scripts at a total of
+$\varepsilon = 1$ gives each of them \PrivCorpTitanicEpsOnePrecision\% precision, about what a script gets
+from its own release at $\varepsilon = 1$ (\PrivProgTitanicEpsOnePrecision\%), which together spend
+\PrivTitanicScripts{} times the budget: the programs share the cells of the columns they all use.
 
 \paragraph{Warnings.} On a \PrivDiagRows-row Parquet file we injected a mistake into $m$ rows (amounts
-above the contract's bound, missing values in a \texttt{NOT\_NULL} column, values below a bound) and
-compiled privately, five seeds per setting (Table~\ref{tab:rq-private-diag}). A normal compilation reports
-the broken contract for every $m > 0$; a private one warns that it is likely violated once $m$ is
-large enough for the budget: from $m = \PrivDiagEpsOne$ at $\varepsilon = 1$ and $m = \PrivDiagEpsTen$
-at $\varepsilon = 10$ in every run. Over all \PrivDiagCompilations{} private compilations there were
-\PrivDiagFalse{} warnings about a contract the data does not break, as Lemma~\ref{lem:utility}
-predicts with probability $1-\beta$. A mistake in one row is never revealed; the run-time check stops the
-program at it.
+above the contract's bound, missing values in a \texttt{NOT\_NULL} column, values below a bound)
+(Table~\ref{tab:rq-private-diag}). A normal compilation reports the broken contract for every $m > 0$. A
+private compilation from the program's cells warns that it is likely violated in every run from
+$m = \PrivDiagEpsOne$ at $\varepsilon = 1$ and $m = \PrivDiagEpsTen$ at $\varepsilon = 10$, with
+\PrivDiagFalse{} warnings about a contract the data does not break in \PrivDiagCompilations{} compilations,
+as Lemma~\ref{lem:utility} predicts. Generic bins, and synthetic data run on the program (as on a
+validation server, where a run stops at its first failing check), report every mistake in every run from
+the same sizes ($m = \PrivDiagGenericEpsOne$ at $\varepsilon = 1$), also without false reports
+(\PrivDiagGenericFalse{} and \PrivDiagSyntheticFalse{}); between those sizes they report less often: at
+$\varepsilon = 0.3$, a mistake in 100 rows in 50--60\% of the runs where the program's cells report it in
+80--100\%, and at $\varepsilon = 3$, one in 10 rows in 40--60\% against 80--90\%. They spend the budget on
+about three times as many cells; the injected values fall in the grid's decades, so the alignment that
+decides the removals above does not matter here. A mistake in one row is never revealed by any private
+method; the run-time check stops the program at it.
 
 \input{generated/privatetable}
 \input{generated/privatediagtable}

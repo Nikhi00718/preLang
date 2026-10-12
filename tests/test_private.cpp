@@ -7,6 +7,7 @@
 // what the source program computes.
 // Run: build/Debug/test_private.exe  (it writes small CSV and facts files in the current folder)
 
+#include "backend/PandasCodegen.h"
 #include "certify/Certifier.h"
 #include "common/Diagnostics.h"
 #include "ir/IRBuilder.h"
@@ -119,7 +120,7 @@ void testReadFacts() {
     check(marks.min > 0 && marks.min == std::nextafter(0.0, 1.0) && marks.max == 100 && !marks.boundsExact,
           "a strict lower bound (> 0) becomes the next double; bounds are not exact");
     check(marks.seenBelow == 0 && marks.seenBelowOrAt && marks.seenAbove == 100 && !marks.seenAboveOrAt,
-          "where the question sequences stopped: values <= 0 and values > 100 were seen");
+          "the evidence: values <= 0 and values > 100 were seen");
     check(!age.hasRange, "a numeric column without bounds has no range");
 
     writeFile("test_private_bad.tsv", "preplang-facts\t1\ncolumn\tx\tINTEGER\t0\t0\t0\t1\t0\t-\t-\t-\t-\n");
@@ -160,6 +161,14 @@ void testCompilesWithoutTheFile() {
     check(std::none_of(c.ir.code.begin(), c.ir.code.end(),
                        [](const Instruction& in) { return in.line == 5 && in.speculative; }),
           "the fill of a column that may have missing values is kept");
+    check(hasMessage(c, Severity::Warning, "FILL_NULL probably has no effect: by the released facts"),
+          "the analyst is told the fill is probably useless, not that it is");
+    const std::string reader = PandasCodegen::helpers(true, true);
+    check(reader.find("fingerprint is not None and (zlib.crc32(data) == fingerprint or TRUST_INPUTS)") !=
+                  std::string::npos &&
+              reader.find("fingerprint is not None and (zlib.crc32(footer) == fingerprint or TRUST_INPUTS)") !=
+                  std::string::npos,
+          "without a checksum no input is trusted, not even with PREPLANG_TRUST_INPUTS");
 
     Compiled missing;
     compile("LOAD \"test_private_other.csv\" AS s;\nSAVE s AS \"test_private_out.csv\";\n", missing,
@@ -200,14 +209,16 @@ void testQueries() {
     TableSchema schema;
     schema.file = "data/s.csv";
     schema.columns = {{"name", ColumnType::String}, {"marks", ColumnType::Integer}};
+    schema.columns.push_back({"city", ColumnType::String});
     std::ostringstream out;
-    writeQueries(out, {{"s.csv", "s", schema, {"marks"}}}, {-5, 0, 100});
+    writeQueries(out, {{"s.csv", "s", schema, {"marks"}, {"name"}}}, {-5, 0, 100});
     const std::string text = out.str();
     check(text.rfind("preplang-queries\t1\nconstants\t-5\t0\t100\n", 0) == 0, "the program's numbers");
     check(text.find("table\ts.csv\ts\tcsv\t") != std::string::npos, "each LOAD with its path as written");
-    check(text.find("column\tname\tSTRING\tmissing\n") != std::string::npos &&
-              text.find("column\tmarks\tINTEGER\trange\n") != std::string::npos,
-          "the public schema, and which columns need bounds");
+    check(text.find("column\tmarks\tINTEGER\trange\n") != std::string::npos &&
+              text.find("column\tname\tSTRING\tmissing\n") != std::string::npos &&
+              text.find("column\tcity\tSTRING\tnone\n") != std::string::npos,
+          "the schema, and per column: bounds, only missing values, or nothing asked");
 }
 
 // ---------- Any facts are safe ----------

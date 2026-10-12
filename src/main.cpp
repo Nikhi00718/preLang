@@ -126,8 +126,8 @@ int finish(const Diagnostics& diagnostics, const SourceManager& source) {
 
 // What --queries asks about: every number written in the program (a number after a
 // minus sign also as a negative one), which are the only places the analysis compares
-// values with, and the names it uses (range questions are asked only about named
-// columns, or about all of them if a selector uses *).
+// values with, and the names it uses (bounds are asked only about named columns, or
+// about all of them if a selector uses *).
 struct ProgramWords {
     std::vector<double> numbers;
     std::set<std::string> names;
@@ -265,6 +265,11 @@ int main(int argc, char* argv[]) {
         // program's numbers, so errors the data causes (a violated contract) do not stop
         // it; they are the owner's to see, and are not written.
         std::vector<QueryTable> tables;
+        // A DROP_NULL of whole rows looks at every column's missing values.
+        const bool wholeRows = std::any_of(program.statements.begin(), program.statements.end(), [](const auto& s) {
+            const auto* dropNull = dynamic_cast<const DropNullStmt*>(s.get());
+            return dropNull && dropNull->columns.empty();
+        });
         for (const std::unique_ptr<Stmt>& statement : program.statements) {
             const auto* load = dynamic_cast<const LoadStmt*>(statement.get());
             if (!load) {
@@ -276,10 +281,12 @@ int main(int argc, char* argv[]) {
                           << ": a private compilation can only LOAD tables, and this one could not be read\n";
                 return 1;
             }
-            QueryTable table{load->path, load->dataset, dataset->tables.front().schema, {}};
+            QueryTable table{load->path, load->dataset, dataset->tables.front().schema, {}, {}};
             for (const ColumnInfo& column : table.schema.columns) {
                 if (words.anyColumn || words.names.count(column.name) != 0) {
                     table.ranged.insert(column.name);
+                } else if (wholeRows) {
+                    table.missing.insert(column.name);
                 }
             }
             tables.push_back(table);
@@ -288,7 +295,8 @@ int main(int argc, char* argv[]) {
         std::ofstream queries(outputFolder / "preplang_queries.tsv");
         writeQueries(queries, tables, words.numbers);
         std::cout << "Wrote " << (outputFolder / "preplang_queries.tsv").generic_string()
-                  << ": give it to tools/release_facts.py to release facts for a private compilation.\n";
+                  << ": review the column types (they are published as the schema), then give it to "
+                     "tools/release_facts.py to release facts for a private compilation.\n";
         return 0;
     }
     if (diagnostics.hasErrors()) {

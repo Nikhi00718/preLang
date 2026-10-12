@@ -72,7 +72,7 @@ results on new batches: \CorpusBothSame{} of \CorpusBothRuns{} runs of \CorpusBo
 scripts for two Kaggle tasks, and all \DriftRuns{} monthly runs of \DriftCompiled{} scripts written by
 others for the traffic and bike data; none differ. Because selective deoptimization never relies on
 the compile-time facts being true, \PL can also compile against data the analyst may not see: from
-differentially private answers to threshold questions at the program's own numbers, everything the
+a differentially private histogram of each column over the program's own numbers, everything the
 compiler writes is $\varepsilon$-differentially private, and \PrivRuns{} runs of \PrivCompilations{}
 private compilations, from noisy, absent or random facts, were all exact.
 \end{abstract}
@@ -134,12 +134,17 @@ analysis itself, for a core of \PL.
 for each table it writes. An assume-guarantee check against the next stage's certificates shows
 which of its checks can never fire, and synthesizes the contract a producer must meet so that none
 of its consumers ever refuses or deoptimizes.
-\item \textbf{Private compilation} (Section~\ref{sec:private}): since the exactness theorem holds for
-any facts the compiler starts from, it can compile against data it may not see. The data owner answers
-only threshold questions at the program's own numbers, with the sparse vector technique; everything the
-analyst sees is $\varepsilon$-differentially private, every run on the real data stays exact, and with
-probability $1-\beta$ every ``likely violated'' warning is true and no removal of a normal compilation
-is lost. Noise costs deoptimizations, never correctness.
+\item \textbf{Private compilation} (Section~\ref{sec:private}): an analyst can compile against data
+they may not see. No differentially private release can certify the emptiness facts a data-aware
+compiler optimizes with, so optimizing from released facts needs run-time guards, which selective
+deoptimization provides. The data owner releases one Laplace histogram per column over the cells the
+program's own numbers define; everything the compiler writes is $\varepsilon$-differentially private for a
+declared schema, and with probability $1-\beta$ every ``likely violated'' warning is true and every
+released fact is false by few rows. At equal budget these program-chosen cells keep more of the normal
+compilation's removals than fixed bins, report broken contracts more often at a small budget, and give a
+program where
+synthetic data compiled normally reports contracts as violated that the data satisfies
+(Section~\ref{sec:rq-private}).
 \item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
 monthly batches of three public datasets, scored against fresh compilations and against
 pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothLifted{}
@@ -476,46 +481,62 @@ schemas~\cite{avro}; here the contracts on both sides are derived from the stage
 A data-aware compiler leaks its data through what it writes. The generated program embeds the
 checksum of the compiled file, which confirms a guessed file; every removal states a fact about it
 (no value of \texttt{age} is missing, no mark is below~10); a violated contract names a row; the
-contract file records bounds. Yet programs travel further than data: in validation servers and data
-clean rooms an analyst writes a pipeline for confidential tables that only the data owner may
-read, and the owner runs it~\cite{barrientos2018}. The analyst needs exactly what a data-aware
-compiler gives (which fills are needed, which contracts the data breaks, which filters do nothing)
-and may not see the data that produces it.
+contract file records bounds. Yet programs travel further than data: in validation
+servers~\cite{barrientos2018} and platforms such as OpenSAFELY~\cite{williamson2020}, an analyst writes
+code for confidential records against dummy data, and the data owner runs it on the real ones. The
+analyst needs what a data-aware compiler gives (which fills are needed, which contracts the data
+breaks, which filters do nothing) and may not see the data that produces it.
 
-Theorem~\ref{thm:deopt} has no hypothesis about the facts the compiler starts from. Those facts
-decide which instructions are removed speculatively and which certificates guard them; the
-certificates are verified by re-analysis, and the generated program checks them on the batch. In
-Lean, \texttt{deopt\_correct} quantifies over arbitrary removals and certificates. So the compiler may
-start from facts that are \emph{wrong}: a wrong fact costs a deoptimization, never a wrong result.
-\PL uses this to compile from differentially private facts.
+\paragraph{Guards are necessary.} The facts such a compiler needs are \emph{emptiness} facts: no value
+is missing, no value is below $k$. No differentially private release can certify one. If a mechanism
+$M$ is $\varepsilon$-differentially private and a table $D'$ differs from $D$ in $k$ rows that break
+the fact, then $\Pr[M(D') = o] \ge e^{-k\varepsilon}\Pr[M(D) = o]$ for every output $o$: whatever $M$
+says on a clean table it also says, with comparable probability, on a table that breaks the fact in a
+few rows. One-sided noise keeps differentially private query processing exact when it decides how
+many padding tuples to drop~\cite{bater2018,wang2024special}, up to the failure probability $\delta$ of
+approximate differential privacy; it cannot make an \emph{unguarded} removal safe, because a removal
+needs the emptiness fact itself. A program optimized from released emptiness facts must check them on
+the data it runs on. Selective deoptimization does exactly that. Theorem~\ref{thm:deopt} has no
+hypothesis about the facts the compiler starts from (in Lean, \texttt{deopt\_correct} quantifies over
+arbitrary removals and certificates): the facts decide which instructions are removed speculatively and
+which certificates guard them, and the generated program checks the certificates on the batch. A
+wrong fact costs a deoptimization, never a wrong result.
 
-\paragraph{The questions.} The data owner runs the compiler with \texttt{--queries}, which writes
-the public schema (names and types of the columns, treated as public like a header) and the numbers
-written in the program. The analysis compares bounds only with these numbers
-(Section~\ref{sec:cert}), so for a program without \texttt{DERIVE} the tightest bounds \emph{at the
-program's numbers} decide every proof the exact bounds decide. Each such fact is a threshold count
-of sensitivity~1 for adding or removing a row: how many values are missing, below $k$, at or below
-$k$, above $k$, at or above $k$. \texttt{tools/release\_facts.py} answers them with
-AboveThreshold, the canonical sparse vector technique~\cite{dwork2014,lyu2017}: per column, one
-sequence for missing values, one for the lower bound (``$<k_1$?'', ``$\le k_1$?'', ``$<k_2$?'', \ldots\
-for the numbers in increasing order, whose counts only grow) and one for the upper bound. Only the
-question at which a sequence stops is released. The bound is the question before it; the stop
-itself is evidence that values below (or above) that number exist.
+\paragraph{What is released.} The data owner runs the compiler with \texttt{--queries}, which writes
+the schema of each input (names and types of its columns) and the numbers written in the program. The
+analysis compares bounds only with these numbers (Section~\ref{sec:cert}): for a program without
+\texttt{DERIVE}, the numbers $k_1 < \dots < k_m$ (and~0) cut a column into the cells
+$(-\infty,k_1)$, $\{k_1\}$, $(k_1,k_2)$, \ldots, $\{k_m\}$, $(k_m,\infty)$ and \emph{missing}, and every
+decision depends only on which cells hold some row. \texttt{tools/release\_facts.py} releases one
+Laplace histogram over these cells per column~\cite{dwork2014}: a row lies in exactly one cell of a
+column, so the histogram has sensitivity~1. Only columns the program names are asked about (all if it
+uses \texttt{*} or a \texttt{DROP\_NULL} of whole rows), and of those only missing values unless they
+are numeric. A cell counts as occupied if its noisy count is above $t + \frac12$ with
+$t = \ln(C/\beta)/\varepsilon_c$, where $C$ is the number of cells released and $\varepsilon_c$ the
+budget of one column. A column's facts are read off its occupied cells: missing values if the missing
+cell is occupied; bounds from the lowest and highest occupied value cells; and, as evidence, that values
+below the upper edge of the lowest occupied cell (or above the lower edge of the highest) exist.
 
 \begin{theorem}[Privacy]\label{thm:private}
-The facts file is $\varepsilon$-differentially private for adding or removing one row of any input
-table, and so is everything the compiler writes for the analyst: the generated program, the
-certificates, the contract file, the manifest and every message.
+For a schema fixed independently of the data, the facts file is $\varepsilon$-differentially private for
+adding or removing one row of any input table, and so is everything the compiler writes for the
+analyst: the generated program, the certificates, the contract file, the manifest and every message.
 \end{theorem}
 \begin{proof}
-AboveThreshold with noise $\mathrm{Lap}(2/\varepsilon_c)$ on the threshold and
-$\mathrm{Lap}(4/\varepsilon_c)$ on each answer is $\varepsilon_c$-differentially private for counting
-questions~\cite[Thm.~3.23]{dwork2014}. Which questions are asked depends only on the program and the
-public schema, never on earlier answers, so the file is a sequential composition of the sequences, with
-$\sum \varepsilon_c = \varepsilon$. The compiler reads the facts file, the program and the public
-schema, and never opens an input file (\texttt{--facts} fails rather than read a table without
-released facts); its outputs are post-processing.
+A Laplace histogram with noise $\mathrm{Lap}(1/\varepsilon_c)$ per cell and sensitivity~1 is
+$\varepsilon_c$-differentially private. A row is in every column, so the columns compose sequentially;
+the budget is divided equally, $\sum \varepsilon_c = \varepsilon$. Which columns and cells are asked
+about depends only on the program and the schema, never on an answer, so the composition is
+non-adaptive. The occupied cells, the facts, the evidence and the compiler's outputs are computed from
+the noisy histograms, the program and the schema alone; the compiler never opens an input file
+(\texttt{--facts} fails rather than read a table without released facts).
 \end{proof}
+
+The hypothesis on the schema is not a formality. A type the compiler \emph{infers} is a fact about the
+values: a CSV column is \textsc{Integer} until one cell holds 3.5, and pandas writes an integer column
+with a missing value to Parquet as a float column. \texttt{--queries} writes the inferred types as the
+owner's draft; the owner must publish the schema as declared (a data dictionary), not as found. The seed
+of the noise is never written to the facts file: whoever knows it can recompute the noise.
 
 \begin{theorem}[Exactness for any facts]\label{thm:anyfacts}
 For any facts file, true, noisy or false, the generated program computes on every batch it admits
@@ -527,39 +548,43 @@ facts describe, is checked against the admission and item certificates. Theorem~
 applies unchanged.
 \end{proof}
 
-The thresholds are set from a failure probability $\beta$: a sequence of $m$ questions with budget
-$\varepsilon_c$ and share $\beta_c$ of $\beta$ uses
-$T = \frac{4}{\varepsilon_c}\ln\frac{m}{\beta_c} + \frac{2}{\varepsilon_c}\ln\frac{1}{\beta_c} + \frac12$.
-
 \begin{lemma}[What the analyst learns]\label{lem:utility}
-With probability at least $1-\beta$ over the noise: (i) every sequence stops at a question whose
-true count is at least~1, so every ``likely violated'' warning names a contract the data breaks; and
-(ii) no released bound is looser than the tightest true bound at the program's numbers, and no column
-is released as missing values unless it has some. For a program without \texttt{DERIVE}, a private
-compilation whose released intervals are non-empty therefore removes at least what a normal
-compilation of the same file removes.
+With probability at least $1-\beta$ over the noise, for every released cell: (i) if it is occupied, it
+holds at least one row; and (ii) if it holds at least $2t + 1$ rows, it is occupied. Hence every
+``likely violated'' warning names a contract the data breaks; for a program without \texttt{DERIVE}
+whose columns each have an occupied value cell, every released bound is at or beyond the tightest true
+bound at the program's numbers, so the private compilation removes at least what a normal compilation of
+the same file removes (except checks of \texttt{UNIQUE} and \texttt{REFERENCES}, which read values); and
+a released fact is false only if fewer than $c(2t + 1)$ rows break it, where $c$ is the number of cells
+it covers ($c = 1$ for ``no missing values'').
 \end{lemma}
-\begin{proof}[Proof sketch]
-By the Laplace tails and a union bound, with probability $1-\beta_c$ no answer noise exceeds
-$\frac{4}{\varepsilon_c}\ln\frac{m}{\beta_c}$ and the threshold noise is not below
-$-\frac{2}{\varepsilon_c}\ln\frac{1}{\beta_c}$; a question then reaches the threshold only if its count
-is at least $\frac12$. A zero count never stops a sequence, so the released bound is at or beyond the
-last question with count zero. The removals follow from Lemma~\ref{lem:mono}, because decisions compare
-bounds only with the program's numbers.
+\begin{proof}
+$\Pr[|\mathrm{Lap}(1/\varepsilon_c)| > t] = e^{-\varepsilon_c t} = \beta/C$, so by a union bound every
+noise is at most $t$ with probability $1-\beta$. Then a noisy count above $t + \frac12$ has a true count
+above $\frac12$, and a true count of at least $2t+1$ gives a noisy count of at least $t+1$. A column with
+no occupied value cell gets no bounds at all, which is why the hypothesis is needed. The removals follow
+from Lemma~\ref{lem:mono}, because decisions compare bounds only with the program's numbers.
 \end{proof}
 
-The released bound may be tighter than the truth: counts below about $2T$ are taken for zero. Those
-false facts cost deoptimizations, and Theorem~\ref{thm:anyfacts} makes them harmless. A private
-compilation cannot report a contract as violated, since nothing it knows is exact and a row would name
-a person; a contract that the released evidence shows broken gets a warning instead
-(``\texttt{EXPECT s.marks BETWEEN 0 AND 100} is likely violated: the released facts report values of
-\texttt{s.marks} above 100''), and the check runs on the real data. Contracts that read the values
-(\texttt{UNIQUE}, \texttt{REFERENCES}) are always checked at run time. A fact about a few rows, such as
-two missing \texttt{Embarked} values among 891 passengers, is hidden by design: hiding what a few
-people contribute is what differential privacy is for, and the run-time check covers it. Facts that
-noise makes contradictory (a lower bound above the upper bound, as on a month of 31 daily rows) are dropped,
-which costs nothing because it uses only the released answers. Images, folders of tables and
-\texttt{PARSE\_DATE}, which read values or file lists, are not supported in a private compilation.
+The bound in the last part is what separates the release from the \emph{optimistic} facts ``nothing is
+missing'', which need no data and also give every removal of a normal compilation. False facts cost
+deoptimizations, and Theorem~\ref{thm:anyfacts} keeps every admitted run exact. They can also cost
+availability: a fact of the admission certificate (the proven check of a column the optimized program does
+not load, or the absence of a division error in \texttt{DERIVE}) has no run-time code to fall back on, so
+a false one makes the program refuse batches. Refusing is not computing a wrong result, but it is a cost,
+and the evaluation counts it. The mechanized core does not cover admission (its admission predicate is
+true), types or compile errors; those parts are tested. Because the release depends only on which cells are occupied, one release can serve
+several programs over the same files: the cells of their numbers together are released once, and each
+program reads its facts off them. A private compilation cannot report a contract as violated, since
+nothing it knows is exact and a row would name a person; a contract the released evidence shows broken
+gets a warning (``\texttt{EXPECT s.marks BETWEEN 0 AND 100} is likely violated: the released facts
+report values of \texttt{s.marks} above 100''), and the check runs on the real data. Contracts that read
+the values (\texttt{UNIQUE}, \texttt{REFERENCES}) are always checked at run time. A fact about a few rows,
+such as two missing \texttt{Embarked} values among 891 passengers, is hidden by design; the run-time check
+covers it. Images, folders of tables and \texttt{PARSE\_DATE}, which read values or file lists, are not
+supported in a private compilation. The guarantee covers what the compiler writes: what the owner's runs
+print (a deoptimization names a row) and how long they take stay with the owner, and releasing them would
+need a mechanism of its own.
 
 \section{Lifting pandas Scripts}\label{sec:lift}
 
