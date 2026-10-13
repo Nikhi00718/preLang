@@ -21,11 +21,11 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:taxi | eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:taxi | eps=100 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:taxi | exact | 1/1 | 36 | 13 | 7 | 16 | 0 | 0 | 100% | 100% | 0/1 | 0 |
-| rq8:taxi | generic eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 50% | 0/5 | 0 |
-| rq8:taxi | generic eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 50% | 0/5 | 0 |
+| rq8:taxi | generic eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 60% | 0/5 | 0 |
+| rq8:taxi | generic eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 60% | 0/5 | 0 |
 | rq8:taxi | none | 1/1 | 36 | 13 | 7 | 16 | 0 | 0 | - | 0% | 0/1 | 0 |
-| rq8:taxi | optimistic | 1/1 | 36 | 13 | 7 | 16 | 0 | 0 | 33% | 25% | 1/1 | 0 |
-| rq8:taxi | random | 10/10 | 360 | 130 | 70 | 160 | 0 | 0 | 58% | 55% | 8/10 | 0 |
+| rq8:taxi | optimistic | 1/1 | 36 | 13 | 7 | 16 | 0 | 0 | 50% | 40% | 1/1 | 0 |
+| rq8:taxi | random | 10/10 | 360 | 130 | 70 | 160 | 0 | 0 | 64% | 56% | 8/10 | 0 |
 | rq8:taxi | synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:taxi | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:traffic | eps=0.1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
@@ -40,7 +40,7 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:traffic | random | 10/10 | 630 | 610 | 20 | 0 | 0 | 0 | 100% | 26% | 0/10 | 0 |
 | rq8:traffic | synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:traffic | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
-| titanic | corpus eps=1 | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 16% | 100% | 148/368 | 0 |
+| titanic | corpus eps=1 | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 17% | 100% | 148/368 | 0 |
 | titanic | corpus eps=10 | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 17% | 100% | 148/368 | 0 |
 | titanic | eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 74/184 | 0 |
 | titanic | eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 31% | 100% | 31/184 | 0 |

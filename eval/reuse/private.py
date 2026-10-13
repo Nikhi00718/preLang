@@ -1,4 +1,4 @@
-"""Private compilation (RQ10): compiling against data the compiler never sees.
+"""Private compilation (RQ8 of the paper): compiling against data the compiler never sees.
 
     py -3 eval/reuse/private.py [path/to/preplang.exe]
 
@@ -24,7 +24,7 @@ Each is compiled from several kinds of facts:
   * optimistic  facts that claim no missing values anywhere, without looking at the data
               (what a private compilation from no budget at all could do; its runs are exact too)
   * corpus    one release for all Titanic scripts together (the budget is spent once)
-  * generic   baseline: the same budget on equal-width bins instead of the program's numbers
+  * generic   baseline: the same budget on fixed logarithmic bins instead of the program's numbers
               (eval/reuse/private_baselines.py)
   * synthetic baseline: a table sampled from the generic release, compiled normally
 
@@ -157,14 +157,20 @@ def removals(generated):
     return found
 
 
+PRUNED = re.compile(r"`(.+?)` \(line (\d+)\) stays removed")
+
+
 def compile_in(compiler, folder, facts=False):
-    args = [str(compiler), "program.prep", "--python"] + (["--facts", "facts.tsv"] if facts else [])
+    args = [str(compiler), "program.prep", "--python", "--ir"] + (["--facts", "facts.tsv"] if facts else [])
     done = subprocess.run(args, cwd=folder, capture_output=True, text=True)
     text = done.stdout + done.stderr
+    # A check whose column is pruned is removed for good and leaves no line in the program:
+    # it counts as removed too (a private compilation keeps such a check, guarded).
+    pruned = {f"line {line}: {what}" for what, line in PRUNED.findall(text)}
     return {"ok": "Compilation failed" not in text and done.returncode == 0,
             "warnings": [line for line in text.splitlines() if line.startswith("warning[")],
             "errors": [line for line in text.splitlines() if line.startswith("error")],
-            "removed": sorted(removals(folder / "output" / "generated.py"))}
+            "removed": sorted(removals(folder / "output" / "generated.py") | pruned)}
 
 
 def owner_setup(compiler, owner, program, files):

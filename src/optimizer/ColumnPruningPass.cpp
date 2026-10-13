@@ -18,6 +18,12 @@ std::string join(const std::vector<std::string>& items) {
     return text;
 }
 
+// The instruction works on a table the compiler knows only from released facts.
+bool releasedTable(const IRProgram& program, const Instruction& instruction) {
+    const auto found = program.tables.find(tableKey(instruction.dataset, instruction.table));
+    return found != program.tables.end() && found->second.released;
+}
+
 // The columns each instruction's table has just before the instruction runs.
 std::vector<std::vector<std::string>> columnsBefore(const IRProgram& program) {
     std::map<std::string, std::vector<std::string>> current;
@@ -93,8 +99,12 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
             case Opcode::Check:
                 // A speculatively removed check does not keep its column loaded: if the
                 // column is pruned, the check is removed for good (see dropUnloadedChecks)
-                // and its proof becomes part of the admission certificate.
-                if (instruction.speculative) {
+                // and its proof becomes part of the admission certificate. After a private
+                // compilation it does: a proof from released facts must never decide whether
+                // a batch is refused, because the analyst would see that (it could reveal a
+                // row); the check stays able to run again, so a run ends as the source
+                // program's run would, whatever the facts.
+                if (instruction.speculative && !releasedTable(program, instruction)) {
                     break;
                 }
                 if (instruction.text == "MATCH_RATE") {  // reads the file-name column of the labels

@@ -49,25 +49,26 @@ def histograms(queries_file, epsilon, beta, seed):
         else:
             found.append(int(present.sum()))
         exact[(file, column)] = (binned, found)
-    per_column = epsilon / len(asked) if asked else epsilon
+    # The same budget as tools/release_facts.py: epsilon per table, split over its columns.
+    columns_of = {file: sum(1 for (f, _) in asked if f == file) for (file, _) in asked}
     cells = sum(len(found) for _, found in exact.values())
-    t = 0.0 if math.isinf(per_column) else math.log(max(cells, 1) / beta) / per_column
     rng = np.random.default_rng(seed)
     released = {}
-    for key, (binned, found) in exact.items():
-        noise = np.zeros(len(found)) if math.isinf(per_column) else rng.laplace(scale=1 / per_column, size=len(found))
+    for (file, column), (binned, found) in exact.items():
+        e = epsilon / columns_of[file]
+        t = 0.0 if math.isinf(e) else math.log(max(cells, 1) / beta) / e
+        noise = np.zeros(len(found)) if math.isinf(e) else rng.laplace(scale=1 / e, size=len(found))
         noisy = np.asarray(found, dtype=float) + noise
-        released[key] = (binned, noisy, noisy > t + 0.5)
-    return tables, released, per_column, t
+        released[(file, column)] = (binned, noisy, noisy > t + 0.5)
+    return tables, released
 
 
 def generic_facts(queries_file, epsilon, beta, seed):
     """The facts file of the generic release: bounds and evidence from the occupied bins
     [e_i, e_i+1), which give values >= e_i and values < e_i+1."""
-    tables, released, per_column, t = histograms(queries_file, epsilon, beta, seed)
+    tables, released = histograms(queries_file, epsilon, beta, seed)
     lines = ["preplang-facts\t1",
-             f"mechanism\tgeneric Laplace histograms over fixed logarithmic bins, epsilon {epsilon:g}, "
-             f"{per_column:.4g} per column: a bin counts as seen above {t + 0.5:.4g}"]
+             f"mechanism\tgeneric Laplace histograms over fixed logarithmic bins, epsilon {epsilon:g} per table"]
     for load_path, name, kind, file, columns in tables:
         lines.append(f"table\t{load_path}\t{name}\t{kind}")
         for column, ctype, _ in columns:
@@ -110,7 +111,7 @@ def write_synthetic(folder, queries_file, epsilon, beta, seed):
     """Samples a synthetic table from the generic release for every LOAD of the program and
     writes it where the LOAD reads it (CSV or Parquet). Values are uniform in their bin; the
     two outer bins are sampled within one decade of their finite edge."""
-    tables, released, _, _ = histograms(queries_file, epsilon, beta, seed)
+    tables, released = histograms(queries_file, epsilon, beta, seed)
     rng = np.random.default_rng(None if seed is None else seed + 1)
     low_edges = np.array([-1e7] + EDGES[1:-1])
     high_edges = np.array(EDGES[1:-1] + [1e7])

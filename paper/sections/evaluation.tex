@@ -264,10 +264,11 @@ gives none of these: each month gets a different program and no statement about 
 \PrivTitanicScripts{} RQ5 Titanic scripts that compile (compiled for the training file), the data owner
 ran \texttt{--queries} and released facts about the compiled file, and the program was compiled with
 \texttt{--facts} in a folder that holds only the program and the facts file. The facts came from the
-release at the program's cells with $\varepsilon \in \{0.1, 1, 10, 100\}$ ($\varepsilon$ is the total
-budget of a program, $\beta = 0.05$; five seeds for the pipelines, one for the scripts); from one release
+release at the program's cells with $\varepsilon \in \{0.1, 1, 10, 100\}$ ($\varepsilon$ is the budget of
+each table a program loads, $\beta = 0.05$; five seeds for the pipelines, one for the scripts, so the
+script rows spend one release per script on the same training file); from one release
 for all Titanic scripts together (two seeds); from the same cells without noise; and from four baselines
-that need no knowledge of the program: \emph{generic} bins (the same budget per column on a fixed
+that do not use the program's numbers: \emph{generic} bins (the same budget per column on a fixed
 logarithmic grid, $[0.001, 0.01)$, \ldots, $[10^5, 10^6)$, the negative ones and the outer ones, read the
 same way), \emph{synthetic} data (a table sampled from the generic release, values uniform in occupied
 bins, compiled normally, as an analyst would who develops against differentially private synthetic or

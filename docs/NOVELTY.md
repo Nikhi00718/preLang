@@ -416,7 +416,9 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   and `tools/release_facts.py --schema-declared`. The numbers cut each column into cells (below k1,
   exactly k1, between k1 and k2, ..., missing); every decision of the analysis depends only on which cells
   hold some row. The tool releases one Laplace histogram per column over those cells (sensitivity 1), for
-  the columns the program names only. The analyst compiles with `--facts`; the compiler opens no input
+  the columns the program names only; each table gets the whole epsilon, split over its columns (a
+  neighbouring dataset differs in one row of one table, so tables compose in parallel). No released fact
+  enters the admission certificate: a removed check keeps its column loaded, so it can always run again. The analyst compiles with `--facts`; the compiler opens no input
   file, treats nothing as exact (no contract is reported violated; contracts that read values are checked
   at run time; a statement shown useless "probably has no effect" and stays, guarded), embeds no
   checksum, and warns "likely violated" where the released evidence shows a contract broken. One release
@@ -429,6 +431,10 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   occupied: every "likely violated" warning names a real violation, a released fact is false only if
   fewer than c(2t + 1) rows break it (c cells), and for programs without `DERIVE` whose columns each have
   an occupied value cell the private compilation removes at least what a normal compilation removes.
+  (4) Whether a run finishes does not depend on the facts: on every batch whose fresh compilation succeeds,
+  the program finishes exactly when the source program does; the facts change only which removed
+  instructions run again, that is, the run time. Without this, a refusal caused by a false admission fact
+  would let an analyst who chooses the program's numbers learn a bit about a row per submission.
 - **Why it is new, to our knowledge.** The rule that a hint may be wrong if it is cheap to check is
   Lampson's (1983), and JIT guards apply it to speculation (Hölzle 1992; Flückiger 2018; Barrière 2021).
   Differential privacy has answered an analyst's queries (PrivateSQL, elastic sensitivity, APEx, also for
@@ -448,14 +454,14 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
     change, which the normal compilation refuses too.
   - Without noise, the program's cells give exactly the normal removals. At epsilon 1 the taxi and
     traffic pipelines keep all of them at full precision; fixed logarithmic bins with the same budget keep
-    50% (taxi) and 83% (traffic), because the program's numbers (1 and 265, 230 and 320) are not on the
+    60% (taxi) and 83% (traffic), because the program's numbers (1 and 265, 230 and 320) are not on the
     grid. Synthetic data sampled from those bins and compiled normally fails on all 15 pipeline
     compilations, with contracts the real data satisfies. The optimistic facts ("nothing is missing",
-    no data) reach 59% recall at 11% precision.
+    no data) reach 60% recall at 11% precision.
   - On the Titanic training file removal precision is 17% at epsilon 1 and 31% at epsilon 10 (fixed bins
     and synthetic data: 20%); the false facts are mostly "no missing `Embarked`" (2 of 891 rows), which no
     release can reveal, and the run deoptimizes them. One release for all 184 scripts at a total epsilon
-    of 1 gives 16% precision, about what each script gets from its own release at epsilon 1, which
+    of 1 gives 17% precision, about what each script gets from its own release at epsilon 1, which
     together spend 184 times the budget.
   - On a 1,000,000-row file with a mistake injected into m rows, the program's cells report the broken
     contract in every run from m = 100 at epsilon 1 and m = 10 at epsilon 10, with 0 false reports in
@@ -475,6 +481,17 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   (now Laplace histograms, thresholds about ten times lower); `PREPLANG_TRUST_INPUTS` bypassed the guards;
   "has no effect" was stated as fact; the utility lemma lost a hypothesis; SPECIAL was described wrongly;
   there were no baselines.
+- **Final strict re-review of this version** (commit 1299b69): PL 5.5/10 overall, private compilation
+  alone 5.5; DB/privacy 5.5/10 overall, private compilation alone 5. Both: 9/10 is not reachable for this
+  project; the realistic ceiling is about 6.5-7. The DB reviewer found one new flaw, now fixed: a false
+  released fact could enter the admission certificate (a proven check of a pruned column), so a refusal
+  the analyst sees could reveal a bit (guarantee 4 above). It also showed that tables compose in parallel
+  (now used), and both said the baselines are weak: the program's cells beat a decade grid and synthetic
+  data sampled from it, but the real competitor is workload-optimized DP (HDMM, AIM) given the program's
+  comparisons as its workload, and on the third-party Titanic scripts the program's cells buy little at
+  epsilon 1. Their suggested next steps: derive the release from the abstract domain and prove that the
+  compiler's output depends only on which cells are occupied, and compare with HDMM/AIM; or bound each
+  person's contribution and set thresholds for run time rather than warnings.
 - **Limits.** The schema must be declared. The unit of privacy is a row, not a person. The guarantee
   covers what the compiler writes, not the data owner's run logs or run time. Small tables give little at
   small epsilon, by design. Images, `LOAD_TABLES` and `PARSE_DATE` are not supported. There is no budget

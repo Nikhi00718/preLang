@@ -511,9 +511,10 @@ decision depends only on which cells hold some row. \texttt{tools/release\_facts
 Laplace histogram over these cells per column~\cite{dwork2014}: a row lies in exactly one cell of a
 column, so the histogram has sensitivity~1. Only columns the program names are asked about (all if it
 uses \texttt{*} or a \texttt{DROP\_NULL} of whole rows), and of those only missing values unless they
-are numeric. A cell counts as occupied if its noisy count is above $t + \frac12$ with
+are numeric. Each table gets the whole budget $\varepsilon$, divided equally between its columns
+asked about. A cell counts as occupied if its noisy count is above $t + \frac12$ with
 $t = \ln(C/\beta)/\varepsilon_c$, where $C$ is the number of cells released and $\varepsilon_c$ the
-budget of one column. A column's facts are read off its occupied cells: missing values if the missing
+budget of the cell's column. A column's facts are read off its occupied cells: missing values if the missing
 cell is occupied; bounds from the lowest and highest occupied value cells; and, as evidence, that values
 below the upper edge of the lowest occupied cell (or above the lower edge of the highest) exist.
 
@@ -524,10 +525,10 @@ analyst: the generated program, the certificates, the contract file, the manifes
 \end{theorem}
 \begin{proof}
 A Laplace histogram with noise $\mathrm{Lap}(1/\varepsilon_c)$ per cell and sensitivity~1 is
-$\varepsilon_c$-differentially private. A row is in every column, so the columns compose sequentially;
-the budget is divided equally, $\sum \varepsilon_c = \varepsilon$. Which columns and cells are asked
-about depends only on the program and the schema, never on an answer, so the composition is
-non-adaptive. The occupied cells, the facts, the evidence and the compiler's outputs are computed from
+$\varepsilon_c$-differentially private. A row is in every column of its table, so those columns compose
+sequentially, with $\sum \varepsilon_c = \varepsilon$ per table; a neighbouring dataset differs in one
+row of one table, so the tables compose in parallel. Which columns and cells are asked about depends
+only on the program and the schema, never on an answer, so the composition is non-adaptive. The occupied cells, the facts, the evidence and the compiler's outputs are computed from
 the noisy histograms, the program and the schema alone; the compiler never opens an input file
 (\texttt{--facts} fails rather than read a table without released facts).
 \end{proof}
@@ -548,12 +549,33 @@ facts describe, is checked against the admission and item certificates. Theorem~
 applies unchanged.
 \end{proof}
 
+\paragraph{What the analyst sees of a run.} On a validation server the analyst learns at least
+whether a job finished. If a released fact could make the generated program refuse a batch, an
+analyst who chooses the program's numbers could learn a bit about one row from each submission. So
+no released fact enters the admission certificate: in a private compilation a removed check keeps its
+column loaded (a normal compilation prunes the column and makes the check's proof an admission fact),
+so every removal can run again. The admission facts that remain are the declared types and the
+absence of compile errors.
+
+\begin{corollary}[Outcomes do not depend on the facts]\label{cor:outcome}
+On every batch whose fresh compilation succeeds, the generated program finishes, with the source
+program's output, exactly when the source program finishes. Of a run, the released facts change only
+which removed instructions run again, that is, how long it takes.
+\end{corollary}
+\begin{proof}
+Types are declared, not released. A batch that breaks the facts behind the absence of compile errors
+also makes its fresh compilation fail, or else the admission certificate was stricter than needed,
+which can only refuse a batch the source program would run (we never observed it). Every other fact
+guards a removal that runs again when broken (Theorem~\ref{thm:anyfacts}).
+\end{proof}
+
 \begin{lemma}[What the analyst learns]\label{lem:utility}
 With probability at least $1-\beta$ over the noise, for every released cell: (i) if it is occupied, it
 holds at least one row; and (ii) if it holds at least $2t + 1$ rows, it is occupied. Hence every
 ``likely violated'' warning names a contract the data breaks; for a program without \texttt{DERIVE}
-whose columns each have an occupied value cell, every released bound is at or beyond the tightest true
-bound at the program's numbers, so the private compilation removes at least what a normal compilation of
+whose columns each have an occupied value cell, every released bound is at or inside the tightest true
+bound at the program's numbers (an occupied cell holds a row), so the private compilation removes at
+least what a normal compilation of
 the same file removes (except checks of \texttt{UNIQUE} and \texttt{REFERENCES}, which read values); and
 a released fact is false only if fewer than $c(2t + 1)$ rows break it, where $c$ is the number of cells
 it covers ($c = 1$ for ``no missing values'').
@@ -568,12 +590,11 @@ from Lemma~\ref{lem:mono}, because decisions compare bounds only with the progra
 
 The bound in the last part is what separates the release from the \emph{optimistic} facts ``nothing is
 missing'', which need no data and also give every removal of a normal compilation. False facts cost
-deoptimizations, and Theorem~\ref{thm:anyfacts} keeps every admitted run exact. They can also cost
-availability: a fact of the admission certificate (the proven check of a column the optimized program does
-not load, or the absence of a division error in \texttt{DERIVE}) has no run-time code to fall back on, so
-a false one makes the program refuse batches. Refusing is not computing a wrong result, but it is a cost,
-and the evaluation counts it. The mechanized core does not cover admission (its admission predicate is
-true), types or compile errors; those parts are tested. Because the release depends only on which cells are occupied, one release can serve
+deoptimizations, and Theorem~\ref{thm:anyfacts} keeps every admitted run exact. In a normal
+compilation a false admission fact (the proven check of a column the optimized program does not load)
+would instead refuse batches; a private compilation keeps such checks (Corollary~\ref{cor:outcome}). The
+mechanized core does not cover admission (its admission predicate is true), types or compile errors;
+those parts are tested. Because the release depends only on which cells are occupied, one release can serve
 several programs over the same files: the cells of their numbers together are released once, and each
 program reads its facts off them. A private compilation cannot report a contract as violated, since
 nothing it knows is exact and a row would name a person; a contract the released evidence shows broken

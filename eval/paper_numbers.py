@@ -590,7 +590,7 @@ def private(results, diagnostics, numbers):
              r"makes, precision the share of its removals that rest on true facts. Compiled: compilations without "
              r"errors. Deopt.\ on file: compilations whose run on the compiled file itself deoptimizes (a released "
              r"fact was false). Every run is scored against a fresh compilation of its batch. $\varepsilon$ is the "
-             r"budget of one program; ``one release'' serves all Titanic scripts with one budget. Generic: fixed "
+             r"budget of each table of one program; ``one release'' serves all Titanic scripts with one budget. Generic: fixed "
              r"logarithmic bins; synthetic: a table sampled from them, compiled normally.}",
              r"\label{tab:rq-private}", r"\centering", r"\footnotesize",
              r"\begin{tabular}{@{}lrrrrrrrrr@{}}", r"\toprule",

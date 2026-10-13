@@ -204,6 +204,35 @@ void testNothingExact() {
     check(warnings == 2, "no warning after a FILTER: the released facts describe the file, not the rows left");
 }
 
+// A refusal is something the analyst sees. If a proof from released facts could make the
+// generated program refuse a batch, an analyst who chooses the program's numbers could learn a
+// bit about a row from every submission. So no released fact may enter the admission
+// certificate: a removed check keeps its column loaded and can always run again.
+void testNoReleasedFactDecidesAdmission() {
+    std::cout << "No released fact decides whether a batch is refused\n";
+    writeFile("test_private_facts.tsv", std::string(header) +
+                                            "column\tname\tSTRING\t0\t-inf\t0\tinf\t0\t-\t-\t-\t-\n"
+                                            "column\tage\tINTEGER\t?\t-inf\t0\tinf\t0\t-\t-\t-\t-\n"
+                                            "column\tmarks\tINTEGER\t0\t0\t0\t100\t0\t-\t-\t-\t-\n");
+    Compiled c;
+    compile("LOAD \"test_private_t.csv\" AS s;\n"   // line 1
+            "EXPECT s.name NOT_NULL;\n"             // line 2: proven from the facts
+            "SELECT s [age];\n"                     // name is not used again
+            "SAVE s AS \"test_private_out.csv\";\n",
+            c, "test_private_facts.tsv");
+    const bool speculative = std::any_of(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) {
+        return in.op == Opcode::Check && in.line == 2 && in.speculative;
+    });
+    const bool loaded = std::any_of(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) {
+        return in.op == Opcode::Load && std::find(in.columns.begin(), in.columns.end(), "name") != in.columns.end();
+    });
+    check(speculative && loaded, "the check of a column the program drops stays, able to run again");
+    const TableCertificate* admission = c.certificate.table("s");
+    const bool needsName = admission && std::any_of(admission->columns.begin(), admission->columns.end(),
+                                                    [](const ColumnFacts& f) { return f.name == "name" && f.notNull; });
+    check(admission && !needsName, "admission does not require the released fact (no missing names)");
+}
+
 void testQueries() {
     std::cout << "What the data owner is asked\n";
     TableSchema schema;
@@ -344,6 +373,7 @@ int main() {
     testReadFacts();
     testCompilesWithoutTheFile();
     testNothingExact();
+    testNoReleasedFactDecidesAdmission();
     testQueries();
     testAnyFactsAreSafe();
     std::cout << (failures == 0 ? "All private compilation tests passed\n"

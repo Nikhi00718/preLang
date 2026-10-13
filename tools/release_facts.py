@@ -16,8 +16,10 @@ exactly k1, between k1 and k2, exactly k2, ..., above km, and missing. Every dec
 analysis depends only on which cells hold some row, so that is all that is released. A row
 lies in exactly one cell of a column, so the histogram of one column changes by 1 when a row
 is added or removed: one Laplace histogram per column (noise Lap(1/epsilon_column) in every
-cell) is epsilon_column-differentially private. A row is in every column, so the columns
-compose sequentially: the total epsilon is divided equally between the columns asked about.
+cell) is epsilon_column-differentially private. A row is in every column of its table, so
+those columns compose sequentially, and a neighbouring dataset differs in one row of one
+table, so the tables compose in parallel: epsilon is divided equally between the columns of
+each table asked about, and every table gets the whole epsilon.
 Only columns the program names are asked about (all of them if it uses * or a DROP_NULL of
 whole rows), and of those only missing values if the program compares no number with them.
 
@@ -161,16 +163,23 @@ def release(queries_files, epsilon, beta, seed):
             frames[file] = read_table(file, kinds[(file, column)], names)
         histograms[(file, column)] = counts(frames[file][column], kinds[(file, column)], types[(file, column)],
                                             asked[(file, column)], sorted(anchors[(file, column)]))
-    per_column = epsilon / len(asked) if asked else epsilon
+    # A neighbouring dataset differs in one row of one table: the tables compose in parallel, the
+    # columns of one table sequentially, so each table's columns share the whole epsilon.
+    columns_of = {file: sum(1 for (f, _) in asked if f == file) for (file, _) in asked}
+    per_column = {file: epsilon / count for file, count in columns_of.items()}
     total_cells = sum(len(found) for found, _ in histograms.values())
-    t = 0.0 if math.isinf(per_column) else math.log(max(total_cells, 1) / beta) / per_column
+    threshold = {file: 0.5 if math.isinf(e) else math.log(max(total_cells, 1) / beta) / e + 0.5
+                 for file, e in per_column.items()}
     rng = np.random.default_rng(seed)
     occupied = {}
-    for key, (found, value_cells) in histograms.items():
-        noise = np.zeros(len(found)) if math.isinf(per_column) else rng.laplace(scale=1 / per_column, size=len(found))
-        occupied[key] = (list(np.asarray(found) + noise > t + 0.5), value_cells)
-    mechanism = (f"Laplace histograms at the program's numbers, epsilon {epsilon:g} in total over {len(asked)} "
-                 f"columns ({per_column:.4g} each), beta {beta:g}: a cell counts as seen above {t + 0.5:.4g}")
+    for (file, column), (found, value_cells) in histograms.items():
+        e = per_column[file]
+        noise = np.zeros(len(found)) if math.isinf(e) else rng.laplace(scale=1 / e, size=len(found))
+        occupied[(file, column)] = (list(np.asarray(found) + noise > threshold[file]), value_cells)
+    mechanism = (f"Laplace histograms at the program's numbers, epsilon {epsilon:g} for each of {len(columns_of)} "
+                 f"tables, split over its columns ({', '.join(f'{c} columns' for c in columns_of.values())}), "
+                 f"beta {beta:g}: a cell counts as seen above "
+                 f"{', '.join(f'{v:.4g}' for v in threshold.values())}")
     out = {}
     for path, (_, tables) in parsed.items():
         lines = ["preplang-facts\t1", f"mechanism\t{mechanism}"]

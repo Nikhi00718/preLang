@@ -396,7 +396,9 @@ Nothing it derives is treated as exact: no contract is reported violated (a cont
 facts show broken gets a "likely violated" warning), contracts that read values are checked at run
 time, and the generated program has no checksum, so every input, including the one the facts
 describe, is checked against the certificates. A wrong fact costs a deoptimization, never a wrong
-result (`tests/test_private.cpp` checks this with random facts, true or false). With probability
+result and never a refused batch: no released fact enters the admission certificate, so whether a run
+finishes does not depend on the facts (`tests/test_private.cpp` checks this with random facts, true or
+false). With probability
 1 - beta (`--beta`, default 0.05) every warning names a real violation and no removal of a normal
 compilation is lost. Tables only: images, `LOAD_TABLES` and `PARSE_DATE` read files or values and are
 refused in a private compilation.
@@ -519,7 +521,7 @@ at epsilon 0.1-100, one release for all Titanic scripts, without noise, absent, 
 possibly false, and two baselines), of the three real-month pipelines and 184 lifted Titanic scripts,
 run 38,409 times on real batches: none unsound. Without noise the private compilation removes exactly
 what a normal one removes. At epsilon 1 the taxi and traffic pipelines keep every removal; fixed
-logarithmic bins with the same budget keep 50% and 83%, and synthetic data sampled from them and
+logarithmic bins with the same budget keep 60% and 83%, and synthetic data sampled from them and
 compiled normally fails on every pipeline with contracts the real data satisfies. One release at a total
 epsilon of 1 serves all 184 Titanic scripts about as well as a release per script. On a 1,000,000-row
 file, a contract broken in 100 rows is reported as likely violated in every run at epsilon 1 (10 rows at
