@@ -3,4 +3,4 @@ defaultTargets = ["Proofs"]
 
 [[lean_lib]]
 name = "Proofs"
-roots = ["Deopt", "Core"]
+roots = ["Deopt", "Core", "Cells"]

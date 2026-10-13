@@ -448,8 +448,8 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   `src/sema/SemanticAnalyzer.cpp`, `tools/release_facts.py`, `tests/test_private.cpp`,
   `eval/reuse/private.py`, `eval/reuse/private_baselines.py`.
 - **Evidence** (`eval/results/private.md`, `eval/results/private_diagnostics.md`, paper RQ8).
-  - 2,919 compilations (the RQ4 pipelines on real months and 184 lifted Titanic scripts; the release at
-    epsilon 0.1-100, one release for all scripts, no noise, and the baselines below) ran 38,409 times:
+  - 3,287 compilations (the RQ4 pipelines on real months and 184 lifted Titanic scripts; the release at
+    epsilon 0.1-100, per row or per ticket, one release for all scripts, no noise, and the baselines below) ran 42,825 times:
     none unsound, no wrong stop. All 688 refusals of months a fresh compilation runs are the taxi schema
     change, which the normal compilation refuses too.
   - Without noise, the program's cells give exactly the normal removals. At epsilon 1 the taxi and
@@ -468,7 +468,8 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
     1,818 compilations. Fixed bins and synthetic data reach the same sizes in every run but less often
     between them (at epsilon 0.3, 100 bad rows in 50-60% of runs against 80-100%).
   - `tests/test_private.cpp`: 300 random facts files with random inputs, 0 runs that differ from the
-    source program; the reader trusts no input without a checksum.
+    source program; the reader trusts no input without a checksum; 200 pairs of tables with the same
+    occupied cells and identical compilations (`testCellsDecide`).
 - **Found by this round in the existing compiler.** A fill of a column dropped right after was removed
   both as a dead store and as having no effect, and the certifier kept "no missing values" as an
   admission fact of a column the program never loads, so batches were refused for nothing; a dead store
@@ -492,8 +493,29 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   epsilon 1. Their suggested next steps: derive the release from the abstract domain and prove that the
   compiler's output depends only on which cells are occupied, and compare with HDMM/AIM; or bound each
   person's contribution and set thresholds for run time rather than warnings.
-- **Limits.** The schema must be declared. The unit of privacy is a row, not a person. The guarantee
-  covers what the compiler writes, not the data owner's run logs or run time. Small tables give little at
-  small epsilon, by design. Images, `LOAD_TABLES` and `PARSE_DATE` are not supported. There is no budget
-  ledger across releases. The Lean development is unchanged; the privacy theorem and the lemma are on
-  paper, and the mechanized core does not cover admission, types or compile errors.
+- **After the final re-review: the release derived from the analysis (Theorem Cells).** For a program
+  without `DERIVE` whose numbers are K, two tables that agree, for every column, on whether it has a
+  missing value, whether it has a value, and for every k in K whether it has a value below k and one
+  above k, receive the same verdicts and the same removals. Mechanized for the core in Lean
+  (`cells_decide` in `proofs/Cells.lean`, 335 lines, axioms `propext` and `Quot.sound`, no `sorry`); for
+  the full compiler (strict comparisons, types, `SELECT`, certificates) `testCellsDecide` compiles 200
+  pairs of different tables with the same occupied cells (other values, row counts, orders) and finds
+  identical verdicts, removals, speculative instructions and certificates in all 200. Consequences:
+  the cell questions are all the analysis can use, so released exactly they give the normal removals
+  (RQ8 confirms it on every workload) and a DP release of them loses only its noise; and the theorem
+  bounds what a *normal* compilation leaks: apart from the checksum and the messages, its output is a
+  function of at most 2|K|+2 bits per column.
+- **After the final re-review: people, not rows.** `release_facts.py --unit COLUMN --max-rows m` counts
+  at most m rows per unit (sensitivity m, all columns of all tables composed sequentially, since a unit
+  may have rows everywhere): epsilon-DP for adding or removing a whole person. Elsewhere contribution
+  bounding costs accuracy; here a fact the truncation makes false is one the generated program checks,
+  so it costs run time only. On Titanic, protecting tickets (134 of 681 tickets have several passengers,
+  up to 7) with one row per ticket gives 17% precision at epsilon 1 (as rows do) and 17% at epsilon 10
+  (rows: 31%), every run exact. The evaluation now has 3,287 compilations run 42,825 times, none
+  unsound, no wrong stop.
+- **Limits.** The schema must be declared. The guarantee covers what the compiler writes, not the data
+  owner's run logs or run time. Small tables give little at small epsilon, by design. Images,
+  `LOAD_TABLES` and `PARSE_DATE` are not supported. There is no budget ledger across releases. The
+  privacy theorem and the utility lemma are on paper; the Lean core covers Theorem Cells but not
+  admission, types or compile errors, and `DERIVE` is outside it. There is no comparison with
+  workload-optimized DP (HDMM, AIM).

@@ -24,6 +24,8 @@ Each is compiled from several kinds of facts:
   * optimistic  facts that claim no missing values anywhere, without looking at the data
               (what a private compilation from no budget at all could do; its runs are exact too)
   * corpus    one release for all Titanic scripts together (the budget is spent once)
+  * unit      the release for a ticket instead of a row (--unit Ticket --max-rows 1): a family
+              travelling on one ticket is protected as a whole
   * generic   baseline: the same budget on fixed logarithmic bins instead of the program's numbers
               (eval/reuse/private_baselines.py)
   * synthetic baseline: a table sampled from the generic release, compiled normally
@@ -136,8 +138,9 @@ def release(owner, analyst, kind, epsilon, seed, ready):
     if epsilon is None:
         (analyst / "facts.tsv").write_text(made_up_facts(queries, kind, seed), encoding="utf-8")
         return
+    unit = ["--unit", "Ticket", "--max-rows", "1"] if kind.startswith("unit") else []
     subprocess.run([PYTHON, str(RELEASE), str(queries), "--epsilon", repr(float(epsilon)), "--seed", str(seed),
-                    "--schema-declared",
+                    "--schema-declared", *unit,
                     "--out", str(analyst / "facts.tsv")], check=True, capture_output=True, text=True)
 
 
@@ -495,10 +498,15 @@ def corpus_releases(prepared, corpus_kinds):
     return ready
 
 
-def main(compiler, quick=False):
+def main(compiler, quick=False, only=None):
+    """With `only` (a prefix of kind names), runs only those kinds and replaces their records in
+    the existing results."""
     WORK.mkdir(parents=True, exist_ok=True)
     kinds = {"rq8": configs(EPSILONS, 1 if quick else 5, 2 if quick else 10, baseline_seeds=1 if quick else 5),
-             "titanic": configs((1, 10), 1, 2) + [(f"corpus eps={e:g}", e, s) for e in (1, 10) for s in range(2)]}
+             "titanic": configs((1, 10), 1, 2) + [(f"corpus eps={e:g}", e, s) for e in (1, 10) for s in range(2)] +
+             [(f"unit eps={e:g}", e, 0) for e in (1, 10)]}
+    if only:
+        kinds = {workload: [c for c in configs_ if c[0].startswith(only)] for workload, configs_ in kinds.items()}
     work = items()
     if quick:
         work = work[:6]
@@ -515,6 +523,9 @@ def main(compiler, quick=False):
             records.append(record)
             if i % 25 == 0:
                 print(i, "done")
+    if only:
+        earlier = json.loads((RESULTS / "private.json").read_text(encoding="utf-8"))["records"]
+        records = [r for r in earlier if not r["kind"].startswith(only)] + records
     rows = summarize(records)
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / "private.json").write_text(json.dumps({"rows": rows, "records": records}, indent=1), encoding="utf-8")
@@ -531,5 +542,6 @@ if __name__ == "__main__":
         (RESULTS / "private_diagnostics.md").write_text(write_diagnostics(found), encoding="utf-8")
         print(write_diagnostics(found))
     else:
+        only = next((a[len("--only="):] for a in sys.argv if a.startswith("--only=")), None)
         main(Path(arguments[0]).resolve() if arguments else ROOT / "build" / "Release" / "preplang.exe",
-             quick="--quick" in sys.argv)
+             quick="--quick" in sys.argv, only=only)

@@ -71,10 +71,12 @@ compilation does. Pandas scripts from GitHub, lifted into \PL, reproduce their o
 results on new batches: \CorpusBothSame{} of \CorpusBothRuns{} runs of \CorpusBothLifted{} held-out
 scripts for two Kaggle tasks, and all \DriftRuns{} monthly runs of \DriftCompiled{} scripts written by
 others for the traffic and bike data; none differ. Because selective deoptimization never relies on
-the compile-time facts being true, \PL can also compile against data the analyst may not see: from
-a differentially private histogram of each column over the program's own numbers, everything the
-compiler writes is $\varepsilon$-differentially private, and \PrivRuns{} runs of \PrivCompilations{}
-private compilations, from noisy, absent or random facts, were all exact.
+the compile-time facts being true, \PL can also compile against data the analyst may not see. We prove,
+in Lean for a core, that what the analysis decides depends on the data only through which cells, cut at
+the program's own numbers, hold a row; the data owner releases a differentially private histogram over
+exactly these cells, per row or per person, and everything the compiler writes is
+$\varepsilon$-differentially private. \PrivRuns{} runs of \PrivCompilations{} private compilations, from noisy,
+absent or random facts, were all exact.
 \end{abstract}
 
 \keywords{data-aware compilation, abstract interpretation, data validation, speculative
@@ -135,10 +137,12 @@ for each table it writes. An assume-guarantee check against the next stage's cer
 which of its checks can never fire, and synthesizes the contract a producer must meet so that none
 of its consumers ever refuses or deoptimizes.
 \item \textbf{Private compilation} (Section~\ref{sec:private}): an analyst can compile against data
-they may not see. No differentially private release can certify the emptiness facts a data-aware
-compiler optimizes with, so optimizing from released facts needs run-time guards, which selective
-deoptimization provides. The data owner releases one Laplace histogram per column over the cells the
-program's own numbers define; everything the compiler writes is $\varepsilon$-differentially private for a
+they may not see. We prove (mechanized for the core) that the analysis depends on the data only through
+which cells, cut at the program's numbers, are occupied, which also bounds what a normal compilation
+reveals. No differentially private release can certify the emptiness facts a data-aware compiler
+optimizes with, so optimizing from released facts needs run-time guards, which selective deoptimization
+provides; the same guards make bounding each person's contribution free of accuracy cost. The data owner
+releases one Laplace histogram per column over those cells; everything the compiler writes is $\varepsilon$-differentially private for a
 declared schema, and with probability $1-\beta$ every ``likely violated'' warning is true and every
 released fact is false by few rows. At equal budget these program-chosen cells keep more of the normal
 compilation's removals than fixed bins, report broken contracts more often at a small budget, and give a
@@ -428,7 +432,8 @@ So a batch is refused only for facts that no run-time code stands in for. Item c
 weaker than $\full$ in the directions their removal does not care about: the check on line~2 of
 Fig.~\ref{fig:students} needs no lower bound of 10 and allows missing marks.
 
-\paragraph{Mechanization.} We mechanized the theorem in Lean~4~\cite{lean4} in two layers
+\paragraph{Mechanization.} We mechanized the theorem in Lean~4~\cite{lean4} in two layers, and a third
+file proves Theorem~\ref{thm:cells} of Section~\ref{sec:private}
 (\texttt{proofs/}, \LeanLines{} lines of Lean's core language, no Mathlib; the theorems use only the axioms
 \texttt{propext} and \texttt{Quot.sound}, which gives function extensionality, and no classical choice). \texttt{Deopt.lean} proves
 Theorem~\ref{thm:deopt} for an abstract setting: a program is a list of partial state transformers; an
@@ -502,6 +507,35 @@ arbitrary removals and certificates): the facts decide which instructions are re
 which certificates guard them, and the generated program checks the certificates on the batch. A
 wrong fact costs a deoptimization, never a wrong result.
 
+\paragraph{What the analysis needs.} Which questions should the owner answer? Exactly those the
+analysis asks.
+
+\begin{theorem}[Cells]\label{thm:cells}
+Let a program have no \texttt{DERIVE}, and let $K$ be the numbers it compares columns with. Two tables
+that agree, for every column, on whether it has a missing value, whether it has a value, and, for every
+$k \in K$, whether it has a value below $k$ and whether it has a value above $k$, receive the same
+verdicts and the same removals from the analysis.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Every decision compares a bound with a number of $K$, and every transfer function raises, lowers or
+joins a bound with a number, which keeps two states that agree on all comparisons with $K$ in agreement:
+$\textit{lo}\,(\textit{raise}(l, k_0)) \ge k$ holds exactly when $l \ge k$ or $k_0 \ge k$, and likewise for
+the other functions. For a table's own facts, ``the minimum is at least $k$'' is the question ``some value
+exists and none is below $k$''.
+\end{proof}
+
+We mechanized the theorem for the core in Lean (\texttt{cells\_decide} in \texttt{proofs/Cells.lean},
+\LeanCellsLines{} lines, axioms \texttt{propext} and \texttt{Quot.sound}). For the compiler, which also has
+strict comparisons, types, \texttt{SELECT} and certificates, a randomized test compiles
+\PrivCellPairs{} pairs of different tables that occupy the same cells (other values, other row counts,
+other orders) and finds identical verdicts, removals, speculative instructions and certificates for every
+pair. Two consequences. First, the answers to the cell questions are \emph{all} the analysis can use:
+released exactly, they give a private compilation the normal compilation's removals (RQ8 confirms this on
+every workload), so a differentially private release of them loses nothing but its noise. Second, the
+theorem bounds what a normal compilation reveals about its data: apart from the checksum and the messages,
+which quote values and which a private compilation drops, the generated program, the certificates and the
+contract file are a function of at most $2|K|+2$ bits per column, the occupied cells.
+
 \paragraph{What is released.} The data owner runs the compiler with \texttt{--queries}, which writes
 the schema of each input (names and types of its columns) and the numbers written in the program. The
 analysis compares bounds only with these numbers (Section~\ref{sec:cert}): for a program without
@@ -532,6 +566,14 @@ only on the program and the schema, never on an answer, so the composition is no
 the noisy histograms, the program and the schema alone; the compiler never opens an input file
 (\texttt{--facts} fails rather than read a table without released facts).
 \end{proof}
+
+\paragraph{People, not rows.} A person with $g$ rows is protected only at $g\varepsilon$ by a release that
+protects rows. With \texttt{--unit} the owner names the column that identifies a person; at most $m$ rows
+of each unit are counted, and the release is $\varepsilon$-differentially private for adding or removing a
+whole unit (each count changes by at most $m$; a unit may have rows in every table, so all columns share
+$\varepsilon$). Elsewhere, counting only some of a person's rows costs accuracy, which is why
+differentially private systems bound contributions reluctantly. Here it costs nothing but run time: a fact
+the truncation makes false is one of the facts the generated program checks on the real data.
 
 The hypothesis on the schema is not a formality. A type the compiler \emph{infers} is a fact about the
 values: a CSV column is \textsc{Integer} until one cell holds 3.5, and pandas writes an integer column

@@ -96,8 +96,9 @@ def main():
 
     numbers["TestCount"] = test_count()
     lean = {name: len((ROOT / "proofs" / f"{name}.lean").read_text(encoding="utf-8").splitlines())
-            for name in ("Deopt", "Core")}
-    numbers.update(LeanLines=sum(lean.values()), LeanDeoptLines=lean["Deopt"], LeanCoreLines=lean["Core"])
+            for name in ("Deopt", "Core", "Cells")}
+    numbers.update(LeanLines=sum(lean.values()), LeanDeoptLines=lean["Deopt"], LeanCoreLines=lean["Core"],
+                   LeanCellsLines=lean["Cells"])
     numbers["SrcLines"] = f"{sum(len(f.read_text(encoding='utf-8').splitlines()) for f in (ROOT / 'src').rglob('*.[ch]pp')):,}"
     numbers["RealDeoptCorrectPct"] = numbers.get("RealDeoptCorrectPct", "--")
 
@@ -565,6 +566,11 @@ def private(results, diagnostics, numbers):
         numbers[f"Priv{prefix}All"] = len(chosen)
         numbers[f"Priv{prefix}FalseViolations"] = sum(
             sum("contract violated" in e for e in r["errors"]) for r in chosen if not r["compiled"])
+    for kind, name in (("unit eps=1", "One"), ("unit eps=10", "Ten")):
+        numbers[f"PrivUnitTitanicEps{name}Precision"] = pct(precision(of(kind, "titanic")))
+    import pandas as pd
+    tickets = pd.read_csv(ROOT / "eval" / "data" / "titanic" / "train.csv")["Ticket"].value_counts()
+    numbers.update(PrivTicketCount=len(tickets), PrivTicketGroups=int((tickets > 1).sum()), PrivTicketMax=int(tickets.max()))
     for kind, name in (("optimistic", "Optimistic"), ("none", "None")):
         numbers[f"Priv{name}Recall"] = pct(recall(of(kind)))
         numbers[f"Priv{name}Precision"] = pct(precision(of(kind)))
@@ -579,6 +585,7 @@ def private(results, diagnostics, numbers):
 
     # Table: recall and precision against the normal removals, per workload and kind of facts.
     kinds = (["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["corpus eps=1", "corpus eps=10"] +
+             ["unit eps=1", "unit eps=10"] +
              [f"{base} eps={e}" for base in ("generic", "synthetic") for e in ("1", "10")] +
              ["optimistic", "random", "none"])
     names = {"exact": "program's cells, no noise", "random": "random (true or false)", "none": "none (claims nothing)",
@@ -612,7 +619,7 @@ def private(results, diagnostics, numbers):
             label = names[kind]
         else:
             method, epsilon = kind.rsplit(" ", 1) if " " in kind else ("program's cells", kind)
-            method = {"corpus": "one release", "generic": "generic bins",
+            method = {"corpus": "one release", "unit": "per ticket", "generic": "generic bins",
                       "synthetic": "synthetic data"}.get(method, method)
             label = f"{method}, $\\varepsilon = {epsilon[4:]}$"
         deopt = f"{100 * sum(anchor) / len(anchor):.0f}\\%" if anchor else "--"
@@ -674,6 +681,9 @@ def private(results, diagnostics, numbers):
         deopt = re.search(r"(\d+) inputs admitted, (\d+) of them deoptimize", text)
         if facts and deopt:
             numbers.update(PrivTestFacts=facts.group(1), PrivTestDeopt=deopt.group(2))
+        cells = re.search(r"(\d+) pairs of different tables with the same occupied cells, 0 with different", text)
+        if cells:
+            numbers["PrivCellPairs"] = cells.group(1)
 
 
 def soundness_tests(numbers):

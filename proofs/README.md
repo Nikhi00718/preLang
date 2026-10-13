@@ -11,6 +11,10 @@ Lean 4 (v4.34.1, core library only, no Mathlib). Build with `lake build` in this
   contracts). It proves the transfer functions sound, every no-effect proof valid, the analysis
   monotone, and the run-time check of the generated code sound and complete for a certificate; from
   these, exactness (`core_deopt_exact`) and composition (`core_compose`) end to end.
+- `Cells.lean`: for programs of the core without DERIVE, what the analysis proves depends on the data
+  only through which cells, cut at the program's numbers, hold a row: whether a column has a missing
+  value, has a value, and for each number k a value below k and a value above k (`cells_decide`,
+  `provesAt_stateEq`). This is what a private compilation releases (paper, Section 7).
 
 The theorems use only the axioms `propext` and `Quot.sound` (no classical choice); the build prints
 them. The C++ compiler is tested against these properties (`tests/test_certificate.cpp`), not proven.

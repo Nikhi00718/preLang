@@ -52,8 +52,10 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | titanic | random | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 21% | 44% | 43/368 | 0 |
 | titanic | synthetic eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 74/184 | 0 |
 | titanic | synthetic eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 20% | 100% | 59/184 | 0 |
+| titanic | unit eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 74/184 | 0 |
+| titanic | unit eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 73/184 | 0 |
 
-All runs: 38409; correct run: 37154, correct stop: 567, needless stop: 688, wrong stop: 0, unsound: 0.
+All runs: 42825; correct run: 41546, correct stop: 591, needless stop: 688, wrong stop: 0, unsound: 0.
 
 ## Private compilations that failed
 

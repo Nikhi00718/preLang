@@ -250,6 +250,116 @@ void testQueries() {
           "the schema, and per column: bounds, only missing values, or nothing asked");
 }
 
+// ---------- The compiler depends on the data only through occupied cells ----------
+
+// What a compilation decided, without its messages (which quote values): contract verdicts,
+// the no-effect proofs behind removals, which instructions are speculative, and the certificate.
+std::string decisions(const Compiled& c) {
+    std::ostringstream out;
+    for (const ContractRecord& contract : c.analysis.contracts) {
+        out << contract.line << ' ' << contract.contract << ' ' << static_cast<int>(contract.verdict) << '\n';
+    }
+    std::set<std::string> removed;  // keyed by statement pointers, so in no fixed order
+    for (const auto& [key, reason] : c.analysis.noEffect) {
+        removed.insert(proofKey(*key.first, key.second));
+    }
+    for (const std::string& key : removed) {
+        out << "removed " << key << '\n';
+    }
+    for (const Instruction& in : c.ir.code) {
+        out << in.line << ' ' << static_cast<int>(in.op) << (in.speculative ? " speculative" : "") << '\n';
+    }
+    printCertificate(out, c.certificate);
+    for (const Diagnostic& d : c.diagnostics.all()) {
+        out << "diagnostic line " << d.location.line << ' ' << static_cast<int>(d.severity) << '\n';
+    }
+    return out.str();
+}
+
+// The numbers of a program cut a column into cells: below the first, each number, between two,
+// above the last. Two tables whose columns occupy the same cells (and both have missing values
+// or neither) get the same decisions: the analysis compares bounds only with those numbers.
+// Proved for the core in proofs/Cells.lean (cells_decide); tested here for the compiler.
+void testCellsDecide() {
+    std::cout << "Tables with the same occupied cells get the same decisions\n";
+    const std::string program = "LOAD \"test_private_cells.csv\" AS s;\n"
+                                "EXPECT s.marks BETWEEN 0 AND 100;\n"
+                                "FILL_NULL s.age WITH 0;\n"
+                                "FILTER s WHERE marks >= 40 AND age < 30;\n"
+                                "EXPECT s.name NOT_NULL;\n"
+                                "DROP_NULL s;\n"
+                                "SAVE s AS \"test_private_out.csv\";\n";
+    const std::vector<int> anchors = {0, 30, 40, 100};
+    std::mt19937 random(7);
+    const auto pick = [&](int n) { return static_cast<int>(random() % static_cast<unsigned>(n)); };
+    // An integer value inside cell i: cells are (-inf,0), {0}, (0,30), {30}, (30,40), {40}, (40,100), {100}, (100,inf).
+    const auto valueIn = [&](int cell) {
+        if (cell % 2 == 1) {
+            return anchors[static_cast<size_t>(cell / 2)];
+        }
+        const int low = cell == 0 ? anchors.front() - 50 : anchors[static_cast<size_t>(cell / 2 - 1)] + 1;
+        const int high = cell / 2 == static_cast<int>(anchors.size()) ? anchors.back() + 50
+                                                                      : anchors[static_cast<size_t>(cell / 2)] - 1;
+        return low + pick(high - low + 1);
+    };
+    const int cells = 2 * static_cast<int>(anchors.size()) + 1;
+    int same = 0, different = 0;
+    for (int round = 0; round < 200; ++round) {
+        // Which cells each numeric column occupies (at least one), and which columns have missing values.
+        std::vector<std::vector<int>> occupied(2);
+        for (auto& column : occupied) {
+            for (int cell = 0; cell < cells; ++cell) {
+                if (pick(3) == 0) {
+                    column.push_back(cell);
+                }
+            }
+            if (column.empty()) {
+                column.push_back(pick(cells));
+            }
+        }
+        const bool missingAge = pick(2), missingMarks = pick(2), missingName = pick(3) == 0;
+        // Two different tables with these cells: other values, other row counts, other orders.
+        const auto table = [&]() {
+            std::vector<std::vector<std::string>> columns(3);
+            for (size_t col = 0; col < 2; ++col) {
+                for (int cell : occupied[col]) {
+                    for (int n = 1 + pick(3); n > 0; --n) {
+                        columns[col].push_back(std::to_string(valueIn(cell)));
+                    }
+                }
+                if (col == 0 ? missingAge : missingMarks) {
+                    columns[col].push_back("");
+                }
+            }
+            const size_t rows = std::max(columns[0].size(), columns[1].size()) + static_cast<size_t>(pick(3));
+            for (size_t col = 0; col < 2; ++col) {
+                const size_t own = columns[col].size();
+                while (columns[col].size() < rows) {
+                    columns[col].push_back(columns[col][static_cast<size_t>(pick(static_cast<int>(own)))]);
+                }
+                std::shuffle(columns[col].begin(), columns[col].end(), random);
+            }
+            for (size_t i = 0; i < rows; ++i) {
+                columns[2].push_back(missingName && i == 0 ? "" : "N" + std::to_string(pick(1000)));
+            }
+            std::string text = "name,age,marks\n";
+            for (size_t i = 0; i < rows; ++i) {
+                text += columns[2][i] + "," + columns[0][i] + "," + columns[1][i] + "\n";
+            }
+            return text;
+        };
+        writeFile("test_private_cells.csv", table());
+        Compiled first;
+        compile(program, first);
+        writeFile("test_private_cells.csv", table());
+        Compiled second;
+        compile(program, second);
+        (decisions(first) == decisions(second) ? same : different)++;
+    }
+    check(different == 0, std::to_string(same) + " pairs of different tables with the same occupied cells, " +
+                              std::to_string(different) + " with different decisions");
+}
+
 // ---------- Any facts are safe ----------
 
 std::set<std::string> removable(const Compiled& c) {
@@ -375,6 +485,7 @@ int main() {
     testNothingExact();
     testNoReleasedFactDecidesAdmission();
     testQueries();
+    testCellsDecide();
     testAnyFactsAreSafe();
     std::cout << (failures == 0 ? "All private compilation tests passed\n"
                                 : std::to_string(failures) + " private compilation test(s) FAILED\n");

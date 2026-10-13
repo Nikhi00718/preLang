@@ -305,6 +305,13 @@ the training file deoptimizes them. One release for all \PrivTitanicScripts{} sc
 $\varepsilon = 1$ gives each of them \PrivCorpTitanicEpsOnePrecision\% precision, about what a script gets
 from its own release at $\varepsilon = 1$ (\PrivProgTitanicEpsOnePrecision\%), which together spend
 \PrivTitanicScripts{} times the budget: the programs share the cells of the columns they all use.
+Protecting tickets instead of rows (\PrivTicketGroups{} of the \PrivTicketCount{} tickets of the training file
+have several passengers, up to \PrivTicketMax{}), with one row counted per ticket, gives
+\PrivUnitTitanicEpsOnePrecision\% precision at $\varepsilon = 1$, as rows do, and
+\PrivUnitTitanicEpsTenPrecision\% at $\varepsilon = 10$, where rows give \PrivProgTitanicEpsTenPrecision\%: the
+tables can no longer share the budget in parallel, and the rows not counted make some facts false, which
+the runs deoptimize. A family on one ticket is then protected at $\varepsilon$ rather than at up to
+\PrivTicketMax$\varepsilon$, and every run stays exact.
 
 \paragraph{Warnings.} On a \PrivDiagRows-row Parquet file we injected a mistake into $m$ rows (amounts
 above the contract's bound, missing values in a \texttt{NOT\_NULL} column, values below a bound)

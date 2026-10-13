@@ -400,7 +400,17 @@ result and never a refused batch: no released fact enters the admission certific
 finishes does not depend on the facts (`tests/test_private.cpp` checks this with random facts, true or
 false). With probability
 1 - beta (`--beta`, default 0.05) every warning names a real violation and no removal of a normal
-compilation is lost. Tables only: images, `LOAD_TABLES` and `PARSE_DATE` read files or values and are
+compilation is lost. The cells are exactly what the analysis needs: for programs without `DERIVE`, two
+tables that occupy the same cells compile identically (proved in Lean for the core,
+`proofs/Cells.lean`, and tested on the compiler). To protect people rather than rows, name the column
+that identifies a person; at most `--max-rows` rows per person are counted, and a fact this makes false
+costs only a deoptimization:
+
+```bash
+py -3 tools/release_facts.py output/preplang_queries.tsv --epsilon 1 --schema-declared --unit Ticket --max-rows 1 --out facts.tsv
+```
+
+Tables only: images, `LOAD_TABLES` and `PARSE_DATE` read files or values and are
 refused in a private compilation.
 
 ## Optimizations
@@ -516,10 +526,10 @@ no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission wit
 nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
 `eval/results/*.md`.
 
-**Private compilation (paper RQ8).** 2,919 compilations from released facts (differentially private
-at epsilon 0.1-100, one release for all Titanic scripts, without noise, absent, optimistic, random and
-possibly false, and two baselines), of the three real-month pipelines and 184 lifted Titanic scripts,
-run 38,409 times on real batches: none unsound. Without noise the private compilation removes exactly
+**Private compilation (paper RQ8).** 3,287 compilations from released facts (differentially private
+at epsilon 0.1-100, per row or per ticket, one release for all Titanic scripts, without noise, absent,
+optimistic, random and possibly false, and two baselines), of the three real-month pipelines and 184
+lifted Titanic scripts, run 42,825 times on real batches: none unsound. Without noise the private compilation removes exactly
 what a normal one removes. At epsilon 1 the taxi and traffic pipelines keep every removal; fixed
 logarithmic bins with the same budget keep 60% and 83%, and synthetic data sampled from them and
 compiled normally fails on every pipeline with contracts the real data satisfies. One release at a total
