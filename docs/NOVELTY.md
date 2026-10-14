@@ -425,16 +425,18 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   can serve many programs over the same files.
 - **Guarantees.** (1) For a schema fixed independently of the data, everything the compiler writes is
   epsilon-differentially private (sequential composition over columns, non-adaptive, post-processing).
-  (2) Every run on every admitted batch is exact, for any facts file, true, noisy or false; false facts can
-  also cost refusals (an admission fact with no run-time fallback), which the evaluation counts. (3) With
+  (2) Every run on every admitted batch is exact, for any facts file, true, noisy or false. (3) With
   probability 1 - beta every occupied cell holds a row and every cell with at least 2t + 1 rows is
   occupied: every "likely violated" warning names a real violation, a released fact is false only if
   fewer than c(2t + 1) rows break it (c cells), and for programs without `DERIVE` whose columns each have
   an occupied value cell the private compilation removes at least what a normal compilation removes.
-  (4) Whether a run finishes does not depend on the facts: on every batch whose fresh compilation succeeds,
-  the program finishes exactly when the source program does; the facts change only which removed
-  instructions run again, that is, the run time. Without this, a refusal caused by a false admission fact
-  would let an analyst who chooses the program's numbers learn a bit about a row per submission.
+  (4) For a program that does not divide in `DERIVE`, whether a run finishes does not depend on the
+  facts: the programs generated from any two facts files refuse the same batches (those that break a
+  declared type); the facts change only which removed instructions run again, that is, the run time. In
+  a private compilation nothing is exact, so no contract is reported violated, and the one compile error
+  left that depends on bounds is a division in `DERIVE` by a range that contains 0. Without this, a
+  refusal caused by a false admission fact would let an analyst who chooses the program's numbers learn
+  a bit about a row per submission.
 - **Why it is new, to our knowledge.** The rule that a hint may be wrong if it is cheap to check is
   Lampson's (1983), and JIT guards apply it to speculation (Hölzle 1992; Flückiger 2018; Barrière 2021).
   Differential privacy has answered an analyst's queries (PrivateSQL, elastic sensitivity, APEx, also for
@@ -493,23 +495,29 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   epsilon 1. Their suggested next steps: derive the release from the abstract domain and prove that the
   compiler's output depends only on which cells are occupied, and compare with HDMM/AIM; or bound each
   person's contribution and set thresholds for run time rather than warnings.
-- **After the final re-review: the release derived from the analysis (Theorem Cells).** For a program
-  without `DERIVE` whose numbers are K, two tables that agree, for every column, on whether it has a
-  missing value, whether it has a value, and for every k in K whether it has a value below k and one
-  above k, receive the same verdicts and the same removals. Mechanized for the core in Lean
-  (`cells_decide` in `proofs/Cells.lean`, 335 lines, axioms `propext` and `Quot.sound`, no `sorry`); for
-  the full compiler (strict comparisons, types, `SELECT`, certificates) `testCellsDecide` compiles 200
-  pairs of different tables with the same occupied cells (other values, row counts, orders) and finds
-  identical verdicts, removals, speculative instructions and certificates in all 200. Consequences:
-  the cell questions are all the analysis can use, so released exactly they give the normal removals
-  (RQ8 confirms it on every workload) and a DP release of them loses only its noise; and the theorem
-  bounds what a *normal* compilation leaks: apart from the checksum and the messages, its output is a
-  function of at most 2|K|+2 bits per column.
+- **After the final re-review: the release derived from the analysis (Theorem Cells).** Let K be the
+  numbers a program compares columns with, and 0; they cut a numeric column into 2|K|+2 cells (each
+  number, the open intervals between and around them, and missing). For a program with a declared
+  schema, no `DERIVE`, no `PARSE_DATE` and no contract that reads values (`UNIQUE`, `REFERENCES`,
+  `MATCH_RATE`), two tables that occupy the same cells of every column receive the same verdicts and
+  the same removals. The hypotheses are needed: ids {1,2} and {1,1} occupy the same cells but differ on
+  `UNIQUE`, and the point cell {30} decides `FILTER s WHERE age < 30`. Mechanized for the core in Lean
+  (`cells_decide` in `proofs/Cells.lean`, 335 lines, axioms `propext` and `Quot.sound`, no `sorry`;
+  the core has only >= and <=, for which "a value below k" and "a value above k" suffice); for the
+  compiler, `testCellsDecide` compiles one program (two contracts, a fill, a filter with a strict
+  comparison, `DROP_NULL`) for 200 pairs of different integer tables with the same occupied cells
+  (other values, row counts, orders) and finds identical verdicts, removals, speculative instructions
+  and certificates in all 200. Consequences: the occupied cells are all the analysis can use, so
+  released exactly they give the normal removals (RQ8 confirms it on every workload) and a DP release
+  of them loses only its noise; and the *decisions* of a normal compilation of such a program reveal at
+  most 2|K|+2 bits per numeric column. The rest of what a normal compilation writes reveals more (the
+  checksum, inferred types, messages, the bounds in the contract file and the output guarantees).
 - **After the final re-review: people, not rows.** `release_facts.py --unit COLUMN --max-rows m` counts
-  at most m rows per unit (sensitivity m, all columns of all tables composed sequentially, since a unit
-  may have rows everywhere): epsilon-DP for adding or removing a whole person. Elsewhere contribution
-  bounding costs accuracy; here a fact the truncation makes false is one the generated program checks,
-  so it costs run time only. On Titanic, protecting tickets (134 of 681 tickets have several passengers,
+  at most m rows per unit, the first m in file order, and no row without a unit (sensitivity m, noise
+  and threshold scaled by m, all columns of all tables composed sequentially, since a unit may have rows
+  everywhere): epsilon-DP for adding or removing a whole person. Contribution bounding is standard (Wilson
+  et al., PoPETs 2020); here the bias it causes never costs exactness, since a fact the truncation makes
+  false is one the generated program checks, but it does cost precision, as noise does. On Titanic, protecting tickets (134 of 681 tickets have several passengers,
   up to 7) with one row per ticket gives 17% precision at epsilon 1 (as rows do) and 17% at epsilon 10
   (rows: 31%), every run exact. The evaluation now has 3,287 compilations run 42,825 times, none
   unsound, no wrong stop.

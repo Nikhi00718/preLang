@@ -1,0 +1,642 @@
+% The text of the paper, from the introduction to the conclusion. Shared by the ACM version
+% (preplang.tex) and the Science of Computer Programming version (preplang-scp.tex).
+
+\section{Introduction}
+
+Data preparation is a large part of building machine-learning systems, and its errors propagate
+silently into models~\cite{sculley2015,polyzotis2018}. A preparation pipeline is usually a Python
+script built on pandas~\cite{mckinney2010} and OpenCV~\cite{bradski2000}. Such a script cannot know,
+until it runs, whether the column it normalizes holds numbers, whether a folder contains a grayscale
+image among color ones, or whether a filter will keep any row. When an assumption is wrong, the
+script raises an exception after processing part of the data or, worse, finishes and writes a
+wrong dataset.
+
+Batch preparation has a property most program analyses leave unused: \emph{the inputs exist when
+the pipeline is compiled}. \PL, a small language and compiler for table and image preprocessing,
+makes the data a compile-time input, as F\# type providers do for types~\cite{petricek2016}. Its
+analysis reads every CSV cell, or only a Parquet footer or the image headers, and follows the types,
+missing values, value ranges and image properties through the pipeline. Contracts the state decides
+are proven or reported as violated, with the offending row, before any data is processed; the
+optimizer deletes the checks of proven contracts and the operations the state shows to be useless.
+
+That raises the question this paper answers. A pipeline compiled and proven for this month's file
+runs again next month, on a file the proofs were not made for. Recompiling every batch is possible,
+but it gives up three things: the compiled program as a fixed, reviewed and tested artifact whose
+manifest records the proofs it relies on; the signal that the data has drifted away from what the
+program was optimized for, since a fresh compilation silently produces a different program; and any
+static guarantee between the stages of a pipeline, since every stage would change with every batch.
+A fingerprint of the compiled file keeps all three but refuses every new batch.
+Data-validation tools~\cite{breck2019,schelter2018,bantilan2020,gx} infer expectations from the data
+rather than from the program: on our real monthly data, the suites they infer refuse most new
+months, and the one that leaves numeric ranges out admits months on which the optimized program
+does not do what a fresh compilation does (Section~\ref{sec:eval}). What is missing is the program's side of the question:
+\emph{which facts of the compile-time data does the compiled program depend on, and what can it do
+for a batch that lacks one?}
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item \textbf{Data-aware compilation} for tables, dates, derived columns and images
+(Section~\ref{sec:lang}): one abstract state, computed from the data or from metadata only, used for
+type checking, for hybrid checking of value contracts~\cite{flanagan2006}, and for optimization.
+\item \textbf{Data certificates} (Section~\ref{sec:cert}): by analysing the program again under
+counterfactually weakened input facts, the compiler finds a set of input facts that its proofs
+and removals depend on (1-minimal without derived columns), over every column of a file, the dates
+of a column, and boxes of image shapes, using the forward analysis as a black box.
+\item \textbf{Selective deoptimization} (Section~\ref{sec:deopt}): the optimizer removes
+instructions \emph{speculatively}; the compiler derives an admission certificate (the facts no
+run-time code can stand in for) and an item certificate for every removal. On a new batch the
+generated program re-enables exactly the removals whose item certificates the batch breaks. We
+prove that this computes exactly what the source program computes on every admitted batch, and
+mechanize the proof in Lean~4~\cite{lean4}: for any monotone, sound analysis, and end to end, with the
+analysis itself, for a core of \PL.
+\item \textbf{Composition} (Section~\ref{sec:compose}): every compiled stage publishes a guarantee
+for each table it writes. An assume-guarantee check against the next stage's certificates shows
+which of its checks can never fire, and synthesizes the contract a producer must meet so that none
+of its consumers ever refuses or deoptimizes.
+\item \textbf{Private compilation} (Section~\ref{sec:private}): an analyst can compile against data
+they may not see. We prove (mechanized for the core) that, for programs without derived columns or
+contracts that read values, the analysis depends on the data only through which cells, cut at the
+program's numbers, are occupied. No differentially private release can certify the emptiness facts a
+data-aware compiler optimizes with, so optimizing from released facts needs run-time guards, which
+selective deoptimization provides; the same guards keep every run exact when the release bounds each
+person's contribution. The data owner
+releases one Laplace histogram per column over those cells; everything the compiler writes is $\varepsilon$-differentially private for a
+declared schema, and with probability $1-\beta$ every ``likely violated'' warning is true and every
+released fact is false by few rows. At equal budget these program-chosen cells keep more of the normal
+compilation's removals than fixed bins, report broken contracts more often at a small budget, and give a
+program where
+synthetic data compiled normally reports contracts as violated that the data satisfies
+(Section~\ref{sec:rq-private}).
+\item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
+monthly batches of three public datasets, scored against fresh compilations and against
+pandera~\cite{bantilan2020}, Great Expectations~\cite{gx} and TFDV~\cite{breck2019}; \CorpusBothLifted{}
+held-out pandas scripts for two Kaggle tasks, lifted into \PL by a second front end, and
+\DriftCompiled{} scripts by others run on the real months; two-stage
+pipelines; private compilations from noisy, absent and random facts; injected mistakes and
+\RbTotal{} real failures from GitHub issues; and the cost of all of it.
+\end{itemize}
+
+Each ingredient has a precedent: speculation with a fallback path in data
+compilers~\cite{spiegelberg2021,schiavio2020}, deoptimization~\cite{holzle1992,flueckiger2018},
+validity ranges of query plans~\cite{markl2004}, residual run-time checks~\cite{stulova2018},
+abductive and sufficient conditions~\cite{dillig2012,mine2014}, inferred input
+specifications~\cite{urban2020}, and data validation. What is new, to our knowledge, is to derive
+per-removal input conditions from the proofs of a data-aware compiler, to check them once per batch
+on cheap statistics, to re-enable exactly the broken removals with an exactness theorem, and to
+compose the resulting certificates across pipeline stages (Section~\ref{sec:related}).
+
+\section{Overview}\label{sec:overview}
+
+\input{figures/figure-arch}
+
+Fig.~\ref{fig:students} cleans a table of students. Compiled against a file whose marks lie in
+$[35,95]$ and whose names are all present, \PL proves the contracts on lines~2--3, finds that
+\texttt{FILL\_NULL} on line~4 and \texttt{FILTER} on line~5 change nothing, and generates a program
+without any of the four.
+
+\begin{figure}[t]
+\begin{lstlisting}
+LOAD "students.csv" AS s;
+EXPECT s.marks BETWEEN 0 AND 100;
+EXPECT s.name NOT_NULL;
+FILL_NULL s.marks WITH 0;
+FILTER s WHERE marks >= 10;
+SAVE s AS "out.csv";
+\end{lstlisting}
+\caption{A pipeline whose four statements on lines 2--5 the optimizer removes.}
+\label{fig:students}
+\end{figure}
+
+\paragraph{Certificates.} The certifier analyses the program again with weaker facts: marks may be
+missing, marks have no lower bound, and so on. A weakening is kept if the proofs survive. The
+\emph{full certificate} keeps all four removals: marks in $[10,100]$ without missing values, names
+without missing values, and the types of every column. Any batch inside it can run the optimized
+program unchanged.
+
+\paragraph{Deoptimization.} A batch with a mark of 101 is outside the full certificate. Without
+deoptimization it must be refused. With it, the compiler has also found an \emph{item certificate}
+per removal: the check on line~2 needs marks in $[0,100]$; the \texttt{FILL\_NULL} on line~4 needs
+marks without missing values; the \texttt{FILTER} on line~5 needs marks of at least 10 without
+missing values; the check on line~3 needs names. The \emph{admission certificate}, which keeps only
+what no run-time code can stand in for, requires only the column types. The generated program keeps
+the four statements behind guards, computes missing-value counts and ranges of the columns the
+guards read, and for this batch re-enables only the check on line~2:
+\begin{lstlisting}[language={},numbers=none]
+Deoptimized line 2: EXPECT s.marks BETWEEN 0 AND 100:
+  marks goes up to 101, above 100
+ContractError: line 2: s.marks has values outside 0 to 100
+\end{lstlisting}
+The run stops exactly where a fresh compilation of the batch stops (it reports the contract as
+violated). A batch with missing marks re-enables the fill and the filter, and writes what a fresh
+compilation writes; a batch with marks as text is refused, because the compiled code reads marks as
+integers. On 400 random batches, \RandFull{} fit the full certificate and \RandDeopt{} are admitted with
+deoptimization; for every one of them, a fresh compilation proves every removal the program keeps
+(Section~\ref{sec:eval}).
+
+\paragraph{Composition.} The compiled program also states what \texttt{out.csv} satisfies for every
+admitted batch: marks in $[10,100]$ without missing values (the deferred and re-enabled checks hold
+whenever the run finishes). A second stage compiled on \texttt{out.csv} needs no admission check for
+any fact that this guarantee implies, and \texttt{tools/contracts.py} names the facts it does not
+imply, with the \texttt{EXPECT} that stage~1 would need.
+
+\section{Data-Aware Compilation}\label{sec:lang}
+
+\subsection{Language}
+\PL programs are straight-line sequences of statements over tables (one CSV or Parquet file),
+table sets (a folder of them), images, image sets, and images linked to a table of labels. Table
+statements are \texttt{FILL\_NULL} (with a value, \texttt{MEAN}, \texttt{MEDIAN} or \texttt{MODE}),
+\texttt{DROP\_NULL}, \texttt{NORMALIZE}, \texttt{FILTER} (with \texttt{AND}, \texttt{OR},
+\texttt{NOT} and comparisons), \texttt{SELECT}, \texttt{DROP}, \texttt{PARSE\_DATE}, which turns a text
+column of ISO dates into \textsc{DateTime}, and \texttt{DERIVE t.c = e}, which adds or replaces a
+column computed with \texttt{+ - * /} from numeric columns and numbers, or as the \texttt{YEAR},
+\texttt{MONTH}, \texttt{DAY}, \texttt{HOUR} or \texttt{WEEKDAY} of a date; image statements are
+\texttt{RESIZE}, \texttt{GRAYSCALE}, \texttt{NORMALIZE RANGE}, \texttt{CONVERT}, \texttt{COMPRESS}
+and \texttt{REMOVE\_CORRUPT}. Selectors such as \texttt{company.*.* WHERE TYPE NUMERIC} address many
+columns, resolved against the inferred schemas. Contracts are written with \texttt{EXPECT}:
+\texttt{NUMBER}, \texttt{STRING}, \texttt{BOOLEAN}, \texttt{NOT\_NULL}, \texttt{BETWEEN},
+\texttt{UNIQUE}, \texttt{REFERENCES}, \texttt{SCHEMA\_SAME\_AS}, \texttt{CHANNELS},
+\texttt{MIN\_WIDTH}, \texttt{MIN\_HEIGHT} and \texttt{MATCH\_RATE}. Every statement begins with its
+own keyword, so the grammar is LL(1); the front end is a hand-written lexer and a recursive-descent
+parser with panic-mode recovery. The compiler generates one Python program (pandas for tables,
+OpenCV for images, one streaming pass per image save).
+
+\subsection{The abstract dataset state}\label{sec:state}
+The semantic analyzer maintains a state $\sigma$ mapping every dataset to an abstract value; a
+single forward pass in the style of abstract interpretation~\cite{cousot1977} suffices, since
+programs have no loops. For a table $T$ and column $c$, let $V_c(T)$ be the multiset of present
+values and $M_c(T)$ the number of missing ones. A column is abstracted as
+$a = \langle \tau, \nu, [l,u], \epsilon \rangle$: a type, $\nu \in \{\textit{none},
+\textit{maybe}\}$ for missing values, an interval~\cite{cousot1976}, and an exactness flag, with
+\begin{multline*}
+\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau,\;
+  \nu = \textit{none} \Rightarrow M_c(T) = 0, \\
+  \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big) \wedge {} \\
+  \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.
+\end{multline*}
+An exact column promises that both bounds occur in the data, which is what allows a compile-time
+\textsc{Violated} verdict. \texttt{LOAD} of a CSV file builds the exact state from every cell (a
+parallel scanner analyses one million rows in \CsvMillion\,s, \CsvSpeedup$\times$ faster than
+pandas reads them). An image set is abstracted as per-file shapes (width, height, channels, broken
+or not) from the PNG or JPEG header, a pixel type, a pixel range and an output format. Transfer
+functions follow the statements: \texttt{FILTER} refines intervals with its comparisons and, as in
+SQL's three-valued logic~\cite{codd1979}, makes compared columns non-missing; \texttt{FILL\_NULL}
+clears \textit{maybe} and joins the fill value; \texttt{NORMALIZE} sets $[0,1]$; \texttt{DERIVE}
+computes the interval of its value by interval arithmetic and makes it \textit{maybe} missing where an
+operand is; \texttt{RESIZE} sets every shape. \texttt{PARSE\_DATE} reads the values of its column (only
+then, so no other program pays for it): if every value is a date in one ISO layout, the column becomes
+\textsc{DateTime} with the first and last date as its interval, and otherwise the compiler names the
+first row that is not a date. A part of a date has its full range (\texttt{MONTH} in $[1,12]$) unless
+the dates fall in one year, month or day: dates from October to December give \texttt{MONTH} in
+$[10,12]$, so a later \texttt{FILTER} on the month can be proven to keep every row. A division by a
+value whose interval contains 0 is a compile error, since pandas would write infinities or missing
+values without a word. Saves check that the format can hold the pixels: \textsc{Float32} pixels cannot
+be saved as PNG, which a plain script would write as black images.
+
+\paragraph{Metadata only.} For Parquet files~\cite{parquet,melnik2010} the compiler reads only the
+footer: types from the schema, intervals from the per-row-group statistics that databases use as
+zone maps~\cite{moerkotte1998}, missing values from the null counts. Compilation then costs
+\PqSixteen\,s for one or 16 million rows; soundness rests on truthful writer statistics.
+
+\subsection{Hybrid contract checking}\label{sec:contracts}
+For a contract $\varphi$ at a point with state $\sigma$, the compiler returns \textsc{Proven} if
+every dataset in $\gamma(\sigma)$ satisfies $\varphi$ (no check is generated), \textsc{Violated} if
+none does (compilation fails, naming the first offending row), and \textsc{Deferred} otherwise (a
+run-time check is generated). This is hybrid type checking~\cite{flanagan2006} and soft
+typing~\cite{cartwright1991} applied to data. A deferred contract refines $\sigma$ afterwards,
+because execution continues only if its check passed.
+
+\begin{lemma}[Soundness of the analysis]\label{lem:sound}
+If $T$ is the content of a CSV input, or of a Parquet input with truthful statistics, then
+$T \in \gamma(\sigma_0)$; for every statement $s$, $T \in \gamma(\sigma) \Rightarrow
+\llbracket s \rrbracket(T) \in \gamma(f_s(\sigma))$; a \textsc{Proven} verdict holds for every
+$T \in \gamma(\sigma)$ and a \textsc{Violated} one for none.
+\end{lemma}
+\begin{proof}[Proof sketch]
+The initial state is computed from all cells, or from statistics that bound the values; exactness is
+claimed only when both bounds and the missing count are known. Transfer functions are case by case:
+\texttt{FILTER} keeps a subset of rows that satisfy the condition and clears $\epsilon$;
+\texttt{FILL\_NULL} adds its value exactly when values are missing. A \textsc{Violated} verdict needs
+an exact column, whose bound is a value of the data.
+\end{proof}
+
+\paragraph{Optimizations.} Analysis results are attached to a three-address IR. \emph{Check
+elimination} removes checks of proven contracts; \emph{no-effect elimination} removes a
+\texttt{FILL\_NULL} on a column without missing values, a \texttt{FILTER} that is always true, a
+\texttt{GRAYSCALE} of 1-channel images, a \texttt{RESIZE} to the size every image has;
+\emph{column pruning} loads only live columns. All of them keep the output exact; the one
+approximate rewrite (merging two resizes) runs only on request. Contracts proven by reading values
+(\texttt{UNIQUE}, \texttt{REFERENCES}, \texttt{MATCH\_RATE}) keep a check that runs only when an
+input differs from the compiled one.
+
+\section{Data Certificates}\label{sec:cert}
+
+Let $\sigma_0$ be the input state of the compiled files with every exactness flag cleared, so that it
+describes a set of files rather than one. For an input state $\iota$, let $\Pi(\iota)$ be the set of
+\emph{obligations} the analysis discharges from it: proven contracts and no-effect facts (each
+identified by its statement and target), leaving out proofs that read the values, plus the absence
+of compile errors. Order input states pointwise: $\textit{none} \sqsubseteq \textit{maybe}$,
+interval inclusion, a fixed type, and for images per-file shapes inside boxes.
+
+\begin{lemma}[Monotonicity]\label{lem:mono}
+If $\iota' \sqsubseteq \iota$, then $\Pi(\iota') \supseteq \Pi(\iota)$.
+\end{lemma}
+\begin{proof}[Proof sketch]
+Every decision is the inclusion of the state in a fixed predicate ($[l,u] \subseteq [a,b]$,
+$\nu = \textit{none}$, a comparison true on all of $[l,u]$), which a smaller state keeps. Transfer
+functions are joins and meets with constants; where a decision changes the path (a filter always
+true in $\iota'$ but not in $\iota$, a contract proven in $\iota'$ but deferred in $\iota$), the
+state of $\iota'$ is below the refined state of $\iota$ because it already satisfies the condition.
+With exactness cleared, no verdict depends on a bound occurring in the data.
+\end{proof}
+
+A \emph{certificate} for a set of obligations $O$ is an input state $\cert{O}$ with
+$O \subseteq \Pi(\cert{O})$. An input $T$ \emph{fits} it if $\alpha(T) \sqsubseteq \cert{O}$, where
+$\alpha(T)$ is $T$'s own inexact state: every certified column has the type the compiler would infer,
+no missing values where the certificate says \textit{none}, values inside the certified interval,
+and every image file inside its box.
+
+\begin{theorem}[Certificate soundness]\label{thm:cert}
+If $T$ fits $\cert{O}$, every obligation in $O$ holds for $T$.
+\end{theorem}
+\begin{proof}
+$\Pi(\alpha(T)) \supseteq \Pi(\cert{O}) \supseteq O$ by Lemma~\ref{lem:mono}; by
+Lemma~\ref{lem:sound}, each proof derived from $\alpha(T)$ holds for $T$ at its program point, and
+each removed operation does nothing there.
+\end{proof}
+
+\paragraph{Counterfactual re-analysis.} The certifier starts from $\sigma_0$ (first checking that it
+still discharges what the compiled program used; otherwise only the exact files are admitted) and
+weakens one fact at a time, running the whole analysis again: missing values are allowed; a lower
+bound becomes $-\infty$, or else the loosest program constant below it that works, first as a closed
+bound ($\geq k$) and then as an open one ($> k$); likewise upper bounds; a column the program only
+carries to its output may be absent; image boxes gain channel counts and size ranges, again up to the
+program's constants; the first and last date of a column \texttt{PARSE\_DATE} reads become open, or else
+the start or end of their year, month or day; and that the column holds dates is kept or dropped like a
+type. A weakening is kept if the criterion still holds. Without \texttt{DERIVE}, the analysis compares
+intervals only with the program's constants, so no other bound can keep more and the result is
+1-minimal (no remaining fact can be weakened on its own). A derived column compares values computed
+from its inputs (\texttt{temp - 273.15 > 0}), and a part of a date changes at calendar boundaries; there
+the result is maximal among the candidates, which include the numbers in \texttt{DERIVE}, but a bound
+between them could keep more. Either way a rejected weakening tells which obligations need the
+fact. The search uses the analysis as a black box, so it needs only a monotone forward analyzer, not
+backward operators~\cite{mine2014}. When every obligation is a conjunction of conditions on single
+facts of one column (range and not-null contracts, fills, and filters over one column are), the
+certificates that discharge it form a product of chains, one per fact, and the search finds its
+greatest element whatever the order in which facts are tried; an obligation over several columns,
+such as a filter \texttt{a > 0 OR b > 0} that is always true, can have incomparable maximal
+certificates (\texttt{a > 0}, or \texttt{b > 0}), and the order picks one. Each run reads no data: tables are replaced by their facts and
+image folders by \emph{corner images}, one per combination of the extreme sizes, channel counts and
+depths of the box. Every image decision is a universal or existential test over files of a
+conjunction of one-dimensional conditions, so a folder inside the box passes whenever its corners do.
+
+\paragraph{Every column.} The weakening runs over every column of the file, not only those the
+optimized program loads: once \texttt{EXPECT t.id NOT\_NULL} is proven and pruning drops \texttt{id},
+the certificate still requires it, and the generated program reads \texttt{id} only to check it.
+
+\section{Selective Deoptimization}\label{sec:deopt}
+
+The full certificate $\full = \cert{\Pi(\sigma_0)}$ treats every removal alike, so a batch that breaks
+the fact behind one removed check is refused, although running that check would decide the batch
+correctly. Dynamic compilers face the same choice with speculative code and resolve it by
+deoptimization~\cite{holzle1992}. \PL applies it per batch and per removal.
+
+\paragraph{Speculative removal.} The optimizer keeps every removed check and operation in the IR,
+marked speculative (with the comparisons a removed \texttt{FILTER} needs). The certifier then finds,
+one after the other and each starting from the previous result:
+\begin{enumerate}
+\item the \emph{full certificate} $\full$, for all of $\Pi(\sigma_0)$;
+\item the \emph{admission certificate} $\adm$, for the obligations no run-time code can stand in
+for: the absence of compile errors, contracts without a run-time check (types, image contracts),
+and removals that cannot be re-enabled (a check of a column pruning dropped);
+\item an \emph{item certificate} $\cert{i}$ for every speculative removal $i$, for the obligation
+$\{i\}$ and the absence of errors, starting from $\full$.
+\end{enumerate}
+An item certificate is stored as the facts it needs beyond $\adm$; one that needs none is removed for
+good. The generated program refuses a batch $T$ that does not fit $\adm$ (naming the fact and the
+obligation), computes the missing-value count, minimum and maximum of the columns item certificates
+mention (or the header facts of image folders), and runs each speculative instruction $i$ only if
+$T$ does not fit $\cert{i}$:
+\begin{lstlisting}[language=Python,numbers=none]
+if deopt("2:1:s..marks"):
+    if not df_s["marks"].dropna().between(0, 100).all():
+        raise ContractError(
+            "line 2: s.marks has values outside 0 to 100")
+\end{lstlisting}
+For the compiled file, \texttt{deopt} is false without looking at the data.
+
+\begin{theorem}[Exact selective deoptimization]\label{thm:deopt}
+Let $T$ fit $\adm$ and let $D = \{\, i \mid T \text{ does not fit } \cert{i} \,\}$. The generated
+program with the removals outside $D$ skipped and those in $D$ run computes on $T$ exactly what the
+source program computes: the same outputs, or a stop at the same check.
+\end{theorem}
+\begin{proof}
+For $i \notin D$, $\alpha(T) \sqsubseteq \cert{i}$ and $i \in \Pi(\cert{i})$, so by
+Lemma~\ref{lem:mono} $i \in \Pi(\alpha(T))$, and since $T$ fits $\adm$ no compile error occurs; by
+Lemma~\ref{lem:sound} instruction $i$ does nothing at the state the source program reaches there on
+$T$. Removing instructions that do nothing along a run does not change the run: by induction on the
+program, the state before every remaining instruction is the same. The instructions in $D$ and all
+others run as in the source program.
+\end{proof}
+
+\begin{corollary}[Agreement with a fresh compilation]
+If a fresh compilation of $T$ succeeds, its program computes the same as the source program on $T$
+(Lemma~\ref{lem:sound}), hence as the deoptimized program. If it reports a contract as violated, the
+removal of that contract's check is not in $\Pi(\alpha(T))$, so it is in $D$ or was never removed;
+the source program fails on $T$ at that check or at an earlier one, and so does the deoptimized
+program.
+\end{corollary}
+
+So a batch is refused only for facts that no run-time code stands in for. Item certificates are
+weaker than $\full$ in the directions their removal does not care about: the check on line~2 of
+Fig.~\ref{fig:students} needs no lower bound of 10 and allows missing marks.
+
+\paragraph{Mechanization.} We mechanized the theorem in Lean~4~\cite{lean4} in two layers, and a third
+file proves Theorem~\ref{thm:cells} of Section~\ref{sec:private} for the core
+(\texttt{proofs/}, \LeanLines{} lines of Lean's core language, no Mathlib; the theorems use only the axioms
+\texttt{propext} and \texttt{Quot.sound}, which gives function extensionality, and no classical choice). \texttt{Deopt.lean} proves
+Theorem~\ref{thm:deopt} for an abstract setting: a program is a list of partial state transformers; an
+analysis is any function from abstract inputs to discharged obligations that is monotone and whose
+no-effect proofs are sound for admitted inputs; item certificates are abstract inputs on which the
+analysis discharges their removal; and the run-time check is sound for $\sqsubseteq$. It also proves
+that the greedy search ends only on certificates the re-analysis accepted and that it only weakens.
+\texttt{Core.lean} instantiates the setting with the analysis of a core of \PL: numeric columns
+abstracted by $\nu$ and an interval, \texttt{FILL\_NULL}, \texttt{FILTER} with $\geq$ and $\leq$,
+\texttt{DROP\_NULL}, \texttt{DERIVE} of the sum of two columns (interval addition), and \texttt{BETWEEN}
+and \texttt{NOT\_NULL} contracts. For this core it proves the
+transfer functions sound and every \textsc{Proven} verdict and no-effect proof valid
+(Lemma~\ref{lem:sound}), monotonicity (Lemma~\ref{lem:mono}), the run-time check of the generated code
+(missing values and bounds of the certified columns) sound and complete for a certificate, and from
+these Theorem~\ref{thm:deopt} and the composition theorem of Section~\ref{sec:compose} end to end. For
+the rest of the language (types, text, normalization, other arithmetic, dates, images, contracts
+proven by reading values) the
+two lemmas remain assumptions, which we test with randomized property tests that compare
+deoptimization decisions with fresh compilations (Section~\ref{sec:soundtest}).
+
+\section{Composing Pipeline Stages}\label{sec:compose}
+
+Pipelines have stages: a cleaning stage writes a table that a feature stage reads. Each compiled
+stage records, for every table it saves, the state the analysis computes at the \texttt{SAVE} when
+its inputs are given the admission certificate: the stage's \emph{guarantee} $G$. Because selective
+deoptimization keeps the source program's semantics (Theorem~\ref{thm:deopt}) and the analysis is
+monotone, every file the stage writes for an admitted batch has its facts inside $G$; facts of
+deferred contracts and of re-enabled checks hold because the run passed them.
+
+\begin{theorem}[Composition]\label{thm:compose}
+Let stage~2 read the table written by stage~1. If $G \sqsubseteq \cert{i}$ for a removal $i$ of
+stage~2, stage~2 never deoptimizes $i$ for an output of stage~1 on an admitted batch; if
+$G \sqsubseteq \adm_2$ on value facts, stage~2 never refuses such an output for its values.
+\end{theorem}
+
+The theorem is transitivity of $\sqsubseteq$ once the facts survive the file between the stages;
+values and missing values do, while a type can change in a CSV round trip (a column whose values are
+all missing reads back as text), so composition covers value facts and types are still checked on
+admission, from metadata. \texttt{tools/contracts.py} reads the contract file every compilation
+writes (\texttt{preplang\_contract.json}) and reports, for each fact stage~2 relies on, whether $G$
+implies it; for each fact it does not, it writes the \texttt{EXPECT} statement that stage~1 would
+need before its \texttt{SAVE}. Given several consumers of one table, it computes the conjunction of
+their requirements: a \emph{producer contract}, synthesized from the consumers' code, under which no
+consumer ever refuses or deoptimizes. Assume-guarantee reasoning is standard for component
+contracts~\cite{benveniste2018}, and schema registries check the containment of writer and reader
+schemas~\cite{avro}; here the contracts on both sides are derived from the stages' proofs.
+
+\section{Compiling Against Data You Cannot See}\label{sec:private}
+
+A data-aware compiler leaks its data through what it writes. The generated program embeds the
+checksum of the compiled file, which confirms a guessed file; every removal states a fact about it
+(no value of \texttt{age} is missing, no mark is below~10); a violated contract names a row; the
+contract file records bounds. Yet programs travel further than data: in validation
+servers~\cite{barrientos2018} and platforms such as OpenSAFELY~\cite{williamson2020}, an analyst writes
+code for confidential records against dummy data, and the data owner runs it on the real ones. The
+analyst needs what a data-aware compiler gives (which fills are needed, which contracts the data
+breaks, which filters do nothing) and may not see the data that produces it.
+
+\paragraph{Guards are necessary.} The facts such a compiler needs are \emph{emptiness} facts: no value
+is missing, no value is below $k$. No differentially private release can certify one. If a mechanism
+$M$ is $\varepsilon$-differentially private and a table $D'$ differs from $D$ in $k$ rows that break
+the fact, then $\Pr[M(D') = o] \ge e^{-k\varepsilon}\Pr[M(D) = o]$ for every output $o$: whatever $M$
+says on a clean table it also says, with comparable probability, on a table that breaks the fact in a
+few rows. One-sided noise keeps differentially private query processing exact when it decides how
+many padding tuples to drop~\cite{bater2018,wang2024special}, up to the failure probability $\delta$ of
+approximate differential privacy; it cannot make an \emph{unguarded} removal safe, because a removal
+needs the emptiness fact itself. A program optimized from released emptiness facts must check them on
+the data it runs on. Selective deoptimization does exactly that. Theorem~\ref{thm:deopt} has no
+hypothesis about the facts the compiler starts from (in Lean, \texttt{deopt\_correct} quantifies over
+arbitrary removals and certificates): the facts decide which instructions are removed speculatively and
+which certificates guard them, and the generated program checks the certificates on the batch. A
+wrong fact costs a deoptimization, never a wrong result.
+
+\paragraph{What the analysis needs.} Which questions should the owner answer? Exactly those the
+analysis asks.
+
+Let $K$ be the numbers a program compares columns with, together with~0, and let
+$k_1 < \dots < k_m$ be its elements. They cut a numeric column into the $2m+2$ \emph{cells}
+$(-\infty,k_1)$, $\{k_1\}$, $(k_1,k_2)$, \ldots, $\{k_m\}$, $(k_m,\infty)$ and \emph{missing}; any other
+column has two cells, \emph{value} and \emph{missing}. A table \emph{occupies} a cell of a column if some
+row's value lies in it.
+
+\begin{theorem}[Cells]\label{thm:cells}
+Let a program over tables with a declared schema have no \texttt{DERIVE} and no \texttt{PARSE\_DATE}, and
+no contract that reads values (\texttt{UNIQUE}, \texttt{REFERENCES}, \texttt{MATCH\_RATE}). Two tables
+that occupy the same cells of every column receive the same verdicts and the same removals from the
+analysis.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Every decision compares a bound with a number of $K$, and every transfer function raises, lowers or
+joins a bound with a number, which keeps two states that agree on all comparisons with $K$ in agreement:
+$\textit{lo}\,(\textit{raise}(l, k_0)) \ge k$ holds exactly when $l \ge k$ or $k_0 \ge k$, and likewise for
+the other functions. For a table's own facts, ``the minimum is at least $k$'' is the question ``some value
+exists and none is below $k$'', and ``the minimum is above $k$'', which a strict comparison or \texttt{==}
+asks, adds ``none is $k$''. The types are declared, so they do not depend on the values.
+\end{proof}
+
+The hypotheses are needed. Ids $\{1,2\}$ and $\{1,1\}$ occupy the same cells, but only the first satisfies
+\texttt{UNIQUE}; and the ages $\{10,29\}$ and $\{10,30\}$ agree on ``a value below 30'' and ``a value above
+30'' but not on the point cell $\{30\}$, which decides whether \texttt{FILTER s WHERE age < 30} removes a
+row. We mechanized the theorem for the core in Lean (\texttt{cells\_decide} in \texttt{proofs/Cells.lean},
+\LeanCellsLines{} lines, axioms \texttt{propext} and \texttt{Quot.sound}); the core has only $\ge$ and $\le$,
+for which ``a value below $k$'' and ``a value above $k$'' suffice. For the compiler, a randomized test
+compiles one program (two contracts, a fill, a filter with a strict comparison, a \texttt{DROP\_NULL}) for
+\PrivCellPairs{} pairs of different integer tables that occupy the same cells (other values, other row
+counts, other orders) and finds identical verdicts, removals, speculative instructions and certificates
+for every pair. Two consequences. First, the occupied cells are \emph{all} the analysis can use: released
+exactly, they give a private compilation the normal compilation's removals (RQ8 confirms this on every
+workload), so a differentially private release of them loses nothing but its noise. Second, the
+\emph{decisions} of a normal compilation of such a program (its verdicts, removals and speculative
+instructions) reveal at most $2|K|+2$ bits per numeric column, which cells are occupied. The rest of what
+a normal compilation writes reveals more: the checksum, the inferred types, the messages, which quote
+values, and the bounds recorded in the contract file and the output guarantees. A private compilation
+drops these or computes them from the release.
+
+\paragraph{What is released.} The data owner runs the compiler with \texttt{--queries}, which writes
+the schema of each input (names and types of its columns) and the numbers written in the program. The
+analysis compares bounds only with these numbers (Section~\ref{sec:cert}): for a program without
+\texttt{DERIVE}, the numbers $k_1 < \dots < k_m$ (and~0) cut a column into the cells
+$(-\infty,k_1)$, $\{k_1\}$, $(k_1,k_2)$, \ldots, $\{k_m\}$, $(k_m,\infty)$ and \emph{missing}, and every
+decision depends only on which cells hold some row. \texttt{tools/release\_facts.py} releases one
+Laplace histogram over these cells per column~\cite{dwork2014}: a row lies in exactly one cell of a
+column, so the histogram has sensitivity~1. Only columns the program names are asked about (all if it
+uses \texttt{*} or a \texttt{DROP\_NULL} of whole rows), and of those only missing values unless they
+are numeric. Each table gets the whole budget $\varepsilon$, divided equally between its columns
+asked about. A cell counts as occupied if its noisy count is above $t + \frac12$ with
+$t = \ln(C/\beta)/\varepsilon_c$, where $C$ is the number of cells released and $\varepsilon_c$ the
+budget of the cell's column. A column's facts are read off its occupied cells: missing values if the missing
+cell is occupied; bounds from the lowest and highest occupied value cells; and, as evidence, that values
+below the upper edge of the lowest occupied cell (or above the lower edge of the highest) exist.
+
+\begin{theorem}[Privacy]\label{thm:private}
+For a schema fixed independently of the data, the facts file is $\varepsilon$-differentially private for
+adding or removing one row of any input table, and so is everything the compiler writes for the
+analyst: the generated program, the certificates, the contract file, the manifest and every message.
+\end{theorem}
+\begin{proof}
+A Laplace histogram with noise $\mathrm{Lap}(1/\varepsilon_c)$ per cell and sensitivity~1 is
+$\varepsilon_c$-differentially private. A row is in every column of its table, so those columns compose
+sequentially, with $\sum \varepsilon_c = \varepsilon$ per table; a neighbouring dataset differs in one
+row of one table, so the tables compose in parallel. Which columns and cells are asked about depends
+only on the program and the schema, never on an answer, so the composition is non-adaptive. The occupied cells, the facts, the evidence and the compiler's outputs are computed from
+the noisy histograms, the program and the schema alone; the compiler never opens an input file
+(\texttt{--facts} fails rather than read a table without released facts).
+\end{proof}
+
+\paragraph{People, not rows.} A person with $g$ rows is protected only at $g\varepsilon$ by a release that
+protects rows. With \texttt{--unit} the owner names the column that identifies a person in every table;
+at most $m$ rows of each unit are counted (the first $m$ in file order) and rows without a unit are not
+counted, so adding or removing a whole unit changes each count by at most $m$. The noise is
+$\mathrm{Lap}(m/\varepsilon_c)$ and the threshold $t = m\ln(C/\beta)/\varepsilon_c$, and since a unit may have
+rows in every table, all columns of all tables share $\varepsilon$; the release is then
+$\varepsilon$-differentially private for adding or removing a unit. Contribution bounding is standard
+in differentially private systems~\cite{wilson2020}, where the rows it drops bias every answer. Here
+the bias never costs exactness: a fact that the truncation makes false is one of the facts the generated
+program checks on the real data, and a run deoptimizes it. It does cost what the analyst learns, as noise
+does: fewer removals are justified and fewer warnings are given (Section~\ref{sec:rq-private}).
+
+The hypothesis on the schema is not a formality. A type the compiler \emph{infers} is a fact about the
+values: a CSV column is \textsc{Integer} until one cell holds 3.5, and pandas writes an integer column
+with a missing value to Parquet as a float column. \texttt{--queries} writes the inferred types as the
+owner's draft; the owner must publish the schema as declared (a data dictionary), not as found. The seed
+of the noise is never written to the facts file: whoever knows it can recompute the noise.
+
+\begin{theorem}[Exactness for any facts]\label{thm:anyfacts}
+For any facts file, true, noisy or false, the generated program computes on every batch it admits
+exactly what the source program computes.
+\end{theorem}
+\begin{proof}
+Without a checksum, no batch is treated as the compiled one: every batch, including the file the
+facts describe, is checked against the admission and item certificates. Theorem~\ref{thm:deopt}
+applies unchanged.
+\end{proof}
+
+\paragraph{What the analyst sees of a run.} On a validation server the analyst learns at least
+whether a job finished. If a released fact could make the generated program refuse a batch, an
+analyst who chooses the program's numbers could learn a bit about one row from each submission. So
+no released fact enters the admission certificate: in a private compilation a removed check keeps its
+column loaded (a normal compilation prunes the column and makes the check's proof an admission fact),
+so every removal can run again. The admission facts that remain are the declared types and the
+absence of compile errors.
+
+\begin{corollary}[Outcomes do not depend on the facts]\label{cor:outcome}
+Let the program not divide in \texttt{DERIVE}. For a declared schema, the programs generated from any two
+facts files refuse the same batches, those that break a declared type, and on every other batch both
+compute what the source program computes. Of a run, the released facts change only which removed
+instructions run again, that is, how long it takes.
+\end{corollary}
+\begin{proof}
+The admission certificate holds the declared types, the facts that keep the program free of compile
+errors, and the proofs no run-time code stands in for. In a private compilation nothing is exact, so no
+contract is reported violated; contracts on types and schemas are decided by the declared schema; and
+\texttt{PARSE\_DATE}, images and folders of tables are refused whatever the facts. The one compile error
+left that depends on bounds is a division in \texttt{DERIVE} by an expression whose range contains~0,
+which the hypothesis excludes. A removed check keeps its column loaded, so every removal can run again
+and no proof needs admission. The admission certificate is therefore the same for every facts file, and every other fact
+guards a removal that runs again when broken (Theorem~\ref{thm:anyfacts}).
+\end{proof}
+
+\begin{lemma}[What the analyst learns]\label{lem:utility}
+With probability at least $1-\beta$ over the noise, for every released cell: (i) if it is occupied, it
+holds at least one row; and (ii) if it holds at least $2t + 1$ rows, it is occupied. Hence every
+``likely violated'' warning names a contract the data breaks; for a program without \texttt{DERIVE}
+whose columns each have an occupied value cell, every released bound is at or inside the tightest true
+bound at the program's numbers (an occupied cell holds a row), so the private compilation removes at
+least what a normal compilation of
+the same file removes (except checks of \texttt{UNIQUE} and \texttt{REFERENCES}, which read values); and
+a released fact is false only if fewer than $c(2t + 1)$ rows break it, where $c$ is the number of cells
+it covers ($c = 1$ for ``no missing values'').
+\end{lemma}
+\begin{proof}
+$\Pr[|\mathrm{Lap}(1/\varepsilon_c)| > t] = e^{-\varepsilon_c t} = \beta/C$, so by a union bound every
+noise is at most $t$ with probability $1-\beta$. Then a noisy count above $t + \frac12$ has a true count
+above $\frac12$, and a true count of at least $2t+1$ gives a noisy count of at least $t+1$. A column with
+no occupied value cell gets no bounds at all, which is why the hypothesis is needed. The removals follow
+from Lemma~\ref{lem:mono}, because decisions compare bounds only with the program's numbers.
+\end{proof}
+
+The bound in the last part is what separates the release from the \emph{optimistic} facts ``nothing is
+missing'', which need no data and also give every removal of a normal compilation. False facts cost
+deoptimizations, and Theorem~\ref{thm:anyfacts} keeps every admitted run exact. In a normal
+compilation a false admission fact (the proven check of a column the optimized program does not load)
+would instead refuse batches; a private compilation keeps such checks (Corollary~\ref{cor:outcome}). The
+mechanized core does not cover admission (its admission predicate is true), types or compile errors;
+those parts are tested. Because the release depends only on which cells are occupied, one release can serve
+several programs over the same files: the cells of their numbers together are released once, and each
+program reads its facts off them. A private compilation cannot report a contract as violated, since
+nothing it knows is exact and a row would name a person; a contract the released evidence shows broken
+gets a warning (``\texttt{EXPECT s.marks BETWEEN 0 AND 100} is likely violated: the released facts
+report values of \texttt{s.marks} above 100''), and the check runs on the real data. Contracts that read
+the values (\texttt{UNIQUE}, \texttt{REFERENCES}) are always checked at run time. A fact about a few rows,
+such as two missing \texttt{Embarked} values among 891 passengers, is hidden by design; the run-time check
+covers it. Images, folders of tables and \texttt{PARSE\_DATE}, which read values or file lists, are not
+supported in a private compilation. The guarantee covers what the compiler writes: what the owner's runs
+print (a deoptimization names a row) and how long they take stay with the owner, and releasing them would
+need a mechanism of its own.
+
+\section{Lifting pandas Scripts}\label{sec:lift}
+
+Certificates are most useful for code that already exists. A second front end parses a pandas script
+with Python's own parser, follows every DataFrame read with \texttt{pd.read\_csv(path)}, and
+translates, in order, the statements that change a followed DataFrame in a way \PL expresses:
+\texttt{fillna} with a constant or the column's \texttt{mean()}, \texttt{median()} or
+\texttt{mode()[0]}; \texttt{dropna}; \texttt{drop} of columns; column selection; boolean-mask
+filters; min--max and z-score normalization written as arithmetic; \texttt{assert} with
+\texttt{between}, \texttt{notna} or \texttt{is\_unique}; and \texttt{to\_csv}. A second version,
+written after the corpora of Section~\ref{sec:rq-corpus} were evaluated, also translates
+\texttt{pd.to\_datetime} of a column into \texttt{PARSE\_DATE} (with \texttt{errors="coerce"}, too:
+on the inputs \PL admits, both read the same dates), \texttt{.dt.hour} and the other date parts, and
+arithmetic over columns and numbers into \texttt{DERIVE}. Statements that only read a DataFrame are
+skipped. Lifting stops at the first statement that changes a DataFrame in another way (\texttt{map},
+\texttt{get\_dummies}, \texttt{set\_index}): the result is the longest prefix of the script's cleaning
+that \PL expresses exactly. The lifted statements, run on their own, are the ground truth for the
+compiled program in Section~\ref{sec:eval}.
+
+\section{Implementation}
+The compiler is about \SrcLines{} lines of C++17 without external libraries: lexer, parser, schema
+provider (parallel CSV scanner, a Thrift compact-protocol reader for Parquet footers, PNG and JPEG
+header readers), semantic analyzer, IR, pass manager, certifier, and an execution planner over the
+pandas and OpenCV code generators. Every compilation writes the generated program, a manifest, and the
+contract file. The front end for pandas, the composition tool and the evaluation harness are Python;
+the unit tests (\TestCount{} checks in \TestSuites{} suites) include the randomized soundness tests.
+
+\input{sections/evaluation}
+
+\input{sections/related}
+
+\section{Conclusion}
+
+A data-aware compiler proves facts about one batch; data certificates say which of them the compiled
+program depends on, selective deoptimization keeps the compiled program usable for batches that break
+some of them, and composition carries guarantees from one stage to the next. On real monthly data,
+the compiled program handles \RealDeoptCorrectPct\% of new months exactly as a fresh compilation
+would, without recompiling, where validators set up on the same data refuse most months or let wrong
+results through; on real scripts, including pipelines written by others and run on the real months, it reproduces
+the scripts' results on every batch it runs. Because deoptimization never relies on the compile-time
+facts being true, the compiler can also work from facts it may not trust: compiled from differentially
+private answers, or from random ones, every run stayed exact, and an analyst who may not see the data
+still learns which contracts it breaks once enough rows break them. The
+refusals that remain come from facts no run-time code can replace, such as a publisher changing a
+column's type, and point to the next step: certificates that let generated code adapt to such
+changes, joins in the language, and the mechanized soundness proof extended from the core
+to the whole analysis.
+
+\paragraph{Artifact.} The compiler, the Lean development, the pandas front end, the composition tool,
+the evaluation scripts with their pinned baseline environments, and the raw results are kept in one
+repository; \texttt{eval/\allowbreak paper\_numbers.py} regenerates every number, table and data figure of this
+paper from the results.

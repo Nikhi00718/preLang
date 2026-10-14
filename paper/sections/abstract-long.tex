@@ -1,0 +1,32 @@
+% The long abstract, used by the ACM version (preplang.tex).
+Batch data-preparation pipelines are compiled once and run again on every new batch: next
+month's file has the same layout and different values. A compiler that reads the input data at
+compile time can prove a pipeline's contracts and delete the checks and operations the data makes
+useless, but its proofs are about one file. We present \PL, a compiler for table and image
+preprocessing pipelines that computes an abstract dataset state from the data, or from its
+metadata alone, decides every contract as proven, violated or deferred, and optimizes, together
+with three ways to carry its proofs to new batches. \emph{Data certificates}, found by re-analysing
+the program under counterfactually weakened input facts, are sets of input facts that the proofs
+and removals depend on, 1-minimal for programs without derived columns. \emph{Selective deoptimization} keeps every removed check and
+operation in the generated program with its own item certificate: a new batch runs the optimized
+program, and only the removals whose certificates it breaks run again; a batch is refused only for
+facts no run-time code can stand in for, such as a column's type. We prove this exact for every
+admitted batch and mechanize the proof in Lean~4, end to end for a core of the language. \emph{Composition} lets a compiled stage
+publish a guarantee for each table it writes; checking it against the next stage's certificates
+shows which downstream checks can never fire and writes the upstream contracts that would close
+the gap. On \RealRuns{} real monthly batches of three public datasets, selective deoptimization
+handles \RealDeoptCorrect{} batches exactly as a fresh compilation would and none
+unsoundly, where Great Expectations and pandera, set up on the same data, refuse
+\RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs, and TFDV,
+which checks no numeric ranges, admits months on which the optimized program does not do what a fresh
+compilation does. Pandas scripts from GitHub, lifted into \PL, reproduce their own
+results on new batches: \CorpusBothSame{} of \CorpusBothRuns{} runs of \CorpusBothLifted{} held-out
+scripts for two Kaggle tasks, and all \DriftRuns{} monthly runs of \DriftCompiled{} scripts written by
+others for the traffic and bike data; none differ. Because selective deoptimization never relies on
+the compile-time facts being true, \PL can also compile against data the analyst may not see. We prove,
+in Lean for a core, that for programs without derived columns or contracts that read values, what the
+analysis decides depends on the data only through which cells, cut at the program's own numbers, hold a
+row; the data owner releases a differentially private histogram over
+exactly these cells, per row or per person, and everything the compiler writes is
+$\varepsilon$-differentially private. \PrivRuns{} runs of \PrivCompilations{} private compilations, from noisy,
+absent or random facts, were all exact.

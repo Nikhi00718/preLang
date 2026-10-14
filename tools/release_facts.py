@@ -179,8 +179,10 @@ def release(queries_files, epsilon, beta, seed, unit=None, max_rows=1):
             if unit:
                 # At most max_rows rows of each unit (person): the facts describe the truncated table,
                 # which the run-time checks make harmless, and one unit changes each count by at most
-                # max_rows. Rows without a unit count as one unit.
-                frames[file] = frames[file][frames[file].groupby(unit, dropna=False).cumcount() < max_rows]
+                # max_rows. Rows without a unit are not counted: merged into one unit, a person without
+                # one could change counts by more than max_rows.
+                frame = frames[file][frames[file][unit].notna()]
+                frames[file] = frame[frame.groupby(unit).cumcount() < max_rows]
         histograms[(file, column)] = counts(frames[file][column], kinds[(file, column)], types[(file, column)],
                                             asked[(file, column)], sorted(anchors[(file, column)]))
     # A neighbouring dataset differs in one row of one table: the tables compose in parallel, the

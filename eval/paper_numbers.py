@@ -95,6 +95,7 @@ def main():
     soundness_tests(numbers)
 
     numbers["TestCount"] = test_count()
+    numbers["TestSuites"] = len(list((ROOT / "build" / "Release").glob("test_*.exe")))
     lean = {name: len((ROOT / "proofs" / f"{name}.lean").read_text(encoding="utf-8").splitlines())
             for name in ("Deopt", "Core", "Cells")}
     numbers.update(LeanLines=sum(lean.values()), LeanDeoptLines=lean["Deopt"], LeanCoreLines=lean["Core"],
@@ -127,6 +128,18 @@ def main():
     lines += [f"\\newcommand{{\\{name}}}{{{value}}}" for name, value in numbers.items()]
     (ROOT / "paper" / "generated" / "numbers.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote paper/generated/numbers.tex ({len(numbers)} numbers)")
+
+
+def write_generated(name, lines):
+    """Writes a generated table or figure. Its tabular or picture shrinks to the line width if it is
+    wider: it fits the ACM two-column page, and the single-column SCP page is narrower."""
+    text = "\n".join(lines) + "\n"
+    for env in ("tabular", "tikzpicture"):
+        begin, end = "\\begin{" + env + "}", "\\end{" + env + "}"
+        if begin in text:
+            text = text.replace(begin, "\\begin{adjustbox}{max width=\\linewidth}\n" + begin, 1)
+            text = text.replace(end, end + "\n\\end{adjustbox}", 1)
+    (ROOT / "paper" / "generated" / name).write_text(text, encoding="utf-8")
 
 
 def test_count():
@@ -196,7 +209,7 @@ def policy_table(rows, groups, caption, label, path):
         lines.append((rf"\textbf{{{title}}}" if bold else title) + " & " +
                      " & ".join(rf"\textbf{{{c}}}" if bold else c for c in cells) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
-    (ROOT / "paper" / "generated" / path).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated(path, lines)
 
 
 def certificates(rows, numbers):
@@ -302,7 +315,7 @@ def timeline(rows):
               r"compilation stops too (temperatures of 0\,K in 2014, taxi fares above \$1,000). The grey run in the "
               r"taxi rows begins in February 2023, when the publisher changed two column types; TFDV admits those "
               r"months, and the optimized program writes them with the old types.}", r"\label{fig:timeline}", r"\end{figure*}"]
-    (ROOT / "paper" / "generated" / "figure-timeline.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated("figure-timeline.tex", lines)
 
 
 def corpus_numbers(records, prefix, numbers, held_out_from):
@@ -393,7 +406,7 @@ def drift_corpora(numbers):
     for label, key in rows:
         lines.append(label + " & " + " & ".join(f"{n[key]:,}" for _, _, _, n in found) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
-    (ROOT / "paper" / "generated" / "drifttable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated("drifttable.tex", lines)
 
 
 def corpora(numbers):
@@ -436,7 +449,7 @@ def corpora(numbers):
                        (r"\quad ran with removals re-enabled", "Deopted")):
         lines.append(label + " & " + " & ".join(str(numbers[prefix + key]) for _, prefix in rows) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
-    (ROOT / "paper" / "generated" / "corpustable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated("corpustable.tex", lines)
 
 
 def composition(results, numbers):
@@ -464,7 +477,7 @@ def composition(results, numbers):
         lines.append(f"{r['workload']} & {'strengthened' if r['strengthened'] else 'as written'} & {facts} & {held} & "
                      f"{len(through)} & {sum(bool(m['stage2_deopts']) for m in through)} & {broken} \\\\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
-    (ROOT / "paper" / "generated" / "comptable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated("comptable.tex", lines)
     numbers.update(ComposeMonths=total_months, ComposeBroken=total_broken)
 
 
@@ -626,7 +639,7 @@ def private(results, diagnostics, numbers):
         lines.append(f"{label} & " + " & ".join(cells) + f" & {len(chosen):,} & {len(compiled):,} & {deopt} & "
                      f"{len(all_runs):,} & {wrong} \\\\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
-    (ROOT / "paper" / "generated" / "privatetable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated("privatetable.tex", lines)
 
     # Reports on the 1,000,000-row file.
     numbers["PrivDiagRows"] = "1{,}000{,}000"
@@ -672,7 +685,7 @@ def private(results, diagnostics, numbers):
                 cells.append(share + (f" ({false})" if false else ""))
             lines.append(f"{kind.replace('_', ' ')} & {m:,} & " + " & ".join(cells) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
-    (ROOT / "paper" / "generated" / "privatediagtable.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_generated("privatediagtable.tex", lines)
 
     test = ROOT / "build" / "Release" / "test_private.exe"
     if test.exists():

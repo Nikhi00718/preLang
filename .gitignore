@@ -40,3 +40,7 @@ proofs/.lake/
 
 # pdflatex output; the committed copy is paper/PrepLang_Paper.pdf
 paper/preplang.pdf
+paper/preplang-scp.pdf
+paper/*.spl
+# written by paper/make_scp_submission.py
+paper/scp-submission/

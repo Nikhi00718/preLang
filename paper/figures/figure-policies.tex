@@ -1,5 +1,6 @@
 \begin{figure}[t]
 \centering
+\begin{adjustbox}{max width=\linewidth}
 \begin{tikzpicture}
 \begin{axis}[
     xbar stacked, bar width=7pt, width=\columnwidth, height=6.2cm,
@@ -27,6 +28,7 @@
 \legend{correct, refused needlessly, wrong}
 \end{axis}
 \end{tikzpicture}
+\end{adjustbox}
 \caption{RQ4: \RealRuns{} real monthly batches, by admission policy. \emph{Correct}: ran and wrote
 the fresh compilation's files, or stopped where it stops; \emph{refused needlessly}: a recompilation
 was needed although the fresh compilation runs; \emph{wrong}: other files, or a run where the fresh

@@ -1,6 +1,7 @@
 \begin{figure*}[t]
 \centering
 \definecolor{deopt}{RGB}{217,95,2}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tikzpicture}[font=\scriptsize]
 \node[anchor=west, inner sep=0pt, font=\scriptsize\bfseries] at (0,0.000) {Traffic};
 \node[anchor=west, inner sep=0pt, text=black!60] at (1.980,0.000) {2013};
@@ -389,6 +390,7 @@
 \path[fill=black!65, draw=black!65] (0,0) rectangle ++(0.180,0.215); \& \node[anchor=west, inner sep=1pt] {ran, wrote the fresh compilation's files}; \& \path[fill=deopt, draw=deopt] (0,0) rectangle ++(0.180,0.215); \& \node[anchor=west, inner sep=1pt] {ran with removals re-enabled, as fresh}; \& \path[fill=white, draw=black, line width=0.5pt] (0,0) rectangle ++(0.180,0.215); \& \node[anchor=west, inner sep=1pt] {stopped where the fresh compilation stops}; \& \path[fill=black!15, draw=black!15] (0,0) rectangle ++(0.180,0.215); \& \node[anchor=west, inner sep=1pt] {refused although fresh runs}; \& \path[pattern=north east lines, pattern color=black, draw=black] (0,0) rectangle ++(0.180,0.215); \& \node[anchor=west, inner sep=1pt] {wrong output}; \\
 };
 \end{tikzpicture}
+\end{adjustbox}
 \caption{RQ4, compiled on the first month: every later month on a calendar axis (the traffic data has a gap), for the best validator, the full certificate and selective deoptimization. White: a fresh compilation stops too (temperatures of 0\,K in 2014, taxi fares above \$1,000). The grey run in the taxi rows begins in February 2023, when the publisher changed two column types; TFDV admits those months, and the optimized program writes them with the old types.}
 \label{fig:timeline}
 \end{figure*}

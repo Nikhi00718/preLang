@@ -1,0 +1,105 @@
+% The paper in the format of Science of Computer Programming (Elsevier, elsarticle class).
+% The text is shared with the ACM version (preplang.tex): sections/body.tex and sections/*.tex.
+% Build from this folder: py -3 ../eval/paper_numbers.py, then pdflatex preplang-scp.tex three times.
+\documentclass[preprint,12pt]{elsarticle}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{stmaryrd}
+\usepackage{array}
+\usepackage{adjustbox}
+\usepackage{xspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[hidelinks]{hyperref}
+\setlength{\emergencystretch}{1.5em}
+
+% elsarticle ends a paragraph heading with a period; the shared text already has one.
+\makeatletter
+\def\els@aparagraph[#1]#2{\elsparagraph[#1]{#2}}
+\def\els@bparagraph#1{\elsparagraph*{#1}}
+\makeatother
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+% Every measured number comes from eval/results/ through eval/paper_numbers.py.
+\input{generated/numbers}
+
+\lstdefinelanguage{PrepLang}{
+  morekeywords={LOAD,LOAD_TABLES,LOAD_IMAGE,LOAD_IMAGES,SAVE,SAVE_TABLES,SAVE_IMAGE,SAVE_IMAGES,
+    AS,TO,WITH,ON,USING,WHERE,TYPE,EXCEPT,IF_EXISTS,RECURSIVE,DROP_NULL,FILL_NULL,NORMALIZE,
+    FILTER,SELECT,DROP,EXPECT,RESIZE,GRAYSCALE,COMPRESS,CONVERT,REMOVE_CORRUPT,LINK,
+    RANGE,MINMAX,ZSCORE,KEEP_ASPECT,QUALITY,JPG,PNG,NPY,NUMERIC,NOT_NULL,BETWEEN,UNIQUE,
+    REFERENCES,SCHEMA_SAME_AS,CHANNELS,MIN_WIDTH,MIN_HEIGHT,MATCH_RATE,AND,OR,NOT,MEDIAN,MEAN,MODE},
+  sensitive=false, comment=[l]{\#}, morestring=[b]"
+}
+\lstset{language=PrepLang, basicstyle=\ttfamily\footnotesize, keywordstyle=\bfseries,
+  commentstyle=\itshape\color{gray}, numbers=left, numberstyle=\tiny, xleftmargin=1.5em,
+  frame=tb, columns=fullflexible, breaklines=true, showstringspaces=false}
+
+\newcommand{\PL}{PrepLang\xspace}
+\newcommand{\full}{\ensuremath{\mathcal{F}}}
+\newcommand{\adm}{\ensuremath{\mathcal{A}}}
+\newcommand{\cert}[1]{\ensuremath{\mathcal{C}_{#1}}}
+
+\journal{Science of Computer Programming}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Compile Once, Reuse Safely: Data Certificates and Selective Deoptimization for Preprocessing
+Pipelines}
+
+\author{Nikhil V\corref{cor1}}
+\ead{atnikhil06@gmail.com}
+\cortext[cor1]{Corresponding author.}
+\affiliation{organization={School of Computer Science and Engineering, Vellore Institute of Technology},
+  city={Vellore},
+  postcode={632014},
+  state={Tamil Nadu},
+  country={India}}
+
+\begin{abstract}
+\input{sections/abstract-scp}
+\end{abstract}
+
+\begin{keyword}
+data-aware compilation \sep abstract interpretation \sep data validation \sep speculative optimization
+\sep deoptimization \sep differential privacy
+\end{keyword}
+
+\end{frontmatter}
+
+\input{sections/body}
+
+\section*{Declaration of competing interest}
+The author declares no known competing financial interests or personal relationships that could have
+appeared to influence the work reported in this paper.
+
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the public, commercial, or
+not-for-profit sectors.
+
+\section*{Data availability}
+The datasets are public (Section~\ref{sec:eval}). The compiler, the Lean development, the evaluation
+scripts and the raw results will be made available on request.
+
+% Science of Computer Programming requires a statement here, before the references, if generative AI
+% tools were used in preparing the manuscript (Elsevier's wording):
+% \section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
+% During the preparation of this work the author used [NAME OF TOOL/SERVICE] in order to [REASON]. After
+% using this tool/service, the author reviewed and edited the content as needed and takes full
+% responsibility for the content of the published article.
+
+\input{sections/references}
+
+\end{document}

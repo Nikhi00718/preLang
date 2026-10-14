@@ -1,0 +1,18 @@
+% The abstract of the Science of Computer Programming version (at most 250 words).
+Batch data-preparation pipelines are compiled once and run on every new batch, with the same layout
+and other values. A compiler that reads the input data at compile time can prove a
+pipeline's contracts and remove the checks and operations the data makes useless, but its proofs hold
+for one file. We present \PL, a compiler for table and image preprocessing pipelines that computes an
+abstract state of the data, decides each contract as proven, violated or deferred, and optimizes.
+Three techniques carry its proofs to new batches. \emph{Data certificates}, found by re-analysing the
+program under weakened input facts, are the input facts its proofs and removals depend on.
+\emph{Selective deoptimization} keeps each removed check and operation in the generated program with
+its own certificate, so a new batch runs again only the removals whose certificates it breaks; we prove
+this exact for every admitted batch and mechanize the proof in Lean~4 for a core of the language.
+\emph{Composition} checks the guarantees a compiled stage publishes against the next stage's
+certificates. Because deoptimization never relies on the compile-time facts being true, \PL can also
+compile from differentially private facts. On \RealRuns{} real
+monthly batches, selective deoptimization handles \RealDeoptCorrect{} exactly
+as a fresh compilation would and none unsoundly, where two data validators refuse
+\RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs. All \PrivRuns{}
+runs of private compilations were exact.
