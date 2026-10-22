@@ -29,6 +29,10 @@ Each is compiled from several kinds of facts:
   * generic   baseline: the same budget on fixed logarithmic bins instead of the program's numbers
               (eval/reuse/private_baselines.py)
   * synthetic baseline: a table sampled from the generic release, compiled normally
+  * hdmm      baseline: HDMM given the program's comparisons as its workload, over the same cells
+              (eval/reuse/private_dp_baselines.py, run in eval/.venv-hdmm)
+  * aim       baseline: AIM's synthetic data over the same cells, facts read off it; aim-synthetic:
+              the same synthetic data compiled normally (run in eval/.venv-dp)
 
 Measured:
   1. exactness: every run is scored against a fresh compilation of the batch, run
@@ -67,13 +71,18 @@ RELEASE = ROOT / "tools" / "release_facts.py"
 TITANIC = ROOT / "eval" / "data" / "titanic"
 CORPUS_WORK = ROOT / "eval" / "work" / "pandas_corpus"
 EPSILONS = (0.1, 1, 10, 100)
+DP_BASELINES = ROOT / "eval" / "reuse" / "private_dp_baselines.py"
+DP_PYTHON = {"hdmm": ROOT / "eval" / ".venv-hdmm" / "Scripts" / "python.exe",
+             "aim": ROOT / "eval" / ".venv-dp" / "Scripts" / "python.exe"}
+SYNTHETIC = ("synthetic", "aim-synthetic")  # compiled normally, from synthetic tables
+BASELINES = ("generic", "synthetic", "hdmm", "aim", "aim-synthetic")
 
 
 def configs(epsilons, seeds, randoms, baselines=(1, 10), baseline_seeds=1):
     """(name, epsilon or None, seed) for every kind of facts."""
     out = [("exact", math.inf, 0)]
     out += [(f"eps={e:g}", e, s) for e in epsilons for s in range(seeds)]
-    out += [(f"{base} eps={e:g}", e, s) for base in ("generic", "synthetic") for e in baselines
+    out += [(f"{base} eps={e:g}", e, s) for base in BASELINES for e in baselines
             for s in range(baseline_seeds)]
     out += [("random", None, s) for s in range(randoms)]
     return out + [("none", None, 0), ("optimistic", None, 0)]
@@ -130,6 +139,19 @@ def release(owner, analyst, kind, epsilon, seed, ready):
     if kind.startswith("generic"):
         (analyst / "facts.tsv").write_text(generic_facts(queries, epsilon, 0.05, seed), encoding="utf-8")
         return
+    for method in ("aim-synthetic", "aim", "hdmm"):  # aim-synthetic before aim
+        if kind.startswith(method):
+            target = ["--folder", str(analyst)] if method == "aim-synthetic" else ["--out", str(analyst / "facts.tsv")]
+            # One thread each: the pool already runs a release per core.
+            env = {**os.environ, "JAX_PLATFORMS": "cpu", "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
+                   "MKL_NUM_THREADS": "1", "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"}
+            subprocess.run([str(DP_PYTHON[method.split("-")[0]]), str(DP_BASELINES), method, str(queries),
+                            "--epsilon", repr(float(epsilon)), "--seed", str(seed), *target],
+                           check=True, capture_output=True, text=True, env=env)
+            if method == "aim-synthetic":
+                (analyst / "facts.tsv").write_text("preplang-facts\t1\nmechanism\tAIM synthetic data\n",
+                                                   encoding="utf-8")  # a record only: compiled normally
+            return
     if kind.startswith("synthetic"):
         write_synthetic(analyst, queries, epsilon, 0.05, seed)
         (analyst / "facts.tsv").write_text("preplang-facts\t1\nmechanism\tsynthetic data from the generic release\n",
@@ -259,7 +281,7 @@ def private_run(job):
     analyst.mkdir(parents=True)
     shutil.copyfile(owner / "program.prep", analyst / "program.prep")  # the program, but no data
     release(owner, analyst, kind, epsilon, seed, ready)
-    compiled = compile_in(compiler, analyst, facts=not kind.startswith("synthetic"))
+    compiled = compile_in(compiler, analyst, facts=not kind.startswith(SYNTHETIC))
     record = {"workload": workload, "item": item, "kind": kind, "epsilon": epsilon, "seed": seed,
               "compiled": compiled["ok"], "errors": compiled["errors"][:3],
               "warnings": compiled["warnings"], "removed": compiled["removed"], "normal_removed": normal["removed"],
@@ -393,11 +415,15 @@ MISTAKES = {  # kind -> (the contract it breaks, the column it changes, the valu
 }
 
 
-def diagnostics(compiler, sizes=(0, 1, 10, 100, 1000, 10000), epsilons=(0.1, 0.3, 1, 3, 10, math.inf), seeds=20):
+METHODS = ("program", "generic", "synthetic", "hdmm", "aim", "aim-synthetic")
+
+
+def diagnostics(compiler, sizes=(0, 1, 10, 100, 1000, 10000), epsilons=(0.1, 0.3, 1, 3, 10, math.inf), seeds=20,
+                methods=METHODS):
     """Does a private compilation warn about a mistake in m rows of a 1,000,000-row file,
     and does it warn about anything else? Ground truth: the normal compilation, which
     reports the broken contract as violated for every m > 0."""
-    tasks = [(compiler, kind, m, epsilons, seeds, 10) for kind in MISTAKES for m in sizes]
+    tasks = [(compiler, kind, m, epsilons, seeds, 10, methods) for kind in MISTAKES for m in sizes]
     with ProcessPoolExecutor(max_workers=max(1, min(6, (os.cpu_count() or 2) - 2))) as pool:
         return [row for found in pool.map(diagnose, tasks) for row in found]
 
@@ -406,7 +432,7 @@ def diagnose(task):
     """One mistake in m rows: the normal compilation, the private ones and the baselines."""
     import numpy as np
     import pandas as pd
-    compiler, kind, m, epsilons, seeds, baseline_seeds = task
+    compiler, kind, m, epsilons, seeds, baseline_seeds, methods = task
     contract, column, value = MISTAKES[kind]
     base = pd.read_parquet(ROOT / "eval" / "data" / "events_1000000.parquet")
     rows = []
@@ -424,7 +450,7 @@ def diagnose(task):
     subprocess.run([str(compiler), "program.prep", "--queries"], cwd=owner, capture_output=True, check=True)
     for epsilon in epsilons:
         for seed in range(1 if math.isinf(epsilon) else seeds):
-            for method in ("program", "generic", "synthetic"):
+            for method in methods:
                 if method != "program" and (math.isinf(epsilon) or seed >= baseline_seeds):
                     continue
                 folder = owner.parent / f"{method} eps={epsilon:g}-{seed}"
@@ -433,10 +459,10 @@ def diagnose(task):
                 folder.mkdir()
                 shutil.copyfile(owner / "program.prep", folder / "program.prep")
                 release(owner, folder, "eps" if method == "program" else method, epsilon, seed, None)
-                private = compile_in(compiler, folder, facts=method != "synthetic")
+                private = compile_in(compiler, folder, facts=method not in SYNTHETIC)
                 # A private compilation warns. An analyst with synthetic data sees what compiling it reports
                 # and, as on a validation server, what running the program on it stops at.
-                if method == "synthetic":
+                if method in SYNTHETIC:
                     said = [e for e in private["errors"] if "contract violated" in e]
                     if private["ok"]:
                         ran = run_here(folder, "generated.py", {})
@@ -463,7 +489,7 @@ def write_diagnostics(rows):
              "program's numbers (20 seeds; 1 without noise); *generic* and *synthetic*: the baselines of "
              "eval/reuse/private_baselines.py with the same budget (10 seeds).", ""]
     columns = sorted({(r["method"], r["epsilon"]) for r in rows},
-                     key=lambda c: (("program", "generic", "synthetic").index(c[0]), c[1]))
+                     key=lambda c: (METHODS.index(c[0]), c[1]))
     sizes = sorted({r["rows"] for r in rows})
     lines.append("| Mistake | m | " + " | ".join(f"{method} {e:g}" for method, e in columns) + " |")
     lines.append("|---|---:|" + "---:|" * len(columns))
@@ -506,7 +532,8 @@ def main(compiler, quick=False, only=None):
              "titanic": configs((1, 10), 1, 2) + [(f"corpus eps={e:g}", e, s) for e in (1, 10) for s in range(2)] +
              [(f"unit eps={e:g}", e, 0) for e in (1, 10)]}
     if only:
-        kinds = {workload: [c for c in configs_ if c[0].startswith(only)] for workload, configs_ in kinds.items()}
+        kinds = {workload: [c for c in configs_ if c[0].startswith(tuple(only.split(",")))]
+                 for workload, configs_ in kinds.items()}
     work = items()
     if quick:
         work = work[:6]
@@ -525,7 +552,7 @@ def main(compiler, quick=False, only=None):
                 print(i, "done")
     if only:
         earlier = json.loads((RESULTS / "private.json").read_text(encoding="utf-8"))["records"]
-        records = [r for r in earlier if not r["kind"].startswith(only)] + records
+        records = [r for r in earlier if not r["kind"].startswith(tuple(only.split(",")))] + records
     rows = summarize(records)
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / "private.json").write_text(json.dumps({"rows": rows, "records": records}, indent=1), encoding="utf-8")
@@ -536,8 +563,13 @@ def main(compiler, quick=False, only=None):
 if __name__ == "__main__":
     arguments = [a for a in sys.argv[1:] if not a.startswith("--")]
     if arguments and arguments[0] == "diagnostics":
+        only = next((a[len("--only="):] for a in sys.argv if a.startswith("--only=")), None)
+        methods = tuple(m for m in METHODS if only is None or m in only.split(","))
         found = diagnostics(Path(arguments[1]).resolve() if len(arguments) > 1 else
-                            ROOT / "build" / "Release" / "preplang.exe")
+                            ROOT / "build" / "Release" / "preplang.exe", methods=methods)
+        if only:  # keep the earlier results of the other methods
+            earlier = json.loads((RESULTS / "private_diagnostics.json").read_text(encoding="utf-8"))
+            found = [r for r in earlier if r["method"] not in methods] + found
         (RESULTS / "private_diagnostics.json").write_text(json.dumps(found, indent=1), encoding="utf-8")
         (RESULTS / "private_diagnostics.md").write_text(write_diagnostics(found), encoding="utf-8")
         print(write_diagnostics(found))

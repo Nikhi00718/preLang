@@ -63,9 +63,9 @@ person's contribution. The data owner
 releases one Laplace histogram per column over those cells; everything the compiler writes is $\varepsilon$-differentially private for a
 declared schema, and with probability $1-\beta$ every ``likely violated'' warning is true and every
 released fact is false by few rows. At equal budget these program-chosen cells keep more of the normal
-compilation's removals than fixed bins, report broken contracts more often at a small budget, and give a
-program where
-synthetic data compiled normally reports contracts as violated that the data satisfies
+compilation's removals than fixed bins and give a program where synthetic data compiled normally reports
+contracts as violated that the data satisfies; given the same cells, HDMM chooses the same measurements
+and does no better, and AIM's synthetic data loses removals and warns about contracts the data satisfies
 (Section~\ref{sec:rq-private}).
 \item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
 monthly batches of three public datasets, scored against fresh compilations and against

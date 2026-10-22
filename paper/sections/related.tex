@@ -65,7 +65,15 @@ drop a real tuple. The facts a data-aware compiler needs are emptiness facts, wh
 cannot certify (Section~\ref{sec:private}); a private compilation removes checks and operations on noisy
 facts and stays exact because selective deoptimization checks them on the data
 (Theorem~\ref{thm:anyfacts}). The questions are chosen by the program, at its own numbers, and answered
-with Laplace histograms~\cite{dwork2014}. Differentially private profiling collects facts about how deployed
+with Laplace histograms~\cite{dwork2014}. Workload-aware mechanisms also choose what to measure from the
+questions to be answered: HDMM~\cite{mckenna2018hdmm} optimizes the measurements for a workload of linear
+counting queries, Ektelo~\cite{zhang2018ektelo} first reduces the domain to the cells the workload tells
+apart, and AIM~\cite{mckenna2022aim} selects marginals to measure and generates synthetic data from them
+with Private-PGM~\cite{mckenna2019pgm}. The program's cells are such a reduction, with the analysis in
+place of a list of queries (Theorem~\ref{thm:cells}); RQ8 gives HDMM and AIM the same cells and budget.
+Partition selection~\cite{desfontaines2022partition} releases which groups are non-empty, with a
+threshold, as the release does for cells; there the groups are not known in advance. Differentially
+private profiling collects facts about how deployed
 software runs~\cite{zhang2020profiling}; languages such as Fuzz~\cite{reed2010} prove that a program is
 itself differentially private. Here the program is not private; only the facts the compiler starts from
 are.

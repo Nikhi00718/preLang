@@ -1,32 +1,32 @@
 \begin{table*}[t]
-\caption{Private compilation (RQ8): share of compilations that report the contract a mistake in $m$ of 1{,}000{,}000 rows breaks (program's cells: 20 seeds, one without noise; baselines: 10 seeds). A private compilation warns that it is likely violated; one from synthetic data reports it violated. In brackets: compilations that report a contract the data does not break.}
+\caption{Private compilation (RQ8): share of compilations that report the contract a mistake in $m$ of 1{,}000{,}000 rows breaks (program's cells: 20 seeds, one without noise; baselines: 10 seeds). A private compilation warns that it is likely violated; one from synthetic data reports it violated. In brackets: compilations that report a contract the data does not break. HDMM is given the program's comparisons as its workload; AIM, whose reports do not depend on $m$, is summarized in the text.}
 \label{tab:rq-private-diag}
 \centering
 \footnotesize
 \begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{@{}lrrrrrrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrrrrrrr@{}}
 \toprule
- & & \multicolumn{6}{c}{program's cells} & \multicolumn{2}{c}{generic bins} & \multicolumn{2}{c}{synthetic data} \\
-Mistake & $m$ & $\varepsilon = 0.1$ & $\varepsilon = 0.3$ & $\varepsilon = 1$ & $\varepsilon = 3$ & $\varepsilon = 10$ & no noise & $\varepsilon = 1$ & $\varepsilon = 10$ & $\varepsilon = 1$ & $\varepsilon = 10$ \\
+ & & \multicolumn{6}{c}{program's cells} & \multicolumn{2}{c}{generic bins} & \multicolumn{2}{c}{synthetic data} & \multicolumn{2}{c}{HDMM} \\
+Mistake & $m$ & $\varepsilon = 0.1$ & $\varepsilon = 0.3$ & $\varepsilon = 1$ & $\varepsilon = 3$ & $\varepsilon = 10$ & no noise & $\varepsilon = 1$ & $\varepsilon = 10$ & $\varepsilon = 1$ & $\varepsilon = 10$ & $\varepsilon = 1$ & $\varepsilon = 10$ \\
 \midrule
-amount above 999 & 0 & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
-amount above 999 & 1 & 0\% & 0\% & 0\% & 0\% & 0\% & 100\% & 0\% & 0\% & 0\% & 0\% \\
-amount above 999 & 10 & 0\% & 0\% & 0\% & 80\% & 100\% & 100\% & 0\% & 100\% & 0\% & 100\% \\
-amount above 999 & 100 & 0\% & 80\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-amount above 999 & 1,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-amount above 999 & 10,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-s missing & 0 & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
-s missing & 1 & 0\% & 0\% & 0\% & 0\% & 0\% & 100\% & 0\% & 0\% & 0\% & 0\% \\
-s missing & 10 & 0\% & 0\% & 0\% & 80\% & 100\% & 100\% & 0\% & 100\% & 0\% & 100\% \\
-s missing & 100 & 0\% & 80\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-s missing & 1,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-s missing & 10,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-a below 0 & 0 & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
-a below 0 & 1 & 0\% & 0\% & 0\% & 0\% & 0\% & 100\% & 0\% & 0\% & 0\% & 0\% \\
-a below 0 & 10 & 0\% & 0\% & 0\% & 90\% & 100\% & 100\% & 0\% & 100\% & 0\% & 100\% \\
-a below 0 & 100 & 0\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-a below 0 & 1,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
-a below 0 & 10,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+amount above 999 & 0 & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+amount above 999 & 1 & 0\% & 0\% & 0\% & 0\% & 0\% & 100\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+amount above 999 & 10 & 0\% & 0\% & 0\% & 80\% & 100\% & 100\% & 0\% & 100\% & 0\% & 100\% & 10\% & 100\% \\
+amount above 999 & 100 & 0\% & 80\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+amount above 999 & 1,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+amount above 999 & 10,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+s missing & 0 & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+s missing & 1 & 0\% & 0\% & 0\% & 0\% & 0\% & 100\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+s missing & 10 & 0\% & 0\% & 0\% & 80\% & 100\% & 100\% & 0\% & 100\% & 0\% & 100\% & 0\% & 90\% \\
+s missing & 100 & 0\% & 80\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+s missing & 1,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+s missing & 10,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+a below 0 & 0 & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+a below 0 & 1 & 0\% & 0\% & 0\% & 0\% & 0\% & 100\% & 0\% & 0\% & 0\% & 0\% & 0\% & 0\% \\
+a below 0 & 10 & 0\% & 0\% & 0\% & 90\% & 100\% & 100\% & 0\% & 100\% & 0\% & 100\% & 10\% & 100\% \\
+a below 0 & 100 & 0\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+a below 0 & 1,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
+a below 0 & 10,000 & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% & 100\% \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}

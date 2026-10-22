@@ -566,14 +566,16 @@ def private(results, diagnostics, numbers):
         numbers[f"PrivTitanicDeoptEps{name}"] = sum(any(run["anchor"] and run["deopts"] for run in r["runs"])
                                                     for r in of(kind, "titanic"))
         for key in ("traffic", "bikes", "taxi", "titanic"):
-            for method, prefix in (("", "Prog"), ("generic ", "Gen"), ("synthetic ", "Syn"), ("corpus ", "Corp")):
+            for method, prefix in (("", "Prog"), ("generic ", "Gen"), ("synthetic ", "Syn"), ("corpus ", "Corp"),
+                                   ("hdmm ", "Hdmm"), ("aim ", "Aim"), ("aim-synthetic ", "AimSyn")):
                 chosen = of(f"{method}{kind}", key)
                 if chosen:
                     label = f"Priv{prefix}{key.capitalize()}Eps{name}"
                     numbers[label + "Recall"] = pct(recall(chosen))
                     numbers[label + "Precision"] = pct(precision(chosen))
                     numbers[label + "Compiled"] = f"{sum(r['compiled'] for r in chosen)}/{len(chosen)}"
-    for kind, prefix in (("synthetic eps=1", "SynEpsOne"), ("synthetic eps=10", "SynEpsTen")):
+    for kind, prefix in (("synthetic eps=1", "SynEpsOne"), ("synthetic eps=10", "SynEpsTen"),
+                         ("aim-synthetic eps=1", "AimSynEpsOne"), ("aim-synthetic eps=10", "AimSynEpsTen")):
         chosen = of(kind)
         numbers[f"Priv{prefix}Failed"] = sum(not r["compiled"] for r in chosen)
         numbers[f"Priv{prefix}All"] = len(chosen)
@@ -581,6 +583,18 @@ def private(results, diagnostics, numbers):
             sum("contract violated" in e for e in r["errors"]) for r in chosen if not r["compiled"])
     for kind, name in (("unit eps=1", "One"), ("unit eps=10", "Ten")):
         numbers[f"PrivUnitTitanicEps{name}Precision"] = pct(precision(of(kind, "titanic")))
+    # The workload-aware baselines over all workloads, and their "likely violated" warnings.
+    for method, prefix in (("", "Prog"), ("hdmm ", "Hdmm"), ("aim ", "Aim"), ("generic ", "Gen")):
+        for kind, name in (("eps=1", "One"), ("eps=10", "Ten")):
+            chosen = of(f"{method}{kind}")
+            if chosen:
+                numbers[f"Priv{prefix}AllEps{name}Recall"] = pct(recall(chosen))
+                numbers[f"Priv{prefix}AllEps{name}Precision"] = pct(precision(chosen))
+                numbers[f"Priv{prefix}AllEps{name}Warnings"] = sum(
+                    sum("likely violated" in w for w in r["warnings"]) for r in chosen)
+                numbers[f"Priv{prefix}AllEps{name}Warned"] = sum(
+                    any("likely violated" in w for w in r["warnings"]) for r in chosen)
+                numbers[f"Priv{prefix}AllEps{name}Count"] = len(chosen)
     import pandas as pd
     tickets = pd.read_csv(ROOT / "eval" / "data" / "titanic" / "train.csv")["Ticket"].value_counts()
     numbers.update(PrivTicketCount=len(tickets), PrivTicketGroups=int((tickets > 1).sum()), PrivTicketMax=int(tickets.max()))
@@ -599,7 +613,8 @@ def private(results, diagnostics, numbers):
     # Table: recall and precision against the normal removals, per workload and kind of facts.
     kinds = (["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["corpus eps=1", "corpus eps=10"] +
              ["unit eps=1", "unit eps=10"] +
-             [f"{base} eps={e}" for base in ("generic", "synthetic") for e in ("1", "10")] +
+             [f"{base} eps={e}" for base in ("hdmm", "aim", "aim-synthetic", "generic", "synthetic")
+              for e in ("1", "10")] +
              ["optimistic", "random", "none"])
     names = {"exact": "program's cells, no noise", "random": "random (true or false)", "none": "none (claims nothing)",
              "optimistic": "optimistic (no data)"}
@@ -610,7 +625,10 @@ def private(results, diagnostics, numbers):
              r"makes, precision the share of its removals that rest on true facts. Compiled: compilations without "
              r"errors. Deopt.\ on file: compilations whose run on the compiled file itself deoptimizes (a released "
              r"fact was false). Every run is scored against a fresh compilation of its batch. $\varepsilon$ is the "
-             r"budget of each table of one program; ``one release'' serves all Titanic scripts with one budget. Generic: fixed "
+             r"budget of each table of one program; ``one release'' serves all Titanic scripts with one budget. HDMM: the "
+             r"high-dimensional matrix mechanism given the program's comparisons as its workload; AIM: synthetic data "
+             r"over the program's cells at $(\varepsilon, 10^{-9})$, its facts read off the synthetic rows, or the "
+             r"synthetic table compiled normally. Generic: fixed "
              r"logarithmic bins; synthetic: a table sampled from them, compiled normally.}",
              r"\label{tab:rq-private}", r"\centering", r"\footnotesize",
              r"\begin{tabular}{@{}lrrrrrrrrr@{}}", r"\toprule",
@@ -633,7 +651,8 @@ def private(results, diagnostics, numbers):
         else:
             method, epsilon = kind.rsplit(" ", 1) if " " in kind else ("program's cells", kind)
             method = {"corpus": "one release", "unit": "per ticket", "generic": "generic bins",
-                      "synthetic": "synthetic data"}.get(method, method)
+                      "synthetic": "synthetic data", "hdmm": "HDMM", "aim": "AIM, facts",
+                      "aim-synthetic": "AIM, synthetic data"}.get(method, method)
             label = f"{method}, $\\varepsilon = {epsilon[4:]}$"
         deopt = f"{100 * sum(anchor) / len(anchor):.0f}\\%" if anchor else "--"
         lines.append(f"{label} & " + " & ".join(cells) + f" & {len(chosen):,} & {len(compiled):,} & {deopt} & "
@@ -652,26 +671,36 @@ def private(results, diagnostics, numbers):
         good = [m for m in sizes if m > 0 and all(r["warned"] for r in chosen if r["rows"] >= m)]
         return f"{min(good):,}" if good and chosen else "never"
 
-    for method, prefix in (("program", ""), ("generic", "Generic"), ("synthetic", "Synthetic")):
+    for method, prefix in (("program", ""), ("generic", "Generic"), ("synthetic", "Synthetic"), ("hdmm", "Hdmm"),
+                           ("aim", "Aim"), ("aim-synthetic", "AimSyn")):
         chosen = [r for r in diagnostics if r["method"] == method]
         numbers[f"PrivDiag{prefix}Compilations"] = len(chosen)
         numbers[f"PrivDiag{prefix}False"] = sum(r["false_warnings"] for r in chosen)
         numbers[f"PrivDiag{prefix}FalseRuns"] = sum(r["false_warnings"] > 0 for r in chosen)
         numbers[f"PrivDiag{prefix}EpsOne"] = always_from(method, 1)
         numbers[f"PrivDiag{prefix}EpsTen"] = always_from(method, 10)
+        # With no mistake (m = 0) every report of the contract is false.
+        clean = [r for r in chosen if r["rows"] == 0]
+        numbers[f"PrivDiag{prefix}CleanWarned"] = (f"{100 * sum(r['warned'] for r in clean) / len(clean):.0f}"
+                                                   if clean else "--")
+        numbers[f"PrivDiag{prefix}FalseShare"] = (f"{100 * sum(r['false_warnings'] > 0 for r in chosen) / len(chosen):.0f}"
+                                                  if chosen else "--")
+    shown = ("program", "generic", "synthetic", "hdmm")  # AIM's reports are summarized in the text
     columns = sorted({(r["method"], r["epsilon"]) for r in diagnostics if r["method"] == "program"
-                      or r["epsilon"] in (1, 10)},
-                     key=lambda c: (("program", "generic", "synthetic").index(c[0]), c[1]))
+                      or (r["method"] in shown and r["epsilon"] in (1, 10))},
+                     key=lambda c: (shown.index(c[0]), c[1]))
     kinds = list(dict.fromkeys(r["kind"] for r in diagnostics))
     lines = [r"\begin{table*}[t]",
              r"\caption{Private compilation (RQ8): share of compilations that report the contract a mistake in $m$ "
              r"of 1{,}000{,}000 rows breaks (program's cells: 20 seeds, one without noise; baselines: 10 seeds). A "
              r"private compilation warns that it is likely violated; one from synthetic data reports it violated. "
-             r"In brackets: compilations that report a contract the data does not break.}",
+             r"In brackets: compilations that report a contract the data does not break. HDMM is given the "
+             r"program's comparisons as its workload; AIM, whose reports do not depend on $m$, is summarized in "
+             r"the text.}",
              r"\label{tab:rq-private-diag}", r"\centering", r"\footnotesize",
              r"\begin{tabular}{@{}lr" + "r" * len(columns) + r"@{}}", r"\toprule",
              r" & & \multicolumn{" + str(sum(c[0] == "program" for c in columns)) + r"}{c}{program's cells} & "
-             r"\multicolumn{2}{c}{generic bins} & \multicolumn{2}{c}{synthetic data} \\",
+             r"\multicolumn{2}{c}{generic bins} & \multicolumn{2}{c}{synthetic data} & \multicolumn{2}{c}{HDMM} \\",
              "Mistake & $m$ & " + " & ".join("no noise" if math.isinf(e) else f"$\\varepsilon = {e:g}$"
                                                for _, e in columns) + r" \\", r"\midrule"]
     for kind in kinds:

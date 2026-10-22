@@ -526,10 +526,12 @@ no fact stage 1 guarantees ever made stage 2 refuse or deoptimize. Admission wit
 nothing measurable (-1% median); certification takes 21-35 ms per compilation. Details:
 `eval/results/*.md`.
 
-**Private compilation (paper RQ8).** 3,287 compilations from released facts (differentially private
+**Private compilation (paper RQ8).** 4,481 compilations from released facts (differentially private
 at epsilon 0.1-100, per row or per ticket, one release for all Titanic scripts, without noise, absent,
-optimistic, random and possibly false, and two baselines), of the three real-month pipelines and 184
-lifted Titanic scripts, run 42,825 times on real batches: none unsound. Without noise the private compilation removes exactly
+optimistic, random and possibly false, and five baselines, among them HDMM and AIM given the program's
+cells), of the three real-month pipelines and 184 lifted Titanic scripts, run 58,533 times on real
+batches: none unsound. Given the same cells, HDMM chooses the same measurements and does no better, and
+AIM's synthetic data loses removals and warns about contracts the data satisfies. Without noise the private compilation removes exactly
 what a normal one removes. At epsilon 1 the taxi and traffic pipelines keep every removal; fixed
 logarithmic bins with the same budget keep 60% and 83%, and synthetic data sampled from them and
 compiled normally fails on every pipeline with contracts the real data satisfies. One release at a total

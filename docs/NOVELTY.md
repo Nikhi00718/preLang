@@ -521,9 +521,25 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   up to 7) with one row per ticket gives 17% precision at epsilon 1 (as rows do) and 17% at epsilon 10
   (rows: 31%), every run exact. The evaluation now has 3,287 compilations run 42,825 times, none
   unsound, no wrong stop.
+- **After the final re-review: HDMM and AIM.** Both get the program's cells and the same budget
+  (`eval/reuse/private_dp_baselines.py`, the authors' code at fixed commits). HDMM, given the program's
+  comparisons as its workload, chose the identity measurement for all 1,064 column blocks; it differs only
+  in how it splits epsilon between columns (more to columns with more cells). Its removals equal the
+  release's on the pipelines and on Titanic at epsilon 1; at epsilon 10 its Titanic precision is 20%
+  against 31% (most Titanic facts are about missing values, which it funds less), and on the 1M-row file
+  it reports every mistake from 100 rows at epsilon 10 where the release needs 10. AIM (defaults,
+  (epsilon, 1e-9), a weaker guarantee) keeps 41%/48% of the normal removals over all workloads at epsilon
+  1/10 against 73%/100%, with higher precision (72%/83% against 51%/76%): its synthetic rows fill empty
+  cells, so its facts err towards "maybe". The same rows give false "likely violated" warnings (34 and 35
+  in 13 and 15 of 199 compilations; the release and HDMM give none), and on the 1M-row file AIM warns about
+  the contract in 64% of compilations of the file without any mistake; its synthetic data compiled
+  normally fails on all 15 pipeline compilations at each budget. 1,194 more compilations, 0 unsound runs.
+  Reading: given the cells, a workload-optimized mechanism chooses the same measurements and a
+  synthetic-data generator loses emptiness; the contribution is the cells (Theorem Cells) and the
+  threshold, not the measurement. A first run of the AIM baseline had a decoder bug (non-integers in
+  INTEGER columns, 171 needless refusals); it was fixed before these numbers.
 - **Limits.** The schema must be declared. The guarantee covers what the compiler writes, not the data
   owner's run logs or run time. Small tables give little at small epsilon, by design. Images,
   `LOAD_TABLES` and `PARSE_DATE` are not supported. There is no budget ledger across releases. The
   privacy theorem and the utility lemma are on paper; the Lean core covers Theorem Cells but not
-  admission, types or compile errors, and `DERIVE` is outside it. There is no comparison with
-  workload-optimized DP (HDMM, AIM).
+  admission, types or compile errors, and `DERIVE` is outside it.
