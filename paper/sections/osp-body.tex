@@ -93,9 +93,14 @@ refused, since no generated code can stand in for the analysis of another type.
 
 \section{Impact}\label{sec:impact}
 
-The evaluation in \texttt{eval/} measures \PL against the tools a data engineer uses today:
+The evaluation in \texttt{eval/} measures \PL against the tools a data engineer uses today
+(\texttt{eval/\allowbreak evaluate.py} sums it up in six questions, from correctness to overhead):
 
 \begin{itemize}
+\item \textbf{Correctness.} \DiffPrograms{} random programs, compiled with and without the optimizer,
+agree cell by cell with a reference interpreter sharing no code with the compiler; before the two fixes
+this test led to (a pruning bug, a pandas~3 incompatibility), \DiffBeforeWrongOpt{} optimized runs were
+wrong.
 \item \textbf{Reuse on real data.} On \RealRuns{} real monthly batches of three public datasets, the compiled
 programs handle \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
 \RealDeoptUnsound{} wrong; Great Expectations and pandera, set up on the same data, refuse
@@ -106,9 +111,10 @@ on which the optimized program does not do what a fresh compilation does.
 16 million Parquet rows a misspelled column is reported in \ScTabNamePl\,s instead of after
 \ScTabNameScript\,s; \RbEarly{} of \RbTotal{} real failures from GitHub issues are reported before any data is
 processed.
-\item \textbf{Cost and gain.} An optimized table pipeline runs in \TabProcOpt\,s instead of \TabProcOz\,s, an
-image pipeline in \ImgPlMem\,MiB instead of \ImgBaseMem\,MiB; admission changes the median run time by
-\OhPct\% and compiling takes \CcMsMin--\CcMsMax\,ms.
+\item \textbf{Cost and gain.} On \CenPrograms{} real programs the optimizer removes \CenInstrCut\% of
+the instructions and \CenChecksCut\% of the run-time checks; a table pipeline runs in \TabProcOpt\,s
+instead of \TabProcOz\,s, an image pipeline in \ImgPlMem\,MiB instead of \ImgBaseMem\,MiB; admission
+changes run time by \OhPct\%; compiling takes a median of \CenCompileMed\,ms and at most \CenMemMax\,MiB.
 \item \textbf{Other people's code.} Lifted pandas scripts from GitHub reproduce their results on new
 batches in \CorpusBothSame{} of \CorpusBothRuns{} runs and in all \DriftRuns{} monthly runs of
 \DriftCompiled{} scripts written by others.
@@ -129,6 +135,6 @@ Others can extend its abstract state, certifier and code generator, and compare 
 
 The language has no joins or aggregations and generates Python only; a changed column type is refused
 rather than handled; the mechanized proofs cover a core of the analysis and the rest is tested; the
-compiler is tested on Windows~11 only. Planned work is joins, generated code that adapts to type changes,
-Linux continuous integration and packaging. \PL compiles a pipeline once and runs it on later batches
+compiler is tested on Windows~11 (MSVC) and Ubuntu (GCC~15.2), not on macOS. Planned work is joins,
+generated code that adapts to type changes, and packaging. \PL compiles a pipeline once and runs it on later batches
 exactly as a fresh compilation would, re-enabling only the removals a batch makes unsafe.
