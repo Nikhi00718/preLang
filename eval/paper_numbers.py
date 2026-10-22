@@ -166,7 +166,15 @@ def differential(results, before, numbers):
                    DiffAgreeOz=f"{agree(results, 'O0'):,}", DiffAgreeOpt=f"{agree(results, 'optimized'):,}",
                    DiffSame=f"{sum(r['same_O0_optimized'] for r in results):,}",
                    DiffStatic=sum(1 for r in fails if r["variants"]["optimized"]["status"] == "compile error"),
-                   DiffStaticPct=f"{100 * sum(1 for r in fails if r['variants']['optimized']['status'] == 'compile error') / len(fails):.0f}")
+                   DiffStaticPct=f"{100 * sum(1 for r in fails if r['variants']['optimized']['status'] == 'compile error') / len(fails):.0f}",
+                   DiffJoin=sum(r.get("join", False) for r in results),
+                   DiffAggregate=sum(r.get("aggregate", False) for r in results))
+    reused = [r["reuse"] for r in results if "reuse" in r]
+    if reused:
+        count = lambda outcome: sum(1 for u in reused if u["outcome"] == outcome)
+        numbers.update(DiffReuse=f"{len(reused):,}", DiffReuseRun=f"{count('correct run'):,}",
+                       DiffReuseStop=count("correct stop"), DiffReuseRefused=count("refused"),
+                       DiffReuseWrong=count("wrong"), DiffReuseDeopt=sum(1 for u in reused if u["deopts"]))
     if before:
         wrong = [r for r in before if r["variants"]["optimized"]["problem"]]
         pruning = sum(1 for r in wrong if "KeyError" in r["variants"]["optimized"]["detail"])

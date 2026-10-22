@@ -26,7 +26,7 @@ repository (\texttt{paper/}, \texttt{docs/}); this article describes the softwar
 
 \subsection{Software architecture}
 
-The compiler (\texttt{src/}, about 11{,}300 lines of C++17 without external libraries) runs lexer, LL(1)
+The compiler (\texttt{src/}, about 11{,}800 lines of C++17 without external libraries) runs lexer, LL(1)
 parser, semantic analysis, IR, optimizer, certifier and code generator in turn. The \emph{schema} readers
 scan CSV files in parallel and read Parquet footers and PNG and JPEG headers; the \emph{semantic
 analyzer} computes the abstract dataset state (types, missing values, value intervals, image properties)
@@ -50,7 +50,8 @@ tests), a lifter of pandas scripts (\texttt{frontend/}), the composition and rel
 \begin{itemize}
 \item \textbf{Compile-time checking:} misspelled or removed columns, type errors and broken contracts
 (\texttt{NOT\_NULL}, \texttt{BETWEEN}, \texttt{UNIQUE}, \texttt{REFERENCES}, schemas, image channels and
-sizes, match rates of images and labels), reported with the line, the offending row and a hint.
+sizes, match rates of images and labels), lookup joins on keys of other types or with repeated values,
+reported with the line, the offending row and a hint; groups (\texttt{AGGREGATE}) keep their facts.
 \item \textbf{Data-driven optimization:} proven checks and no-effect operations are removed, unused
 columns are not loaded, image pipelines are streamed; rewrites that change the output need
 \texttt{--approx}.
@@ -97,9 +98,10 @@ The evaluation in \texttt{eval/} answers six questions (\texttt{eval/\allowbreak
 answers with every number below):
 
 \begin{itemize}
-\item \textbf{Correctness: is the output right?} \DiffPrograms{} random programs, compiled with and without
-the optimizer, agree cell by cell with a reference interpreter that shares no code with the compiler;
-before the two fixes this test led to (a pruning bug, a pandas~3 incompatibility), \DiffBeforeWrongOpt{}
+\item \textbf{Correctness: is the output right?} \DiffPrograms{} random programs (with joins and
+groups), compiled with and without the optimizer, agree cell by cell with a reference interpreter that
+shares no code with the compiler, and reused on a second batch none of the \DiffReuse{} runs differs from
+it; before two fixes this test led to (a pruning bug, a pandas~3 incompatibility), \DiffBeforeWrongOpt{}
 optimized runs were wrong. Reused on new batches, \PrivRuns{} runs after \PrivCompilations{} private
 compilations and every run of the experiments below did what a fresh compilation does.
 \item \textbf{Performance.} An optimized table pipeline runs in \TabProcOpt\,s instead of \TabProcOz\,s
@@ -135,8 +137,9 @@ Others can extend its abstract state, certifier and code generator, and compare 
 
 \section{Limitations and conclusions}
 
-The language has no joins or aggregations and generates Python only; a changed column type is refused
-rather than handled; the mechanized proofs cover a core of the analysis and the rest is tested; the
-compiler is tested on Windows~11 (MSVC) and Ubuntu (GCC~15.2), not on macOS. Planned work is joins,
-generated code that adapts to type changes, and packaging. \PL compiles a pipeline once and runs it on later batches
+Joins are lookups on a key with one name in both tables (no many-to-many joins), groups have five
+aggregates, and only Python is generated; a changed column type is refused rather than handled; the
+mechanized proofs cover a core of the analysis without joins and groups, and the rest is tested; the
+compiler is tested on Windows~11 (MSVC) and Ubuntu (GCC~15.2). Planned work is general joins, generated
+code that adapts to type changes, and packaging. \PL compiles a pipeline once and runs it on later batches
 exactly as a fresh compilation would, re-enabling only the removals a batch makes unsafe.

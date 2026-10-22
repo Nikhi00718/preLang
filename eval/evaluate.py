@@ -60,10 +60,11 @@ def report(n):
         "## 1. Correctness: does the compiler produce the right output?",
         "",
         f"**Yes, on every program tested, after two bugs this evaluation found were fixed.** "
-        f"{n['DiffPrograms']} random table programs over random CSV files ({n['DiffRows']} output rows) were "
-        f"compiled with `--O0` and with the optimizer, run, and compared cell by cell with a reference "
-        f"interpreter of the language written in plain Python, sharing no code with the compiler or pandas "
-        f"(`differential.md`, `eval/compilation/differential.py`).",
+        f"{n['DiffPrograms']} random table programs over random CSV files ({n['DiffRows']} output rows; "
+        f"{n['DiffJoin']} with a `JOIN`, {n['DiffAggregate']} with an `AGGREGATE`) were compiled with `--O0` and "
+        f"with the optimizer, run, and compared cell by cell with a reference interpreter of the language "
+        f"written in plain Python, sharing no code with the compiler or pandas (`differential.md`, "
+        f"`eval/compilation/differential.py`).",
         "",
         f"- `--O0` agrees with the reference on {n['DiffAgreeOz']} / {n['DiffPrograms']}; the optimized program "
         f"on {n['DiffAgreeOpt']} / {n['DiffPrograms']}; `--O0` and optimized outputs are byte-identical (or fail "
@@ -71,8 +72,13 @@ def report(n):
         f"- Of the {n['DiffFails']} programs whose data breaks a contract, the compiler reports "
         f"{n['DiffStatic']} ({n['DiffStaticPct']}%) at compile time, before any data is processed; the rest "
         f"fail at the same line when they run.",
-        f"- Before the fixes, the same {n['DiffPrograms']} programs gave a wrong result in {n['DiffBeforeWrongOpt']} "
-        f"optimized runs and {n['DiffBeforeWrongOz']} `--O0` runs (`differential_prefix.md`): "
+        f"- Reused on a second random batch, the optimized programs ended as the reference does on that "
+        f"batch in {n['DiffReuseRun']} runs (same rows) and {n['DiffReuseStop']} stops (same failing line), "
+        f"refused {n['DiffReuseRefused']} batches, and were wrong {n['DiffReuseWrong']} times; "
+        f"{n['DiffReuseDeopt']} runs re-enabled a removed check or operation.",
+        f"- In an earlier run of 2,000 programs (before `JOIN` and `AGGREGATE`), the compiler before two fixes "
+        f"gave a wrong result in {n['DiffBeforeWrongOpt']} optimized runs and {n['DiffBeforeWrongOz']} `--O0` "
+        f"runs (`differential_prefix.md`): "
         f"{n['DiffBeforePruning']} from column pruning keeping a `DROP` of a column a pruned `SELECT` had "
         f"already removed (`KeyError`), and {n['DiffBeforeNa']} from pandas 3, where a text comparison is "
         f"`bool[pyarrow]` and combining it with a mask holding NA raises `TypeError`. Both are fixed, with "
@@ -89,8 +95,9 @@ def report(n):
         f"Windows (MSVC) and Ubuntu (GCC 15.2) with no compiler warnings; the core analysis is mechanized in "
         f"Lean 4 ({n['LeanLines']} lines, `proofs/`).",
         "",
-        "Limits: the random programs cover the table statements without dates and images; image pipelines "
-        "are checked pixel by pixel against a hand-written script (`rq3.md`), not by a reference interpreter.",
+        "Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` included, but not dates "
+        "and images; image pipelines are checked pixel by pixel against a hand-written script (`rq3.md`), not by "
+        "a reference interpreter.",
         "",
         "## 2. Performance: how much faster or slower is it?",
         "",

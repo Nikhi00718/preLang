@@ -6,16 +6,17 @@ file and the script behind it.
 
 ## 1. Correctness: does the compiler produce the right output?
 
-**Yes, on every program tested, after two bugs this evaluation found were fixed.** 2,000 random table programs over random CSV files (15,058 output rows) were compiled with `--O0` and with the optimizer, run, and compared cell by cell with a reference interpreter of the language written in plain Python, sharing no code with the compiler or pandas (`differential.md`, `eval/compilation/differential.py`).
+**Yes, on every program tested, after two bugs this evaluation found were fixed.** 2,000 random table programs over random CSV files (11,089 output rows; 623 with a `JOIN`, 717 with an `AGGREGATE`) were compiled with `--O0` and with the optimizer, run, and compared cell by cell with a reference interpreter of the language written in plain Python, sharing no code with the compiler or pandas (`differential.md`, `eval/compilation/differential.py`).
 
 - `--O0` agrees with the reference on 2,000 / 2,000; the optimized program on 2,000 / 2,000; `--O0` and optimized outputs are byte-identical (or fail at the same contract) on 2,000 / 2,000.
-- Of the 598 programs whose data breaks a contract, the compiler reports 433 (72%) at compile time, before any data is processed; the rest fail at the same line when they run.
-- Before the fixes, the same 2,000 programs gave a wrong result in 109 optimized runs and 36 `--O0` runs (`differential_prefix.md`): 76 from column pruning keeping a `DROP` of a column a pruned `SELECT` had already removed (`KeyError`), and 33 from pandas 3, where a text comparison is `bool[pyarrow]` and combining it with a mask holding NA raises `TypeError`. Both are fixed, with regression tests in `tests/test_optimizer.cpp`.
+- Of the 658 programs whose data breaks a contract, the compiler reports 465 (71%) at compile time, before any data is processed; the rest fail at the same line when they run.
+- Reused on a second random batch, the optimized programs ended as the reference does on that batch in 1,198 runs (same rows) and 301 stops (same failing line), refused 36 batches, and were wrong 0 times; 336 runs re-enabled a removed check or operation.
+- In an earlier run of 2,000 programs (before `JOIN` and `AGGREGATE`), the compiler before two fixes gave a wrong result in 109 optimized runs and 36 `--O0` runs (`differential_prefix.md`): 76 from column pruning keeping a `DROP` of a column a pruned `SELECT` had already removed (`KeyError`), and 33 from pandas 3, where a text comparison is `bool[pyarrow]` and combining it with a mask holding NA raises `TypeError`. Both are fixed, with regression tests in `tests/test_optimizer.cpp`.
 - Injected mistakes (`rq1.md`): 24 of 24 reported before any data is processed, 0 false alarms on the 5 original programs.
 - Reuse on new data is checked against a fresh compilation of every batch: 0 unsound outcomes in 244 edited batches (`certificates.md`), 238 real monthly batches (`realbatches.md`), 3212 runs of lifted Titanic and House Prices scripts (`pandas_corpus*.md`), 3255 runs of lifted traffic and bike scripts (`drift_corpus_*.md`), and 64,179 runs after 4,879 private compilations (`private.md`).
-- 287 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC) and Ubuntu (GCC 15.2) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
+- 297 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC) and Ubuntu (GCC 15.2) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
 
-Limits: the random programs cover the table statements without dates and images; image pipelines are checked pixel by pixel against a hand-written script (`rq3.md`), not by a reference interpreter.
+Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` included, but not dates and images; image pipelines are checked pixel by pixel against a hand-written script (`rq3.md`), not by a reference interpreter.
 
 ## 2. Performance: how much faster or slower is it?
 

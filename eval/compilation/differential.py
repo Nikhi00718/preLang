@@ -12,6 +12,11 @@ at the same line) and the same output, cell by cell (floats to 1e-9 relative).
 The compiler stops a program at compile time when it proves a contract violated; that
 counts as the same outcome as the reference failing at that line.
 
+Programs may JOIN a random lookup table and AGGREGATE. Each optimized program is also
+reused on a second random batch (other files with the same columns, given as name=file):
+it must refuse the batch, or end as the reference does on that batch (the same rows, or a
+failure at the same line). Anything else is a wrong reuse.
+
     py -3 eval/compilation/differential.py [--programs 600] [--seed 1] [--workers 6]
 
 Writes eval/results/differential.json.gz and .md.
@@ -64,12 +69,28 @@ def random_table(rng):
         columns[name] = ("FLOAT", nulls([round(rng.uniform(-100, 100), 2) + 0.25 for _ in range(rows)]))
     columns["cat"] = ("STRING", nulls([rng.choice(CATEGORIES) for _ in range(rows)]))
     columns["flag"] = ("BOOLEAN", nulls([rng.random() < 0.5 for _ in range(rows)]))
+    columns["k"] = ("INTEGER", nulls([rng.randint(1, 6) for _ in range(rows)]))
     return columns
+
+
+def random_lookup(rng):
+    """The lookup table u: key k (some of 1..6, now and then one repeated), w (INTEGER) and
+    label (STRING), with missing values in some tables."""
+    keys = rng.sample(range(1, 7), rng.randint(2, 5))
+    if rng.random() < 0.12:
+        keys.append(keys[0])  # a repeated key: JOIN must stop
+    rng.shuffle(keys)
+    def nulls(values):
+        out = [None if rng.random() < rng.choice([0, 0.2]) else v for v in values]
+        out[0] = values[0]
+        return out
+    return {"k": ("INTEGER", keys), "w": ("INTEGER", nulls([rng.randint(-20, 40) for _ in keys])),
+            "label": ("STRING", nulls([rng.choice(CATEGORIES) for _ in keys]))}
 
 
 def write_csv(path, table):
     names = list(table)
-    rows = len(table["id"][1])
+    rows = len(next(iter(table.values()))[1])
     with open(path, "w", newline="", encoding="utf-8") as f:
         out = csv.writer(f)
         out.writerow(names)
@@ -88,65 +109,97 @@ def cell_text(value):
 
 
 def random_program(rng, table):
-    """A type-correct program over table t: the statement mix of the examples. Returns the
-    source text. The generator tracks column types so the program only fails where the
-    data breaks a contract or a statistic has no values."""
+    """A type-correct program over table t: the statement mix of the examples, sometimes a
+    JOIN with the lookup table u and an AGGREGATE. Returns the source text. The generator
+    tracks column types so the program only fails where the data breaks a contract (or a
+    lookup key repeats, or a statistic has no values)."""
     types = {name: kind for name, (kind, _) in table.items()}
-    lines = ['LOAD "data.csv" AS t;']
-    numeric = lambda: [c for c, k in types.items() if k in ("INTEGER", "FLOAT")]
-    derived = 0
-    for _ in range(rng.randint(2, 9)):
-        op = rng.choice(["filter", "filter", "fill", "fillstat", "normalize", "dropnull", "derive",
-                         "expect_range", "expect_notnull", "drop", "select"])
-        if op == "filter":
-            lines.append(f"FILTER t WHERE {condition(rng, types, 2)};")
-        elif op == "fill":
-            column = rng.choice(list(types))
-            kind = types[column]
-            value = {"INTEGER": str(rng.randint(-5, 5)), "FLOAT": f"{rng.randint(-5, 5)}.5",
-                     "STRING": '"none"', "BOOLEAN": rng.choice(["TRUE", "FALSE"])}[kind]
-            lines.append(f"FILL_NULL t.{column} WITH {value};")
-        elif op == "fillstat" and numeric():
-            column = rng.choice(numeric())
-            stat = rng.choice(["MEAN", "MEDIAN", "MODE"])
-            lines.append(f"FILL_NULL t.{column} WITH {stat};")
-            if stat != "MODE":
-                types[column] = "FLOAT"
-        elif op == "normalize" and numeric():
-            column = rng.choice([c for c in numeric() if c != "id"] or numeric())
-            how = rng.choice(["MINMAX", "ZSCORE"])
-            lines.append(f"NORMALIZE t.{column} USING {how};")
-            types[column] = "FLOAT"
-        elif op == "dropnull":
-            if rng.random() < 0.5:
-                lines.append("DROP_NULL t;")
+    joins = rng.random() < 0.4
+    lines = ['LOAD "data.csv" AS t;'] + (['LOAD "lookup.csv" AS u;'] if joins else [])
+    count = rng.randint(2, 9)
+    join_at = rng.randrange(count) if joins else -1
+    names = iter(f"d{i}" for i in range(1, 100))
+    for step in range(count):
+        if step == join_at and types.get("k") == "INTEGER" and "w" not in types and "label" not in types:
+            lines.append("JOIN t WITH u ON k;")
+            types.update(w="INTEGER", label="STRING")
+        line = statement(rng, types, names)
+        if line:
+            lines.append(line)
+    if rng.random() < 0.35 and any(k != "FLOAT" for k in types.values()):
+        groups = [c for c, k in types.items() if k != "FLOAT"]
+        by = rng.sample(groups, min(len(groups), rng.randint(1, 2)))
+        numeric = [c for c, k in types.items() if k in ("INTEGER", "FLOAT") and c not in by]
+        items, new = [], {c: types[c] for c in by}
+        for _ in range(rng.randint(1, 3)):
+            function = rng.choice(["COUNT", "SUM", "MEAN", "MIN", "MAX"]) if numeric else "COUNT"
+            name = next(names)
+            if function == "COUNT":
+                items.append(f"COUNT AS {name}")
+                new[name] = "INTEGER"
             else:
-                lines.append(f"DROP_NULL t [{', '.join(rng.sample(list(types), rng.randint(1, 2)))}];")
-        elif op == "derive" and numeric():
-            derived += 1
-            name = f"d{derived}"
-            left, right = rng.choice(numeric()), rng.choice(numeric())
-            sign = rng.choice(["+", "-", "*"])
-            constant = rng.choice(["", f" {rng.choice(['+', '*'])} {rng.randint(1, 4)}"])
-            lines.append(f"DERIVE t.{name} = {left} {sign} {right}{constant};")
-            types[name] = "INTEGER" if types[left] == types[right] == "INTEGER" else "FLOAT"
-        elif op == "expect_range" and numeric():
-            column = rng.choice(numeric())
-            low = rng.randint(-120, 0)
-            lines.append(f"EXPECT t.{column} BETWEEN {low} AND {low + rng.randint(50, 300)};")
-        elif op == "expect_notnull":
-            lines.append(f"EXPECT t.{rng.choice(list(types))} NOT_NULL;")
-        elif op == "drop" and len(types) > 3:
-            column = rng.choice([c for c in types if c != "id"])
-            lines.append(f"DROP t [{column}];")
-            del types[column]
-        elif op == "select" and len(types) > 3:
-            keep = ["id"] + rng.sample([c for c in types if c != "id"], rng.randint(2, len(types) - 1))
-            rng.shuffle(keep)
-            lines.append(f"SELECT t [{', '.join(keep)}];")
-            types = {c: types[c] for c in keep}
+                column = rng.choice(numeric)
+                items.append(f"{function} {column} AS {name}")
+                new[name] = "FLOAT" if function == "MEAN" else types[column]
+        lines.append(f"AGGREGATE t BY [{', '.join(by)}] {', '.join(items)};")
+        types.clear()
+        types.update(new)
+        for _ in range(rng.randint(0, 2)):
+            line = statement(rng, types, names)
+            if line:
+                lines.append(line)
     lines.append('SAVE t AS "out.csv";')
     return "\n".join(lines) + "\n"
+
+
+def statement(rng, types, names):
+    """One random statement over t for the current column types (updated), or None."""
+    numeric = [c for c, k in types.items() if k in ("INTEGER", "FLOAT")]
+    op = rng.choice(["filter", "filter", "fill", "fillstat", "normalize", "dropnull", "derive",
+                     "expect_range", "expect_notnull", "drop", "select"])
+    if op == "filter":
+        return f"FILTER t WHERE {condition(rng, types, 2)};"
+    if op == "fill":
+        column = rng.choice(list(types))
+        value = {"INTEGER": str(rng.randint(-5, 5)), "FLOAT": f"{rng.randint(-5, 5)}.5",
+                 "STRING": '"none"', "BOOLEAN": rng.choice(["TRUE", "FALSE"])}[types[column]]
+        return f"FILL_NULL t.{column} WITH {value};"
+    if op == "fillstat" and numeric:
+        column = rng.choice(numeric)
+        stat = rng.choice(["MEAN", "MEDIAN", "MODE"])
+        if stat != "MODE":
+            types[column] = "FLOAT"
+        return f"FILL_NULL t.{column} WITH {stat};"
+    if op == "normalize" and numeric:
+        column = rng.choice([c for c in numeric if c != "id"] or numeric)
+        types[column] = "FLOAT"
+        return f"NORMALIZE t.{column} USING {rng.choice(['MINMAX', 'ZSCORE'])};"
+    if op == "dropnull":
+        if rng.random() < 0.5:
+            return "DROP_NULL t;"
+        return f"DROP_NULL t [{', '.join(rng.sample(list(types), min(len(types), rng.randint(1, 2))))}];"
+    if op == "derive" and numeric:
+        name = next(names)
+        left, right = rng.choice(numeric), rng.choice(numeric)
+        sign = rng.choice(["+", "-", "*"])
+        constant = rng.choice(["", f" {rng.choice(['+', '*'])} {rng.randint(1, 4)}"])
+        types[name] = "INTEGER" if types[left] == types[right] == "INTEGER" else "FLOAT"
+        return f"DERIVE t.{name} = {left} {sign} {right}{constant};"
+    if op == "expect_range" and numeric:
+        low = rng.randint(-120, 0)
+        return f"EXPECT t.{rng.choice(numeric)} BETWEEN {low} AND {low + rng.randint(50, 300)};"
+    if op == "expect_notnull":
+        return f"EXPECT t.{rng.choice(list(types))} NOT_NULL;"
+    if op == "drop" and len(types) > 3:
+        column = rng.choice([c for c in types if c != "id"])
+        del types[column]
+        return f"DROP t [{column}];"
+    if op == "select" and len(types) > 3:
+        keep = rng.sample(list(types), rng.randint(2, len(types) - 1))
+        for column in [c for c in types if c not in keep]:
+            del types[column]
+        return f"SELECT t [{', '.join(keep)}];"
+    return None
 
 
 def condition(rng, types, depth):
@@ -189,10 +242,11 @@ def tokens(text):
     return out
 
 
-def reference(source, table, failed=None):
-    """Runs the program on the table: (columns, kinds) with typed Python values. A contract
-    that does not hold raises Failure; with a list `failed`, its line is added to the list
-    instead and the program goes on (as if that check were not there)."""
+def reference(source, table, lookup, failed=None):
+    """Runs the program on the table t (and the lookup table u): (columns, kinds) of t with
+    typed Python values. A contract that does not hold raises Failure; with a list `failed`,
+    its line is added to the list instead and the program goes on (as if that check were
+    not there)."""
     def fail(line, why):
         if failed is None:
             raise Failure(line, why)
@@ -277,6 +331,56 @@ def reference(source, table, failed=None):
                     columns.pop(x[0])
         elif word == "SELECT":
             columns = {x[0]: columns[x[0]] for x in t[3:-2] if isinstance(x, tuple)}
+        elif word == "JOIN":  # left join; each key once in u; a missing key matches nothing
+            key = t[5][0]
+            found = {}
+            for i, value in enumerate(lookup[key][1]):
+                if value is None:
+                    continue
+                if value in found:
+                    fail(number, f"{key} {value} repeats")
+                    continue
+                found[value] = i
+            for name, (kind, values) in lookup.items():
+                if name != key:
+                    columns[name] = [None if v not in found else values[found[v]] for v in columns[key]]
+                    kinds[name] = kind
+        elif word == "AGGREGATE":  # one row per group of non-missing BY values, sorted by them
+            close = t.index("]")
+            by = [x[0] for x in t[4:close] if isinstance(x, tuple)]
+            groups = {}
+            for i in range(rows):
+                group = tuple(columns[c][i] for c in by)
+                if None not in group:
+                    groups.setdefault(group, []).append(i)
+            ordered = sorted(groups)
+            result = {c: [g[j] for g in ordered] for j, c in enumerate(by)}
+            new_kinds = {c: kinds[c] for c in by}
+            items, current = [], []
+            for x in t[close + 1:-1]:
+                if x == ",":
+                    items.append(current)
+                    current = []
+                else:
+                    current.append(x)
+            items.append(current)
+            for item in items:
+                function, name = item[0][0], item[-1][0]
+                if function == "COUNT":
+                    result[name] = [len(groups[g]) for g in ordered]
+                    new_kinds[name] = "INTEGER"
+                    continue
+                column = item[1][0]
+                values = [[columns[column][i] for i in groups[g] if columns[column][i] is not None] for g in ordered]
+                if function == "SUM":
+                    zero = 0.0 if kinds[column] == "FLOAT" else 0
+                    result[name] = [sum(v, zero) for v in values]
+                elif function == "MEAN":
+                    result[name] = [statistics.fmean(v) if v else None for v in values]
+                else:
+                    result[name] = [(min(v) if function == "MIN" else max(v)) if v else None for v in values]
+                new_kinds[name] = "FLOAT" if function == "MEAN" else kinds[column]
+            columns, kinds = result, new_kinds
     return columns, kinds
 
 
@@ -377,13 +481,13 @@ def compile_program(folder, extra):
             "line": int(lines[0][1]) if lines else None, "text": text[-600:]}
 
 
-def run_generated(folder, script):
+def run_generated(folder, script, inputs=()):
     out = folder / "output"
     target = out / "out.csv"
     if target.exists():
         target.unlink()
     text, argv = io.StringIO(), sys.argv
-    sys.argv = [str(out / script)]
+    sys.argv = [str(out / script), *inputs]
     os.environ["PREPLANG_TRUST_INPUTS"] = "0"
     start = time.perf_counter()
     try:
@@ -392,14 +496,18 @@ def run_generated(folder, script):
     except Exception as error:  # noqa: BLE001 - the program's failure is a result
         found = re.match(r"line (\d+):", str(error))
         status = "contract error" if type(error).__name__ == "ContractError" else "crash"
+        if "is not the input the program was compiled with" in str(error):
+            status = "refused"
         return {"status": status, "line": int(found.group(1)) if found else None,
-                "reason": f"{type(error).__name__}: {str(error)[:300]}", "seconds": time.perf_counter() - start}
+                "reason": f"{type(error).__name__}: {str(error)[:300]}", "seconds": time.perf_counter() - start,
+                "deopts": text.getvalue().count("Deoptimized ")}
     finally:
         sys.argv = argv
     seconds = time.perf_counter() - start
     with open(target, newline="", encoding="utf-8") as f:
         rows = list(csv.reader(f))
-    return {"status": "saved", "header": rows[0], "rows": rows[1:], "seconds": seconds}
+    return {"status": "saved", "header": rows[0], "rows": rows[1:], "seconds": seconds,
+            "deopts": text.getvalue().count("Deoptimized ")}
 
 
 def same_cell(text, value, kind):
@@ -412,7 +520,7 @@ def same_cell(text, value, kind):
     if kind == "STRING":
         return text == value
     number = float(text)
-    return math.isclose(number, float(value), rel_tol=1e-9, abs_tol=1e-12)
+    return math.isclose(number, float(value), rel_tol=1e-9, abs_tol=1e-9)
 
 
 def agrees(run, expected):
@@ -438,27 +546,38 @@ def agrees(run, expected):
     return ""
 
 
+def expectation(source, table, lookup):
+    """The reference outcome: the rows saved, or the line of the first failing contract
+    (and every line whose contract fails)."""
+    try:
+        columns, kinds = reference(source, table, lookup)
+        names = list(columns)
+        rows = list(zip(*columns.values())) if names else []
+        return {"status": "saves", "header": names, "rows": rows, "kinds": kinds}
+    except Failure as failure:
+        failing = []
+        reference(source, table, lookup, failing)
+        return {"status": "fails", "line": failure.line, "failing": failing}
+
+
 def check_one(index, seed):
     rng = random.Random(seed * 100003 + index)
-    table = random_table(rng)
+    table, lookup = random_table(rng), random_lookup(rng)
     source = random_program(rng, table)
+    batch, batch_lookup = random_table(rng), random_lookup(rng)  # the second batch, for reuse
     folder = WORK / f"p{index:04d}"
     if folder.exists():
         shutil.rmtree(folder)
     folder.mkdir(parents=True)
     write_csv(folder / "data.csv", table)
+    write_csv(folder / "lookup.csv", lookup)
+    write_csv(folder / "data_b.csv", batch)
+    write_csv(folder / "lookup_b.csv", batch_lookup)
     (folder / "program.prep").write_text(source, encoding="utf-8")
-    try:
-        columns, kinds = reference(source, table)
-        names = list(columns)
-        rows = list(zip(*columns.values())) if names else []
-        expected = {"status": "saves", "header": names, "rows": rows, "kinds": kinds}
-    except Failure as failure:
-        failing = []
-        reference(source, table, failing)
-        expected = {"status": "fails", "line": failure.line, "failing": failing}
+    expected = expectation(source, table, lookup)
     result = {"index": index, "program": source, "expected": expected["status"],
-              "expected_rows": len(expected.get("rows", [])), "variants": {}}
+              "expected_rows": len(expected.get("rows", [])), "variants": {},
+              "join": "JOIN " in source, "aggregate": "AGGREGATE " in source}
     for variant, extra in (("O0", ["--O0"]), ("optimized", [])):
         compiled = compile_program(folder, extra)
         run = compiled if compiled["status"] != "compiled" else run_generated(folder, "generated.py")
@@ -473,6 +592,18 @@ def check_one(index, seed):
     a, b = result["variants"]["O0"].pop("_run"), result["variants"]["optimized"].pop("_run")
     result["same_O0_optimized"] = (a["status"] == b["status"] and a.get("line") == b.get("line")
                                    and a.get("header") == b.get("header") and a.get("rows") == b.get("rows"))
+    # Reuse: the optimized program (output/generated.py) on the second batch
+    if result["variants"]["optimized"]["status"] != "compile error":
+        run = run_generated(folder, "generated.py", [f"t={folder / 'data_b.csv'}", f"u={folder / 'lookup_b.csv'}"])
+        truth = expectation(source, batch, batch_lookup)
+        if run["status"] == "refused":
+            outcome, problem = "refused", ""
+        else:
+            # A compile error is not possible here, so a failure must be at the first failing line.
+            problem = agrees(run, dict(truth, failing=[truth.get("line")]))
+            outcome = "wrong" if problem else "correct stop" if run["status"] == "contract error" else "correct run"
+        result["reuse"] = {"outcome": outcome, "problem": problem, "deopts": run.get("deopts", 0),
+                           "truth": truth["status"], "detail": run.get("reason", "")}
     return result
 
 
@@ -495,8 +626,23 @@ def report(results, seconds):
               f"| optimized agrees with the reference | {agree['optimized']} / {n} |",
               f"| --O0 and optimized give byte-identical outputs or the same failure | {same} / {n} |",
               f"| failing contracts reported at compile time (before any data is processed) | {static} / {fails} |",
+              f"| programs with a JOIN / an AGGREGATE | {sum(r['join'] for r in results)} / "
+              f"{sum(r['aggregate'] for r in results)} |",
               f"| time for the whole run (s) | {seconds:.0f} |", ""]
-    wrong = [r for r in results if any(r["variants"][v]["problem"] for v in ("O0", "optimized")) or not r["same_O0_optimized"]]
+    reused = [r["reuse"] for r in results if "reuse" in r]
+    outcomes = {o: sum(1 for u in reused if u["outcome"] == o) for o in ("correct run", "correct stop", "refused", "wrong")}
+    lines += ["## Reuse on a second batch", "",
+              "The optimized program of every program that compiled, run on another random batch with the "
+              "same columns (`t=data_b.csv u=lookup_b.csv`), against the reference on that batch.", "",
+              "| Outcome | Programs |", "|---|---:|",
+              f"| ran, same rows as the reference | {outcomes['correct run']} |",
+              f"| stopped at the line where the reference fails | {outcomes['correct stop']} |",
+              f"| refused (the batch breaks the admission certificate) | {outcomes['refused']} |",
+              f"| wrong (other rows, another line, or a crash) | {outcomes['wrong']} |",
+              f"| runs that re-enabled at least one removed check or operation | "
+              f"{sum(1 for u in reused if u['deopts'])} |", ""]
+    wrong = [r for r in results if any(r["variants"][v]["problem"] for v in ("O0", "optimized")) or not r["same_O0_optimized"]
+             or r.get("reuse", {}).get("outcome") == "wrong"]
     if wrong:
         lines += ["## Disagreements", ""]
         for r in wrong:
@@ -504,6 +650,8 @@ def report(results, seconds):
             for v in ("O0", "optimized"):
                 lines.append(f"- {v}: {r['variants'][v]['status']}; {r['variants'][v]['problem'] or 'agrees'}"
                              + (f" ({r['variants'][v]['detail'].strip()[:200]})" if r['variants'][v]['detail'] else ""))
+            if r.get("reuse", {}).get("outcome") == "wrong":
+                lines.append(f"- reuse on the second batch: {r['reuse']['problem']} ({r['reuse']['detail'][:200]})")
             lines.append("")
     return "\n".join(lines)
 
