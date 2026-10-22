@@ -414,17 +414,37 @@ void SemanticAnalyzer::visit(const DropNullStmt& node) {
 }
 
 void SemanticAnalyzer::visit(const FillNullStmt& node) {
-    std::optional<ColumnResolution> resolution = resolver_.columns(node.target, "FILL_NULL");
-    if (!resolution) {
-        return;
-    }
-    DatasetSymbol& dataset = *resolution->dataset;
     const bool literal = node.method == FillMethod::Value;
     const bool average = node.method == FillMethod::Mean || node.method == FillMethod::Median;
-    const std::string method = literal ? literalText(node.value) : fillMethodName(node.method);
     const auto fits = [&](const ColumnState& column) {
         return literal ? canStore(column.type, node.value) : !average || isNumeric(column.type);
     };
+    // WHERE NULLABLE means the columns with missing values, which depends on the batch. Filling a
+    // column without missing values has no effect, so the statement means the same on every batch
+    // if it matches every column the fill fits (those without missing values here become no-ops,
+    // removed behind a "no missing values" certificate) and the others only where values are
+    // missing (on a batch with missing values there, a fresh compilation reports a type error,
+    // which the admission certificate stands in for).
+    Selector selector = node.target;
+    const bool nullable = selector.filter == SelectorFilter::Nullable;
+    if (nullable) {
+        selector.filter = SelectorFilter::None;
+    }
+    std::optional<ColumnResolution> resolution = resolver_.columns(selector, "FILL_NULL");
+    if (!resolution) {
+        return;
+    }
+    if (nullable) {
+        std::vector<ColumnMatch> kept;
+        for (const ColumnMatch& match : resolution->matched) {
+            if (match.column->nullable || fits(*match.column)) {
+                kept.push_back(match);
+            }
+        }
+        resolution->matched = kept;
+    }
+    DatasetSymbol& dataset = *resolution->dataset;
+    const std::string method = literal ? literalText(node.value) : fillMethodName(node.method);
     const auto hint = [&](const ColumnState& column) {
         return literal ? valueHint(column) : "use MODE (the most frequent value) for a " +
                                                  std::string(columnTypeName(column.type)) + " column";

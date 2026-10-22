@@ -67,6 +67,7 @@ are exact (no noise, not private), for comparison.
 """
 import argparse
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -76,9 +77,24 @@ import pandas as pd
 NUMERIC = ("INTEGER", "FLOAT")
 
 
+_files = {}  # the identity of a file -> the path it was first seen under
+
+
+def same_file(file):
+    """One path for every spelling of the same file (case on Windows, '..', links): the budget is
+    divided between tables, and one file loaded twice is one table whose rows a person is in once,
+    so two spellings must not count as two tables (that would spend epsilon twice on the same rows)."""
+    try:
+        stat = os.stat(file)
+        identity = (stat.st_dev, stat.st_ino) if stat.st_ino else os.path.normcase(os.path.realpath(file))
+    except OSError:
+        identity = os.path.normcase(os.path.realpath(file))
+    return _files.setdefault(identity, file)
+
+
 def read_queries(path):
     """-> (numbers, [(load path, name, format, file, [(column, type, asked)])]); asked is
-    "range", "missing" or "none"."""
+    "range", "missing" or "none". `file` is the same string for every spelling of one file."""
     numbers, tables = [], []
     lines = Path(path).read_text(encoding="utf-8").splitlines()
     if not lines or lines[0].split("\t") != ["preplang-queries", "1"]:
@@ -88,7 +104,7 @@ def read_queries(path):
         if fields[0] == "constants":
             numbers = [float(value) for value in fields[1:]]
         elif fields[0] == "table":
-            tables.append((fields[1], fields[2], fields[3], fields[4], []))
+            tables.append((fields[1], fields[2], fields[3], same_file(fields[4]), []))
         elif fields[0] == "column":
             tables[-1][4].append((fields[1], fields[2], fields[3]))
     return numbers, tables

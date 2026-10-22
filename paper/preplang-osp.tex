@@ -1,0 +1,134 @@
+% PrepLang as an Original Software Publication (OSP) for the Software Track of Science of Computer
+% Programming, on Elsevier's OSP template (scico-osp-template.tex): code metadata table, motivation,
+% software description, illustrative example, impact, conclusions. Suggested length 3-6 pages of
+% running text. The research article is preplang-scp.tex.
+% Build from this folder: py -3 ../eval/paper_numbers.py, pdflatex preplang-osp.tex,
+% py -3 osp_references.py, then pdflatex preplang-osp.tex twice.
+\documentclass[preprint,12pt,a4paper]{elsarticle}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{array}
+\usepackage{adjustbox}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=4pt, parsep=0pt}  % compact lists
+\usepackage{xspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage[hidelinks]{hyperref}
+\setlength{\emergencystretch}{3em}
+
+% Every measured number comes from eval/results/ through eval/paper_numbers.py.
+\input{generated/numbers}
+
+% A field only the author can fill in before submitting (printed in red so that it is not missed).
+\newcommand{\fillin}[1]{\textcolor{red}{[#1]}}
+
+\lstdefinelanguage{PrepLang}{
+  morekeywords={LOAD,SAVE,AS,WITH,WHERE,USING,DROP_NULL,FILL_NULL,NORMALIZE,FILTER,SELECT,DROP,EXPECT,
+    MINMAX,NUMBER,NOT_NULL,BETWEEN,AND,OR,TRUE},
+  sensitive=false, comment=[l]{\#}, morestring=[b]"
+}
+\lstset{language=PrepLang, basicstyle=\ttfamily\footnotesize, keywordstyle=\bfseries,
+  commentstyle=\itshape\color{gray}, numbers=left, numberstyle=\tiny, xleftmargin=1.5em,
+  frame=tb, columns=fullflexible, breaklines=true, showstringspaces=false}
+
+\newcommand{\PL}{PrepLang\xspace}
+\newcommand{\full}{\ensuremath{\mathcal{F}}}
+\newcommand{\adm}{\ensuremath{\mathcal{A}}}
+
+\journal{Science of Computer Programming}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{PrepLang: a data-aware compiler for data-preparation pipelines that reuses its proofs on new
+batches}
+
+\author{Nikhil V}
+\ead{atnikhil06@gmail.com}
+\address{School of Computer Science and Engineering, Vellore Institute of Technology, Vellore 632014,
+Tamil Nadu, India}
+
+\begin{abstract}
+\PL is a compiler, written in C++17, for a small language of table and image preprocessing pipelines.
+It reads the input data at compile time, proves or refutes the pipeline's data contracts before any
+data is processed, removes the checks and operations the data makes useless, and generates a pandas
+and OpenCV program. The generated program keeps every removal behind a guard with the input facts it
+depends on, so it runs unchanged on new batches and runs a removal again only on a batch that breaks
+its facts. The repository also holds Lean~4 proofs for a core of the analysis, a lifter for pandas
+scripts, a tool that composes compiled stages, a tool that releases differentially private facts to
+compile against, and the complete evaluation.
+\end{abstract}
+
+\begin{keyword}
+data-aware compilation \sep data validation \sep speculative optimization \sep deoptimization \sep
+data pipelines \sep differential privacy
+\end{keyword}
+
+\end{frontmatter}
+
+% The template's code metadata table (its caption names it), at the top of the next page.
+\begin{table}[t]
+\footnotesize
+\renewcommand{\arraystretch}{1.0}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{|l|p{5.6cm}|p{8.6cm}|}
+\hline
+\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Please fill in this column} \\
+\hline
+C1 & Current code version & \fillin{v2.0.0: tag this release} \\
+\hline
+C2 & Permanent link to code/repository used for this code version &
+  \url{https://github.com/Nikhi00718/preLang} \fillin{make it public} \\
+\hline
+C3 & Permanent link to Reproducible Capsule & None; \texttt{eval/paper\_numbers.py} regenerates every
+  number from the raw results \\
+\hline
+C4 & Legal Code License & \fillin{an OSI-approved licence, e.g.\ MIT, in a LICENSE file} \\
+\hline
+C5 & Code versioning system used & git \\
+\hline
+C6 & Software code languages, tools, and services used & C++17 (no external libraries); Python~3 with
+  pandas, NumPy, PyArrow, OpenCV; Lean~4; CMake \\
+\hline
+C7 & Compilation requirements, operating environments and dependencies & CMake 3.16+, a C++17 compiler
+  (tested: Visual Studio 2022, Windows~11); Python 3.12 with pandas, PyArrow, OpenCV; Lean 4.34.1
+  (optional, for the proofs) \\
+\hline
+C8 & If available, link to developer documentation/manual & \texttt{README.md}; the READMEs of
+  \texttt{eval/}, \texttt{paper/}, \texttt{proofs/}, \texttt{docs/} \\
+\hline
+C9 & Support email for questions & atnikhil06@gmail.com \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Code metadata (mandatory)}
+\label{tab:metadata}
+\end{table}
+
+\input{sections/osp-body}
+
+\section*{Declaration of competing interest}
+The author declares no known competing financial interests or personal relationships that could have
+appeared to influence the work reported in this paper.
+
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the public, commercial, or
+not-for-profit sectors.
+
+% Science of Computer Programming requires a statement here, before the references, if generative AI
+% tools were used in preparing the manuscript (Elsevier's wording):
+% \section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
+% During the preparation of this work the author used [NAME OF TOOL/SERVICE] in order to [REASON]. After
+% using this tool/service, the author reviewed and edited the content as needed and takes full
+% responsibility for the content of the published article.
+
+\input{sections/references-osp}
+
+\end{document}

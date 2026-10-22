@@ -567,7 +567,8 @@ def private(results, diagnostics, numbers):
                                                     for r in of(kind, "titanic"))
         for key in ("traffic", "bikes", "taxi", "titanic"):
             for method, prefix in (("", "Prog"), ("generic ", "Gen"), ("synthetic ", "Syn"), ("corpus ", "Corp"),
-                                   ("hdmm ", "Hdmm"), ("aim ", "Aim"), ("aim-synthetic ", "AimSyn")):
+                                   ("hdmm ", "Hdmm"), ("aim ", "Aim"), ("aim-marginals ", "AimMarg"),
+                                   ("aim-synthetic ", "AimSyn")):
                 chosen = of(f"{method}{kind}", key)
                 if chosen:
                     label = f"Priv{prefix}{key.capitalize()}Eps{name}"
@@ -584,7 +585,8 @@ def private(results, diagnostics, numbers):
     for kind, name in (("unit eps=1", "One"), ("unit eps=10", "Ten")):
         numbers[f"PrivUnitTitanicEps{name}Precision"] = pct(precision(of(kind, "titanic")))
     # The workload-aware baselines over all workloads, and their "likely violated" warnings.
-    for method, prefix in (("", "Prog"), ("hdmm ", "Hdmm"), ("aim ", "Aim"), ("generic ", "Gen")):
+    for method, prefix in (("", "Prog"), ("hdmm ", "Hdmm"), ("aim ", "Aim"), ("aim-marginals ", "AimMarg"),
+                           ("generic ", "Gen")):
         for kind, name in (("eps=1", "One"), ("eps=10", "Ten")):
             chosen = of(f"{method}{kind}")
             if chosen:
@@ -595,6 +597,9 @@ def private(results, diagnostics, numbers):
                 numbers[f"Priv{prefix}AllEps{name}Warned"] = sum(
                     any("likely violated" in w for w in r["warnings"]) for r in chosen)
                 numbers[f"Priv{prefix}AllEps{name}Count"] = len(chosen)
+    blocks = [shape for r in records if r["kind"].startswith("hdmm ")
+              for shape in re.findall(r"\w+: (identity|\d+ queries) over \d+ cells", r["facts"])]
+    numbers.update(PrivHdmmBlocks=f"{len(blocks):,}", PrivHdmmIdentity=f"{blocks.count('identity'):,}")
     import pandas as pd
     tickets = pd.read_csv(ROOT / "eval" / "data" / "titanic" / "train.csv")["Ticket"].value_counts()
     numbers.update(PrivTicketCount=len(tickets), PrivTicketGroups=int((tickets > 1).sum()), PrivTicketMax=int(tickets.max()))
@@ -613,7 +618,7 @@ def private(results, diagnostics, numbers):
     # Table: recall and precision against the normal removals, per workload and kind of facts.
     kinds = (["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["corpus eps=1", "corpus eps=10"] +
              ["unit eps=1", "unit eps=10"] +
-             [f"{base} eps={e}" for base in ("hdmm", "aim", "aim-synthetic", "generic", "synthetic")
+             [f"{base} eps={e}" for base in ("hdmm", "aim-marginals", "aim", "aim-synthetic", "generic", "synthetic")
               for e in ("1", "10")] +
              ["optimistic", "random", "none"])
     names = {"exact": "program's cells, no noise", "random": "random (true or false)", "none": "none (claims nothing)",
@@ -622,13 +627,13 @@ def private(results, diagnostics, numbers):
     lines = [r"\begin{table*}[t]",
              r"\caption{Private compilation (RQ8). Per workload, recall/precision (\%) of the compilation's removals "
              r"against the normal compilation of the same file: recall is the share of normal removals it also "
-             r"makes, precision the share of its removals that rest on true facts. Compiled: compilations without "
+             r"makes, precision the share of its removals that the normal compilation also makes. Compiled: compilations without "
              r"errors. Deopt.\ on file: compilations whose run on the compiled file itself deoptimizes (a released "
              r"fact was false). Every run is scored against a fresh compilation of its batch. $\varepsilon$ is the "
              r"budget of each table of one program; ``one release'' serves all Titanic scripts with one budget. HDMM: the "
-             r"high-dimensional matrix mechanism given the program's comparisons as its workload; AIM: synthetic data "
-             r"over the program's cells at $(\varepsilon, 10^{-9})$, its facts read off the synthetic rows, or the "
-             r"synthetic table compiled normally. Generic: fixed "
+             r"high-dimensional matrix mechanism given the program's comparisons as its workload; AIM: at "
+             r"$(\varepsilon, 10^{-9})$ over the program's cells, read with the release's threshold from its model's "
+             r"marginals, read off its synthetic rows, or its synthetic table compiled normally. Generic: fixed "
              r"logarithmic bins; synthetic: a table sampled from them, compiled normally.}",
              r"\label{tab:rq-private}", r"\centering", r"\footnotesize",
              r"\begin{tabular}{@{}lrrrrrrrrr@{}}", r"\toprule",
@@ -651,8 +656,8 @@ def private(results, diagnostics, numbers):
         else:
             method, epsilon = kind.rsplit(" ", 1) if " " in kind else ("program's cells", kind)
             method = {"corpus": "one release", "unit": "per ticket", "generic": "generic bins",
-                      "synthetic": "synthetic data", "hdmm": "HDMM", "aim": "AIM, facts",
-                      "aim-synthetic": "AIM, synthetic data"}.get(method, method)
+                      "synthetic": "synthetic data", "hdmm": "HDMM", "aim": "AIM, synthetic rows",
+                      "aim-marginals": "AIM, marginals", "aim-synthetic": "AIM, compiled"}.get(method, method)
             label = f"{method}, $\\varepsilon = {epsilon[4:]}$"
         deopt = f"{100 * sum(anchor) / len(anchor):.0f}\\%" if anchor else "--"
         lines.append(f"{label} & " + " & ".join(cells) + f" & {len(chosen):,} & {len(compiled):,} & {deopt} & "
@@ -672,7 +677,7 @@ def private(results, diagnostics, numbers):
         return f"{min(good):,}" if good and chosen else "never"
 
     for method, prefix in (("program", ""), ("generic", "Generic"), ("synthetic", "Synthetic"), ("hdmm", "Hdmm"),
-                           ("aim", "Aim"), ("aim-synthetic", "AimSyn")):
+                           ("aim", "Aim"), ("aim-marginals", "AimMarg"), ("aim-synthetic", "AimSyn")):
         chosen = [r for r in diagnostics if r["method"] == method]
         numbers[f"PrivDiag{prefix}Compilations"] = len(chosen)
         numbers[f"PrivDiag{prefix}False"] = sum(r["false_warnings"] for r in chosen)

@@ -64,8 +64,9 @@ releases one Laplace histogram per column over those cells; everything the compi
 declared schema, and with probability $1-\beta$ every ``likely violated'' warning is true and every
 released fact is false by few rows. At equal budget these program-chosen cells keep more of the normal
 compilation's removals than fixed bins and give a program where synthetic data compiled normally reports
-contracts as violated that the data satisfies; given the same cells, HDMM chooses the same measurements
-and does no better, and AIM's synthetic data loses removals and warns about contracts the data satisfies
+contracts as violated that the data satisfies; given the same cells and threshold, HDMM and AIM do no
+better on any workload, and AIM's synthetic data loses removals and warns about contracts the data
+satisfies
 (Section~\ref{sec:rq-private}).
 \item \textbf{An evaluation on real data and real code} (Section~\ref{sec:eval}): \RealRuns{}
 monthly batches of three public datasets, scored against fresh compilations and against
@@ -168,7 +169,7 @@ values and $M_c(T)$ the number of missing ones. A column is abstracted as
 $a = \langle \tau, \nu, [l,u], \epsilon \rangle$: a type, $\nu \in \{\textit{none},
 \textit{maybe}\}$ for missing values, an interval~\cite{cousot1976}, and an exactness flag, with
 \begin{multline*}
-\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau,\;
+\gamma(a) = \{\, T \mid V_c(T) \subseteq [l,u] \text{ with type } \tau, \\
   \nu = \textit{none} \Rightarrow M_c(T) = 0, \\
   \epsilon \Rightarrow \big(M_c(T) > 0 \Leftrightarrow \nu = \textit{maybe}\big) \wedge {} \\
   \big(V_c(T) = \emptyset \vee \min V_c = l \wedge \max V_c = u\big) \,\}.

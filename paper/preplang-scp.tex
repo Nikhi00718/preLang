@@ -1,9 +1,11 @@
 % The paper in the format of Science of Computer Programming (Elsevier, elsarticle class).
 % The text is shared with the ACM version (preplang.tex): sections/body.tex and sections/*.tex.
 % Build from this folder: py -3 ../eval/paper_numbers.py, then pdflatex preplang-scp.tex three times.
-\documentclass[preprint,12pt]{elsarticle}
+% Two columns (Elsevier's 5p journal layout): the guide for authors permits double-column formatting
+% for LaTeX submissions, and it halves the page count of the single-column preprint.
+\documentclass[final,5p,twocolumn]{elsarticle}
 
-\usepackage{lmodern}
+\usepackage{lmodern}  % scalable Type 1 fonts throughout
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
@@ -18,7 +20,26 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage[hidelinks]{hyperref}
-\setlength{\emergencystretch}{1.5em}
+\setlength{\emergencystretch}{3em}
+
+% Floats stay near the text that introduces them, with clear space around them.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.75}
+\renewcommand{\dblfloatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{dbltopnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\setlength{\textfloatsep}{14pt plus 4pt minus 2pt}
+\setlength{\dbltextfloatsep}{14pt plus 4pt minus 2pt}
+\setlength{\floatsep}{12pt plus 3pt minus 2pt}
+\setlength{\dblfloatsep}{12pt plus 3pt minus 2pt}
+\setlength{\intextsep}{12pt plus 3pt minus 2pt}
+\setlength{\abovecaptionskip}{6pt}
+\setlength{\belowcaptionskip}{2pt}
 
 % elsarticle ends a paragraph heading with a period; the shared text already has one.
 \makeatletter

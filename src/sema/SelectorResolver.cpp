@@ -135,6 +135,16 @@ std::optional<TableResolution> SelectorResolver::singleTable(const Selector& sel
 }
 
 std::optional<ColumnResolution> SelectorResolver::columns(const Selector& selector, const std::string& statement) {
+    if (selector.filter == SelectorFilter::Nullable) {
+        // Which columns have missing values depends on the batch: the statement would act on other
+        // columns of the next batch, which no certificate of the compiled program can stand in for.
+        // FILL_NULL resolves WHERE NULLABLE itself (a fill of a column without missing values does nothing).
+        diagnostics_.error(Phase::Semantic, selector.location,
+                           "WHERE NULLABLE is allowed only in FILL_NULL: which columns have missing values depends "
+                           "on the batch, so " + statement + " would act on other columns of the next one",
+                           "name the columns, or select them with WHERE TYPE");
+        return std::nullopt;
+    }
     DatasetSymbol* owner = dataset(selector.parts[0], selector.location);
     if (!owner || !requireTabular(*owner, selector.location, statement)) {
         return std::nullopt;

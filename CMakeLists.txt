@@ -59,5 +59,11 @@ foreach(name lexer parser semantic tableset imageset parquet optimizer scanner c
     add_test(NAME ${name} COMMAND test_${name})
 endforeach()
 
+# The data owner's release (tools/release_facts.py) is Python, tested if an interpreter is found.
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME release_facts COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_release_facts.py)
+endif()
+
 # The Parquet tests read small files made by tests/data/make_parquet.py
 target_compile_definitions(test_parquet PRIVATE PREPLANG_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")

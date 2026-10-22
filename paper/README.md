@@ -7,10 +7,12 @@ Pipelines*, in two formats that share one text: ACM `acmart` (`PrepLang_Paper.pd
 | Path | Contents |
 |---|---|
 | `preplang.tex` | the ACM version: front matter and the long abstract |
-| `preplang-scp.tex` | the SCP version: front matter, a 250-word abstract, keywords and the declarations |
+| `preplang-scp.tex` | the SCP version, in Elsevier's two-column journal layout (permitted for LaTeX submissions): front matter, a 250-word abstract, keywords and the declarations |
 | `sections/body.tex` | the text of both, introduction to conclusion |
 | `sections/` | the two abstracts, evaluation, related work, references (numbered in citation order) |
-| `make_scp_submission.py` | writes `scp-submission/`: one self-contained `.tex`, the PDF, `highlights.docx`, a zip |
+| `preplang-osp.tex` | the software article for the SCP Software Track (Original Software Publication): code metadata table, motivation, description, example, impact; `PrepLang_Software_SCP.pdf` |
+| `osp_references.py` | writes `sections/references-osp.tex`, the entries of `sections/references.tex` the software article cites |
+| `make_scp_submission.py` | writes `scp-submission/` and `scp-osp-submission/`: one self-contained `.tex`, the PDF, `highlights.docx`, a zip |
 | `figures/` | the hand-written figures (architecture, admission policies) |
 | `generated/` | every measured number (`numbers.tex`), the result tables and the timeline figure |
 | `archive/` | the earlier IEEE-format draft |
@@ -27,7 +29,20 @@ pdflatex preplang.tex
 pdflatex preplang.tex
 ```
 
-The SCP version builds the same way from `preplang-scp.tex`. For a submission, build it, then:
+The SCP version builds the same way from `preplang-scp.tex`. The software article needs its references
+written between the first and the second run:
+
+```bash
+pdflatex preplang-osp.tex
+py -3 osp_references.py
+pdflatex preplang-osp.tex
+pdflatex preplang-osp.tex
+```
+
+The Software Track requires the code in a public repository under an OSI-approved licence, named in
+the article's metadata table (fields C1, C2 and C4 are marked in red until they are filled in).
+
+For a submission, build the articles, then:
 
 ```bash
 py -3 make_scp_submission.py

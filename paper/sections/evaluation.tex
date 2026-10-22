@@ -279,8 +279,11 @@ above each number, of present values and of missing ones) and optimizes its meas
 $\varepsilon$ between the columns; we estimate the cells by least squares and read them with a threshold
 that bounds every cell's noise with probability $1-\beta$, as the release does. \emph{AIM}~\cite{mckenna2022aim}
 (the authors' code and default settings) generates synthetic data from the one-way marginals of the same
-cells at $(\varepsilon, 10^{-9})$, a weaker guarantee than $\varepsilon$-differential privacy; its synthetic
-data is read as facts (a cell is occupied if a synthetic row lies in it) or compiled normally.
+cells at $(\varepsilon, 10^{-9})$, a weaker guarantee than $\varepsilon$-differential privacy. We read it
+three ways: as the release is read (its model's one-way marginals, a cell occupied if its estimate exceeds a
+threshold that bounds every cell's Gaussian noise with probability $1-\beta$, from the noise of AIM's
+measurements of that column); off its synthetic rows (a cell is occupied if a synthetic row lies in it);
+and by compiling its synthetic table normally.
 Random facts, true or false at random, test exactness. Every generated program was run on every batch of
 RQ4 or RQ5 and on the compiled file itself, and scored against a fresh compilation of the batch.
 
@@ -322,26 +325,34 @@ the runs deoptimize. A family on one ticket is then protected at $\varepsilon$ r
 \PrivTicketMax$\varepsilon$, and every run stays exact.
 
 \paragraph{Workload-aware mechanisms.} Given the program's cells, HDMM chooses the identity measurement
-for every column of every release (1{,}064 of 1{,}064): the workload needs every cell's count. It differs
-from the release only in how it divides $\varepsilon$ between the columns of a table, giving more to
-columns with more cells (in the traffic pipeline 22\% to each of four columns compared with numbers and
-6\% to each column asked only about missing values, where the release gives each 17\%). Its removals
-equal the release's on the pipelines and on Titanic at $\varepsilon = 1$; at $\varepsilon = 10$ its
-Titanic precision is \PrivHdmmTitanicEpsTenPrecision\% against \PrivProgTitanicEpsTenPrecision\%, because
-most Titanic facts are about missing values, in the columns it gives less. AIM keeps fewer of the normal
-removals (over all workloads, \PrivAimAllEpsOneRecall\% at $\varepsilon = 1$ and \PrivAimAllEpsTenRecall\% at
-$\varepsilon = 10$, against \PrivProgAllEpsOneRecall\% and \PrivProgAllEpsTenRecall\%), and more of the
-removals it makes rest on true facts (\PrivAimAllEpsOnePrecision\% and \PrivAimAllEpsTenPrecision\%, against
-\PrivProgAllEpsOnePrecision\% and \PrivProgAllEpsTenPrecision\%): its synthetic data puts rows in cells the
-data leaves empty, so its facts err towards ``maybe''. The same rows give warnings about contracts that
-no compiled file breaks, \PrivAimAllEpsOneWarnings{} and \PrivAimAllEpsTenWarnings{} of them, in
-\PrivAimAllEpsOneWarned{} and \PrivAimAllEpsTenWarned{} of \PrivAimAllEpsOneCount{} compilations; the release
-and HDMM give none. Compiled normally, AIM's synthetic data fails, like the generic synthetic data, on every
-pipeline compilation at both budgets (all \PrivAimSynEpsOneFailed{} at each), with contracts
-the real data satisfies. Given the cells, a mechanism optimized for the workload thus chooses the same
-measurements, and one optimized for synthetic data loses the emptiness the compiler needs: what the
-program's numbers contribute is the cells (Theorem~\ref{thm:cells}), and what the threshold contributes
-is that an occupied cell holds a row.
+for \PrivHdmmIdentity{} of the \PrivHdmmBlocks{} columns it measures: the workload needs every cell's count. It
+differs from the release only in how it divides $\varepsilon$ between the columns of a table. It minimizes
+the expected squared error of the comparison queries, which gives more to columns compared with many
+numbers (in the traffic pipeline 22\% to each of four such columns and 6\% to each column asked only about
+missing values, where the release gives each 17\%); minimizing the largest noise of any cell, which is
+what deciding emptiness needs, gives the release's equal split. HDMM's removals equal the release's on
+the pipelines and on Titanic at $\varepsilon = 1$; at $\varepsilon = 10$ its Titanic precision is
+\PrivHdmmTitanicEpsTenPrecision\% against \PrivProgTitanicEpsTenPrecision\%, because most Titanic facts are
+about missing values, in the columns it gives less. AIM read as the release is read keeps every removal of
+the taxi and traffic pipelines and gives no warning, as the release does; it spends its budget over 16
+rounds per column, so each cell is noisier, and it keeps \PrivAimMargBikesEpsTenRecall\% of the bike
+removals at $\varepsilon = 10$ (release: \PrivProgBikesEpsTenRecall\%) at a Titanic precision of
+\PrivAimMargTitanicEpsTenPrecision\% (release: \PrivProgTitanicEpsTenPrecision\%). Read off its synthetic
+rows, as an analyst who has only the synthetic data would, AIM keeps fewer of the normal removals
+(\PrivAimAllEpsOneRecall\% at $\varepsilon = 1$ and \PrivAimAllEpsTenRecall\% at $\varepsilon = 10$ over all
+workloads, against \PrivProgAllEpsOneRecall\% and \PrivProgAllEpsTenRecall\%) and makes fewer that the normal
+compilation does not make (precision \PrivAimAllEpsOnePrecision\% and \PrivAimAllEpsTenPrecision\%, against
+\PrivProgAllEpsOnePrecision\% and \PrivProgAllEpsTenPrecision\%): synthetic rows fill cells the data leaves
+empty, so the facts err towards ``maybe'', and the same rows give \PrivAimAllEpsOneWarnings{} and
+\PrivAimAllEpsTenWarnings{} warnings about contracts that no compiled file breaks. Compiled normally, AIM's
+synthetic table fails, like the generic synthetic data, on every pipeline compilation at both budgets, with
+contracts the real data satisfies. In short, read with the release's threshold, neither mechanism keeps
+more removals or makes fewer wrong ones than one Laplace histogram per column, on any workload at either
+budget: given the cells, deciding emptiness needs every cell's count with equal noise, which the plain
+histogram gives. What the program's numbers contribute is the cells (Theorem~\ref{thm:cells}), and what
+the threshold contributes is that an occupied cell holds a row. We did not evaluate Gaussian noise under
+zero-concentrated differential privacy, which for tables with many columns can need a lower threshold than
+Laplace noise at the same $(\varepsilon, \delta)$, nor operating points other than $\beta = 0.05$.
 
 \paragraph{Warnings.} On a \PrivDiagRows-row Parquet file we injected a mistake into $m$ rows (amounts
 above the contract's bound, missing values in a \texttt{NOT\_NULL} column, values below a bound)
@@ -361,10 +372,13 @@ method; the run-time check stops the program at it. HDMM reports no contract the
 (\PrivDiagHdmmFalse{} in \PrivDiagHdmmCompilations{} compilations) and every mistake in every run from
 $m = \PrivDiagHdmmEpsOne$ at $\varepsilon = 1$, as the release, but only from $m = \PrivDiagHdmmEpsTen$ at
 $\varepsilon = 10$, where the release needs \PrivDiagEpsTen{}: the missing values of \texttt{s} get less of
-its budget. AIM's reports do not depend on the mistake. On the file without one, its facts warn about
-the contract in \PrivDiagAimCleanWarned\% of the compilations, and \PrivDiagAimFalseShare\% of its
-compilations warn about a contract the data satisfies; \PrivDiagAimSynFalseShare\% of the compilations of
-its synthetic data report one as violated.
+its budget. AIM read as the release is read reports no contract the data satisfies
+(\PrivDiagAimMargFalse{} in \PrivDiagAimMargCompilations{} compilations) and every mistake in every run from
+$m = \PrivDiagAimMargEpsOne$ at $\varepsilon = 1$ and $m = \PrivDiagAimMargEpsTen$ at $\varepsilon = 10$. Read off
+its synthetic rows, its reports do not depend on the mistake: on the file without one it warns about the
+contract in \PrivDiagAimCleanWarned\% of the compilations, \PrivDiagAimFalseShare\% of its compilations warn
+about a contract the data satisfies, and \PrivDiagAimSynFalseShare\% of the compilations of its synthetic
+table report one as violated.
 
 \input{generated/privatetable}
 \input{generated/privatediagtable}
@@ -399,7 +413,16 @@ no effect, and the certifier kept ``no missing \texttt{Embarked}'' as an admissi
 program never loads. A dead store is removed whatever the data, so its no-effect fact is no longer an
 obligation; a normal compilation of a file without missing \texttt{Embarked} had the same needless
 refusals waiting for the next batch. The earlier RQs were measured before this fix, which only removes
-admission facts.
+admission facts. Two more were found by independent reviews of this work. (7)~The selector
+\texttt{WHERE NULLABLE} chose its columns by the compile-time facts, with no certificate for the choice: a
+program compiled where a column had no missing values never filled that column on a batch where it had
+some, and wrote what a fresh compilation would not. A fill of a column without missing values has no
+effect, so \texttt{FILL\_NULL \ldots\ WHERE NULLABLE} now matches every column its value fits, and those
+without missing values become removals guarded by ``no missing values''; with any other statement the
+selector is an error, since no certificate can say that a column \emph{has} missing values. No program
+of the evaluation uses it. (8)~The release keyed tables by their path, so one file loaded under two
+spellings (\texttt{p.csv} and \texttt{P.CSV} on Windows) counted as two tables and received $\varepsilon$
+twice; tables are now keyed by the file itself. No release of the evaluation loads a file twice.
 
 \subsection{Threats to validity}
 

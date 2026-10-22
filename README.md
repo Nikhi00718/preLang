@@ -177,7 +177,7 @@ or filling it is a type error, as the language has no date values.
 ```text
 company.*.salary                                     # salary in every table
 company.*.* WHERE TYPE NUMERIC EXCEPT [id, year]     # every numeric column except the keys
-company.*.* WHERE NULLABLE                           # every column with missing values
+FILL_NULL company.*.* WHERE NULLABLE WITH 0;         # every column with missing values (FILL_NULL only)
 FILL_NULL company.*.age WITH 0 IF_EXISTS;            # skip the tables without the column
 ```
 

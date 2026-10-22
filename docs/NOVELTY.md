@@ -538,6 +538,24 @@ prediction-invariance certificates 7.5, retroactive edit certificates 7-7.5, and
   synthetic-data generator loses emptiness; the contribution is the cells (Theorem Cells) and the
   threshold, not the measurement. A first run of the AIM baseline had a decoder bug (non-integers in
   INTEGER columns, 171 needless refusals); it was fixed before these numbers.
+- **Strict re-review of f1ad7fd (two reviewers).** PL: overall 5.5, private compilation 6.0 (both
+  unchanged); DB/privacy: overall 5.5, private compilation 5.5 (+0.5). Tool venues: 45-65% by both. They
+  found two real bugs, both fixed with regression tests: (1) `FILL_NULL ... WHERE NULLABLE` chose its
+  columns by the compile-time facts with no certificate, so a compiled (or privately compiled) program
+  left new missing values unfilled where a fresh compilation fills them; FILL_NULL now matches every
+  column its value fits (guarded no-ops where nothing is missing) and the selector is an error elsewhere
+  (`testNullableSelector`). (2) The release keyed tables by path, so `p.csv` and `P.CSV` were two tables
+  with epsilon each; tables are keyed by file identity (`tests/test_release_facts.py`). Neither touched an
+  evaluation result. They also showed the comparison overreached: HDMM's split follows from the
+  L2 objective on a comparison-weighted workload (an emptiness objective gives the equal split), and AIM
+  was read off sampled rows at threshold 0. AIM's model marginals read with the release's threshold
+  (`aim-marginals`) were added: they keep every taxi and traffic removal with no warning, as the release
+  does, but 80% of the bike removals at epsilon 10 (release 100%) at Titanic precision 16%/18% (release
+  17%/31%), since AIM spends its budget over 16 rounds per column. So, read with the same threshold,
+  neither HDMM nor AIM beats one Laplace histogram per column on any workload; the gains come from the
+  cells and the threshold, not the mechanism. HDMM chose identity for 1,064 of 1,064 column blocks
+  (now recorded in each facts file and counted by `eval/paper_numbers.py`). Totals: 4,879 compilations,
+  64,179 runs, 0 unsound. Not evaluated: Gaussian/zCDP noise for wide tables, other operating points.
 - **Limits.** The schema must be declared. The guarantee covers what the compiler writes, not the data
   owner's run logs or run time. Small tables give little at small epsilon, by design. Images,
   `LOAD_TABLES` and `PARSE_DATE` are not supported. There is no budget ledger across releases. The

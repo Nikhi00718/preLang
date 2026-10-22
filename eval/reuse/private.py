@@ -31,7 +31,8 @@ Each is compiled from several kinds of facts:
   * synthetic baseline: a table sampled from the generic release, compiled normally
   * hdmm      baseline: HDMM given the program's comparisons as its workload, over the same cells
               (eval/reuse/private_dp_baselines.py, run in eval/.venv-hdmm)
-  * aim       baseline: AIM's synthetic data over the same cells, facts read off it; aim-synthetic:
+  * aim       baseline: AIM's synthetic data over the same cells, facts read off it; aim-marginals:
+              AIM's model marginals read with a threshold, as the release is read; aim-synthetic:
               the same synthetic data compiled normally (run in eval/.venv-dp)
 
 Measured:
@@ -75,7 +76,7 @@ DP_BASELINES = ROOT / "eval" / "reuse" / "private_dp_baselines.py"
 DP_PYTHON = {"hdmm": ROOT / "eval" / ".venv-hdmm" / "Scripts" / "python.exe",
              "aim": ROOT / "eval" / ".venv-dp" / "Scripts" / "python.exe"}
 SYNTHETIC = ("synthetic", "aim-synthetic")  # compiled normally, from synthetic tables
-BASELINES = ("generic", "synthetic", "hdmm", "aim", "aim-synthetic")
+BASELINES = ("generic", "synthetic", "hdmm", "aim", "aim-marginals", "aim-synthetic")
 
 
 def configs(epsilons, seeds, randoms, baselines=(1, 10), baseline_seeds=1):
@@ -139,7 +140,7 @@ def release(owner, analyst, kind, epsilon, seed, ready):
     if kind.startswith("generic"):
         (analyst / "facts.tsv").write_text(generic_facts(queries, epsilon, 0.05, seed), encoding="utf-8")
         return
-    for method in ("aim-synthetic", "aim", "hdmm"):  # aim-synthetic before aim
+    for method in ("aim-synthetic", "aim-marginals", "aim", "hdmm"):  # the longer names first
         if kind.startswith(method):
             target = ["--folder", str(analyst)] if method == "aim-synthetic" else ["--out", str(analyst / "facts.tsv")]
             # One thread each: the pool already runs a release per core.
@@ -415,7 +416,7 @@ MISTAKES = {  # kind -> (the contract it breaks, the column it changes, the valu
 }
 
 
-METHODS = ("program", "generic", "synthetic", "hdmm", "aim", "aim-synthetic")
+METHODS = ("program", "generic", "synthetic", "hdmm", "aim", "aim-marginals", "aim-synthetic")
 
 
 def diagnostics(compiler, sizes=(0, 1, 10, 100, 1000, 10000), epsilons=(0.1, 0.3, 1, 3, 10, math.inf), seeds=20,

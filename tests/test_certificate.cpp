@@ -336,6 +336,32 @@ void testDeadStoreNeedsNoFact() {
           "a batch with missing marks is admitted");
 }
 
+// WHERE NULLABLE selects the columns with missing values, which depends on the batch. A fill of a
+// column without missing values must stay in the program behind a "no missing values" certificate,
+// or a batch with a missing value there is admitted and not filled (a fresh compilation fills it).
+void testNullableSelector() {
+    std::cout << "WHERE NULLABLE: a fill that matched nothing here runs on a batch with missing values\n";
+    writeFile("test_certificate_students.csv", students);  // age has a missing value, marks none
+    Compiled c;
+    compile("LOAD \"test_certificate_students.csv\" AS s;\nFILL_NULL s.* WHERE NULLABLE WITH 0;\n"
+            "SAVE s AS \"out.csv\";\n",
+            c);
+    const bool guarded = std::any_of(c.certificate.items.begin(), c.certificate.items.end(), [](const ItemCertificate& item) {
+        return item.description.rfind("line 2:", 0) == 0 && std::any_of(item.tables.begin(), item.tables.end(),
+            [](const TableCertificate& table) {
+                return std::any_of(table.columns.begin(), table.columns.end(),
+                                   [](const ColumnFacts& column) { return column.name == "marks" && column.notNull; });
+            });
+    });
+    check(!c.diagnostics.hasErrors() && guarded, "the fill of marks is removed behind 'no missing values in marks'");
+    const ColumnFacts* name = fact(c.certificate, "s", "name");
+    check(name && name->notNull, "a text column the number cannot fill must keep no missing values to be admitted");
+    Compiled normalize;
+    compile("LOAD \"test_certificate_students.csv\" AS s;\nNORMALIZE s.* WHERE NULLABLE;\nSAVE s AS \"out.csv\";\n",
+            normalize);
+    check(normalize.diagnostics.hasErrors(), "WHERE NULLABLE outside FILL_NULL is a compile error");
+}
+
 void testValueProofs() {
     std::cout << "Proofs that read the values\n";
     writeFile("test_certificate_keys.csv", "id,city\n1,Pune\n2,Goa\n3,Pune\n");
@@ -671,6 +697,7 @@ int main() {
     testAdmission();
     testUnreadColumns();
     testDeadStoreNeedsNoFact();
+    testNullableSelector();
     testValueProofs();
     testSoundness(program, "Soundness on 400 random inputs");
     // name and marks are not read after the SELECT, but proofs depend on them.

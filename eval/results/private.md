@@ -6,6 +6,8 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | rq8:bikes | aim eps=1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 54% | 0/5 | 7 |
 | rq8:bikes | aim eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 69% | 0/5 | 9 |
+| rq8:bikes | aim-marginals eps=1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 14% | 0/5 | 0 |
+| rq8:bikes | aim-marginals eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 80% | 0/5 | 0 |
 | rq8:bikes | aim-synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:bikes | aim-synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:bikes | eps=0.1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 14% | 0/5 | 0 |
@@ -24,6 +26,8 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:bikes | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:taxi | aim eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 56% | 0/5 | 9 |
 | rq8:taxi | aim eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 20% | 0/5 | 16 |
+| rq8:taxi | aim-marginals eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
+| rq8:taxi | aim-marginals eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:taxi | aim-synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:taxi | aim-synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:taxi | eps=0.1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
@@ -42,6 +46,8 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:taxi | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:traffic | aim eps=1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 26% | 0/5 | 18 |
 | rq8:traffic | aim eps=10 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 49% | 0/5 | 10 |
+| rq8:traffic | aim-marginals eps=1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
+| rq8:traffic | aim-marginals eps=10 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:traffic | aim-synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:traffic | aim-synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:traffic | eps=0.1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
@@ -60,6 +66,8 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:traffic | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | titanic | aim eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 18% | 25% | 18/184 | 0 |
 | titanic | aim eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 39% | 44% | 11/184 | 0 |
+| titanic | aim-marginals eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 16% | 100% | 74/184 | 0 |
+| titanic | aim-marginals eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 18% | 100% | 69/184 | 0 |
 | titanic | aim-synthetic eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 9% | 12% | 20/184 | 0 |
 | titanic | aim-synthetic eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 47% | 50% | 9/184 | 0 |
 | titanic | corpus eps=1 | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 17% | 100% | 148/368 | 0 |
@@ -79,7 +87,7 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | titanic | unit eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 74/184 | 0 |
 | titanic | unit eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 73/184 | 0 |
 
-All runs: 58533; correct run: 56682, correct stop: 843, needless stop: 1008, wrong stop: 0, unsound: 0.
+All runs: 64179; correct run: 62054, correct stop: 957, needless stop: 1168, wrong stop: 0, unsound: 0.
 
 ## Private compilations that failed
 

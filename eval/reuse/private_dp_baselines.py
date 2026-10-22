@@ -30,6 +30,10 @@ tables in parallel, since a neighbouring dataset differs in one row of one table
                  rounds per column, model size 80). Synthetic rows that no table of the published
                  schema can hold (an INTEGER in a cell without an integer) are dropped. The facts are
                  read off the synthetic data: a cell is occupied if a synthetic row lies in it.
+  aim-marginals  The same AIM run, read as tools/release_facts.py reads its histograms: a cell of
+                 the model's one-way marginal is occupied if its estimate exceeds tau + 1/2, where tau
+                 bounds the Gaussian noise of every cell with probability 1 - beta, from the noise of
+                 AIM's measurements of that column (their inverse-variance combination).
   aim-synthetic  The same synthetic data, written as a table where the program loads it (values
                  inside their cells), for a normal compilation: what an analyst who develops
                  against AIM's synthetic data sees.
@@ -71,12 +75,15 @@ def columns_asked(queries_file):
 
 
 def cell_of_rows(values, value_cells):
-    """The cell of every row: 0 missing, then 1 + the index of its value cell (or 1: present)."""
+    """The cell of every row: 0 missing, then 1 + the index of its value cell (or 1: present); -1
+    for a present value in no cell (one that does not parse as a number), which tools/release_facts.py
+    does not count either."""
     present = values.notna().to_numpy()
     index = np.zeros(len(values), dtype=np.int64)
     if value_cells is None:
         index[present] = 1
         return index
+    index[present] = -1
     x = pd.to_numeric(values, errors="coerce").to_numpy(dtype=float)
     for i, (low, high, shape) in enumerate(value_cells):
         inside = (x == low) if shape == "point" else (x > low) & (x < high)
@@ -158,7 +165,8 @@ def hdmm_release(tables, asked, epsilon, seed):
     exact = {}
     for key, (kind, _, _, value_cells) in asked.items():
         size = 1 + (len(value_cells) if value_cells else 1)
-        exact[key] = np.bincount(cell_of_rows(read_table(key[0], kind, [key[1]])[key[1]], value_cells), minlength=size)
+        index = cell_of_rows(read_table(key[0], kind, [key[1]])[key[1]], value_cells)
+        exact[key] = np.bincount(index[index >= 0], minlength=size)
     total_cells = sum(len(x) for x in exact.values())
     rng = np.random.default_rng(seed)
     occupied, chosen = {}, []
@@ -183,7 +191,9 @@ def hdmm_release(tables, asked, epsilon, seed):
                 quantiles.append(np.abs(z @ pinv.T))
             tau = np.quantile(np.vstack(quantiles), tail, axis=0)
             occupied[key] = estimate > tau + 0.5
-            chosen.append(f"{key[1]}: {A.shape[0]} queries, weight {weights[keys.index(key)]:.2f}")
+            n = A.shape[1]
+            shape = "identity" if A.shape[0] == n and np.allclose(A, np.diag(np.diag(A))) else f"{A.shape[0]} queries"
+            chosen.append(f"{key[1]}: {shape} over {n} cells, weight {weights[keys.index(key)]:.2f}")
     return occupied, "; ".join(chosen)
 
 
@@ -195,19 +205,39 @@ def aim_synthetic(tables, asked, epsilon, seed):
     jax.config.update("jax_enable_x64", True)
     jax.config.update("jax_enable_compilation_cache", False)
     sys.path.insert(0, str(ROOT / "eval" / ".venv-dp" / "aim"))
-    from aim import AIM
+    import aim as aim_script
     from mbi import Dataset, Domain
-    out = {}
+    # Every measurement AIM takes, with its noise: the marginals of its model are read with a
+    # threshold from these (aim-marginals).
+    measured = []
+    if not getattr(aim_script, "_recording", False):
+        original = aim_script.LinearMeasurement
+
+        def recording(y, clique, *args, **kwargs):
+            measured.append((tuple(clique), float(kwargs.get("stddev", args[0] if args else 1.0))))
+            return original(y, clique, *args, **kwargs)
+        aim_script.LinearMeasurement = recording
+        aim_script._recording = True
+    out, marginals = {}, {}
     for file, columns in by_table(asked).items():
         kind = asked[(file, columns[0])][0]
         frame = read_table(file, kind, columns)
         data = {column: cell_of_rows(frame[column], asked[(file, column)][3]) for column in columns}
+        parsed = np.all([index >= 0 for index in data.values()], axis=0)  # as the release, leave out unparsed values
+        data = {column: index[parsed] for column, index in data.items()}
         sizes = {column: 1 + (len(asked[(file, column)][3]) if asked[(file, column)][3] else 1) for column in columns}
         dataset = Dataset(data, Domain(tuple(columns), tuple(sizes[c] for c in columns)))
         np.random.seed(seed)  # mbi's synthetic data draws from np.random
-        mechanism = AIM(epsilon, DELTA, prng=np.random.RandomState(seed))
+        mechanism = aim_script.AIM(epsilon, DELTA, prng=np.random.RandomState(seed))
+        measured.clear()
         with contextlib.redirect_stdout(io.StringIO()):
-            _, synth = mechanism.run(dataset, [((column,), 1.0) for column in columns])
+            model, synth = mechanism.run(dataset, [((column,), 1.0) for column in columns])
+        for column in columns:
+            # The model's marginal combines every measurement of the column; its noise is about that
+            # of their inverse-variance combination.
+            sigmas = [sigma for clique, sigma in measured if clique == (column,)]
+            marginals[(file, column)] = (np.asarray(model.project((column,)).datavector(), dtype=float),
+                                         sum(1 / s ** 2 for s in sigmas) ** -0.5 if sigmas else math.inf)
         cells_of = {column: np.asarray(synth.data[column]) for column in columns}
         # The schema is public: a synthetic row whose INTEGER column lies in a cell that holds no
         # integer (strictly between 0 and 1, say) is not a possible row, and is dropped.
@@ -216,7 +246,7 @@ def aim_synthetic(tables, asked, epsilon, seed):
             _, ctype, _, value_cells = asked[(file, column)]
             keep &= possible_cells(value_cells, ctype)[cells_of[column]]
         out[file] = {column: index[keep] for column, index in cells_of.items()}
-    return out
+    return out, marginals
 
 
 def integers_inside(low, high):
@@ -236,6 +266,15 @@ def possible_cells(value_cells, ctype):
         return np.ones(1 + (len(value_cells) if value_cells else 1), dtype=bool)
     return np.array([True] + [low == round(low) if shape == "point" else integers_inside(low, high) is not None
                               for low, high, shape in value_cells])
+
+
+def aim_marginals_occupied(marginals):
+    """AIM read as the release is read: a cell of a column's model marginal counts as occupied if
+    its estimate is above tau + 1/2, where tau bounds every cell's Gaussian noise with probability
+    1 - beta (two-sided, union bound over all cells: tau = sigma sqrt(2 ln(2C / beta)))."""
+    total = sum(len(estimate) for estimate, _ in marginals.values())
+    return {key: estimate > sigma * math.sqrt(2 * math.log(2 * total / BETA)) + 0.5
+            for key, (estimate, sigma) in marginals.items()}
 
 
 def aim_occupied(asked, synthetic):
@@ -299,7 +338,7 @@ def write_aim_synthetic(folder, tables, asked, synthetic, seed):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("method", choices=("hdmm", "aim", "aim-synthetic"))
+    parser.add_argument("method", choices=("hdmm", "aim", "aim-marginals", "aim-synthetic"))
     parser.add_argument("queries")
     parser.add_argument("--epsilon", type=float, required=True)
     parser.add_argument("--seed", type=int, default=0)
@@ -314,8 +353,13 @@ def main():
                           f"beta {BETA:g}: {strategy}")
         Path(args.out).write_text(text, encoding="utf-8")
         return
-    synthetic = aim_synthetic(tables, asked, args.epsilon, args.seed)
-    if args.method == "aim":
+    synthetic, marginals = aim_synthetic(tables, asked, args.epsilon, args.seed)
+    if args.method == "aim-marginals":
+        text = facts_file(tables, asked, aim_marginals_occupied(marginals),
+                          f"AIM's model marginals over the program's cells, ({args.epsilon:g}, {DELTA:g}) per table, "
+                          f"read with a Gaussian threshold at beta {BETA:g}")
+        Path(args.out).write_text(text, encoding="utf-8")
+    elif args.method == "aim":
         text = facts_file(tables, asked, aim_occupied(asked, synthetic),
                           f"AIM synthetic data over the program's cells, ({args.epsilon:g}, {DELTA:g}) per table")
         Path(args.out).write_text(text, encoding="utf-8")
