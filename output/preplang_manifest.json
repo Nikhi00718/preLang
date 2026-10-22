@@ -14,6 +14,8 @@
   },
   "operations": [
     "LOAD students <- \"students.csv\" [name, age, marks, attendance, passed, department]",
+    "CHECK students.marks BETWEEN 0 AND 100",
+    "CHECK students.name NOT_NULL",
     "FILL_NULL students.department WITH \"UNKNOWN\"",
     "DROP_NULL students",
     "NORMALIZE students.attendance MINMAX",
@@ -29,6 +31,7 @@
     "SAVE students -> \"clean.csv\""
   ],
   "admitted_by_certificate": [],
+  "deoptimized": [],
   "outputs": [
     {
       "file": "clean.csv",

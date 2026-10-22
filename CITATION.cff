@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use PrepLang, please cite it as below."
+title: "PrepLang: a data-aware compiler for dataset preparation"
+version: 2.0.0
+authors:
+  - family-names: Nikhil
+    given-names: V.
+    affiliation: "Vellore Institute of Technology"
+repository-code: "https://github.com/Nikhi00718/preLang"
+keywords:
+  - compiler
+  - domain-specific language
+  - data preparation
+  - data validation
+  - pandas

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The generated programs and tools/release_facts.py use these
+      - name: Install Python packages
+        run: python -m pip install numpy pandas pyarrow opencv-python-headless
+
+      # On Windows, --run starts the generated program with the py launcher
+      - name: Install Python packages for the py launcher
+        if: runner.os == 'Windows'
+        run: py -3 -m pip install numpy pandas pyarrow opencv-python-headless
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="${{ env.pythonLocation }}/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Unit tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Compile and run the students example
+        shell: bash
+        run: |
+          exe=build/preplang
+          [ -f build/Release/preplang.exe ] && exe=build/Release/preplang.exe
+          "$exe" examples/tabular/students.prep --run
+          test -s output/clean.csv

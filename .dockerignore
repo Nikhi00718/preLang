@@ -1,0 +1,15 @@
+build/
+build-dev/
+.git/
+eval/data/
+eval/work/
+eval/.venv-*/
+demo/work/
+demo/live/
+proofs/.lake/
+paper/
+docs/review2/
+docs/review3/
+studio/node_modules/
+**/__pycache__/
+test_*
