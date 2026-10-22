@@ -40,7 +40,7 @@ paper/build_log.txt
 # Lean build output
 proofs/.lake/
 
-# pdflatex output; the committed copy is paper/PrepLang_Paper.pdf
+# pdflatex output; the committed copy is paper/PrepLang_Software_SCP.pdf
 paper/preplang.pdf
 paper/preplang-scp.pdf
 paper/*.spl

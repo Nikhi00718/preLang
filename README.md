@@ -598,8 +598,10 @@ file, a contract broken in 100 rows is reported as likely violated in every run 
 epsilon 10), with no false warning in 1,818 compilations. Details: `eval/results/private.md` and
 `private_diagnostics.md`.
 
-The paper is `paper/preplang.tex` (ACM `acmart`), built as `paper/PrepLang_Paper.pdf`; every number
-and table it shows is in `paper/generated/`, written by `eval/paper_numbers.py` (see `paper/README.md`).
+The paper is the software article `paper/preplang-osp.tex`, built as `paper/PrepLang_Software_SCP.pdf`;
+the theory and the full evaluation are in the research article's source (`paper/preplang.tex`). Every
+number and table they show is in `paper/generated/`, written by `eval/paper_numbers.py` (see
+`paper/README.md`).
 What is new compared with existing work is in [docs/NOVELTY.md](docs/NOVELTY.md).
 
 ## Project layout
@@ -633,7 +635,7 @@ eval/                the evaluation
   results/           every result as .json and .md (the largest as .json.gz); evaluation.md
   paper_numbers.py   writes paper/generated/ from eval/results/
   evaluate.py        writes results/evaluation.md: the six evaluation questions
-paper/               the paper (LaTeX, ACM format) and PrepLang_Paper.pdf
+paper/               the software article (PrepLang_Software_SCP.pdf) and the research article's source
   sections/ figures/ hand-written parts;  generated/: numbers and tables;  archive/: IEEE draft
 docs/                NOVELTY.md (novelty and prior work), DEMO_VIDEO_SCRIPT.md, USER_STUDY.md (protocol),
                      review2/ and review3/ (course reports)

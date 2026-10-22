@@ -1,8 +1,12 @@
 # The paper
 
-*Compile Once, Reuse Safely: Data Certificates and Selective Deoptimization for Preprocessing
-Pipelines*, in two formats that share one text: ACM `acmart` (`PrepLang_Paper.pdf`) and Elsevier
-`elsarticle` for *Science of Computer Programming* (`PrepLang_Paper_SCP.pdf`).
+The paper is the software article for the Science of Computer Programming Software Track (an Original
+Software Publication): `preplang-osp.tex`, built as **`PrepLang_Software_SCP.pdf`**.
+
+The longer research article, *Compile Once, Reuse Safely: Data Certificates and Selective
+Deoptimization for Preprocessing Pipelines*, is kept as source only (`preplang.tex` in ACM `acmart`,
+`preplang-scp.tex` in Elsevier `elsarticle`): it holds the theory and the full evaluation the software
+article points to, and is not submitted. Build it as below to read it as a PDF.
 
 | Path | Contents |
 |---|---|
