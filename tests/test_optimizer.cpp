@@ -1,6 +1,7 @@
 // Unit tests for the IR builder and the optimizer passes.
 // Run: build/Debug/test_optimizer.exe  (it writes a small CSV file in the current folder)
 
+#include "backend/PandasCodegen.h"
 #include "common/Diagnostics.h"
 #include "ir/IRBuilder.h"
 #include "lexer/Lexer.h"
@@ -148,6 +149,30 @@ void testDerive() {
           "a kept DERIVE loads the columns it reads, and only those");
 }
 
+// Found by eval/compilation/differential.py: the SELECT loses city to pruning, and
+// the DROP of city after it must go too, or the optimized program fails with KeyError.
+void testDropAfterPrunedSelect() {
+    const Compiled c = compile("SELECT s [city, name, marks];\nDROP s [city];");
+    check(c.ok && loadedColumns(c.ir) == std::vector<std::string>{"name", "marks"} && countOf(c.ir, Opcode::Drop) == 0,
+          "a DROP of a column a pruned SELECT no longer has is removed");
+}
+
+// Found by eval/compilation/differential.py: with pandas 3 a comparison of a STRING column
+// is bool[pyarrow], and t1 & t2 with a boolean mask holding NA raised TypeError.
+void testStringComparisonIsBoolean() {
+    const Compiled c = compile("FILTER s WHERE city == \"Pune\" AND age > 20;", {false, false});
+    PandasCodegen codegen(".", Certificate{});
+    std::string text;
+    for (const Instruction& instruction : c.ir.code) {
+        if (instruction.op == Opcode::Compare) {
+            text += codegen.code(instruction, c.ir);
+        }
+    }
+    check(c.ok && text.find("== \"Pune\").astype(\"boolean\")") != std::string::npos &&
+              text.find("> 20\n") != std::string::npos,
+          "a comparison of a STRING column gives a boolean mask, a numeric one is unchanged");
+}
+
 void testOptimizerOff() {
     const Compiled c = compile("FILTER s WHERE marks > 0;", {false, false});
     check(c.ok && countOf(c.ir, Opcode::Filter) == 1 && c.report.instructionsBefore == c.report.instructionsAfter,
@@ -169,6 +194,8 @@ int main() {
     testColumnPruning();
     testFilterColumnsStayLive();
     testDropNullBlocksPruning();
+    testDropAfterPrunedSelect();
+    testStringComparisonIsBoolean();
     testOptimizerOff();
     testDerive();
 

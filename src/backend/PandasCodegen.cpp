@@ -422,6 +422,12 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
                    ") / spread if pd.notna(spread) and spread > 0 else column * 0.0\n";
         }
         case Opcode::Compare:
+            // pandas 3 compares a string column into bool[pyarrow], which & and | with a
+            // boolean mask holding NA cannot combine; as boolean it is like every other mask.
+            if (in.values[0].kind == LiteralKind::String) {
+                return temp + " = (" + column + " " + in.text + " " + pythonValue(in.values[0]) +
+                       ").astype(\"boolean\")\n";
+            }
             return temp + " = " + column + " " + in.text + " " + pythonValue(in.values[0]) + "\n";
         case Opcode::And:
             return temp + " = t" + std::to_string(in.uses[0]) + " & t" + std::to_string(in.uses[1]) + "\n";

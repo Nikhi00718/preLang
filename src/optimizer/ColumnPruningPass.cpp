@@ -24,6 +24,19 @@ bool releasedTable(const IRProgram& program, const Instruction& instruction) {
     return found != program.tables.end() && found->second.released;
 }
 
+// The columns of the instruction's table after it runs, given those before.
+void applyColumns(std::vector<std::string>& columns, const Instruction& instruction) {
+    if (instruction.op == Opcode::Load || instruction.op == Opcode::Select) {
+        columns = instruction.columns;
+    } else if (instruction.op == Opcode::Derive && !contains(columns, instruction.column)) {
+        columns.push_back(instruction.column);
+    } else if (instruction.op == Opcode::Drop) {
+        columns.erase(std::remove_if(columns.begin(), columns.end(),
+                                     [&](const std::string& c) { return contains(instruction.columns, c); }),
+                      columns.end());
+    }
+}
+
 // The columns each instruction's table has just before the instruction runs.
 std::vector<std::vector<std::string>> columnsBefore(const IRProgram& program) {
     std::map<std::string, std::vector<std::string>> current;
@@ -31,15 +44,7 @@ std::vector<std::vector<std::string>> columnsBefore(const IRProgram& program) {
     for (const Instruction& instruction : program.code) {
         std::vector<std::string>& columns = current[tableKey(instruction.dataset, instruction.table)];
         result.push_back(columns);
-        if (instruction.op == Opcode::Load || instruction.op == Opcode::Select) {
-            columns = instruction.columns;
-        } else if (instruction.op == Opcode::Derive && !contains(columns, instruction.column)) {
-            columns.push_back(instruction.column);
-        } else if (instruction.op == Opcode::Drop) {
-            columns.erase(std::remove_if(columns.begin(), columns.end(),
-                                         [&](const std::string& c) { return contains(instruction.columns, c); }),
-                          columns.end());
-        }
+        applyColumns(columns, instruction);
     }
     return result;
 }
@@ -179,30 +184,30 @@ void ColumnPruningPass::dropUnloadedChecks(IRProgram& program, OptimizationRepor
 
 // After pruning, SELECT and DROP may name columns that are no longer loaded.
 // Those names are removed, and a DROP left with no columns is removed too.
+// The columns are followed in program order with each list already fitted: a
+// SELECT that loses a column means a later DROP of it has nothing to drop.
 void ColumnPruningPass::fitColumnLists(IRProgram& program, OptimizationReport& report) {
-    const std::vector<std::vector<std::string>> before = columnsBefore(program);
+    std::map<std::string, std::vector<std::string>> current;
     std::vector<bool> remove(program.code.size(), false);
 
     for (size_t i = 0; i < program.code.size(); ++i) {
         Instruction& instruction = program.code[i];
-        if (instruction.op != Opcode::Select && instruction.op != Opcode::Drop) {
-            continue;
+        std::vector<std::string>& loaded = current[tableKey(instruction.dataset, instruction.table)];
+        if (instruction.op == Opcode::Select || instruction.op == Opcode::Drop) {
+            const std::string original = describe(instruction);
+            std::vector<std::string>& columns = instruction.columns;
+            const size_t count = columns.size();
+            columns.erase(std::remove_if(columns.begin(), columns.end(),
+                                         [&](const std::string& c) { return !contains(loaded, c); }),
+                          columns.end());
+            if (columns.size() != count && instruction.op == Opcode::Drop && columns.empty()) {
+                remove[i] = true;
+                report.changes.push_back("column pruning: removed " + original + ", its columns are never loaded");
+            } else if (columns.size() != count) {
+                report.changes.push_back("column pruning: " + original + " now lists only loaded columns");
+            }
         }
-        const std::string original = describe(instruction);
-        std::vector<std::string>& columns = instruction.columns;
-        const size_t count = columns.size();
-        columns.erase(std::remove_if(columns.begin(), columns.end(),
-                                     [&](const std::string& c) { return !contains(before[i], c); }),
-                      columns.end());
-        if (columns.size() == count) {
-            continue;
-        }
-        if (instruction.op == Opcode::Drop && columns.empty()) {
-            remove[i] = true;
-            report.changes.push_back("column pruning: removed " + original + ", its columns are never loaded");
-        } else {
-            report.changes.push_back("column pruning: " + original + " now lists only loaded columns");
-        }
+        applyColumns(loaded, instruction);
     }
     removeMarked(program, remove);
 }
