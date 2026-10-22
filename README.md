@@ -638,7 +638,7 @@ paper/               the paper (LaTeX, ACM format) and PrepLang_Paper.pdf
 docs/                NOVELTY.md (novelty and prior work), DEMO_VIDEO_SCRIPT.md, USER_STUDY.md (protocol),
                      review2/ and review3/ (course reports)
 demo/ studio/        the live demo with slides, and PrepLang Studio (a local editor app)
-Dockerfile           Ubuntu build with the Python packages; .github/workflows/ci.yml: CI on Ubuntu and Windows
+Dockerfile           Ubuntu build with the Python packages; .github/workflows/ci.yml: CI on Ubuntu, Windows and macOS
 ARCHITECTURE.md      the phases and modules;  CONTRIBUTING.md, CHANGELOG.md, CITATION.cff
 ```
 

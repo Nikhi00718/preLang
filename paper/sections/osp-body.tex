@@ -140,6 +140,6 @@ Others can extend its abstract state, certifier and code generator, and compare 
 Joins are lookups on a key with one name in both tables (no many-to-many joins), groups have five
 aggregates, and only Python is generated; a changed column type is refused rather than handled; the
 mechanized proofs cover a core of the analysis without joins and groups, and the rest is tested; the
-compiler is tested on Windows~11 (MSVC) and Ubuntu (GCC~15.2). Planned work is general joins, generated
+compiler is tested on Windows (MSVC), Ubuntu and macOS (GCC). Planned work is general joins, generated
 code that adapts to type changes, and packaging. \PL compiles a pipeline once and runs it on later batches
 exactly as a fresh compilation would, re-enabling only the removals a batch makes unsafe.

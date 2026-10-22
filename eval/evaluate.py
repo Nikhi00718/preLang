@@ -92,7 +92,8 @@ def report(n):
         f"(`drift_corpus_*.md`), and {n['PrivRuns']} runs after {n['PrivCompilations']} private compilations "
         f"(`private.md`).",
         f"- {n['TestCount']} unit tests in {n['TestSuites']} C++ suites plus the release tool's tests pass on "
-        f"Windows (MSVC) and Ubuntu (GCC 15.2) with no compiler warnings; the core analysis is mechanized in "
+        f"Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is "
+        f"mechanized in "
         f"Lean 4 ({n['LeanLines']} lines, `proofs/`).",
         "",
         "Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` included, but not dates "

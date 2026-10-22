@@ -12,7 +12,7 @@ ctest --test-dir build -C Release --output-on-failure
 ```
 
 On Windows use the Visual Studio generator (`-G "Visual Studio 17 2022"`); on Linux and macOS any
-C++17 compiler works (GCC 15 and MSVC 19.44 are tested in CI). The generated programs and
+C++17 compiler works (CI tests MSVC on Windows and GCC on Ubuntu and macOS). The generated programs and
 `tools/release_facts.py` need Python 3.10+ with `numpy`, `pandas` (2.0 or newer, 3.x tested),
 `pyarrow` and `opencv-python`. `docker build -t preplang .` gives the same environment.
 
