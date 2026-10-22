@@ -34,6 +34,8 @@ private:
     std::unique_ptr<Stmt> dropStatement();
     std::unique_ptr<Stmt> parseDateStatement();
     std::unique_ptr<Stmt> deriveStatement();
+    std::unique_ptr<Stmt> joinStatement();
+    std::unique_ptr<Stmt> aggregateStatement();
     std::unique_ptr<Stmt> saveStatement(DataKind kind);
     std::unique_ptr<Stmt> expectStatement();
     std::unique_ptr<Stmt> resizeStatement();
@@ -68,6 +70,7 @@ private:
     std::string number();
     int integer(const std::string& what);
     std::string identifier(const std::string& what);
+    bool matchWord(const std::string& word);
     void endStatement();
 
     // Reading tokens

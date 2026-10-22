@@ -149,6 +149,25 @@ void testDerive() {
           "a kept DERIVE loads the columns it reads, and only those");
 }
 
+// JOIN adds only the lookup columns used later, so the lookup LOAD reads only those and the key.
+void testJoinPruning() {
+    std::ofstream("test_optimizer_zones.csv") << "city,zone,pin\nChennai,South,1\nPune,West,2\n";
+    const Compiled c = compile("LOAD \"test_optimizer_zones.csv\" AS z;\nJOIN s WITH z ON city;\n"
+                               "SELECT s [name, zone];");
+    const Instruction* join = nullptr;
+    std::vector<std::string> lookup;
+    for (const Instruction& in : c.ir.code) {
+        join = in.op == Opcode::Join ? &in : join;
+        if (in.op == Opcode::Load && in.dataset == "z") {
+            lookup = in.columns;
+        }
+    }
+    check(c.ok && join && join->columns == std::vector<std::string>{"zone"} &&
+              lookup == std::vector<std::string>{"city", "zone"} &&
+              loadedColumns(c.ir) == std::vector<std::string>{"name", "city"},
+          "JOIN adds only used lookup columns; both LOADs read only what is needed");
+}
+
 // Found by eval/compilation/differential.py: the SELECT loses city to pruning, and
 // the DROP of city after it must go too, or the optimized program fails with KeyError.
 void testDropAfterPrunedSelect() {
@@ -196,6 +215,7 @@ int main() {
     testDropNullBlocksPruning();
     testDropAfterPrunedSelect();
     testStringComparisonIsBoolean();
+    testJoinPruning();
     testOptimizerOff();
     testDerive();
 

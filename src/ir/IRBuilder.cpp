@@ -196,6 +196,28 @@ void IRBuilder::visit(const DeriveStmt& node) {
     }
 }
 
+void IRBuilder::visit(const JoinStmt&) {
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::Join, target);
+        instruction.withDataset = target.args[0];
+        instruction.withTable = target.args[1];
+        instruction.columns.assign(target.args.begin() + 2, target.args.end());
+        emit(std::move(instruction));
+    }
+}
+
+void IRBuilder::visit(const AggregateStmt& node) {
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::Aggregate, target);
+        instruction.columns = node.by;
+        for (size_t i = 0; i < node.items.size(); ++i) {
+            const AggregateItem& item = node.items[i];
+            instruction.aggregates.push_back({item.function, item.column, item.name, target.args[i]});
+        }
+        emit(std::move(instruction));
+    }
+}
+
 void IRBuilder::visit(const SaveStmt& node) {
     for (const Target& target : targets()) {
         if (node.kind == DataKind::Image || node.kind == DataKind::ImageSet) {
@@ -351,6 +373,18 @@ std::string instructionText(const Instruction& in) {
             return "PARSE_DATE " + target;
         case Opcode::Derive:
             return "DERIVE " + target + " = " + in.text;
+        case Opcode::Join:
+            return "JOIN " + table + " WITH " + tableKey(in.withDataset, in.withTable) + " ON " + in.column + " ADD " +
+                   listText(in.columns);
+        case Opcode::Aggregate: {
+            std::string text = "AGGREGATE " + table + " BY " + listText(in.columns);
+            for (size_t i = 0; i < in.aggregates.size(); ++i) {
+                const AggregateResult& item = in.aggregates[i];
+                text += (i > 0 ? ", " : " ") + item.function + (item.column.empty() ? "" : " " + item.column) +
+                        " AS " + item.name;
+            }
+            return text;
+        }
         case Opcode::LoadImages:
             return "LOAD_IMAGES " + in.dataset + " <- \"" + in.text + "\"";
         case Opcode::Resize:

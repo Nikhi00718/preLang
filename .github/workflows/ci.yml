@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,11 @@ jobs:
       - name: Install Python packages for the py launcher
         if: runner.os == 'Windows'
         run: py -3 -m pip install numpy pandas pyarrow opencv-python-headless
+
+      # Apple's libc++ lacks floating-point std::from_chars (the CSV scanner uses it): GCC from Homebrew
+      - name: Use GCC on macOS
+        if: runner.os == 'macOS'
+        run: echo "CXX=$(brew --prefix gcc@14)/bin/g++-14" >> "$GITHUB_ENV"
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="${{ env.pythonLocation }}/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}"

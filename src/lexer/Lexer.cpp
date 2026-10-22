@@ -18,6 +18,7 @@ const std::unordered_map<std::string, TokenType>& keywordTable() {
         {"DROP_NULL", TokenType::DROP_NULL}, {"FILL_NULL", TokenType::FILL_NULL},
         {"NORMALIZE", TokenType::NORMALIZE}, {"FILTER", TokenType::FILTER}, {"SELECT", TokenType::SELECT},
         {"DROP", TokenType::DROP}, {"PARSE_DATE", TokenType::PARSE_DATE}, {"DERIVE", TokenType::DERIVE},
+        {"JOIN", TokenType::JOIN}, {"AGGREGATE", TokenType::AGGREGATE},
         {"SAVE", TokenType::SAVE}, {"SAVE_TABLES", TokenType::SAVE_TABLES},
         {"SAVE_IMAGE", TokenType::SAVE_IMAGE}, {"SAVE_IMAGES", TokenType::SAVE_IMAGES},
         {"EXPECT", TokenType::EXPECT}, {"RESIZE", TokenType::RESIZE}, {"GRAYSCALE", TokenType::GRAYSCALE},

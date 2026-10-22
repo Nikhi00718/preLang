@@ -34,6 +34,13 @@ void applyColumns(std::vector<std::string>& columns, const Instruction& instruct
         columns.erase(std::remove_if(columns.begin(), columns.end(),
                                      [&](const std::string& c) { return contains(instruction.columns, c); }),
                       columns.end());
+    } else if (instruction.op == Opcode::Join) {
+        columns.insert(columns.end(), instruction.columns.begin(), instruction.columns.end());
+    } else if (instruction.op == Opcode::Aggregate) {
+        columns = instruction.columns;
+        for (const AggregateResult& item : instruction.aggregates) {
+            columns.push_back(item.name);
+        }
     }
 }
 
@@ -138,6 +145,38 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
                     liveColumns.erase(column);
                 }
                 break;
+
+            case Opcode::Join: {  // adds only the lookup columns read or saved afterwards; reads the key on both sides
+                const std::string original = describe(instruction);
+                std::vector<std::string> kept;
+                std::vector<std::string> skipped;
+                for (const std::string& column : instruction.columns) {
+                    (liveColumns.count(column) != 0 ? kept : skipped).push_back(column);
+                    liveColumns.erase(column);
+                }
+                if (!skipped.empty()) {
+                    changes.push_back("column pruning: " + original + " adds only " +
+                                      (kept.empty() ? std::string("the check of its key") : join(kept)) + ", skips " +
+                                      join(skipped));
+                }
+                instruction.columns = kept;
+                std::set<std::string>& lookup = live[tableKey(instruction.withDataset, instruction.withTable)];
+                lookup.insert(kept.begin(), kept.end());
+                lookup.insert(instruction.column);
+                liveColumns.insert(instruction.column);
+                break;
+            }
+
+            case Opcode::Aggregate: {  // reads its BY columns and the columns its results come from
+                std::set<std::string> read(instruction.columns.begin(), instruction.columns.end());
+                for (const AggregateResult& item : instruction.aggregates) {
+                    if (!item.column.empty()) {
+                        read.insert(item.column);
+                    }
+                }
+                liveColumns = read;
+                break;
+            }
 
             case Opcode::Load: {
                 std::vector<std::string> kept;

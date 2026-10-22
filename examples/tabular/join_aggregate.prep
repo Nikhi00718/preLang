@@ -1,0 +1,13 @@
+# Sales per category and city: a lookup JOIN, then one row per group.
+LOAD "orders.csv" AS orders;
+LOAD "products.csv" AS products;     # each product must be in it once: checked from the file
+
+EXPECT orders.price BETWEEN 0 AND 5000;
+JOIN orders WITH products ON product;      # adds category and weight_kg; P9 is not in products
+FILL_NULL orders.category WITH "Unknown";
+FILL_NULL orders.quantity WITH 1;
+DERIVE orders.revenue = quantity * price;
+
+AGGREGATE orders BY [category, city] COUNT AS n_orders, SUM revenue AS revenue, MAX price AS top_price;
+EXPECT orders.top_price BETWEEN 0 AND 5000;   # proven: MAX keeps the range of price, [40, 1200]
+SAVE orders AS "sales_by_category.csv";

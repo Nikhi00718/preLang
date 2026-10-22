@@ -181,6 +181,25 @@ The compiler knows the range of every derived column (interval arithmetic; a par
 narrower than its full range when the dates fall in one year, month or day). A division by a value
 that can be 0 is a compile error, and `PARSE_DATE` names the first row that is not a date.
 
+**Joins and groups.** `JOIN t WITH u ON key` adds the columns of a lookup table `u` to every row of
+`t`: the one row of `u` with the same key, or missing values if there is none (a left join).
+`AGGREGATE t BY [columns] ...` makes one row per group, with `COUNT AS name` (rows of the group) and
+`SUM`, `MEAN`, `MIN`, `MAX column AS name`; rows with a missing `BY` value belong to no group.
+
+```text
+JOIN orders WITH products ON product;      # each product must be in products once
+AGGREGATE orders BY [category, city] COUNT AS n_orders, SUM revenue AS revenue, MAX price AS top_price;
+```
+
+Both are checked before anything runs: the keys must be the same kind of value (an INTEGER key never
+matches a STRING one), a column in both tables is an error (pandas would rename it to `_x` and `_y`),
+and a key repeated in the lookup file is an error with its rows; on a new batch the generated program
+checks the key again before joining. The new columns keep what is known about them: joined columns
+keep their type and range and may be missing, `COUNT` is at least 1, `SUM` is at least 0 when every
+value is, and `MEAN`, `MIN` and `MAX` stay within the column's range, so contracts after them can still
+be proven (`examples/tabular/join_aggregate.prep`). `BY`, `COUNT`, `SUM`, `MIN` and `MAX` are not
+reserved words: columns may have these names.
+
 **Column types** are BOOLEAN, INTEGER, FLOAT and STRING, inferred from the CSV cells, plus DATETIME
 for the date and timestamp columns of Parquet files and the columns `PARSE_DATE` reads. A DATETIME
 column can be kept, dropped, saved, checked with `NOT_NULL` and taken apart with `DERIVE`; comparing
@@ -209,7 +228,8 @@ FILL_NULL company.*.age WITH 0 IF_EXISTS;            # skip the tables without t
 ```ebnf
 program        = { statement } EOF ;
 statement      = load | drop_null | fill_null | normalize | filter | select | drop | parse_date | derive
-               | save | expect | resize | grayscale | compress | convert | remove_corrupt | link ;
+               | join | aggregate | save | expect | resize | grayscale | compress | convert | remove_corrupt
+               | link ;
 
 load           = ( "LOAD" | "LOAD_TABLES" | "LOAD_IMAGE" | "LOAD_IMAGES" ) STRING "AS" IDENT [ "RECURSIVE" ] ";" ;
 save           = "SAVE" table_ref "AS" STRING ";"  | "SAVE_TABLES" IDENT "TO" STRING ";"
@@ -223,6 +243,9 @@ select         = "SELECT" table_ref column_list ";" ;
 drop           = "DROP" table_selector column_list [ "IF_EXISTS" ] ";" ;
 parse_date     = "PARSE_DATE" column_selector ";" ;
 derive         = "DERIVE" path "=" sum ";" ;          (* path: table.column or tableset.table.column *)
+join           = "JOIN" table_ref "WITH" table_ref "ON" IDENT ";" ;
+aggregate      = "AGGREGATE" table_ref "BY" column_list aggregate_item { "," aggregate_item } ";" ;
+aggregate_item = ( "COUNT" | ( "SUM" | "MEAN" | "MIN" | "MAX" ) IDENT ) "AS" IDENT ;
 expect         = "EXPECT" column_selector constraint [ "IF_EXISTS" ] ";" ;
 constraint     = "NUMBER" | "STRING" | "BOOLEAN" | "NOT_NULL" | "BETWEEN" number "AND" number | "UNIQUE"
                | "REFERENCES" path | "SCHEMA_SAME_AS" table_ref [ "EXCEPT" column_list ]
@@ -452,6 +475,7 @@ because pruning a column before it would change which rows are removed.
 | `examples/tabular/optimize.prep` | every table optimization, and why `DROP_NULL` blocks pruning |
 | `examples/tabular/tableset.prep` | a folder of tables, wildcards, type selectors, cross-table contracts |
 | `examples/tabular/ml_split.prep` | `SCHEMA_SAME_AS` between a train and a test split |
+| `examples/tabular/join_aggregate.prep` | a lookup `JOIN` and `AGGREGATE`; a contract proven after both |
 | `examples/images/imageset.prep` | image dataset: broken file, proven size and channel contracts |
 | `examples/images/linked.prep` | images linked to labels, `MATCH_RATE`, float pixels saved as NPY |
 | `examples/images/optimize_images.prep` | image optimizations; add `--approx` for RESIZE fusion |

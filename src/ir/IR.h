@@ -16,7 +16,7 @@
 //   t1 = s.marks >= 50;  t2 = s.passed == TRUE;  t3 = t1 AND t2;  FILTER s IF t3
 enum class Opcode {
     Load, Check, FillNull, DropNull, Normalize, Compare, And, Or, Not, Filter, Select, Drop, Save,
-    ParseDate, Derive,
+    ParseDate, Derive, Join, Aggregate,
     LoadImages, Resize, Grayscale, NormalizeImages, Compress, Convert, RemoveCorrupt, SaveImages,
 };
 
@@ -40,6 +40,9 @@ enum class Opcode {
 //   PARSE_DATE    dataset, table, column
 //   DERIVE        dataset, table, column = the new column, columns = the columns it reads,
 //                 text = the value as written, value = its tree
+//   JOIN          dataset, table, column = the key, withDataset, withTable = the lookup table,
+//                 columns = the columns it adds
+//   AGGREGATE     dataset, table, columns = the BY columns, aggregates = the new columns
 //   LOAD_IMAGES   dataset, text = folder or file
 //   RESIZE        dataset, numbers = [width, height, keep aspect (0 or 1)]
 //   GRAYSCALE     dataset
@@ -48,6 +51,14 @@ enum class Opcode {
 //   CONVERT       dataset, text = JPG | PNG | NPY
 //   REMOVE_CORRUPT    dataset
 //   SAVE_IMAGES   dataset, text = folder (or file), numbers = [one file (0 or 1)]
+// One new column of AGGREGATE, with the type analysis gave it.
+struct AggregateResult {
+    std::string function;  // COUNT, SUM, MEAN, MIN or MAX
+    std::string column;    // empty for COUNT
+    std::string name;
+    std::string type;      // INTEGER or FLOAT
+};
+
 struct Instruction {
     explicit Instruction(Opcode opcode) : op(opcode) {}
 
@@ -59,6 +70,9 @@ struct Instruction {
     std::string text;
     std::vector<Literal> values;
     std::shared_ptr<const ValueExpr> value;  // DERIVE
+    std::string withDataset;                 // JOIN: the lookup table
+    std::string withTable;
+    std::vector<AggregateResult> aggregates;  // AGGREGATE
     std::vector<int> numbers;
     int result = 0;         // temporary t<result> this instruction defines; 0 if none
     std::vector<int> uses;  // temporaries this instruction reads

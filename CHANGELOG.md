@@ -3,6 +3,10 @@
 ## 2.0.0 (unreleased)
 
 ### Added
+- `JOIN t WITH u ON key` (a lookup join) and `AGGREGATE t BY [columns]` with `COUNT`, `SUM`, `MEAN`,
+  `MIN` and `MAX`: key types, columns in both tables and repeated lookup keys are compile errors (a
+  repeated key is checked again on new batches), and the new columns keep their types and ranges;
+  column pruning reaches through a `JOIN` to the lookup table's `LOAD`.
 - Speculative removal with per-removal certificates and selective deoptimization: a compiled program
   admitted on a new input runs again exactly the removed checks and operations whose item
   certificates that input breaks.
@@ -12,9 +16,9 @@
 - `PARSE_DATE` and `DERIVE` (dates from ISO text, derived columns with interval arithmetic and
   calendar parts); the lifter `frontend/pandas2prep.py` lifts them too.
 - Lean 4 mechanization of the core analysis (`proofs/`).
-- Continuous integration on Ubuntu (GCC) and Windows (MSVC); a Dockerfile.
-- `eval/compilation/differential.py`: random programs compared with `--O0` and a reference
-  interpreter; `eval/compilation/census.py`: work removed, run time and overhead on lifted programs.
+- Continuous integration on Ubuntu (GCC), Windows (MSVC) and macOS (GCC); a Dockerfile.
+- `eval/compilation/differential.py`: random programs, with joins and groups, compared with `--O0`
+  and a reference interpreter, and reused on a second batch; `eval/compilation/census.py`: work removed, run time and overhead on lifted programs.
 
 ### Fixed
 - Column pruning kept a `DROP` of a column that a pruned `SELECT` before it no longer had, so the

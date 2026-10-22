@@ -445,6 +445,36 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             return column + " = " + pandasValue(*in.value, table) + "\n";
         case Opcode::Drop:
             return table + " = " + table + ".drop(columns=" + pythonList(in.columns) + ")\n";
+        case Opcode::Join: {  // a left join on a key the lookup table has once; a missing key matches nothing
+            std::vector<std::string> read = {in.column};
+            read.insert(read.end(), in.columns.begin(), in.columns.end());
+            const std::string key = pythonString(in.column);
+            const std::string lookup = tableKey(in.withDataset, in.withTable) + "." + in.column;
+            return "right = " + tableVariable(in.withDataset, in.withTable) + "[" + pythonList(read) +
+                   "].dropna(subset=[" + key + "])\nif right[" + key + "].duplicated().any():\n" +
+                   "    raise ContractError(" + pythonString("line " + std::to_string(in.line) + ": JOIN needs each " +
+                                                           lookup + " once, but it repeats ") +
+                   " + repr(str(right.loc[right[" + key + "].duplicated(), " + key + "].iloc[0])))\n" + table + " = " +
+                   table + ".merge(right, on=" + key + ", how=\"left\")\n";
+        }
+        case Opcode::Aggregate: {  // one row per group, sorted by the BY values; a missing BY value is in no group
+            std::string code = "grouped = " + table + ".groupby(" + pythonList(in.columns) +
+                               ", dropna=True, sort=True)\n" + table + " = pd.DataFrame({";
+            std::string types;
+            for (size_t i = 0; i < in.aggregates.size(); ++i) {
+                const AggregateResult& item = in.aggregates[i];
+                const std::string statistic = item.function == "COUNT" ? "grouped.size()"
+                                              : "grouped[" + pythonString(item.column) + "]." +
+                                                    (item.function == "SUM"    ? "sum()"
+                                                     : item.function == "MEAN" ? "mean()"
+                                                     : item.function == "MIN"  ? "min()"
+                                                                               : "max()");
+                code += (i > 0 ? ", " : "") + pythonString(item.name) + ": " + statistic;
+                types += (i > 0 ? ", " : "") + pythonString(item.name) + ": " +
+                         pythonString(item.type == "FLOAT" ? "Float64" : "Int64");
+            }
+            return code + "}).reset_index().astype({" + types + "})\n";
+        }
         case Opcode::Save:
             return "path = HERE / " + pythonString(in.text) +
                    "\npath.parent.mkdir(parents=True, exist_ok=True)\n" + table +

@@ -92,6 +92,21 @@ void ASTDot::visit(const DeriveStmt& node) {
     addStatement("Derive", {node.target.text(), valueText(*node.value)});
 }
 
+void ASTDot::visit(const JoinStmt& node) {
+    addStatement("Join", {node.target.text(), "WITH " + node.other.text(), "ON " + node.key});
+}
+
+void ASTDot::visit(const AggregateStmt& node) {
+    std::vector<std::string> fields = {node.target.text()};
+    for (const std::string& column : node.by) {
+        fields.push_back("BY " + column);
+    }
+    for (const AggregateItem& item : node.items) {
+        fields.push_back(item.function + (item.column.empty() ? "" : " " + item.column) + " AS " + item.name);
+    }
+    addStatement("Aggregate", fields);
+}
+
 void ASTDot::visit(const SaveStmt& node) {
     addStatement("Save " + dataKindName(node.kind), {node.target.text(), "\"" + node.path + "\""});
 }

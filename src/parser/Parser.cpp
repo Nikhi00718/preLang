@@ -12,7 +12,7 @@ struct ParseError {};
 
 const std::vector<std::string> statementKeywords = {
     "LOAD", "LOAD_TABLES", "LOAD_IMAGE", "LOAD_IMAGES", "DROP_NULL", "FILL_NULL", "NORMALIZE", "FILTER",
-    "SELECT", "DROP", "PARSE_DATE", "DERIVE", "SAVE", "SAVE_TABLES", "SAVE_IMAGE", "SAVE_IMAGES", "EXPECT", "RESIZE", "GRAYSCALE",
+    "SELECT", "DROP", "PARSE_DATE", "DERIVE", "JOIN", "AGGREGATE", "SAVE", "SAVE_TABLES", "SAVE_IMAGE", "SAVE_IMAGES", "EXPECT", "RESIZE", "GRAYSCALE",
     "COMPRESS", "CONVERT", "REMOVE_CORRUPT", "LINK"};
 
 // How a token is shown in "found ..." messages.
@@ -60,6 +60,8 @@ std::unique_ptr<Stmt> Parser::statement() {
         case TokenType::DROP:           return dropStatement();
         case TokenType::PARSE_DATE:     return parseDateStatement();
         case TokenType::DERIVE:         return deriveStatement();
+        case TokenType::JOIN:           return joinStatement();
+        case TokenType::AGGREGATE:      return aggregateStatement();
         case TokenType::SAVE:           return saveStatement(DataKind::Table);
         case TokenType::SAVE_TABLES:    return saveStatement(DataKind::TableSet);
         case TokenType::SAVE_IMAGE:     return saveStatement(DataKind::Image);
@@ -200,6 +202,56 @@ std::unique_ptr<Stmt> Parser::deriveStatement() {
     }
     consume(TokenType::EQUAL, "'=' after the new column");
     node->value = sum();
+    endStatement();
+    return node;
+}
+
+// join -> JOIN table_ref WITH table_ref ON IDENTIFIER ;
+std::unique_ptr<Stmt> Parser::joinStatement() {
+    auto node = std::make_unique<JoinStmt>();
+    node->location = advance().location;
+    node->target = tableRef();
+    consume(TokenType::WITH, "'WITH' and the lookup table");
+    node->other = tableRef();
+    consume(TokenType::ON, "'ON' and the key column");
+    node->key = identifier("the key column both tables have");
+    endStatement();
+    return node;
+}
+
+// aggregate      -> AGGREGATE table_ref BY column_list aggregate_item { , aggregate_item } ;
+// aggregate_item -> ( COUNT | ( SUM | MEAN | MIN | MAX ) IDENTIFIER ) AS IDENTIFIER
+// BY, COUNT, SUM, MIN and MAX are matched as words, not reserved: columns keep these names.
+std::unique_ptr<Stmt> Parser::aggregateStatement() {
+    auto node = std::make_unique<AggregateStmt>();
+    node->location = advance().location;
+    node->target = tableRef();
+    if (!matchWord("BY")) {
+        errorExpected("'BY' and the columns to group by");
+    }
+    node->by = columnList();
+    do {
+        AggregateItem item;
+        item.location = peek().location;
+        if (match(TokenType::MEAN)) {
+            item.function = "MEAN";
+        } else {
+            for (const char* function : {"COUNT", "SUM", "MIN", "MAX"}) {
+                if (item.function.empty() && matchWord(function)) {
+                    item.function = function;
+                }
+            }
+        }
+        if (item.function.empty()) {
+            errorExpected("COUNT, SUM, MEAN, MIN or MAX");
+        }
+        if (item.function != "COUNT") {
+            item.column = identifier("the column " + item.function + " reads");
+        }
+        consume(TokenType::AS, "'AS' and the name of the new column");
+        item.name = identifier("the name of the new column");
+        node->items.push_back(item);
+    } while (match(TokenType::COMMA));
     endStatement();
     return node;
 }
@@ -635,6 +687,22 @@ int Parser::integer(const std::string& what) {
 
 // A dataset, table or column name. A column called e.g. "number" clashes with
 // the keyword NUMBER, so the hint shows how to quote it.
+// A word that is a keyword only in one place (BY, COUNT, ...): an identifier with this text.
+bool Parser::matchWord(const std::string& word) {
+    if (!check(TokenType::IDENTIFIER)) {
+        return false;
+    }
+    std::string upper;
+    for (char c : peek().lexeme) {
+        upper += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    }
+    if (upper != word) {
+        return false;
+    }
+    advance();
+    return true;
+}
+
 std::string Parser::identifier(const std::string& what) {
     if (check(TokenType::IDENTIFIER)) {
         return advance().lexeme;

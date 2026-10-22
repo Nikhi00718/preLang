@@ -1,0 +1,9 @@
+order_id,product,quantity,price,city
+1,P1,2,250.0,Chennai
+2,P2,1,1200.0,Pune
+3,P1,5,240.0,Chennai
+4,P3,,90.5,Delhi
+5,P9,3,40.0,Pune
+6,P2,2,1150.0,Delhi
+7,P3,4,88.0,Chennai
+8,P1,1,260.0,

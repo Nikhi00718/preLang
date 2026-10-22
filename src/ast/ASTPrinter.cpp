@@ -173,6 +173,18 @@ void ASTPrinter::visit(const DeriveStmt& node) {
     printNode("Derive", {"column: " + node.target.text(), "value: " + valueText(*node.value)});
 }
 
+void ASTPrinter::visit(const JoinStmt& node) {
+    printNode("Join", {"table: " + node.target.text(), "with: " + node.other.text(), "on: " + node.key});
+}
+
+void ASTPrinter::visit(const AggregateStmt& node) {
+    std::vector<std::string> fields = {"table: " + node.target.text(), "by: " + listText(node.by)};
+    for (const AggregateItem& item : node.items) {
+        fields.push_back(item.function + (item.column.empty() ? "" : " " + item.column) + " AS " + item.name);
+    }
+    printNode("Aggregate", fields);
+}
+
 void ASTPrinter::visit(const SaveStmt& node) {
     printNode("Save " + dataKindName(node.kind), {"dataset: " + node.target.text(), "to: \"" + node.path + "\""});
 }

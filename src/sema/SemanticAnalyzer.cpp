@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <limits>
+#include <map>
 #include <utility>
 
 namespace {
@@ -198,7 +200,7 @@ AnalysisResult SemanticAnalyzer::analyze(const Program& program) {
         statement->accept(*this);
     }
     for (const DatasetSymbol& dataset : symbols_.datasets()) {
-        if (!dataset.saved && dataset.kind != DatasetKind::Dataset) {
+        if (!dataset.saved && !dataset.joined && dataset.kind != DatasetKind::Dataset) {
             diagnostics_.warning(Phase::Semantic, dataset.definedAt,
                                  "dataset '" + dataset.name + "' is loaded but never saved",
                                  "add a SAVE statement, or remove the LOAD");
@@ -828,6 +830,198 @@ void SemanticAnalyzer::visit(const DeriveStmt& node) {
     addTarget(node, tableTarget(dataset, table, columnName));
     log(node, "DERIVE " + columnDisplayName(dataset, table, columnName) + " = " + valueText(*node.value) + ": " +
                   state.typeText() + (existing ? " (replaces the column)" : ""));
+}
+
+// JOIN adds the columns of a lookup table to every row: each row gets the one row of the
+// other table with its key, or missing values if there is none (a left join). The key must
+// be the same kind of value on both sides, no other column may be in both tables (pandas
+// would rename them), and the key may appear only once in the lookup table, so no row is
+// repeated. When the lookup file's key values are known, a repeated key is an error here;
+// otherwise the generated program checks it before joining.
+void SemanticAnalyzer::visit(const JoinStmt& node) {
+    std::optional<TableResolution> left = resolver_.singleTable(node.target, "JOIN");
+    std::optional<TableResolution> right = resolver_.singleTable(node.other, "JOIN");
+    if (!left || !right) {
+        return;
+    }
+    DatasetSymbol& dataset = *left->dataset;
+    TableState& table = *left->tables.front();
+    DatasetSymbol& otherDataset = *right->dataset;
+    TableState& other = *right->tables.front();
+    otherDataset.joined = true;  // read as a lookup table, whether or not the JOIN is correct
+    if (&table == &other) {
+        diagnostics_.error(Phase::Semantic, node.other.location, "JOIN needs two different tables");
+        return;
+    }
+    const int errorsBefore = diagnostics_.errorCount();
+    const ColumnState* key = resolver_.column(dataset, table, node.key, node.target.location);
+    const ColumnState* otherKey = resolver_.column(otherDataset, other, node.key, node.other.location);
+    if (!key || !otherKey) {
+        return;
+    }
+    const std::string name = columnDisplayName(dataset, table, node.key);
+    const std::string otherName = columnDisplayName(otherDataset, other, node.key);
+    if (key->type != otherKey->type) {
+        diagnostics_.error(Phase::Type, node.location,
+                           "JOIN compares " + std::string(columnTypeName(key->type)) + " column " + name + " with " +
+                               columnTypeName(otherKey->type) + " column " + otherName + ": no row would match",
+                           "both keys must hold the same kind of value");
+    } else if (key->type == ColumnType::Float || key->type == ColumnType::DateTime) {
+        diagnostics_.error(Phase::Type, node.location,
+                           "JOIN needs an INTEGER, STRING or BOOLEAN key, but " + name + " is " +
+                               columnTypeName(key->type),
+                           key->type == ColumnType::Float ? "equal decimals can print differently; DERIVE an integer key"
+                                                          : "DERIVE a key from its parts, such as YEAR and MONTH");
+    }
+    std::vector<ColumnState> added;
+    std::vector<std::string> addedNames;
+    for (const ColumnState& column : other.columns) {
+        if (column.name == node.key) {
+            continue;
+        }
+        if (table.column(column.name)) {
+            diagnostics_.error(Phase::Semantic, node.location,
+                               "column '" + column.name + "' is in both " + columnDisplayName(dataset, table, "") +
+                                   " and " + columnDisplayName(otherDataset, other, ""),
+                               "DROP it from one of them first; a join would keep both under other names");
+            continue;
+        }
+        ColumnState joined = column;
+        joined.nullable = true;  // rows whose key is missing or not in the lookup table
+        joined.exact = false;
+        joined.valuesChanged = true;
+        joined.rowsRemoved = true;
+        added.push_back(joined);
+        addedNames.push_back(column.name);
+    }
+    const bool valuesKnown = !other.schema.released && other.schema.format == TableFormat::Csv &&
+                             other.schema.valuesKnown && otherKey->exact && !otherKey->valuesChanged;
+    if (valuesKnown) {
+        std::map<std::string, std::vector<size_t>> rows;
+        const std::vector<std::string> values = readColumnValues(other.schema, node.key);
+        for (size_t i = 0; i < values.size(); ++i) {
+            if (!values[i].empty()) {
+                rows[values[i]].push_back(i);
+            }
+        }
+        for (const std::string& value : values) {
+            const std::vector<size_t>& found = value.empty() ? std::vector<size_t>{} : rows[value];
+            if (found.size() > 1) {
+                diagnostics_.error(Phase::Contract, node.other.location,
+                                   "JOIN needs each " + otherName + " once, but \"" + value + "\" is in rows " +
+                                       std::to_string(found[0] + 1) + " and " + std::to_string(found[1] + 1) + " of " +
+                                       other.schema.file,
+                                   "each row of " + columnDisplayName(dataset, table, "") +
+                                       " would be repeated; remove the repeated rows of the lookup table");
+                break;
+            }
+        }
+    }
+    if (diagnostics_.errorCount() > errorsBefore) {
+        return;
+    }
+    for (const ColumnState& column : added) {
+        table.columns.push_back(column);
+        table.removedAt.erase(column.name);
+        recordColumn(dataset, table, column, node.location.line, "JOIN " + columnDisplayName(otherDataset, other, ""));
+    }
+    Target target = tableTarget(dataset, table, node.key);
+    target.args = {otherDataset.name, otherDataset.kind == DatasetKind::TableSet ? other.name : ""};
+    target.args.insert(target.args.end(), addedNames.begin(), addedNames.end());
+    addTarget(node, target);
+    log(node, "JOIN " + columnDisplayName(dataset, table, "") + " WITH " + columnDisplayName(otherDataset, other, "") +
+                  " ON " + node.key + ": adds " + (addedNames.empty() ? "no column" : join(addedNames)) +
+                  (valuesKnown ? " (every key of the lookup table is different)" : " (keys checked when it runs)"));
+}
+
+// AGGREGATE makes one row per group of BY values; rows with a missing BY value belong to
+// no group (as in pandas' groupby). What is known about each new column:
+//   COUNT  INTEGER, at least 1, never missing
+//   SUM    the column's type, never missing (a group without values sums to 0); at least 0
+//          if every value is, at most 0 if every value is
+//   MEAN   FLOAT; MIN and MAX the column's type: within the column's range, missing if a
+//          group has no value of the column
+void SemanticAnalyzer::visit(const AggregateStmt& node) {
+    std::optional<TableResolution> resolution = resolver_.singleTable(node.target, "AGGREGATE");
+    if (!resolution) {
+        return;
+    }
+    DatasetSymbol& dataset = *resolution->dataset;
+    TableState& table = *resolution->tables.front();
+    const int errorsBefore = diagnostics_.errorCount();
+    std::vector<ColumnState> columns;
+    std::vector<std::string> names;
+    std::vector<std::string> types;
+    const auto addName = [&](const std::string& name, SourceLocation location) {
+        if (contains(names, name)) {
+            diagnostics_.error(Phase::Semantic, location, "column '" + name + "' is named twice in AGGREGATE");
+            return false;
+        }
+        names.push_back(name);
+        return true;
+    };
+    for (const std::string& name : node.by) {
+        ColumnState* column = resolver_.column(dataset, table, name, node.target.location);
+        if (column && addName(name, node.target.location)) {
+            ColumnState group = *column;
+            group.nullable = false;
+            group.exact = false;
+            group.valuesChanged = true;
+            group.rowsRemoved = true;
+            columns.push_back(group);
+        }
+    }
+    const double infinity = std::numeric_limits<double>::infinity();
+    for (const AggregateItem& item : node.items) {
+        ColumnState result{item.name, ColumnType::Integer, false, Range{1, infinity}, false, true, ""};
+        result.rowsRemoved = true;
+        if (item.function != "COUNT") {
+            const ColumnState* column = resolver_.column(dataset, table, item.column, item.location);
+            if (!column) {
+                continue;
+            }
+            if (!isNumeric(column->type)) {
+                diagnostics_.error(Phase::Type, item.location,
+                                   item.function + " needs a numeric column, but '" + item.column + "' is " +
+                                       columnTypeName(column->type),
+                                   "COUNT AS name counts the rows of each group");
+                continue;
+            }
+            const Range& range = column->range;
+            result.type = item.function == "MEAN" ? ColumnType::Float : column->type;
+            if (item.function == "SUM") {
+                result.range = {range.min >= 0 ? 0 : -infinity, range.max <= 0 ? 0 : infinity};
+            } else {
+                result.nullable = column->nullable;
+                result.range = range;
+            }
+        }
+        if (addName(item.name, item.location)) {
+            columns.push_back(result);
+            types.push_back(columnTypeName(result.type));
+        }
+    }
+    if (diagnostics_.errorCount() > errorsBefore) {
+        return;
+    }
+    for (const ColumnState& column : table.columns) {
+        if (!contains(names, column.name)) {
+            table.removedAt[column.name] = node.location.line;
+        }
+    }
+    table.columns = columns;
+    for (const ColumnState& column : columns) {
+        recordColumn(dataset, table, column, node.location.line, "AGGREGATE BY " + join(node.by));
+    }
+    Target target = tableTarget(dataset, table);
+    target.args = types;
+    addTarget(node, target);
+    std::vector<std::string> described;
+    for (const ColumnState& column : columns) {
+        described.push_back(column.name + " " + column.typeText());
+    }
+    log(node, "AGGREGATE " + columnDisplayName(dataset, table, "") + " BY " + join(node.by) + ": " +
+                  join(described));
 }
 
 void SemanticAnalyzer::visit(const SaveStmt& node) {

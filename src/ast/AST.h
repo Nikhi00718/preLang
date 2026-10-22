@@ -18,6 +18,8 @@ struct SelectStmt;
 struct DropStmt;
 struct ParseDateStmt;
 struct DeriveStmt;
+struct JoinStmt;
+struct AggregateStmt;
 struct SaveStmt;
 struct ExpectStmt;
 struct ResizeStmt;
@@ -45,6 +47,8 @@ public:
     virtual void visit(const DropStmt& node) = 0;
     virtual void visit(const ParseDateStmt& node) = 0;
     virtual void visit(const DeriveStmt& node) = 0;
+    virtual void visit(const JoinStmt& node) = 0;
+    virtual void visit(const AggregateStmt& node) = 0;
     virtual void visit(const SaveStmt& node) = 0;
     virtual void visit(const ExpectStmt& node) = 0;
     virtual void visit(const ResizeStmt& node) = 0;
@@ -239,6 +243,32 @@ std::vector<std::string> valueColumns(const ValueExpr& expr);
 struct DeriveStmt : Stmt {
     Selector target;  // the table, with the new (or replaced) column as the last part
     std::shared_ptr<const ValueExpr> value;
+    void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
+};
+
+// JOIN trips WITH zones ON zone_id;   (a lookup: each row of trips gets the columns of the
+// one row of zones with its zone_id, or missing values if there is none)
+struct JoinStmt : Stmt {
+    Selector target;  // the table that gets the columns
+    Selector other;   // the lookup table
+    std::string key;  // the column both tables have
+    void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
+};
+
+// One result column of AGGREGATE: COUNT AS trips, SUM fare AS total, MEAN fare AS average.
+struct AggregateItem {
+    SourceLocation location;
+    std::string function;  // COUNT, SUM, MEAN, MIN or MAX
+    std::string column;    // the column it reads; empty for COUNT (the rows of the group)
+    std::string name;      // the new column
+};
+
+// AGGREGATE trips BY [zone, hour] COUNT AS trips, MEAN fare AS average;
+// (one row per group; rows with a missing BY value belong to no group)
+struct AggregateStmt : Stmt {
+    Selector target;
+    std::vector<std::string> by;
+    std::vector<AggregateItem> items;
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
 

@@ -101,6 +101,7 @@ struct DatasetSymbol {
     ImageState images;               // IMAGE and IMAGESET: what is known now
     LinkState link;                  // DATASET
     bool saved = false;
+    bool joined = false;  // a JOIN reads it as a lookup table, so it need not be saved
 
     bool isTabular() const { return kind == DatasetKind::Table || kind == DatasetKind::TableSet; }
     bool isImage() const { return kind == DatasetKind::Image || kind == DatasetKind::ImageSet; }

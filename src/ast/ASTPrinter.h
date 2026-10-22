@@ -27,6 +27,8 @@ public:
     void visit(const DropStmt& node) override;
     void visit(const ParseDateStmt& node) override;
     void visit(const DeriveStmt& node) override;
+    void visit(const JoinStmt& node) override;
+    void visit(const AggregateStmt& node) override;
     void visit(const SaveStmt& node) override;
     void visit(const ExpectStmt& node) override;
     void visit(const ResizeStmt& node) override;

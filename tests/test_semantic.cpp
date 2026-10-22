@@ -9,6 +9,7 @@
 #include "sema/SemanticAnalyzer.h"
 #include "sema/SymbolTable.h"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -294,10 +295,74 @@ void testDeriveReplacesAndDefines() {
     check(total && deferred, "a derived value may be missing where an operand is (age has a missing value)");
 }
 
+// Lookup tables for JOIN: zones by city; one with a repeated city, one whose city is a
+// number, one that also has a marks column.
+const char* const lookupFiles[][2] = {
+    {"test_semantic_zones.csv", "city,zone,pin\nChennai,South,600001\nPune,West,411001\nDelhi,North,110001\n"},
+    {"test_semantic_zones_repeated.csv", "city,zone\nChennai,South\nPune,West\nChennai,East\n"},
+    {"test_semantic_zones_numbers.csv", "city,zone\n1,South\n2,West\n"},
+    {"test_semantic_zones_marks.csv", "city,marks\nChennai,1\n"},
+};
+
+void testJoin() {
+    Analysis a;
+    analyze("LOAD \"test_semantic_zones.csv\" AS z;\nJOIN s WITH z ON city;\nSAVE s AS \"out.csv\";", a);
+    const ColumnState* zone = column(a, "zone");
+    const ColumnState* pin = column(a, "pin");
+    check(!a.diagnostics.hasErrors() && zone && zone->type == ColumnType::String && zone->nullable && pin &&
+              pin->type == ColumnType::Integer && pin->range.min == 110001 && pin->range.max == 600001,
+          "JOIN adds the lookup columns with their types and ranges, missing where no key matches");
+    check(!reported(a, Severity::Warning, Phase::Semantic, "never saved"),
+          "a lookup table read by JOIN need not be saved");
+}
+
+void testJoinErrors() {
+    Analysis repeated;
+    analyze("LOAD \"test_semantic_zones_repeated.csv\" AS z;\nJOIN s WITH z ON city;\nSAVE s AS \"o.csv\";", repeated);
+    check(reported(repeated, Severity::Error, Phase::Contract, "\"Chennai\" is in rows 1 and 3"),
+          "a key that repeats in the lookup file is an error, with its rows");
+    Analysis types;
+    analyze("LOAD \"test_semantic_zones_numbers.csv\" AS z;\nJOIN s WITH z ON city;\nSAVE s AS \"o.csv\";", types);
+    check(reported(types, Severity::Error, Phase::Type, "STRING column s.city with INTEGER column z.city"),
+          "keys of different types are a type error");
+    Analysis both;
+    analyze("LOAD \"test_semantic_zones_marks.csv\" AS z;\nJOIN s WITH z ON city;\nSAVE s AS \"o.csv\";", both);
+    check(reported(both, Severity::Error, Phase::Semantic, "column 'marks' is in both s and z"),
+          "a column in both tables is an error, not renamed");
+}
+
+void testAggregate() {
+    Analysis a;
+    analyze("AGGREGATE s BY [city] COUNT AS n, SUM marks AS total, MEAN age AS average, MAX marks AS top;\n"
+            "SAVE s AS \"out.csv\";",
+            a);
+    const ColumnState* city = column(a, "city");
+    const ColumnState* n = column(a, "n");
+    const ColumnState* total = column(a, "total");
+    const ColumnState* average = column(a, "average");
+    const ColumnState* top = column(a, "top");
+    check(!a.diagnostics.hasErrors() && city && !city->nullable && n && n->type == ColumnType::Integer &&
+              !n->nullable && n->range.min == 1 && std::isinf(n->range.max),
+          "AGGREGATE: BY columns are never missing, COUNT is an INTEGER of at least 1");
+    check(total && total->type == ColumnType::Integer && !total->nullable && total->range.min == 0 &&
+              std::isinf(total->range.max),
+          "SUM keeps the type and is at least 0 when every value is");
+    check(average && average->type == ColumnType::Float && average->nullable && average->range.min == 20 &&
+              average->range.max == 22 && top && top->range.min == 42 && top->range.max == 91 && !column(a, "marks"),
+          "MEAN is FLOAT within the range, missing like its column; MAX keeps the range; other columns go");
+    Analysis text;
+    analyze("AGGREGATE s BY [city] MEAN name AS x;\nSAVE s AS \"out.csv\";", text);
+    check(reported(text, Severity::Error, Phase::Type, "MEAN needs a numeric column, but 'name' is STRING"),
+          "MEAN of a text column is a type error");
+}
+
 }  // namespace
 
 int main() {
     std::ofstream(csvFile) << csvText;
+    for (const auto& [file, text] : lookupFiles) {
+        std::ofstream(file) << text;
+    }
 
     std::cout << "Semantic analysis tests\n";
     testSchemaFacts();
@@ -322,6 +387,9 @@ int main() {
     testDates();
     testDateAndDivisionErrors();
     testDeriveReplacesAndDefines();
+    testJoin();
+    testJoinErrors();
+    testAggregate();
 
     std::cout << (failures == 0 ? "All semantic tests passed.\n" : "Some semantic tests FAILED.\n");
     return failures == 0 ? 0 : 1;
