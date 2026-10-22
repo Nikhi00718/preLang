@@ -5,6 +5,16 @@ repository root with the Release build (`build/Release/preplang.exe`); each one 
 `.md` file to `results/`. Downloaded data goes to `data/` and scratch folders to `work/`; neither is
 committed.
 
+## `evaluate.py`: the six questions
+
+`py -3 eval/evaluate.py` writes `results/evaluation.md`: correctness, performance, optimization
+effectiveness, practical usefulness, comparison and overhead, each answered with numbers from the
+results below (through `paper_numbers.py`, so they are the paper's numbers). `--run` reruns
+`differential.py` and `census.py` first; `--quick` runs small versions into `work/quick/`.
+
+The largest result files are kept gzipped (`private.json.gz`, `private_diagnostics.json.gz`,
+`differential*.json.gz`); `paper_numbers.py` reads either form.
+
 ## `compilation/`: what data-aware compilation finds and costs (RQ1, RQ2)
 
 | Script | What it does | Results |
@@ -14,6 +24,8 @@ committed.
 | `scale.py` | time to the first error on 16M-row Parquet tables and 3,000 images | `scale.*` |
 | `run_realbugs.py` | the 44 failures from GitHub issues (`realbugs_catalog.py`) | `realbugs.*` |
 | `datasets.py` | builds the example images and the benchmark and scale data | |
+| `differential.py` | random programs, `--O0` and optimized, against a reference interpreter (correctness) | `differential.*`; `differential_prefix.*` is the run before the two fixes it led to (`PREPLANG_COMPILER` names another build) |
+| `census.py` | work removed, run time and compiler time and memory on the examples and lifted programs (run the reuse corpora first) | `census.*` |
 
 ## `reuse/`: reusing a compiled program on new batches (RQ3 to RQ8)
 

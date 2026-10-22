@@ -41,9 +41,10 @@ Measured:
   2. what the analyst learns: the removals of the private compilation against those of
      the normal compilation of the same file (precision, recall), and the warnings;
   3. the cost: deoptimizations on the compiled file itself, refusals.
-Writes eval/results/private.json and .md.
+Writes eval/results/private.json.gz (gzipped) and .md.
 """
 import contextlib
+import gzip
 import io
 import json
 import math
@@ -552,13 +553,29 @@ def main(compiler, quick=False, only=None):
             if i % 25 == 0:
                 print(i, "done")
     if only:
-        earlier = json.loads((RESULTS / "private.json").read_text(encoding="utf-8"))["records"]
+        earlier = read_result("private.json")["records"]
         records = [r for r in earlier if not r["kind"].startswith(tuple(only.split(",")))] + records
     rows = summarize(records)
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "private.json").write_text(json.dumps({"rows": rows, "records": records}, indent=1), encoding="utf-8")
+    write_result_gz("private.json", {"rows": rows, "records": records})
     (RESULTS / "private.md").write_text(write_markdown(rows, records), encoding="utf-8")
     print(write_markdown(rows, records))
+
+
+def read_result(name):
+    """A result file of eval/results/; the large ones are kept gzipped (name.gz)."""
+    path = RESULTS / name
+    if not path.exists():
+        return json.loads(gzip.decompress((RESULTS / (name + ".gz")).read_bytes()).decode("utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def write_result_gz(name, data):
+    """Writes eval/results/name.gz: gzipped JSON with a fixed header time, so the same
+    results give the same bytes."""
+    text = json.dumps(data, indent=1).encode("utf-8")
+    (RESULTS / (name + ".gz")).write_bytes(gzip.compress(text, mtime=0))
+    (RESULTS / name).unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
@@ -569,9 +586,9 @@ if __name__ == "__main__":
         found = diagnostics(Path(arguments[1]).resolve() if len(arguments) > 1 else
                             ROOT / "build" / "Release" / "preplang.exe", methods=methods)
         if only:  # keep the earlier results of the other methods
-            earlier = json.loads((RESULTS / "private_diagnostics.json").read_text(encoding="utf-8"))
+            earlier = read_result("private_diagnostics.json")
             found = [r for r in earlier if r["method"] not in methods] + found
-        (RESULTS / "private_diagnostics.json").write_text(json.dumps(found, indent=1), encoding="utf-8")
+        write_result_gz("private_diagnostics.json", found)
         (RESULTS / "private_diagnostics.md").write_text(write_diagnostics(found), encoding="utf-8")
         print(write_diagnostics(found))
     else:

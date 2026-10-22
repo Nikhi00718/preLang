@@ -4,6 +4,7 @@
 
 The paper uses these macros instead of typed-in numbers, so it always matches the results.
 """
+import gzip
 import json
 import math
 import statistics
@@ -15,7 +16,14 @@ RESULTS = ROOT / "eval" / "results"
 
 
 def load(name):
+    """A result file; the large ones are kept gzipped (name.gz)."""
+    if not (RESULTS / name).exists():
+        return json.loads(gzip.decompress((RESULTS / (name + ".gz")).read_bytes()).decode("utf-8"))
     return json.loads((RESULTS / name).read_text(encoding="utf-8"))
+
+
+def found(name):
+    return (RESULTS / name).exists() or (RESULTS / (name + ".gz")).exists()
 
 
 def main():
@@ -90,9 +98,14 @@ def main():
         certcost(load("certcost.json"), numbers)
     if (RESULTS / "certsize.json").exists():
         certsize(load("certsize.json"), numbers)
-    if (RESULTS / "private.json").exists() and (RESULTS / "private_diagnostics.json").exists():
+    if found("private.json") and found("private_diagnostics.json"):
         private(load("private.json"), load("private_diagnostics.json"), numbers)
     soundness_tests(numbers)
+    if found("differential.json"):
+        differential(load("differential.json")["results"],
+                     load("differential_prefix.json")["results"] if found("differential_prefix.json") else None, numbers)
+    if found("census.json"):
+        census(load("census.json"), numbers)
 
     numbers["TestCount"] = test_count()
     numbers["TestSuites"] = len(list((ROOT / "build" / "Release").glob("test_*.exe")))
@@ -140,6 +153,52 @@ def write_generated(name, lines):
             text = text.replace(begin, "\\begin{adjustbox}{max width=\\linewidth}\n" + begin, 1)
             text = text.replace(end, end + "\n\\end{adjustbox}", 1)
     (ROOT / "paper" / "generated" / name).write_text(text, encoding="utf-8")
+
+
+def differential(results, before, numbers):
+    """eval/compilation/differential.py: random programs against a reference interpreter;
+    `before` is the same run with the compiler before the two fixes it led to."""
+    def agree(rows, variant):
+        return sum(1 for r in rows if not r["variants"][variant]["problem"])
+    fails = [r for r in results if r["expected"] == "fails"]
+    numbers.update(DiffPrograms=f"{len(results):,}", DiffRows=f"{sum(r['expected_rows'] for r in results):,}",
+                   DiffFails=len(fails), DiffSaves=len(results) - len(fails),
+                   DiffAgreeOz=f"{agree(results, 'O0'):,}", DiffAgreeOpt=f"{agree(results, 'optimized'):,}",
+                   DiffSame=f"{sum(r['same_O0_optimized'] for r in results):,}",
+                   DiffStatic=sum(1 for r in fails if r["variants"]["optimized"]["status"] == "compile error"),
+                   DiffStaticPct=f"{100 * sum(1 for r in fails if r['variants']['optimized']['status'] == 'compile error') / len(fails):.0f}")
+    if before:
+        wrong = [r for r in before if r["variants"]["optimized"]["problem"]]
+        pruning = sum(1 for r in wrong if "KeyError" in r["variants"]["optimized"]["detail"])
+        numbers.update(DiffBeforeWrongOpt=len(wrong), DiffBeforeWrongOz=len(before) - agree(before, "O0"),
+                       DiffBeforePruning=pruning, DiffBeforeNa=len(wrong) - pruning)
+
+
+def census(data, numbers):
+    """eval/compilation/census.py: work removed, run time and overhead on lifted programs."""
+    ok = [r for r in data["programs"] if r["status"] == "compiled"]
+    total = {side: {k: sum(r[side][k] for r in ok) for k in ("instructions", "checks", "columns")}
+             for side in ("before", "after")}
+    cut = lambda k: f"{100 * (total['before'][k] - total['after'][k]) / total['before'][k]:.0f}"
+    changed = [r for r in ok if r["before"] != r["after"]]
+    speed = [r["run_O0_s"] / r["run_opt_s"] for r in changed if r["run_status"] == "finished"]
+    numbers.update(CenPrograms=len(ok), CenChanged=len(changed), CenChangedPct=f"{100 * len(changed) / len(ok):.0f}",
+                   CenInstrBefore=f"{total['before']['instructions']:,}", CenInstrAfter=f"{total['after']['instructions']:,}",
+                   CenInstrCut=cut("instructions"), CenChecksBefore=total["before"]["checks"],
+                   CenChecksAfter=total["after"]["checks"], CenChecksCut=cut("checks"),
+                   CenColsBefore=f"{total['before']['columns']:,}", CenColsAfter=f"{total['after']['columns']:,}",
+                   CenColsCut=cut("columns"), CenSame=sum(r["same_output"] for r in ok),
+                   CenSpeedMed=f"{statistics.median(speed):.2f}", CenSpeedGeo=f"{statistics.geometric_mean(speed):.2f}",
+                   CenSpeedMax=f"{max(speed):.1f}",
+                   CenCompileMed=f"{1000 * statistics.median(r['compile_s'] for r in ok):.0f}",
+                   CenCompileMax=f"{1000 * max(r['compile_s'] for r in ok):.0f}",
+                   CenMemMax=f"{max(r['compile_mib'] for r in ok):.0f}")
+    for row in data["large_inputs"]:
+        key = {"CSV, 1,000,000 rows x 10 columns": "CenCsvMillion", "Parquet, 16,000,000 rows (footer only)": "CenPqSixteen",
+               "3,000 JPG images, 640x480": "CenImgThreeK"}.get(row["input"])
+        if key:
+            numbers.update({key + "Mem": f"{row['compile_peak_mib']:.0f}", key + "Size": f"{row['mib']:.0f}",
+                            key + "S": f"{row['compile_s']:.2f}"})
 
 
 def test_count():

@@ -1,0 +1,532 @@
+"""Correctness: does a compiled program compute what the program says?
+
+Random table programs over random CSV files, each
+
+    compiled with --O0 and run,
+    compiled with the optimizer (the default) and run,
+    evaluated by reference(): an interpreter of the language written here in plain
+    Python, without pandas and without any code of the compiler,
+
+and the three results compared: the same outcome (saved rows, or a contract that fails
+at the same line) and the same output, cell by cell (floats to 1e-9 relative).
+The compiler stops a program at compile time when it proves a contract violated; that
+counts as the same outcome as the reference failing at that line.
+
+    py -3 eval/compilation/differential.py [--programs 600] [--seed 1] [--workers 6]
+
+Writes eval/results/differential.json.gz and .md.
+"""
+import argparse
+import contextlib
+import csv
+import gzip
+import io
+import json
+import math
+import os
+import random
+import re
+import runpy
+import shutil
+import statistics
+import subprocess
+import sys
+import time
+from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+WORK = ROOT / "eval" / "work" / os.environ.get("PREPLANG_DIFF_WORK", "differential")
+# PREPLANG_RESULTS: another folder for the results (eval/evaluate.py --quick)
+RESULTS = Path(os.environ.get("PREPLANG_RESULTS") or ROOT / "eval" / "results")
+# PREPLANG_COMPILER: another build to test, such as one before a fix
+COMPILER = Path(os.environ.get("PREPLANG_COMPILER") or ROOT / "build" / ("Release/preplang.exe" if os.name == "nt" else "preplang"))
+
+# ---------------------------------------------------------------- random data and programs
+
+CATEGORIES = ["red", "green", "blue", "grey"]
+
+
+def random_table(rng):
+    """Columns: id (unique INTEGER), two INTEGER, two FLOAT, one STRING, one BOOLEAN;
+    every column but id has missing values in some tables."""
+    rows = rng.randint(4, 40)
+    columns = {"id": ("INTEGER", list(range(1, rows + 1)))}
+    def nulls(values):
+        rate = rng.choice([0, 0, 0.1, 0.3])
+        out = [None if rng.random() < rate else v for v in values]
+        out[rng.randrange(rows)] = values[0]  # one value at least: a column of only missing cells is STRING
+        return out
+    for name in ("a", "b"):
+        low = rng.randint(-50, 50)
+        columns[name] = ("INTEGER", nulls([rng.randint(low, low + rng.randint(0, 200)) for _ in range(rows)]))
+    for name in ("x", "y"):
+        columns[name] = ("FLOAT", nulls([round(rng.uniform(-100, 100), 2) + 0.25 for _ in range(rows)]))
+    columns["cat"] = ("STRING", nulls([rng.choice(CATEGORIES) for _ in range(rows)]))
+    columns["flag"] = ("BOOLEAN", nulls([rng.random() < 0.5 for _ in range(rows)]))
+    return columns
+
+
+def write_csv(path, table):
+    names = list(table)
+    rows = len(table["id"][1])
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        out = csv.writer(f)
+        out.writerow(names)
+        for i in range(rows):
+            out.writerow([cell_text(table[n][1][i]) for n in names])
+
+
+def cell_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, float):
+        return repr(value)
+    return str(value)
+
+
+def random_program(rng, table):
+    """A type-correct program over table t: the statement mix of the examples. Returns the
+    source text. The generator tracks column types so the program only fails where the
+    data breaks a contract or a statistic has no values."""
+    types = {name: kind for name, (kind, _) in table.items()}
+    lines = ['LOAD "data.csv" AS t;']
+    numeric = lambda: [c for c, k in types.items() if k in ("INTEGER", "FLOAT")]
+    derived = 0
+    for _ in range(rng.randint(2, 9)):
+        op = rng.choice(["filter", "filter", "fill", "fillstat", "normalize", "dropnull", "derive",
+                         "expect_range", "expect_notnull", "drop", "select"])
+        if op == "filter":
+            lines.append(f"FILTER t WHERE {condition(rng, types, 2)};")
+        elif op == "fill":
+            column = rng.choice(list(types))
+            kind = types[column]
+            value = {"INTEGER": str(rng.randint(-5, 5)), "FLOAT": f"{rng.randint(-5, 5)}.5",
+                     "STRING": '"none"', "BOOLEAN": rng.choice(["TRUE", "FALSE"])}[kind]
+            lines.append(f"FILL_NULL t.{column} WITH {value};")
+        elif op == "fillstat" and numeric():
+            column = rng.choice(numeric())
+            stat = rng.choice(["MEAN", "MEDIAN", "MODE"])
+            lines.append(f"FILL_NULL t.{column} WITH {stat};")
+            if stat != "MODE":
+                types[column] = "FLOAT"
+        elif op == "normalize" and numeric():
+            column = rng.choice([c for c in numeric() if c != "id"] or numeric())
+            how = rng.choice(["MINMAX", "ZSCORE"])
+            lines.append(f"NORMALIZE t.{column} USING {how};")
+            types[column] = "FLOAT"
+        elif op == "dropnull":
+            if rng.random() < 0.5:
+                lines.append("DROP_NULL t;")
+            else:
+                lines.append(f"DROP_NULL t [{', '.join(rng.sample(list(types), rng.randint(1, 2)))}];")
+        elif op == "derive" and numeric():
+            derived += 1
+            name = f"d{derived}"
+            left, right = rng.choice(numeric()), rng.choice(numeric())
+            sign = rng.choice(["+", "-", "*"])
+            constant = rng.choice(["", f" {rng.choice(['+', '*'])} {rng.randint(1, 4)}"])
+            lines.append(f"DERIVE t.{name} = {left} {sign} {right}{constant};")
+            types[name] = "INTEGER" if types[left] == types[right] == "INTEGER" else "FLOAT"
+        elif op == "expect_range" and numeric():
+            column = rng.choice(numeric())
+            low = rng.randint(-120, 0)
+            lines.append(f"EXPECT t.{column} BETWEEN {low} AND {low + rng.randint(50, 300)};")
+        elif op == "expect_notnull":
+            lines.append(f"EXPECT t.{rng.choice(list(types))} NOT_NULL;")
+        elif op == "drop" and len(types) > 3:
+            column = rng.choice([c for c in types if c != "id"])
+            lines.append(f"DROP t [{column}];")
+            del types[column]
+        elif op == "select" and len(types) > 3:
+            keep = ["id"] + rng.sample([c for c in types if c != "id"], rng.randint(2, len(types) - 1))
+            rng.shuffle(keep)
+            lines.append(f"SELECT t [{', '.join(keep)}];")
+            types = {c: types[c] for c in keep}
+    lines.append('SAVE t AS "out.csv";')
+    return "\n".join(lines) + "\n"
+
+
+def condition(rng, types, depth):
+    if depth > 0 and rng.random() < 0.35:
+        joiner = rng.choice(["AND", "OR"])
+        return f"({condition(rng, types, depth - 1)} {joiner} {condition(rng, types, depth - 1)})"
+    if depth > 0 and rng.random() < 0.1:
+        return f"NOT {condition(rng, types, depth - 1)}"
+    column = rng.choice(list(types))
+    kind = types[column]
+    if kind == "STRING":
+        return f'{column} {rng.choice(["==", "!="])} "{rng.choice(CATEGORIES)}"'
+    if kind == "BOOLEAN":
+        return f'{column} {rng.choice(["==", "!="])} {rng.choice(["TRUE", "FALSE"])}'
+    op = rng.choice(["<", "<=", ">", ">=", "==", "!="])
+    value = rng.randint(-60, 120) if kind == "INTEGER" else round(rng.uniform(-1.5, 100), 1)
+    return f"{column} {op} {value}"
+
+
+# ---------------------------------------------------------------- the reference interpreter
+
+class Failure(Exception):
+    """A contract that does not hold, or a statistic without values, at a program line."""
+    def __init__(self, line, why):
+        super().__init__(f"line {line}: {why}")
+        self.line = line
+
+
+TOKEN = re.compile(r'\s*(?:(\d+\.\d+|\d+)|("[^"]*")|([A-Za-z_][A-Za-z0-9_]*)|(<=|>=|==|!=|[<>()\[\],;.=+\-*/]))')
+
+
+def tokens(text):
+    out, pos = [], 0
+    while pos < len(text.rstrip()):
+        m = TOKEN.match(text, pos)
+        number, string, name, symbol = m.groups()
+        out.append(float(number) if number and "." in number else int(number) if number else
+                   string[1:-1] if string else (name,) if name else symbol)
+        pos = m.end()
+    return out
+
+
+def reference(source, table, failed=None):
+    """Runs the program on the table: (columns, kinds) with typed Python values. A contract
+    that does not hold raises Failure; with a list `failed`, its line is added to the list
+    instead and the program goes on (as if that check were not there)."""
+    def fail(line, why):
+        if failed is None:
+            raise Failure(line, why)
+        failed.append(line)
+    columns = {name: list(values) for name, (_, values) in table.items()}
+    kinds = {name: kind for name, (kind, _) in table.items()}
+    for number, text in enumerate(source.splitlines(), 1):
+        if not text.strip():
+            continue
+        t = tokens(text)
+        word = t[0][0]
+        rows = len(next(iter(columns.values())))
+        if word == "FILTER":
+            mask = Expr(t[3:-1]).boolean(columns)
+            keep = [i for i in range(rows) if mask[i] is True]
+            columns = {n: [v[i] for i in keep] for n, v in columns.items()}
+        elif word == "FILL_NULL":
+            column, value = t[3][0], t[5]
+            present = [v for v in columns[column] if v is not None]
+            if value in (("MEAN",), ("MEDIAN",), ("MODE",)):
+                if not present and None in columns[column]:  # missing values, and nothing to fill them with
+                    fail(number, f"{column} has no values")
+                fill = None  # an empty table: nothing to compute, nothing to fill
+                if value == ("MODE",) and present:
+                    counts = {}
+                    for v in present:
+                        counts[v] = counts.get(v, 0) + 1
+                    top = max(counts.values())
+                    fill = min(v for v, c in counts.items() if c == top)
+                elif value != ("MODE",):
+                    if present:
+                        fill = float(statistics.fmean(present) if value == ("MEAN",) else statistics.median(present))
+                    columns[column] = [None if v is None else float(v) for v in columns[column]]
+                    kinds[column] = "FLOAT"
+            else:
+                fill = {"TRUE": True, "FALSE": False}.get(value[0], value) if isinstance(value, tuple) else value
+                if t[5] == "-":
+                    fill = -t[6]
+                if kinds[column] == "FLOAT" and fill is not None:
+                    fill = float(fill)
+            columns[column] = [fill if v is None else v for v in columns[column]]
+        elif word == "NORMALIZE":
+            column, how = t[3][0], t[5][0]
+            values = columns[column]
+            present = [float(v) for v in values if v is not None]
+            if how == "ZSCORE":
+                centre = statistics.fmean(present) if present else None
+                spread = statistics.stdev(present) if len(present) > 1 else None
+            else:
+                centre = min(present) if present else None
+                spread = max(present) - min(present) if present else None
+            if spread is not None and spread > 0:
+                columns[column] = [None if v is None else (v - centre) / spread for v in values]
+            else:
+                columns[column] = [None if v is None else 0.0 for v in values]
+            kinds[column] = "FLOAT"
+        elif word == "DROP_NULL":
+            names = [x[0] for x in t[3:-2] if isinstance(x, tuple)] if t[2] == "[" else list(columns)
+            keep = [i for i in range(rows) if all(columns[n][i] is not None for n in names)]
+            columns = {n: [v[i] for i in keep] for n, v in columns.items()}
+        elif word == "DERIVE":
+            name = t[3][0]
+            columns[name] = Expr(t[5:-1]).values(columns)
+            kinds[name] = "FLOAT" if any(isinstance(v, float) for v in columns[name]) or any(
+                kinds.get(x[0]) == "FLOAT" for x in t[5:-1] if isinstance(x, tuple)) else "INTEGER"
+            if kinds[name] == "FLOAT":
+                columns[name] = [None if v is None else float(v) for v in columns[name]]
+        elif word == "EXPECT":
+            column = t[3][0]
+            if t[4] == ("NOT_NULL",):
+                if any(v is None for v in columns[column]):
+                    fail(number, f"{column} has missing values")
+            else:
+                low = -t[6] if t[5] == "-" else t[5]
+                rest = t[7:] if t[5] == "-" else t[6:]
+                high = -rest[2] if rest[1] == "-" else rest[1]
+                if any(v is not None and not (low <= v <= high) for v in columns[column]):
+                    fail(number, f"{column} outside {low} to {high}")
+        elif word == "DROP":
+            for x in t[3:-2]:
+                if isinstance(x, tuple):
+                    columns.pop(x[0])
+        elif word == "SELECT":
+            columns = {x[0]: columns[x[0]] for x in t[3:-2] if isinstance(x, tuple)}
+    return columns, kinds
+
+
+class Expr:
+    """FILTER conditions (three-valued: None is unknown) and DERIVE values over columns."""
+    def __init__(self, items):
+        self.items, self.pos = items, 0
+
+    def peek(self):
+        return self.items[self.pos] if self.pos < len(self.items) else None
+
+    def take(self):
+        self.pos += 1
+        return self.items[self.pos - 1]
+
+    def boolean(self, columns):
+        self.columns, self.rows = columns, len(next(iter(columns.values())))
+        return self.disjunction()
+
+    def disjunction(self):
+        left = self.conjunction()
+        while self.peek() == ("OR",):
+            self.take()
+            right = self.conjunction()
+            left = [True if a is True or b is True else None if a is None or b is None else False
+                    for a, b in zip(left, right)]
+        return left
+
+    def conjunction(self):
+        left = self.negation()
+        while self.peek() == ("AND",):
+            self.take()
+            right = self.negation()
+            left = [False if a is False or b is False else None if a is None or b is None else True
+                    for a, b in zip(left, right)]
+        return left
+
+    def negation(self):
+        if self.peek() == ("NOT",):
+            self.take()
+            return [None if v is None else not v for v in self.negation()]
+        if self.peek() == "(":
+            self.take()
+            inner = self.disjunction()
+            self.take()
+            return inner
+        column, op = self.take()[0], self.take()
+        value = self.take()
+        if value == "-":
+            value = -self.take()
+        if isinstance(value, tuple):
+            value = {"TRUE": True, "FALSE": False}[value[0]]
+        compare = {"<": lambda a, b: a < b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b,
+                   ">=": lambda a, b: a >= b, "==": lambda a, b: a == b, "!=": lambda a, b: a != b}[op]
+        return [None if v is None else compare(v, value) for v in self.columns[column]]
+
+    def values(self, columns):
+        self.columns, self.rows = columns, len(next(iter(columns.values())))
+        return self.sum()
+
+    def sum(self):
+        left = self.product()
+        while self.peek() in ("+", "-"):
+            op = self.take()
+            right = self.product()
+            left = [None if a is None or b is None else a + b if op == "+" else a - b for a, b in zip(left, right)]
+        return left
+
+    def product(self):
+        left = self.operand()
+        while self.peek() in ("*", "/"):
+            op = self.take()
+            right = self.operand()
+            left = [None if a is None or b is None else a * b if op == "*" else a / b for a, b in zip(left, right)]
+        return left
+
+    def operand(self):
+        item = self.take()
+        if item == "(":
+            inner = self.sum()
+            self.take()
+            return inner
+        if isinstance(item, tuple):
+            return list(self.columns[item[0]])
+        return [item] * self.rows
+
+
+# ---------------------------------------------------------------- running and comparing
+
+def compile_program(folder, extra):
+    done = subprocess.run([str(COMPILER), "program.prep", "--python", *extra], cwd=folder, capture_output=True,
+                          text=True)
+    text = done.stdout + done.stderr
+    if done.returncode == 0:
+        return {"status": "compiled", "text": text}
+    lines = re.findall(r"error\[(\w+)\]: .*\n\s*--> program\.prep:(\d+)", text)
+    return {"status": "compile error", "kinds": sorted({k for k, _ in lines}),
+            "line": int(lines[0][1]) if lines else None, "text": text[-600:]}
+
+
+def run_generated(folder, script):
+    out = folder / "output"
+    target = out / "out.csv"
+    if target.exists():
+        target.unlink()
+    text, argv = io.StringIO(), sys.argv
+    sys.argv = [str(out / script)]
+    os.environ["PREPLANG_TRUST_INPUTS"] = "0"
+    start = time.perf_counter()
+    try:
+        with contextlib.redirect_stdout(text), contextlib.redirect_stderr(text):
+            runpy.run_path(str(out / script), run_name="__main__")
+    except Exception as error:  # noqa: BLE001 - the program's failure is a result
+        found = re.match(r"line (\d+):", str(error))
+        status = "contract error" if type(error).__name__ == "ContractError" else "crash"
+        return {"status": status, "line": int(found.group(1)) if found else None,
+                "reason": f"{type(error).__name__}: {str(error)[:300]}", "seconds": time.perf_counter() - start}
+    finally:
+        sys.argv = argv
+    seconds = time.perf_counter() - start
+    with open(target, newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))
+    return {"status": "saved", "header": rows[0], "rows": rows[1:], "seconds": seconds}
+
+
+def same_cell(text, value, kind):
+    if value is None:
+        return text == ""
+    if text == "":
+        return False
+    if kind == "BOOLEAN":
+        return text == str(value)
+    if kind == "STRING":
+        return text == value
+    number = float(text)
+    return math.isclose(number, float(value), rel_tol=1e-9, abs_tol=1e-12)
+
+
+def agrees(run, expected):
+    """'' if the run matches the reference outcome, else what differs."""
+    if expected["status"] == "fails":
+        # The compiler may prove a later contract violated while it leaves an earlier one,
+        # which it cannot decide, to run time: right if that later contract does fail.
+        if run["status"] == "compile error" and "contract" in run.get("kinds", []):
+            return "" if run["line"] in expected["failing"] else f"compile error at line {run['line']}, which holds; reference fails at lines {expected['failing']}"
+        if run["status"] == "contract error":
+            return "" if run["line"] == expected["line"] else f"contract error at line {run['line']}, reference at line {expected['line']}"
+        return f"{run['status']}, but the reference fails at line {expected['line']}"
+    if run["status"] != "saved":
+        return f"{run['status']} ({run.get('reason') or run.get('kinds')}), but the reference saves {len(expected['rows'])} rows"
+    if run["header"] != expected["header"]:
+        return f"columns {run['header']} instead of {expected['header']}"
+    if len(run["rows"]) != len(expected["rows"]):
+        return f"{len(run['rows'])} rows instead of {len(expected['rows'])}"
+    for r, (got, want) in enumerate(zip(run["rows"], expected["rows"]), 1):
+        for name, text, value in zip(expected["header"], got, want):
+            if not same_cell(text, value, expected["kinds"][name]):
+                return f"row {r}, column {name}: {text!r} instead of {value!r}"
+    return ""
+
+
+def check_one(index, seed):
+    rng = random.Random(seed * 100003 + index)
+    table = random_table(rng)
+    source = random_program(rng, table)
+    folder = WORK / f"p{index:04d}"
+    if folder.exists():
+        shutil.rmtree(folder)
+    folder.mkdir(parents=True)
+    write_csv(folder / "data.csv", table)
+    (folder / "program.prep").write_text(source, encoding="utf-8")
+    try:
+        columns, kinds = reference(source, table)
+        names = list(columns)
+        rows = list(zip(*columns.values())) if names else []
+        expected = {"status": "saves", "header": names, "rows": rows, "kinds": kinds}
+    except Failure as failure:
+        failing = []
+        reference(source, table, failing)
+        expected = {"status": "fails", "line": failure.line, "failing": failing}
+    result = {"index": index, "program": source, "expected": expected["status"],
+              "expected_rows": len(expected.get("rows", [])), "variants": {}}
+    for variant, extra in (("O0", ["--O0"]), ("optimized", [])):
+        compiled = compile_program(folder, extra)
+        run = compiled if compiled["status"] != "compiled" else run_generated(folder, "generated.py")
+        if compiled["status"] == "compiled":
+            shutil.copyfile(folder / "output" / "generated.py", folder / "output" / f"generated_{variant}.py")
+            run["warnings"] = compiled["text"].count("warning[")
+        result["variants"][variant] = {"status": run["status"], "line": run.get("line"),
+                                       "seconds": run.get("seconds"), "rows": len(run.get("rows", [])),
+                                       "problem": agrees(run, expected),
+                                       "detail": run.get("reason") or run.get("text", "")[-300:] if run["status"] != "saved" else ""}
+        result["variants"][variant]["_run"] = run
+    a, b = result["variants"]["O0"].pop("_run"), result["variants"]["optimized"].pop("_run")
+    result["same_O0_optimized"] = (a["status"] == b["status"] and a.get("line") == b.get("line")
+                                   and a.get("header") == b.get("header") and a.get("rows") == b.get("rows"))
+    return result
+
+
+def report(results, seconds):
+    n = len(results)
+    lines = ["# Correctness: compiled programs against a reference interpreter", "",
+             f"{n} random table programs over random CSV files (eval/compilation/differential.py), "
+             "each compiled with --O0 and with the optimizer, run, and compared with an interpreter of the "
+             "language written without pandas or compiler code.", ""]
+    agree = {v: sum(1 for r in results if not r["variants"][v]["problem"]) for v in ("O0", "optimized")}
+    fails = sum(1 for r in results if r["expected"] == "fails")
+    static = sum(1 for r in results if r["expected"] == "fails" and r["variants"]["optimized"]["status"] == "compile error")
+    same = sum(1 for r in results if r["same_O0_optimized"])
+    rows = sum(r["expected_rows"] for r in results)
+    lines += ["| Measure | Value |", "|---|---:|",
+              f"| programs | {n} |",
+              f"| reference saves a table / a contract fails | {n - fails} / {fails} |",
+              f"| rows saved by the reference, in all | {rows:,} |",
+              f"| --O0 agrees with the reference | {agree['O0']} / {n} |",
+              f"| optimized agrees with the reference | {agree['optimized']} / {n} |",
+              f"| --O0 and optimized give byte-identical outputs or the same failure | {same} / {n} |",
+              f"| failing contracts reported at compile time (before any data is processed) | {static} / {fails} |",
+              f"| time for the whole run (s) | {seconds:.0f} |", ""]
+    wrong = [r for r in results if any(r["variants"][v]["problem"] for v in ("O0", "optimized")) or not r["same_O0_optimized"]]
+    if wrong:
+        lines += ["## Disagreements", ""]
+        for r in wrong:
+            lines += [f"### p{r['index']:04d}", "", "```text", r["program"].rstrip(), "```", ""]
+            for v in ("O0", "optimized"):
+                lines.append(f"- {v}: {r['variants'][v]['status']}; {r['variants'][v]['problem'] or 'agrees'}"
+                             + (f" ({r['variants'][v]['detail'].strip()[:200]})" if r['variants'][v]['detail'] else ""))
+            lines.append("")
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--programs", type=int, default=600)
+    parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--workers", type=int, default=6)
+    args = parser.parse_args()
+    WORK.mkdir(parents=True, exist_ok=True)
+    start = time.perf_counter()
+    with ProcessPoolExecutor(args.workers) as pool:
+        results = list(pool.map(check_one, range(args.programs), [args.seed] * args.programs, chunksize=8))
+    seconds = time.perf_counter() - start
+    RESULTS.mkdir(exist_ok=True)
+    # gzipped, with a fixed header time: the same results give the same bytes
+    text = json.dumps({"seed": args.seed, "results": results}, indent=1).encode("utf-8")
+    (RESULTS / "differential.json.gz").write_bytes(gzip.compress(text, mtime=0))
+    text = report(results, seconds)
+    (RESULTS / "differential.md").write_text(text + "\n", encoding="utf-8")
+    print(text[:3000])
+
+
+if __name__ == "__main__":
+    main()

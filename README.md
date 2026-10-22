@@ -91,6 +91,23 @@ cmake --build build
 ./build/Debug/preplang.exe examples/tabular/students.prep --run
 ```
 
+On Linux or macOS (GCC 15 and MSVC are tested in `.github/workflows/ci.yml`):
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ctest --test-dir build
+```
+
+```bash
+./build/preplang examples/tabular/students.prep --run
+```
+
+Or with Docker, which builds the compiler with the Python packages the generated programs need and
+runs the tests and the example (`docker run --rm -it preplang bash` for a shell):
+
+```bash
+docker build -t preplang . && docker run --rm preplang
+```
+
 The generated program is always `output/generated.py`, and `SAVE` paths are relative to `output/`.
 `LOAD` paths are relative to the folder of the `.prep` file.
 
@@ -442,6 +459,23 @@ because pruning a column before it would change which rows are removed.
 
 ## Evaluation
 
+**[eval/results/evaluation.md](eval/results/evaluation.md) answers six questions** from the results
+below: correctness (does the compiler produce the right output?), performance, optimization
+effectiveness (how much work it removes), practical usefulness on real programs and data, comparison
+with existing tools, and overhead (compile time, memory, run-time cost). `py -3 eval/evaluate.py`
+regenerates it; `--run` first reruns the two experiments behind correctness and effectiveness:
+
+- `eval/compilation/differential.py`: 2,000 random programs, each compiled with `--O0` and with the
+  optimizer, run, and compared cell by cell with a reference interpreter written without pandas or
+  compiler code. Both agree with it on all 2,000; before two fixes this test led to, 109 optimized
+  runs were wrong (`eval/results/differential_prefix.md`).
+- `eval/compilation/census.py`: on 435 programs (the examples and programs lifted from GitHub pandas
+  scripts), the instructions, run-time checks and columns the optimizer removes, the run time of
+  `--O0` against optimized, and the compiler's time and peak memory, also on large inputs.
+
+`py -3 eval/evaluate.py --quick` runs a small version of both in a few minutes (also in Docker:
+`docker run --rm preplang python3 eval/evaluate.py --quick`).
+
 The `eval/` folder holds a small, reproducible evaluation (run with the Release build).
 
 ```bash
@@ -568,15 +602,20 @@ tools/               contracts.py: composes compiled stages, synthesizes produce
 examples/            example programs and data (tables, table sets, images, errors)
 output/              the program generated for examples/tabular/students.prep, as an example
 eval/                the evaluation
-  compilation/       RQ1-RQ2: injected mistakes, script baselines, benchmarks, real GitHub failures
+  compilation/       RQ1-RQ2: injected mistakes, script baselines, benchmarks, real GitHub failures;
+                     differential testing against a reference interpreter; the optimization census
   reuse/             RQ3-RQ8: certificates, validators, real months, pandas corpora, composition, cost,
                      private compilation
-  results/           every result as .json and .md (the paper's numbers come only from here)
+  results/           every result as .json and .md (the largest as .json.gz); evaluation.md
   paper_numbers.py   writes paper/generated/ from eval/results/
+  evaluate.py        writes results/evaluation.md: the six evaluation questions
 paper/               the paper (LaTeX, ACM format) and PrepLang_Paper.pdf
   sections/ figures/ hand-written parts;  generated/: numbers and tables;  archive/: IEEE draft
-docs/                NOVELTY.md (novelty and prior work), review2/ and review3/ (course reports)
+docs/                NOVELTY.md (novelty and prior work), DEMO_VIDEO_SCRIPT.md, USER_STUDY.md (protocol),
+                     review2/ and review3/ (course reports)
 demo/ studio/        the live demo with slides, and PrepLang Studio (a local editor app)
+Dockerfile           Ubuntu build with the Python packages; .github/workflows/ci.yml: CI on Ubuntu and Windows
+ARCHITECTURE.md      the phases and modules;  CONTRIBUTING.md, CHANGELOG.md, CITATION.cff
 ```
 
 Each of `eval/`, `paper/`, `proofs/` and `docs/` has a short README of its own.
