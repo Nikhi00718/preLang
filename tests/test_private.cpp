@@ -29,6 +29,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -237,8 +238,13 @@ void testQueries() {
     std::cout << "What the data owner is asked\n";
     TableSchema schema;
     schema.file = "data/s.csv";
-    schema.columns = {{"name", ColumnType::String}, {"marks", ColumnType::Integer}};
-    schema.columns.push_back({"city", ColumnType::String});
+    for (const auto& [name, type] : std::vector<std::pair<std::string, ColumnType>>{
+             {"name", ColumnType::String}, {"marks", ColumnType::Integer}, {"city", ColumnType::String}}) {
+        ColumnInfo column;
+        column.name = name;
+        column.type = type;
+        schema.columns.push_back(column);
+    }
     std::ostringstream out;
     writeQueries(out, {{"s.csv", "s", schema, {"marks"}, {"name"}}}, {-5, 0, 100});
     const std::string text = out.str();

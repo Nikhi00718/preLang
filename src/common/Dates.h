@@ -132,7 +132,7 @@ inline std::string dateText(double seconds) {
     }
     const CivilTime time = civilFromSeconds(seconds);
     const auto rest = static_cast<std::int64_t>(std::floor(seconds)) - time.days * 86400;
-    char text[32];
+    char text[128];  // room for any year, so GCC's -Wformat-truncation has nothing to report
     std::snprintf(text, sizeof text, "%04lld-%02d-%02d %02lld:%02lld:%02lld", static_cast<long long>(time.year),
                   time.month, time.day, static_cast<long long>(rest / 3600), static_cast<long long>(rest % 3600 / 60),
                   static_cast<long long>(rest % 60));
