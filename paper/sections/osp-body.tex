@@ -93,36 +93,38 @@ refused, since no generated code can stand in for the analysis of another type.
 
 \section{Impact}\label{sec:impact}
 
-The evaluation in \texttt{eval/} measures \PL against the tools a data engineer uses today
-(\texttt{eval/\allowbreak evaluate.py} sums it up in six questions, from correctness to overhead):
+The evaluation in \texttt{eval/} answers six questions (\texttt{eval/\allowbreak evaluate.py} writes the
+answers with every number below):
 
 \begin{itemize}
-\item \textbf{Correctness.} \DiffPrograms{} random programs, compiled with and without the optimizer,
-agree cell by cell with a reference interpreter sharing no code with the compiler; before the two fixes
-this test led to (a pruning bug, a pandas~3 incompatibility), \DiffBeforeWrongOpt{} optimized runs were
-wrong.
-\item \textbf{Reuse on real data.} On \RealRuns{} real monthly batches of three public datasets, the compiled
-programs handle \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) exactly as a fresh compilation would, with
-\RealDeoptUnsound{} wrong; Great Expectations and pandera, set up on the same data, refuse
-\RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh compilation runs, and TFDV admits months
-on which the optimized program does not do what a fresh compilation does.
-\item \textbf{Mistakes before processing.} All 24 injected mistakes are reported at compile time, in
-\RqOneMsMin--\RqOneMsMax\,ms, where a script-style interpreter crashes on 20 and writes wrong output on 4; on
-16 million Parquet rows a misspelled column is reported in \ScTabNamePl\,s instead of after
-\ScTabNameScript\,s; \RbEarly{} of \RbTotal{} real failures from GitHub issues are reported before any data is
-processed.
-\item \textbf{Cost and gain.} On \CenPrograms{} real programs the optimizer removes \CenInstrCut\% of
-the instructions and \CenChecksCut\% of the run-time checks; a table pipeline runs in \TabProcOpt\,s
-instead of \TabProcOz\,s, an image pipeline in \ImgPlMem\,MiB instead of \ImgBaseMem\,MiB; admission
-changes run time by \OhPct\%; compiling takes a median of \CenCompileMed\,ms and at most \CenMemMax\,MiB.
-\item \textbf{Other people's code.} Lifted pandas scripts from GitHub reproduce their results on new
-batches in \CorpusBothSame{} of \CorpusBothRuns{} runs and in all \DriftRuns{} monthly runs of
-\DriftCompiled{} scripts written by others.
-\item \textbf{Without seeing the data.} \PrivCompilations{} private compilations from released, noisy or
-random facts ran \PrivRuns{} times, all exact; at equal budget the release at the program's numbers keeps
-every removal of the taxi and traffic pipelines, where fixed bins keep \PrivGenTaxiEpsOneRecall\% and
-\PrivGenTrafficEpsOneRecall\%, and HDMM~\cite{mckenna2018hdmm} and AIM~\cite{mckenna2022aim}, given the same
-cells and threshold, do no better.
+\item \textbf{Correctness: is the output right?} \DiffPrograms{} random programs, compiled with and without
+the optimizer, agree cell by cell with a reference interpreter that shares no code with the compiler;
+before the two fixes this test led to (a pruning bug, a pandas~3 incompatibility), \DiffBeforeWrongOpt{}
+optimized runs were wrong. Reused on new batches, \PrivRuns{} runs after \PrivCompilations{} private
+compilations and every run of the experiments below did what a fresh compilation does.
+\item \textbf{Performance.} An optimized table pipeline runs in \TabProcOpt\,s instead of \TabProcOz\,s
+after Python start-up, and an image pipeline as fast as a hand-written streaming script, in \ImgPlMem\,MiB
+instead of the \ImgBaseMem\,MiB of a script that loads every image.
+\item \textbf{Optimization effectiveness.} On \CenPrograms{} examples and lifted programs the optimizer
+removes \CenInstrCut\% of the instructions, \CenChecksCut\% of the run-time checks and \CenColsCut\% of
+the columns read, with identical output.
+\item \textbf{Practical usefulness.} \RbEarly{} of \RbTotal{} real failures from GitHub issues are reported
+before any data is processed; lifted pandas scripts from GitHub reproduce their results on new batches in
+\CorpusBothSame{} of \CorpusBothRuns{} runs, and in all \DriftRuns{} monthly runs of \DriftCompiled{}
+scripts written by others; on 16 million Parquet rows a misspelled column is reported in
+\ScTabNamePl\,s instead of after \ScTabNameScript\,s.
+\item \textbf{Comparison.} On \RealRuns{} real monthly batches the compiled programs handle
+\RealDeoptCorrect{} (\RealDeoptCorrectPct\%) as a fresh compilation would, with \RealDeoptUnsound{} wrong;
+Great Expectations and pandera refuse \RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh
+compilation runs, and TFDV admits months on which the program then differs. All 24 injected mistakes are
+reported at compile time, where a script-style program crashes on 20 and writes wrong output on 4.
+Compiling from private facts, the release at the program's numbers keeps every removal of the taxi and
+traffic pipelines at $\varepsilon=1$, where fixed bins keep \PrivGenTaxiEpsOneRecall\% and
+\PrivGenTrafficEpsOneRecall\%; HDMM~\cite{mckenna2018hdmm} and AIM~\cite{mckenna2022aim}, given the same
+cells, do no better.
+\item \textbf{Overhead.} Compiling takes a median of \CenCompileMed\,ms and at most \CenMemMax\,MiB
+(\CenCsvMillionMem\,MiB for a million CSV rows, \CenPqSixteenMem\,MiB for a \CenPqSixteenSize\,MiB Parquet
+file, of which only the footer is read); admitting a new batch changes run time by \OhPct\%.
 \end{itemize}
 
 \noindent One script, \texttt{eval/\allowbreak paper\_numbers.py}, regenerates every number from the raw
