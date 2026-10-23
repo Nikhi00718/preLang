@@ -134,6 +134,36 @@ jobs:
           name: fuzz-crashes
           path: crashes/
 
+  # pip install builds the compiler and installs its commands; used from a clean folder
+  pip:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Use GCC on macOS
+        if: runner.os == 'macOS'
+        run: echo "CXX=$(brew --prefix gcc@14)/bin/g++-14" >> "$GITHUB_ENV"
+      - name: pip install
+        run: python -m pip install .
+      - name: Use the installed commands
+        shell: bash
+        run: |
+          mkdir -p ../use && cp -r examples ../use/ && cd ../use
+          preplang --version
+          preplang examples/tabular/students.prep --python > /dev/null
+          python output/generated.py
+          test -s output/clean.csv
+          preplang examples/errors/semantic_error.prep --json | python -c "import json, sys; assert json.load(sys.stdin)['errors'] > 0"
+          printf 'import pandas as pd\ndf = pd.read_csv("examples/tabular/students.csv")\ndf = df.dropna()\ndf.to_csv("out.csv", index=False)\n' > clean.py
+          preplang-lift clean.py -o lifted.prep && preplang lifted.prep --explain > /dev/null
+          preplang-contracts --help > /dev/null && preplang-release-facts --help > /dev/null
+
   # The Dockerfile builds, its tests pass and the image runs the compiler
   docker:
     runs-on: ubuntu-latest

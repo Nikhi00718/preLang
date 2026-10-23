@@ -48,3 +48,6 @@ paper/*.spl
 paper/scp-submission/
 paper/scp-osp-submission/
 paper/preplang-osp.pdf
+
+# pip wheel builds
+dist/

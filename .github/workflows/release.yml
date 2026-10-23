@@ -1,8 +1,8 @@
 name: Release
 
 # Pushing a tag vX.Y.Z builds the compiler on Linux, Windows and macOS, tests it, and publishes a
-# GitHub release with one archive per platform (the compiler, the examples, the Python tools and
-# the documentation) and the Docker image ghcr.io/<owner>/preplang:X.Y.Z. The tag must match the
+# GitHub release with one archive (the compiler, the examples, the Python tools and the
+# documentation) and one wheel per platform, and the Docker image ghcr.io/<owner>/preplang:X.Y.Z. The tag must match the
 # version in CMakeLists.txt, and CHANGELOG.md must have a section for it.
 
 on:
@@ -75,10 +75,19 @@ jobs:
             tar czf "$name.tar.gz" "$name"
           fi
 
+      # The same compiler as a wheel: pip install preplang-<version>-py3-none-<platform>.whl
+      - name: Wheel
+        shell: bash
+        run: |
+          [ "$RUNNER_OS" = Windows ] || export CMAKE_ARGS=-DPREPLANG_STATIC_RUNTIME=ON
+          python -m pip wheel . --no-deps -w .
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}
-          path: preplang-*.*z*
+          path: |
+            preplang-*.*z*
+            preplang-*.whl
 
   publish:
     needs: binaries

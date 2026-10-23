@@ -10,6 +10,7 @@ option(PREPLANG_SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanit
 option(PREPLANG_COVERAGE "Build with coverage counters for gcovr (GCC)" OFF)
 option(PREPLANG_FUZZ "Link the fuzz targets with libFuzzer (Clang); otherwise they replay their corpus" OFF)
 option(PREPLANG_STATIC_RUNTIME "Link the C++ runtime statically, for release binaries (GCC)" OFF)
+option(PREPLANG_TESTS "Build the tests and the fuzz targets (pip install turns this off)" ON)
 
 if(PREPLANG_SANITIZE)
     add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all)
@@ -75,7 +76,19 @@ endif()
 add_executable(preplang src/main.cpp)
 target_link_libraries(preplang PRIVATE preplang_core)
 target_compile_definitions(preplang PRIVATE PREPLANG_VERSION="${PROJECT_VERSION}")
-install(TARGETS preplang RUNTIME DESTINATION bin)
+
+if(SKBUILD)
+    # pip install (pyproject.toml): the compiler becomes the `preplang` command, and the Python
+    # tools join the package python/preplang, where pyproject.toml makes them commands too.
+    install(TARGETS preplang RUNTIME DESTINATION ${SKBUILD_SCRIPTS_DIR})
+    install(FILES frontend/pandas2prep.py tools/contracts.py tools/release_facts.py DESTINATION preplang)
+else()
+    install(TARGETS preplang RUNTIME DESTINATION bin)
+endif()
+
+if(NOT PREPLANG_TESTS)
+    return()
+endif()
 
 # Unit tests: ctest --test-dir build -C Debug --output-on-failure
 enable_testing()

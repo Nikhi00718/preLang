@@ -103,9 +103,18 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ctest -
 ./build/preplang examples/tabular/students.prep --run
 ```
 
-Each release on GitHub (from v2.0.0) has prebuilt compilers for Linux, Windows and macOS, which need
-no C++ toolchain, and the Docker image `ghcr.io/nikhi00718/preplang`. `preplang --version` prints the
-version.
+Or install it with pip, which builds the compiler (a C++17 compiler and CMake are needed) and puts the
+`preplang` command on your PATH together with `preplang-lift` (the pandas lifter),
+`preplang-contracts` and `preplang-release-facts`; pandas and PyArrow come with it, OpenCV with
+`[images]`:
+
+```bash
+pip install "preplang[images] @ git+https://github.com/Nikhi00718/preLang"
+```
+
+Each release on GitHub (from v2.0.0) has prebuilt compilers and wheels for Linux, Windows and macOS,
+which need no C++ toolchain, and the Docker image `ghcr.io/nikhi00718/preplang`. `preplang --version`
+prints the version.
 
 Or with Docker, which builds the compiler with the Python packages the generated programs need and
 runs the tests and the example (`docker run --rm -it preplang bash` for a shell):
@@ -662,6 +671,7 @@ Dockerfile           Ubuntu build with the Python packages
 .github/workflows/   ci.yml: builds and tests on Ubuntu, Windows and macOS, sanitizers, coverage, format,
                      clang-tidy, fuzzing, Docker, the Lean proofs; release.yml: binaries and image per tag
 LANGUAGE.md          the language and command-line reference
+pyproject.toml, python/  pip packaging: the compiler and the Python tools as commands
 ARCHITECTURE.md      the phases and modules;  CONTRIBUTING.md, CHANGELOG.md, CITATION.cff, LICENSE (MIT)
 ```
 

@@ -26,6 +26,9 @@
   Linux, Windows and macOS and a Docker image for every version tag.
 - `LANGUAGE.md`: the complete language and command-line reference.
 - `--json`: the diagnostics as one JSON object, for editors and other tools; writes nothing.
+- `pip install`: builds the compiler with scikit-build-core and installs `preplang`, `preplang-lift`,
+  `preplang-contracts` and `preplang-release-facts`; releases also carry a wheel per platform.
+- `frontend/pandas2prep.py` takes its arguments with argparse (`--help` printed a traceback).
 - `eval/reproduce.sh` (the evaluation in three tiers), `eval/corpora.py` and `eval/corpora/` (the
   GitHub script corpora frozen as evaluated, and checksums of the downloaded inputs).
 - `eval/compilation/differential.py`: random programs, with joins and groups, compared with `--O0`

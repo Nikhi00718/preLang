@@ -32,6 +32,7 @@ changes it in a way PrepLang cannot express (a new column, map, apply, ...): the
 lifted program is the longest prefix of the script's cleaning that PrepLang
 expresses exactly, and every followed DataFrame is saved where its prefix ends.
 """
+import argparse
 import ast
 import sys
 from dataclasses import dataclass, field
@@ -439,14 +440,25 @@ def lift(source, derived=True):
     return Lifter(derived).lift(ast.parse(source))
 
 
-if __name__ == "__main__":
-    result = lift(open(sys.argv[1], encoding="utf-8", errors="replace").read())
-    if "-o" in sys.argv:
-        out = sys.argv[sys.argv.index("-o") + 1]
-        open(out, "w", encoding="utf-8").write(result.program())
-        print(f"Wrote {out}", file=sys.stderr)
+def main():
+    """pandas2prep.py script.py [-o out.prep]: the lifted program, and how far each DataFrame was lifted."""
+    parser = argparse.ArgumentParser(prog="preplang-lift",
+                                     description="Lift the cleaning part of a pandas script into PrepLang.")
+    parser.add_argument("script", help="the pandas script (.py)")
+    parser.add_argument("-o", dest="out", help="write the program here instead of printing it")
+    args = parser.parse_args()
+    with open(args.script, encoding="utf-8", errors="replace") as source:
+        result = lift(source.read())
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as out:
+            out.write(result.program())
+        print(f"Wrote {args.out}", file=sys.stderr)
     else:
         print(result.program(), end="")
     for variable, frame in result.frames.items():
         print(f"# {variable}: " + (f"lifted until {frame.stopped_at}" if frame.stopped_at else "lifted completely"),
               file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
