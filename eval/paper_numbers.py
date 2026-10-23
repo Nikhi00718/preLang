@@ -127,6 +127,9 @@ def main():
     if found("differential.json"):
         differential(load("differential.json")["results"],
                      load("differential_prefix.json")["results"] if found("differential_prefix.json") else None, numbers)
+    if all(found(f"differential_seed{seed}.json") for seed in NEW_SEEDS) and found("differential_seed7_prefix.json"):
+        new_seeds([load(f"differential_seed{seed}.json")["results"] for seed in NEW_SEEDS],
+                  load("differential_seed7_prefix.json")["results"], numbers)
     if found("census.json"):
         census(load("census.json"), numbers)
 
@@ -203,6 +206,20 @@ def differential(results, before, numbers):
         pruning = sum(1 for r in wrong if "KeyError" in r["variants"]["optimized"]["detail"])
         numbers.update(DiffBeforeWrongOpt=len(wrong), DiffBeforeWrongOz=len(before) - agree(before, "O0"),
                        DiffBeforePruning=pruning, DiffBeforeNa=len(wrong) - pruning)
+
+
+NEW_SEEDS = (7, 8, 9)
+
+
+def new_seeds(runs, before, numbers):
+    """differential.py with three more seeds after the paper's run (--seed 7, 8, 9, 2,000 programs
+    each); `before` is seed 7 with the compiler before the dead-store fix it led to."""
+    results = [r for run in runs for r in run]
+    agree = sum(1 for r in results if not any(v["problem"] for v in r["variants"].values()))
+    reused = [r["reuse"] for r in results if "reuse" in r]
+    numbers.update(DiffSeedPrograms=f"{len(results):,}", DiffSeedAgree=f"{agree:,}",
+                   DiffSeedReuse=f"{len(reused):,}", DiffSeedReuseWrong=sum(1 for u in reused if u["outcome"] == "wrong"),
+                   DiffSeedBeforeWrong=sum(1 for r in before if r["variants"]["optimized"]["problem"]))
 
 
 def census(data, numbers):

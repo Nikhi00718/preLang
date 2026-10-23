@@ -498,8 +498,10 @@ regenerates it; `--run` first reruns the two experiments behind correctness and 
 - `eval/compilation/differential.py`: 2,000 random programs, each compiled with `--O0` and with the
   optimizer, run, and compared cell by cell with a reference interpreter written without pandas or
   compiler code. Both agree with it on all 2,000; before two fixes this test led to, 109 optimized
-  runs were wrong (`eval/results/differential_prefix.md`).
-- `eval/compilation/census.py`: on 435 programs (the examples and programs lifted from GitHub pandas
+  runs were wrong (`eval/results/differential_prefix.md`). Three more seeds (`--seed 7`, `8`, `9`; 6,000
+  programs) found one more bug, a `FILL_NULL ... WITH MEAN` removed as a dead store although it can stop
+  the program (`differential_seed7_prefix.md`); after the fix all 6,000 agree (`differential_seed*.md`).
+- `eval/compilation/census.py`: on 436 programs (the examples and programs lifted from GitHub pandas
   scripts), the instructions, run-time checks and columns the optimizer removes, the run time of
   `--O0` against optimized, and the compiler's time and peak memory, also on large inputs.
 

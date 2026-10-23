@@ -192,6 +192,20 @@ void testStringComparisonIsBoolean() {
           "a comparison of a STRING column gives a boolean mask, a numeric one is unchanged");
 }
 
+// Found by eval/compilation/differential.py (seed 7): FILL_NULL ... WITH MEAN stops the program
+// when the column has missing values and none to compute the mean from, so removing it as a
+// dead store made the optimized program save a table where the source program stops.
+void testStatisticFillIsNotADeadStore() {
+    const Compiled mean = compile("FILL_NULL s.age WITH MEAN;\nDROP s [age];");
+    const std::vector<std::string> columns = loadedColumns(mean.ir);
+    check(mean.ok && countOf(mean.ir, Opcode::FillNull) == 1 &&
+              std::find(columns.begin(), columns.end(), "age") != columns.end(),
+          "a FILL_NULL WITH MEAN of a column dropped later is kept, and its column loaded");
+    const Compiled constant = compile("FILL_NULL s.age WITH 0;\nDROP s [age];");
+    check(constant.ok && countOf(constant.ir, Opcode::FillNull) == 0,
+          "a FILL_NULL WITH a value of a column dropped later is still removed");
+}
+
 void testOptimizerOff() {
     const Compiled c = compile("FILTER s WHERE marks > 0;", {false, false});
     check(c.ok && countOf(c.ir, Opcode::Filter) == 1 && c.report.instructionsBefore == c.report.instructionsAfter,
@@ -215,6 +229,7 @@ int main() {
     testDropNullBlocksPruning();
     testDropAfterPrunedSelect();
     testStringComparisonIsBoolean();
+    testStatisticFillIsNotADeadStore();
     testJoinPruning();
     testOptimizerOff();
     testDerive();

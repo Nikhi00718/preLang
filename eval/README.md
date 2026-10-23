@@ -55,7 +55,7 @@ The largest result files are kept gzipped (`private.json.gz`, `private_diagnosti
 | `scale.py` | time to the first error on 16M-row Parquet tables and 3,000 images | `scale.*` |
 | `run_realbugs.py` | the 44 failures from GitHub issues (`realbugs_catalog.py`) | `realbugs.*` |
 | `datasets.py` | builds the example images and the benchmark and scale data | |
-| `differential.py` | random programs, `--O0` and optimized, against a reference interpreter (correctness) | `differential.*`; `differential_prefix.*` is the run before the two fixes it led to (`PREPLANG_COMPILER` names another build) |
+| `differential.py` | random programs, `--O0` and optimized, against a reference interpreter (correctness) | `differential.*`; `differential_prefix.*` is the run before the two fixes it led to (`PREPLANG_COMPILER` names another build); `differential_seed{7,8,9}.*` are three more seeds, and `differential_seed7_prefix.*` seed 7 before the fix it led to |
 | `census.py` | work removed, run time and compiler time and memory on the examples and lifted programs (run the reuse corpora first) | `census.*` |
 
 ## `reuse/`: reusing a compiled program on new batches (RQ3 to RQ8)

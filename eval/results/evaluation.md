@@ -10,11 +10,11 @@ file and the script behind it.
 
 - `--O0` agrees with the reference on 2,000 / 2,000; the optimized program on 2,000 / 2,000; `--O0` and optimized outputs are byte-identical (or fail at the same contract) on 2,000 / 2,000.
 - Of the 658 programs whose data breaks a contract, the compiler reports 465 (71%) at compile time, before any data is processed; the rest fail at the same line when they run.
-- Reused on a second random batch, the optimized programs ended as the reference does on that batch in 1,198 runs (same rows) and 301 stops (same failing line), refused 36 batches, and were wrong 0 times; 336 runs re-enabled a removed check or operation.
+- Reused on a second random batch, the optimized programs ended as the reference does on that batch in 1,198 runs (same rows) and 301 stops (same failing line), refused 36 batches, and were wrong 0 times; 348 runs re-enabled a removed check or operation.
 - In an earlier run of 2,000 programs (before `JOIN` and `AGGREGATE`), the compiler before two fixes gave a wrong result in 109 optimized runs and 36 `--O0` runs (`differential_prefix.md`): 76 from column pruning keeping a `DROP` of a column a pruned `SELECT` had already removed (`KeyError`), and 33 from pandas 3, where a text comparison is `bool[pyarrow]` and combining it with a mask holding NA raises `TypeError`. Both are fixed, with regression tests in `tests/test_optimizer.cpp`.
 - Injected mistakes (`rq1.md`): 24 of 24 reported before any data is processed, 0 false alarms on the 5 original programs.
 - Reuse on new data is checked against a fresh compilation of every batch: 0 unsound outcomes in 244 edited batches (`certificates.md`), 238 real monthly batches (`realbatches.md`), 3212 runs of lifted Titanic and House Prices scripts (`pandas_corpus*.md`), 3255 runs of lifted traffic and bike scripts (`drift_corpus_*.md`), and 64,179 runs after 4,879 private compilations (`private.md`).
-- 297 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
+- 299 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
 
 Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` included, but not dates and images; image pipelines are checked pixel by pixel against a hand-written script (`rq3.md`), not by a reference interpreter.
 
@@ -25,25 +25,25 @@ Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` i
 - Tables, 200,000 rows x 40 columns (`rq3.md`): optimized 1.49 s, `--O0` 1.81 s, script-style pandas 1.82 s: 1.21x end to end, 40% less time after Python's 1.02 s start-up.
 - Images, 1,000 at 640x480 (`rq3.md`): 3.52 s and 10 MiB streaming, against 4.01 s and 922 MiB for a script that loads everything, and 3.54 s for a hand-written streaming script.
 - With `--approx`, merging two RESIZEs saves 5% at a mean PSNR of 57.0 dB (minimum 51.8 dB).
-- On the 435 real programs of the census (`census.md`) the data are small, so run time is mostly fixed cost: over the 151 programs the optimizer changed, the median speedup is 1.07x (geometric mean 1.08x, up to 1.8x).
+- On the 436 real programs of the census (`census.md`) the data are small, so run time is mostly fixed cost: over the 152 programs the optimizer changed, the median speedup is 1.09x (geometric mean 1.08x, up to 1.6x).
 - Time to the first error on 16M rows (`scale.md`): 0.02 s to compile against 2.81 s for the script to crash.
 
 ## 3. Optimization effectiveness: how much unnecessary work does it eliminate?
 
-On 435 programs (the examples and programs lifted from other people's GitHub pandas scripts), the optimizer removed 14% of IR instructions (2,070 -> 1,789), 73% of run-time contract checks (26 -> 7) and 2% of the columns read (28,022 -> 27,548); it changed 151 programs (35%), and the optimized and `--O0` programs wrote identical files on 435 of 435.
+On 436 programs (the examples and programs lifted from other people's GitHub pandas scripts), the optimizer removed 14% of IR instructions (2,080 -> 1,797), 75% of run-time contract checks (28 -> 7) and 2% of the columns read (28,030 -> 27,554); it changed 152 programs (35%), and the optimized and `--O0` programs wrote identical files on 436 of 436.
 
 | Corpus | Programs | Instructions | Run-time checks | Columns read | Programs with something removed |
 |---|---:|---:|---:|---:|---:|
-| examples | 8 | 100 -> 83 (-17%) | 13 -> 7 (-46%) | 51 -> 42 (-18%) | 6 (75%) |
+| examples | 9 | 110 -> 91 (-17%) | 15 -> 7 (-53%) | 59 -> 48 (-19%) | 7 (78%) |
 | Titanic scripts | 184 | 784 -> 684 (-13%) | 0 | 2957 -> 2736 (-7%) | 78 (42%) |
 | House Prices scripts | 168 | 836 -> 721 (-14%) | 0 | 24092 -> 23907 (-1%) | 45 (27%) |
 | traffic scripts | 41 | 191 -> 175 (-8%) | 0 | 369 -> 362 (-2%) | 7 (17%) |
 | bike scripts (days) | 19 | 76 -> 68 (-11%) | 0 | 304 -> 287 (-6%) | 6 (32%) |
 | bike scripts (hours) | 12 | 45 -> 39 (-13%) | 0 | 204 -> 193 (-5%) | 6 (50%) |
 | monthly pipelines | 3 | 38 -> 19 (-50%) | 13 -> 0 (-100%) | 45 -> 21 (-53%) | 3 (100%) |
-| **all** | 435 | 2070 -> 1789 (-14%) | 26 -> 7 (-73%) | 28022 -> 27548 (-2%) | 151 (35%) |
+| **all** | 436 | 2080 -> 1797 (-14%) | 28 -> 7 (-75%) | 28030 -> 27554 (-2%) | 152 (35%) |
 
-What the passes did, over all programs: column pruning 381, no-effect elimination 38, contract check elimination 19, dead store elimination 8, contract check made conditional 5, dead image operation 1.
+What the passes did, over all programs: column pruning 384, no-effect elimination 38, contract check elimination 21, dead store elimination 8, contract check made conditional 5, dead image operation 1.
 
 Removed checks are not lost: each is kept with the facts its proof needs and runs again on a new input that breaks them (deoptimization: 9 of 238 real monthly batches, `realbatches.md`).
 
@@ -77,7 +77,7 @@ Limits: the validators are general tools configured as their documentation sugge
 
 ## 6. Overhead: compile time, memory and run-time cost
 
-- Compile time: median 30 ms, at most 885 ms on the 435 census programs; 22 to 39 ms on the RQ1 programs.
+- Compile time: median 28 ms, at most 904 ms on the 436 census programs; 22 to 39 ms on the RQ1 programs.
 - Compiler memory: at most 8 MiB peak on the census programs; 65 MiB for a 59 MiB CSV of 1M rows (the file is read into memory once); 6 MiB for a 346 MiB Parquet file (footer only); 9 MiB for 3,000 images (headers only) (`census.md`).
 - Certification: 14 to 207 re-analyses per program, 21 to 35 ms of compile time in all (`certcost.md`).
 - Run time of reuse (`overhead.md`): checking the certificate of a new batch costs -1% (-3% to +1%, within noise) of a 0.88 s run, against 0.94 s to compile and run fresh.

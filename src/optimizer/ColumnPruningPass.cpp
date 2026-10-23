@@ -92,6 +92,13 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
             case Opcode::FillNull:
             case Opcode::Normalize:
             case Opcode::ParseDate:
+                // A FILL_NULL with MEAN, MEDIAN or MODE stops the program when the column has
+                // missing values and none to compute the statistic from, so it is not a dead
+                // store even if the column is never used again: it stays, and keeps its column.
+                if (instruction.op == Opcode::FillNull && instruction.values.empty()) {
+                    liveColumns.insert(instruction.column);
+                    break;
+                }
                 if (liveColumns.count(instruction.column) == 0) {
                     remove[i] = true;
                     if (!instruction.proofKey.empty()) {
