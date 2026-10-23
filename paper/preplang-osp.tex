@@ -8,6 +8,8 @@
 
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
+\usepackage{microtype}
+\DisableLigatures[-]{encoding=T1, family=tt*}  % --approx, not an en dash
 \usepackage{amssymb}
 \usepackage{xcolor}
 \usepackage{listings}
@@ -56,19 +58,21 @@ batches}
 Tamil Nadu, India}
 
 \begin{abstract}
-\PL is a compiler, written in C++17, for a small language of table and image preprocessing pipelines.
-It reads the input data at compile time, proves or refutes the pipeline's data contracts before any
-data is processed, removes the checks and operations the data makes useless, and generates a pandas
-and OpenCV program. The generated program keeps every removal behind a guard with the input facts it
-depends on, so it runs unchanged on new batches and runs a removal again only on a batch that breaks
-its facts. The repository also holds Lean~4 proofs for a core of the analysis, a lifter for pandas
-scripts, a tool that composes compiled stages, a tool that releases differentially private facts to
-compile against, and the complete evaluation.
+A data-preparation pipeline is compiled when its input already exists, and then run again on later
+batches the compiler never saw. \PL, a compiler for a small language of table and image pipelines
+written in C++17, uses both facts. It reads the input at compile time (every CSV cell, Parquet footers,
+image headers), proves or refutes the pipeline's data contracts before any data is processed, and
+removes the checks and operations the data makes useless. Every removal stays in the generated pandas
+and OpenCV program behind a guard that holds the facts about the input it depends on, so the program
+runs unchanged on new batches and runs a removal again only on a batch that breaks those facts, with
+the result a fresh compilation would give. The repository holds \TestCount{} unit tests with
+sanitizer, coverage and fuzzing jobs, Lean~4 proofs for a core of the analysis, and one script that
+reproduces every number in this article.
 \end{abstract}
 
 \begin{keyword}
-data-aware compilation \sep data validation \sep speculative optimization \sep deoptimization \sep
-data pipelines \sep differential privacy
+domain-specific language \sep data-aware compilation \sep abstract interpretation \sep speculative
+optimization \sep deoptimization \sep data validation
 \end{keyword}
 
 \end{frontmatter}

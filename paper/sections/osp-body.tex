@@ -22,6 +22,33 @@ program, compiles it against the current batch, reads the diagnostics and deploy
 for every later batch. The theory (with its Lean proofs) and the full evaluation are documented in the
 repository (\texttt{paper/}, \texttt{docs/}); this article describes the software.
 
+Table~\ref{tab:related} places \PL among the closest tools. Validators know the values but check them
+apart from the code and again on every batch; compile-time analyses follow the code but know only
+declared or inferred structure. To our knowledge, no other tool both decides value contracts at
+program points from the real data and carries those decisions safely to later batches.
+
+\begin{table}[t]
+\footnotesize
+\caption{\PL and the closest tools. \emph{Values}: missing values and value ranges.}
+\label{tab:related}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright}p{2.9cm}>{\raggedright}p{1.9cm}>{\raggedright}p{2.9cm}>{\raggedright}p{1.1cm}
+  >{\raggedright\arraybackslash}p{2.8cm}@{}}
+\toprule
+Tool & Decides at & Knows about the data & Follows code & On a new batch \\
+\midrule
+TFDV~\cite{breck2019}, Deequ~\cite{schelter2018}, GX~\cite{gx}, pandera~\cite{bantilan2020}
+  & run time & values, from each batch & no & validates it again \\
+F\# type providers~\cite{petricek2016} & compile time & types, from a sample & no & -- \\
+Zhuang and Lu~\cite{zhuang2022} & compile time & column types, from the code & yes & -- \\
+Gerstl et al.~\cite{gerstl2026} & compile time & R data-frame shapes, optionally from the data & yes & -- \\
+Mirji~\cite{mirji2026} & compile time & declared schemas & yes & checks the output schema \\
+\textbf{\PL} & \textbf{compile time} & \textbf{types and values of every cell; image headers} & \textbf{yes}
+  & \textbf{admits by certificate; reruns only the removals it breaks} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Software description}
 
 \subsection{Software architecture}
@@ -44,6 +71,14 @@ sound and monotone), \texttt{tests/} (\TestCount{} checks in \TestSuites{} suite
 tests), a lifter of pandas scripts (\texttt{frontend/}), the composition and release tools
 (\texttt{tools/}), a local editor app (\texttt{studio/}) and the evaluation (\texttt{eval/}).
 
+Continuous integration builds and tests the compiler on Windows (MSVC), Ubuntu and macOS (GCC), compiles
+every example end to end, and runs the tests under AddressSanitizer and UndefinedBehaviorSanitizer, a
+line-coverage gate, \texttt{clang-format} and \texttt{clang-tidy}, and libFuzzer on the three parts that
+read untrusted bytes (the \texttt{.prep} front end, the CSV scanner and the Parquet footer reader); it also
+checks the Lean proofs and builds the Docker image. Each release publishes compilers for the three
+systems that need no C++ toolchain. \texttt{LANGUAGE.md} is the reference of the language, the command
+line and the generated program.
+
 \subsection{Software functionalities}
 
 {\sloppy
@@ -56,11 +91,11 @@ reported with the line, the offending row and a hint; groups (\texttt{AGGREGATE}
 columns are not loaded, image pipelines are streamed; rewrites that change the output need
 \texttt{--approx}.
 \item \textbf{Reuse:} admission by certificate, and re-enabled removals with the reason printed.
-\item \textbf{Composition:} \texttt{tools/\allowbreak contracts.py} checks one stage's published guarantees
-against the next stage's certificates and writes the contract a producer must meet.
-\item \textbf{Private compilation:} the data owner releases differentially private facts at the cells the
-program's numbers define (\texttt{--queries}, \texttt{tools/\allowbreak release\_facts.py}); the analyst
-compiles with \texttt{--facts} without opening any input file, and every run stays exact.
+\item \textbf{Beyond one program:} \texttt{tools/\allowbreak contracts.py} checks one compiled stage's
+guarantees against the next stage's certificates; \texttt{frontend/\allowbreak pandas2prep.py} lifts the
+cleaning part of pandas scripts into \PL; and with \texttt{--facts} a program compiles from differentially
+private facts its data owner released (\texttt{tools/\allowbreak release\_facts.py}), opening no input
+file, while every run stays exact.
 \item \textbf{Inspection:} every phase can be printed (\texttt{--tokens} to \texttt{--python}), with an
 execution plan (\texttt{--explain}) and the files a run would touch (\texttt{--dry-run}).
 \end{itemize}
@@ -91,6 +126,20 @@ ContractError: line 3: students.marks has values outside 0 to 100
 \end{verbatim}}
 \noindent A batch within the facts runs with both checks removed; a batch whose \texttt{age} holds text is
 refused, since no generated code can stand in for the analysis of another type.
+
+The same analysis covers images, from their headers alone. In \texttt{examples/\allowbreak images/\allowbreak
+linked.prep}, images and their labels are linked and checked, resized, normalized to $[0, 1]$ and saved as
+NumPy arrays. Changing the format to PNG gives, before any pixel is decoded:
+{\small\begin{verbatim}
+error[type]: cannot save FLOAT32 pixels as PNG:
+             NORMALIZE at line 10 scaled them to [0, 1]
+   --> examples/images/linked.prep:13:1
+13 | SAVE_IMAGES imgs TO "processed/ml_ready/";
+   = hint: image files store 8-bit pixels, so these would come out
+     almost black; add CONVERT imgs TO NPY; to keep the float
+     values
+\end{verbatim}}
+\noindent The equivalent hand-written OpenCV script runs without an error and writes almost black images.
 
 \section{Impact}\label{sec:impact}
 
@@ -129,11 +178,16 @@ cells, do no better.
 file, of which only the footer is read); admitting a new batch changes run time by \OhPct\%.
 \end{itemize}
 
-\noindent One script, \texttt{eval/\allowbreak paper\_numbers.py}, regenerates every number from the raw
-results, with the baselines in pinned environments (\texttt{eval/\allowbreak README.md}). \PL is a research
-prototype, built by the
-author and partly within a compiler-design course; it has no users outside the author's experiments yet.
-Others can extend its abstract state, certifier and code generator, and compare on the same batches.
+\noindent \texttt{eval/\allowbreak reproduce.sh check} rebuilds the compiler, runs every test and regenerates
+every number above from the committed results, without network access; \texttt{full} reruns the
+experiments and \texttt{baselines} the validators and differential-privacy mechanisms, in pinned
+environments (\texttt{eval/\allowbreak README.md}). The evaluation is reusable on its own: the differential
+harness with its reference interpreter tests any change to the optimizer, and the GitHub script corpora
+are frozen as evaluated, each file by its URL at a fixed commit and its hash (1{,}773 of the 1{,}778 files
+could still be downloaded on 23 October 2026), so other validators and pipeline analyses can be compared
+on the same programs and batches. \PL is a research prototype by one author, begun in a compiler-design
+course; it has no users outside the author's experiments yet. Its abstract state, certifier and code
+generator are separate modules that others can extend.
 
 \section{Limitations and conclusions}
 
@@ -141,5 +195,5 @@ Joins are lookups on a key with one name in both tables (no many-to-many joins),
 aggregates, and only Python is generated; a changed column type is refused rather than handled; the
 mechanized proofs cover a core of the analysis without joins and groups, and the rest is tested; the
 compiler is tested on Windows (MSVC), Ubuntu and macOS (GCC). Planned work is general joins, generated
-code that adapts to type changes, and packaging. \PL compiles a pipeline once and runs it on later batches
+code that adapts to type changes, and a Python package. \PL compiles a pipeline once and runs it on later batches
 exactly as a fresh compilation would, re-enabling only the removals a batch makes unsafe.
