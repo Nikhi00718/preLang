@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PrepLang",
+  "scopeName": "source.preplang",
+  "comment": "Tokens as in LANGUAGE.md section 2; keywords ignore case.",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#string" },
+    { "include": "#quoted-identifier" },
+    { "include": "#statement-keyword" },
+    { "include": "#keyword" },
+    { "include": "#constant" },
+    { "include": "#number" },
+    { "include": "#operator" }
+  ],
+  "repository": {
+    "comment": { "name": "comment.line.number-sign.preplang", "match": "#.*$" },
+    "string": { "name": "string.quoted.double.preplang", "match": "\"[^\"\\n]*\"?" },
+    "quoted-identifier": { "name": "variable.other.quoted.preplang", "match": "`[^`\\n]*`?" },
+    "statement-keyword": {
+      "name": "keyword.control.statement.preplang",
+      "match": "(?i)\\b(LOAD_TABLES|LOAD_IMAGES|LOAD_IMAGE|LOAD|DROP_NULL|FILL_NULL|NORMALIZE|FILTER|SELECT|DROP|PARSE_DATE|DERIVE|JOIN|AGGREGATE|SAVE_TABLES|SAVE_IMAGES|SAVE_IMAGE|SAVE|EXPECT|RESIZE|GRAYSCALE|COMPRESS|CONVERT|REMOVE_CORRUPT|LINK)\\b"
+    },
+    "keyword": {
+      "name": "keyword.other.preplang",
+      "match": "(?i)\\b(AS|WITH|TO|ON|USING|ZSCORE|MINMAX|RANGE|WHERE|TYPE|EXCEPT|IF_EXISTS|RECURSIVE|MEAN|MEDIAN|MODE|NUMBER|NUMERIC|STRING|BOOLEAN|NULLABLE|NOT_NULL|BETWEEN|UNIQUE|REFERENCES|SCHEMA_SAME_AS|CHANNELS|MIN_WIDTH|MIN_HEIGHT|MATCH_RATE|KEEP_ASPECT|QUALITY|JPG|PNG|NPY|AND|OR|NOT)\\b"
+    },
+    "constant": { "name": "constant.language.boolean.preplang", "match": "(?i)\\b(TRUE|FALSE)\\b" },
+    "number": { "name": "constant.numeric.preplang", "match": "\\b[0-9]+(\\.[0-9]+)?\\b" },
+    "operator": { "name": "keyword.operator.preplang", "match": "==|!=|<=|>=|<|>|=|\\+|-|\\*|/|%" }
+  }
+}

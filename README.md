@@ -667,6 +667,7 @@ paper/               the software article (PrepLang_Software_SCP.pdf) and the re
 docs/                NOVELTY.md (novelty and prior work), DEMO_VIDEO_SCRIPT.md, USER_STUDY.md (protocol),
                      review2/ and review3/ (course reports)
 demo/ studio/        the live demo with slides, and PrepLang Studio (a local editor app)
+editors/vscode/      VS Code extension: syntax highlighting and the compiler's diagnostics (--json) on save
 Dockerfile           Ubuntu build with the Python packages
 .github/workflows/   ci.yml: builds and tests on Ubuntu, Windows and macOS, sanitizers, coverage, format,
                      clang-tidy, fuzzing, Docker, the Lean proofs; release.yml: binaries and image per tag

@@ -42,6 +42,11 @@ jobs:
       - name: Tests
         run: ctest --test-dir build -C Release --output-on-failure
 
+      # The editor extension's diagnostics, on the compiler's real --json output
+      - name: VS Code extension tests
+        if: runner.os == 'Linux'
+        run: cd editors/vscode && PREPLANG="$GITHUB_WORKSPACE/build/preplang" npm test
+
       - name: Compile and run the students example
         shell: bash
         run: |

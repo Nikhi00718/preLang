@@ -1,0 +1,39 @@
+{
+  "name": "preplang",
+  "displayName": "PrepLang",
+  "description": "PrepLang (.prep) syntax highlighting and the compiler's diagnostics as you save",
+  "version": "2.0.0",
+  "publisher": "nikhil-v",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/Nikhi00718/preLang" },
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Programming Languages", "Linters"],
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:preplang"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "preplang",
+        "aliases": ["PrepLang", "preplang"],
+        "extensions": [".prep"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      { "language": "preplang", "scopeName": "source.preplang", "path": "./syntaxes/preplang.tmLanguage.json" }
+    ],
+    "configuration": {
+      "title": "PrepLang",
+      "properties": {
+        "preplang.compilerPath": {
+          "type": "string",
+          "default": "preplang",
+          "description": "The preplang compiler: a command on PATH (pip install preplang) or the path to the executable."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/diagnostics.test.js"
+  }
+}
