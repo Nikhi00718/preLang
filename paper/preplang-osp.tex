@@ -65,7 +65,7 @@ image headers), proves or refutes the pipeline's data contracts before any data 
 removes the checks and operations the data proves redundant. Every removal stays in the generated
 pandas and OpenCV program behind a guard that holds the facts about the input it depends on. The program
 runs unchanged on new batches, runs a removal again only on a batch that breaks those facts, and then
-gives the result a fresh compilation would give. On \RealRuns{} later months of real data, three compiled
+gives the result a fresh compilation would give. On \RealRuns{} later months of five public datasets, the compiled
 pipelines handled \RealDeoptCorrectPct\% as a fresh compilation would and none wrongly. The repository holds
 \TestCount{} test checks with sanitizer, coverage and fuzzing jobs, Lean~4 proofs for a core of the
 analysis, and one script that reproduces every number in this article.

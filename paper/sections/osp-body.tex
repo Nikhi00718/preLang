@@ -68,13 +68,12 @@ The repository also holds \texttt{proofs/} (\LeanLines{} lines of Lean~4~\cite{l
 things: for any sound and monotone analysis, the generated program gives the output of a fresh compilation
 on every batch it admits; and the analysis of a core of the language is sound and monotone. Joins, groups,
 dates and images are outside that core. Joins and groups are checked by the differential test of
-Section~\ref{sec:impact}, dates and images only by unit tests and the examples. The other folders are \texttt{tests/} (\TestCount{} checks in \TestSuites{} suites), the pandas lifter
-(\texttt{frontend/}), the tools below (\texttt{tools/}), a VS Code extension and the evaluation
-(\texttt{eval/}).
+Section~\ref{sec:impact}, dates and images only by unit tests and the examples. \texttt{tests/} holds
+\TestCount{} checks in \TestSuites{} suites.
 
-\PL installs with \texttt{pip} from the repository (commands \texttt{preplang}, \texttt{preplang-lift},
-\texttt{preplang-contracts}, \texttt{preplang-release-facts}) or runs from the \texttt{Dockerfile}.
-Continuous integration builds and tests the compiler on Windows (MSVC), Ubuntu and macOS (GCC), compiles
+\PL installs with \texttt{pip} or runs from the \texttt{Dockerfile}; each release also ships compilers for
+Windows, Linux and macOS. A VS Code extension (\texttt{editors/}) shows the diagnostics on save. Continuous
+integration builds and tests the compiler on Windows (MSVC), Ubuntu and macOS (GCC), compiles
 every example, runs the tests under AddressSanitizer and UndefinedBehaviorSanitizer with a coverage gate,
 fuzzes the three readers of untrusted bytes (\texttt{.prep}, CSV, Parquet footers) with libFuzzer, and
 checks the Lean proofs. \texttt{LANGUAGE.md} documents the language, the
@@ -97,9 +96,8 @@ cleaning part of pandas scripts into \PL, up to the first statement the language
 \texttt{--facts} a program compiles from differentially private facts that its data owner released
 (\texttt{tools/\allowbreak release\_facts.py}) without opening an input file; the generated program checks
 those facts on the real data, so every run stays exact.
-\item \textbf{Inspection.} Every phase can be printed (\texttt{--tokens} to \texttt{--python}), together with
-an execution plan (\texttt{--explain}), the files a run would touch (\texttt{--dry-run}) and the
-diagnostics as JSON (\texttt{--json}).
+\item \textbf{Inspection.} Every phase can be printed (\texttt{--tokens} to \texttt{--python}), with a plan
+(\texttt{--explain}) and JSON diagnostics (\texttt{--json}).
 \end{itemize}
 }
 
@@ -121,18 +119,18 @@ knows only that the marks lie in $[50, 95]$. It removes the range and not-null c
 \texttt{--certificate} shows the facts the range check needs: marks at least 0 and at most 100. Run on a
 later batch in which a mark is 104, the generated program re-enables the check and stops where a fresh
 compilation would:
-{\small\begin{verbatim}
+\par\smallskip\noindent\begin{minipage}{\linewidth}\small\begin{verbatim}
 Deoptimized line 3: EXPECT students.marks BETWEEN 0 AND 100:
   marks goes up to 104, above 100
 ContractError: line 3: students.marks has values outside 0 to 100
-\end{verbatim}}
+\end{verbatim}\end{minipage}\par\smallskip
 \noindent A batch within the facts runs with both checks removed. A batch whose \texttt{age} holds text is
 refused, because generated code cannot replace an analysis of the column under another type.
 
 The same analysis covers images, from their headers alone. In \texttt{examples/\allowbreak images/\allowbreak
 linked.prep}, images and their labels are linked and checked, resized, normalized to $[0, 1]$ and saved as
 NumPy arrays. Changing the format to PNG gives, before any pixel is decoded:
-{\small\begin{verbatim}
+\par\smallskip\noindent\begin{minipage}{\linewidth}\small\begin{verbatim}
 error[type]: cannot save FLOAT32 pixels as PNG:
              NORMALIZE at line 10 scaled them to [0, 1]
    --> examples/images/linked.prep:13:1
@@ -140,7 +138,7 @@ error[type]: cannot save FLOAT32 pixels as PNG:
    = hint: image files store 8-bit pixels, so these would come out
      almost black; add CONVERT imgs TO NPY; to keep the float
      values
-\end{verbatim}}
+\end{verbatim}\end{minipage}\par\smallskip
 \noindent The equivalent hand-written OpenCV script runs without an error and writes almost black images.
 
 \section{Impact}\label{sec:impact}
@@ -159,13 +157,15 @@ removed as a dead store, \DiffSeedBeforeWrong{} wrong run); after the fixes all 
 and none of \DiffSeedReuse{} reuses is wrong. The CSV fuzzer found an out-of-bounds read on a NUL byte.
 Each fix has a regression test.
 \item \textbf{Performance.} On a table of 200{,}000 rows the optimized program runs in \TabProcOpt\,s
-instead of \TabProcOz\,s after Python start-up. An image pipeline runs as fast as a hand-written
+instead of \TabProcOz\,s after Python start-up, but most real inputs are small: over the \CenChanged{}
+programs of the census below that the optimizer changes, the median speedup is \CenSpeedMed$\times$ (at most
+\CenSpeedMax$\times$). An image pipeline runs as fast as a hand-written
 streaming script, in \ImgPlMem\,MiB instead of the \ImgBaseMem\,MiB of a script that loads every image.
 \item \textbf{Optimization.} On \CenPrograms{} programs (the examples and programs lifted from GitHub
 scripts) the optimizer removes \CenInstrCut\% of the instructions (\CenInstrBefore{} to \CenInstrAfter),
 \CenChecksBefore{} to \CenChecksAfter{} run-time checks and \CenColsCut\% of the columns read, and changes
 \CenChanged{} programs; all \CenSame{} write the same files with and without it. The lifted scripts
-contain no contracts, so all removed checks come from the examples and the three monthly pipelines.
+contain no contracts, so all removed checks come from the examples and the traffic, bikes and taxi pipelines below.
 \item \textbf{Real programs.} Of \RbTotal{} data-preparation failures reported in GitHub issues, \RbEarly{}
 are reported before any data is processed (\RbContract{} of them only after the requirement is written as an
 \texttt{EXPECT}). Of \CorpusBothScripts{} Titanic and House Prices scripts from GitHub the lifter
@@ -174,40 +174,39 @@ translates \CorpusBothLifted{}; their programs reproduce a fresh compilation in 
 bike scripts it translates \DriftCompiled{}, which reproduce a fresh run on all \DriftRuns{} later real
 months. Most untranslated scripts fail before the language matters: 547 of the 945 never call
 \texttt{pd.read\_csv} on a file path, which the lifter needs to find the input.
-\item \textbf{Comparison.} Three monthly pipelines, compiled once and run on \RealRuns{} later real months
-(UCI traffic and bikes, NYC taxi), handle \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) as a fresh
-compilation would and none wrongly; the \RealDeoptNeedless{} they refuse are taxi months in which
-\texttt{passenger\_count} changed type. The validators answer the same question, whether the pipeline may
-run on a month: each learns from the month the pipeline was compiled on, as its documentation suggests
-(Great Expectations profiles the columns, pandera and TFDV infer a schema), and every answer is scored against a fresh
-compilation of the month. Great Expectations and pandera refuse
-\RealValidatorStopMin--\RealValidatorStopMax\% of the months, and TFDV admits \RealValidatorWrongMax{}
+\item \textbf{Comparison.} Five monthly pipelines on public data (UCI traffic, bikes and Beijing air
+quality; NYC green taxi; Citi Bike Jersey City), each compiled on one month and run on the later ones,
+handle \RealDeoptCorrect{} of \RealRuns{} months (\RealDeoptCorrectPct\%) as a fresh compilation would and
+none wrongly. All \RealDeoptNeedless{} refusals are months in which a column changed type (taxi
+\texttt{passenger\_count}; air pressure and temperature between whole and decimal numbers). The Citi Bike
+and air-quality pipelines were added for this version, with bounds taken from the domain (the New York
+area, physical ranges), and handle \RealCitibikeCorrect{} of \RealCitibikeRuns{} and \RealAirCorrect{} of
+\RealAirRuns{} months. Each validator decides whether the pipeline may run on a month after learning
+from the compiled month as its documentation suggests (Great Expectations profiles the columns, pandera
+and TFDV infer a schema), and is scored against the same fresh compilation. Great Expectations and pandera refuse \RealValidatorStopMax\% of the months, and TFDV admits \RealValidatorWrongMax{}
 months on which the program then differs. The validators were not built for this decision; the numbers
 show what it costs to use them for it. All 24 mistakes injected into 5 example programs are reported at
 compile time, where a script-style pandas program crashes on 20 and writes wrong output on 4.
 \item \textbf{Private compilation.} At $\varepsilon=1$ the private facts keep every removal of the taxi
-and traffic pipelines but only 14\% of the bikes pipeline's, where AIM~\cite{mckenna2022aim} with its
-own workload keeps 54\%. On the \PrivTitanicScripts{} Titanic scripts, \PrivTitanicDeoptEpsOne{}
-compilations remove instructions that their own input then re-enables, because a released fact was
-false. In all \PrivRuns{} runs after \PrivCompilations{} private compilations no output differs
-from a fresh compilation.
+and traffic pipelines but 14\% of the bikes pipeline's (AIM~\cite{mckenna2022aim}: 54\%), and
+\PrivTitanicDeoptEpsOne{} of \PrivTitanicScripts{} Titanic compilations re-enable a removal on their own
+input; no output of \PrivRuns{} runs differs from a fresh compilation.
 \item \textbf{Overhead.} Compiling takes a median of \CenCompileMed\,ms and at most \CenMemMax\,MiB
 (\CenCsvMillionMem\,MiB for a million CSV rows). Checking the certificate of a new batch changes run time
 by \OhPctLow\% to \OhPctHigh\%, within measurement noise.
 \end{itemize}
 
-\noindent \texttt{eval/\allowbreak reproduce.sh check} (about ten minutes, no network) rebuilds the compiler,
-runs every test, regenerates every number above from the committed results, and reruns small versions of
-the differential test and the optimization census, which the Docker image can also run.
-\texttt{full} (several hours) downloads the inputs and reruns every experiment, and \texttt{baselines}
-reruns the validators, in pinned environments. The GitHub script corpora are frozen as evaluated, each
-file by its URL at a fixed commit and its hash.
+\noindent \texttt{eval/\allowbreak reproduce.sh check} (about ten minutes, no network, also in Docker)
+rebuilds the compiler, runs every test, regenerates every number above from the committed results, and
+reruns small versions of the differential test and the census. \texttt{full} (several hours) downloads
+the inputs, including the GitHub scripts frozen by URL, commit and hash, and reruns every experiment;
+\texttt{baselines} reruns the validators in pinned environments.
 
 \section{Limitations and conclusions}
 
 Joins are lookups on a key with one name in both tables (no many-to-many joins), groups have five
 aggregates, and only Python is generated. A changed column type is refused rather than handled. The
 mechanized proofs do not cover joins, groups, dates or images. The lifter translated a minority of the
-GitHub scripts above. The comparison with validators uses three pipelines written by the author, and
+GitHub scripts above. The five monthly pipelines were written by the author, and
 \PL has no outside users yet and no user study; \texttt{docs/\allowbreak USER\_STUDY.md} is its protocol. Planned work is general joins,
 generated code that adapts to type changes, and that study, with people who write pandas cleaning scripts.
