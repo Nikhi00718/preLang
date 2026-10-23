@@ -26,14 +26,19 @@ bool isBlank(std::string_view text) { return text.find_first_not_of(" \t\r") == 
 
 bool isDigit(char c) { return c >= '0' && c <= '9'; }
 
-bool equalsIgnoreCase(std::string_view text, const char* word) {
+// `word` is lower case. The lengths are compared first: a cell may hold a NUL byte, which must not
+// be taken for the end of `word`.
+bool equalsIgnoreCase(std::string_view text, std::string_view word) {
+    if (text.size() != word.size()) {
+        return false;
+    }
     for (size_t i = 0; i < text.size(); ++i) {
         const char c = text[i] >= 'A' && text[i] <= 'Z' ? static_cast<char>(text[i] - 'A' + 'a') : text[i];
         if (c != word[i]) {
             return false;
         }
     }
-    return word[text.size()] == '\0';
+    return true;
 }
 
 // Moves i past a run of digits, adding them to `digits` (while it stays exact)

@@ -116,6 +116,11 @@ void testCells() {
           "number then boolean: STRING because of line 3");
     check(scanCsv("v\n.5\n").columns[0].type == ColumnType::String,
           ".5 is STRING: a number needs a digit before the point");
+    // Found by the CSV fuzzer: a NUL after "true" was compared with the end of "true" and the
+    // check read past it (AddressSanitizer: global-buffer-overflow).
+    const CsvScan nul = scanCsv(std::string("v\ntrue\0\n", 8));
+    check(nul.columns.size() == 1 && nul.columns[0].type == ColumnType::String,
+          "\"true\" followed by a NUL byte is STRING, not BOOLEAN");
 }
 
 // Every number the fast path accepts must equal std::from_chars exactly.

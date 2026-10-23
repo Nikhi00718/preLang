@@ -46,6 +46,9 @@
   used again, but that fill stops the program when the column has missing values and none to compute
   the statistic from; the optimized program then wrote a table where the source program stops. Found by
   the differential test with a new seed (1 of 2,000 programs); such a fill is now kept.
+- The CSV scanner read one byte past the string literal `"true"` when a 5-byte cell started with `true`
+  followed by a NUL byte (AddressSanitizer: global-buffer-overflow). Found by the CSV fuzzer in CI; the
+  input is now in `fuzz/corpus/csv/` and `tests/test_scanner.cpp`.
 - `eval/paper_numbers.py` read the Kaggle Titanic file and the real monthly batches, and found the
   test programs only in a Visual Studio build, so the paper's numbers could not be regenerated from
   `eval/results/` alone or on Linux and macOS; the input sizes are kept in `results/inputs.json`.
