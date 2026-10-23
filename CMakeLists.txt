@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(PrepLang VERSION 2.0.0 LANGUAGES CXX)
+project(PrepLang VERSION 2.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -51,6 +51,7 @@ add_library(preplang_core
     src/dataset/DatasetLinker.cpp
     src/ir/IRBuilder.cpp
     src/certify/Certifier.cpp
+    src/certify/NumberKinds.cpp
     src/optimizer/PassManager.cpp
     src/optimizer/RedundantOpPass.cpp
     src/optimizer/DeadOpPass.cpp
@@ -102,6 +103,7 @@ endforeach()
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
     add_test(NAME release_facts COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_release_facts.py)
+    add_test(NAME lifter COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_lifter.py)
     # Every example program, compiled end to end (it writes output/ in the build folder).
     add_test(NAME examples COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_examples.py $<TARGET_FILE:preplang>
              WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -63,7 +63,7 @@ enum class Opcode {
 //   DERIVE        dataset, table, column = the new column, columns = the columns it reads,
 //                 text = the value as written, value = its tree
 //   JOIN          dataset, table, column = the key, withDataset, withTable = the lookup table,
-//                 columns = the columns it adds
+//                 columns = the columns it adds, text = MANY (every matching row) or empty (one)
 //   AGGREGATE     dataset, table, columns = the BY columns, aggregates = the new columns
 //   LOAD_IMAGES   dataset, text = folder or file
 //   RESIZE        dataset, numbers = [width, height, keep aspect (0 or 1)]
@@ -75,7 +75,7 @@ enum class Opcode {
 //   SAVE_IMAGES   dataset, text = folder (or file), numbers = [one file (0 or 1)]
 // One new column of AGGREGATE, with the type analysis gave it.
 struct AggregateResult {
-    std::string function;  // COUNT, SUM, MEAN, MIN or MAX
+    std::string function;  // COUNT, SUM, MEAN, MEDIAN, MIN, MAX, STD or COUNT_DISTINCT
     std::string column;    // empty for COUNT
     std::string name;
     std::string type;  // INTEGER or FLOAT

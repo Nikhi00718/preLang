@@ -26,6 +26,19 @@ and, unless derived=False (the version that lifted the corpora of RQ5):
     df["hour"] = df["when"].dt.hour                     DERIVE df.hour = HOUR(when);
     df["temp_c"] = df["temp"] - 273.15                  DERIVE df.temp_c = temp - 273.15;
 
+That version also finds reads that are not written as one literal call:
+
+    path = DATA + "day.csv"; pd.read_csv(path)          a path built from strings (+, f-strings,
+                                                        os.path.join, pathlib's /)
+    pd.read_csv(path, parse_dates=["dteday"])           LOAD, then PARSE_DATE df.dteday;
+                                                        sep=",", header=0, encoding="utf-8",
+                                                        low_memory and engine change nothing
+    pd.read_csv(path, index_col="id")                   LOAD, then DROP df [id] (the index is not a column)
+    def load(p): return pd.read_csv(p)                  a function that only reads a file
+    def load(p): df = pd.read_csv(p); ...; return df    its body, with p bound, as if written here
+    def main(): ...; main()                             the body of a function called once
+    try: / with ...:                                    the statements inside
+
 Statements that only read a DataFrame (print, describe, plots, models) do not
 change it and are skipped. Lifting a DataFrame stops at the first statement that
 changes it in a way PrepLang cannot express (a new column, map, apply, ...): the
@@ -97,11 +110,18 @@ def name_text(column):
     return column if column.isidentifier() else "`" + column + "`"
 
 
+# read_csv options that do not change the table read from a comma-separated UTF-8 file
+NEUTRAL_OPTIONS = {"sep": {","}, "delimiter": {","}, "header": {0, "infer"},
+                   "encoding": {"utf-8", "utf8", "UTF-8", "UTF8"}, "low_memory": None, "engine": None}
+
+
 class Lifter:
     def __init__(self, derived=True):
-        self.derived = derived  # translate PARSE_DATE and DERIVE
+        self.derived = derived  # translate PARSE_DATE and DERIVE, and find more reads (see the module text)
         self.out = Lifted()
         self.texts = {}  # module-level names bound to a string, e.g. path = "data/train.csv"
+        self.functions = {}  # module-level functions, by name
+        self.inlined = set()  # functions whose body was lifted in place of their call
 
     # ---------- recognising DataFrame expressions ----------
 
@@ -135,19 +155,37 @@ class Lifter:
         return self.out
 
     def statement(self, node):
-        if isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.ClassDef)):
+        if isinstance(node, ast.FunctionDef):
+            self.functions[node.name] = node
             return
+        if isinstance(node, (ast.Import, ast.ImportFrom, ast.ClassDef)):
+            return
+        if self.derived and isinstance(node, (ast.Try, ast.With)):
+            for inner in node.body:  # the statements run in order when nothing fails
+                self.statement(inner)
+            return
+        if self.derived and isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and \
+                isinstance(node.value.func, ast.Name) and not node.value.args and not node.value.keywords:
+            function = self.functions.get(node.value.func.id)
+            if function and not function.args.args and function.name not in self.inlined:
+                self.inlined.add(function.name)  # main(): its body, once, as if written here
+                for inner in function.body:
+                    if not isinstance(inner, ast.Return):
+                        self.statement(inner)
+                return
         if isinstance(node, ast.If) and isinstance(node.test, ast.Compare) and \
                 isinstance(node.test.left, ast.Name) and node.test.left.id == "__name__":
             for inner in node.body:
                 self.statement(inner)
             return
-        if self.load(node):
+        if self.load(node) or self.inline_call(node):
             return
         if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
             value = node.value
-            if isinstance(value, ast.Constant) and isinstance(value.value, str):
-                self.texts[node.targets[0].id] = value.value
+            text = self.static_text(value, self.texts) if self.derived else \
+                value.value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
+            if text is not None:
+                self.texts[node.targets[0].id] = text
             else:
                 self.texts.pop(node.targets[0].id, None)
         touched = self.changed_frames(node)
@@ -172,29 +210,153 @@ class Lifter:
         self.out.prep.extend(prep)
         self.out.source_lines.append(ast.unparse(node))
 
+    def static_text(self, node, names):
+        """The string an expression always has, from string constants and `names` (+, f-strings,
+        os.path.join, str(), pathlib's Path and /), or None."""
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value
+        if isinstance(node, ast.Name):
+            return names.get(node.id)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Div)):
+            left, right = self.static_text(node.left, names), self.static_text(node.right, names)
+            if left is None or right is None:
+                return None
+            return left + right if isinstance(node.op, ast.Add) else left.rstrip("/\\") + "/" + right
+        if isinstance(node, ast.JoinedStr):
+            parts = []
+            for value in node.values:
+                if isinstance(value, ast.FormattedValue):
+                    part = self.static_text(value.value, names) \
+                        if value.conversion == -1 and value.format_spec is None else None
+                else:
+                    part = self.static_text(value, names)
+                if part is None:
+                    return None
+                parts.append(part)
+            return "".join(parts)
+        if isinstance(node, ast.Call) and not node.keywords and node.args:
+            name = ast.unparse(node.func)
+            parts = [self.static_text(arg, names) for arg in node.args]
+            if None in parts:
+                return None
+            if name in ("os.path.join", "path.join"):
+                return "/".join(part.rstrip("/\\") for part in parts[:-1]) + ("/" if len(parts) > 1 else "") + parts[-1]
+            if name in ("str", "Path", "pathlib.Path") and len(parts) == 1:
+                return parts[0]
+        return None
+
+    def read_call(self, call, names):
+        """(path, columns to parse as dates, the call as it can be run) for pd.read_csv(...) of a known
+        path with no option that changes the table but parse_dates; None otherwise."""
+        if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr == "read_csv"
+                and len(call.args) == 1):
+            return None
+        argument = call.args[0]
+        if self.derived:
+            path = self.static_text(argument, names)
+        elif isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+            path = argument.value
+        else:
+            path = names.get(argument.id) if isinstance(argument, ast.Name) else None
+        if path is None:
+            return None
+        dates, options, index = [], [], []
+        for keyword in call.keywords:
+            if not self.derived:
+                return None  # read options PrepLang does not have (sep, usecols, ...): not followed
+            if keyword.arg == "parse_dates":
+                try:
+                    dates = strings(keyword.value)
+                except Unsupported:
+                    return None
+            elif keyword.arg == "index_col" and isinstance(keyword.value, ast.Constant) and \
+                    isinstance(keyword.value.value, str):
+                index = [keyword.value.value]
+            elif not (keyword.arg in NEUTRAL_OPTIONS and isinstance(keyword.value, ast.Constant) and
+                      (NEUTRAL_OPTIONS[keyword.arg] is None or keyword.value.value in NEUTRAL_OPTIONS[keyword.arg])):
+                return None
+            options.append(f", {keyword.arg}={ast.unparse(keyword.value)}")
+        if set(index) & set(dates):
+            return None
+        return path, dates, index, f"pd.read_csv({path!r}{''.join(options)})"
+
+    def function_read(self, call):
+        """For df = load("x.csv"), where load only returns pd.read_csv(...): that read."""
+        if not (self.derived and isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+                and call.func.id in self.functions and not call.keywords):
+            return None
+        function = self.functions[call.func.id]
+        if len(function.body) != 1 or not isinstance(function.body[0], ast.Return) or \
+                len(call.args) != len(function.args.args):
+            return None
+        names = dict(self.texts)
+        for parameter, argument in zip(function.args.args, call.args):
+            text = self.static_text(argument, self.texts)
+            if text is None:
+                return None
+            names[parameter.arg] = text
+        return self.read_call(function.body[0].value, names)
+
+    def inline_call(self, node):
+        """x = f(args), where f reads a file, may change the DataFrame, and returns it last: f's body
+        is lifted as if written here, with its parameters bound to the arguments, and x is the
+        DataFrame it returns. Only for module-level functions whose arguments are known strings."""
+        if not (self.derived and isinstance(node, ast.Assign) and len(node.targets) == 1 and
+                isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call) and
+                isinstance(node.value.func, ast.Name) and not node.value.keywords):
+            return False
+        function = self.functions.get(node.value.func.id)
+        if function is None or function.name in self.inlined or len(node.value.args) != len(function.args.args) or \
+                not function.body or not isinstance(function.body[-1], ast.Return) or \
+                not isinstance(function.body[-1].value, ast.Name) or \
+                any(isinstance(n, (ast.Return, ast.Yield, ast.Global, ast.Nonlocal))
+                    for statement in function.body[:-1] for n in ast.walk(statement)):
+            return False
+        bound = {}
+        for parameter, argument in zip(function.args.args, node.value.args):
+            text = self.static_text(argument, self.texts)
+            if text is None:
+                return False
+            bound[parameter.arg] = text
+        reads = [n for statement in function.body for n in ast.walk(statement)
+                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "read_csv"]
+        if len(reads) != 1:
+            return False
+        self.inlined.add(function.name)
+        saved = dict(self.texts)
+        self.texts.update(bound)
+        for parameter, text in bound.items():
+            self.out.source_lines.append(f"{parameter} = {text!r}")
+        for inner in function.body[:-1]:
+            self.statement(inner)
+        self.texts = saved
+        returned = function.body[-1].value.id
+        target = node.targets[0].id
+        if returned not in self.out.frames or target in self.out.frames:
+            return returned in self.out.frames
+        self.out.frames[target] = self.out.frames.pop(returned)
+        self.out.source_lines.append(f"{target} = {returned}")
+        return True
+
     def load(self, node):
         """df = pd.read_csv("file.csv") starts following df."""
         if not (isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)):
             return False
-        call = node.value
-        if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr == "read_csv"
-                and call.args):
+        read = self.read_call(node.value, self.texts) or self.function_read(node.value)
+        if read is None:
             return False
-        path = call.args[0]
-        if isinstance(path, ast.Name) and path.id in self.texts:
-            path = ast.Constant(self.texts[path.id])  # the path was given to a variable first
-        if not (isinstance(path, ast.Constant) and isinstance(path.value, str)):
-            return False
+        path, dates, index, call = read
         variable = node.targets[0].id
-        if call.keywords or len(call.args) > 1:
-            return False  # read options PrepLang does not have (sep, usecols, ...): not followed
         if variable in self.out.frames:
             return False
-        frame = Frame(name=variable if variable.isidentifier() else "data", path=path.value)
+        frame = Frame(name=variable if variable.isidentifier() else "data", path=path)
         self.out.frames[variable] = frame
         self.out.prep.append(f'LOAD "{frame.path}" AS {frame.name};')
+        self.out.prep.extend(f"PARSE_DATE {frame.name}.{name_text(column)};" for column in dates)
+        if index:
+            self.out.prep.append(f"DROP {frame.name} [{name_text(index[0])}];")
         # recorded with the path itself, so the lifted statements run on their own
-        self.out.source_lines.append(f"{variable} = pd.read_csv({frame.path!r})")
+        self.out.source_lines.append(f"{variable} = {call}")
         return True
 
     def changed_frames(self, node):

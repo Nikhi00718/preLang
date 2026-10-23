@@ -910,9 +910,9 @@ std::vector<std::string> admissionProblems(const TableCertificate& certificate, 
         // of whole numbers is INTEGER, and one without any value is STRING. (Letting
         // INTEGER data into a FLOAT column, or an empty column into any type, can
         // change what the analysis of that file decides.)
-        if (column.typeFixed && info.type != column.type) {
-            problems.push_back(column.name + " is " + columnTypeName(info.type) + ", not " +
-                               columnTypeName(column.type));
+        const bool kindChanged = column.numberKind && isNumeric(info.type) && isNumeric(column.type);
+        if (column.typeFixed && info.type != column.type && !kindChanged) {
+            problems.push_back(column.name + " is " + columnTypeName(info.type) + ", not " + requiredTypeName(column));
             continue;
         }
         if (column.notNull && (info.missingCount > 0 || !info.missingKnown)) {
@@ -1029,7 +1029,7 @@ void printTables(std::ostream& out, const std::vector<TableCertificate>& tables,
             }
             out << pad << std::left << std::setw(static_cast<int>(width)) << column.name;
             if (!items) {
-                out << std::setw(9) << (column.typeFixed ? columnTypeName(column.type) : "any type");
+                out << std::setw(9) << (column.typeFixed ? requiredTypeName(column) : std::string("any type"));
             }
             if (!items && !column.read) {
                 facts.insert(facts.begin(), {"(not read)", "loaded only to check the facts below"});
@@ -1091,6 +1091,20 @@ void printImages(std::ostream& out, const std::vector<ImageCertificate>& images,
 
 }  // namespace
 
+std::string requiredTypeName(const ColumnFacts& column) {
+    return column.numberKind ? "NUMBER" : columnTypeName(column.type);
+}
+
+void markNumberKinds(Certificate& certificate, const std::set<std::pair<std::string, std::string>>& columns) {
+    for (std::vector<TableCertificate>* tables : {&certificate.tables, &certificate.fullTables}) {
+        for (TableCertificate& table : *tables) {
+            for (ColumnFacts& column : table.columns) {
+                column.numberKind = columns.count({table.key, column.name}) != 0;
+            }
+        }
+    }
+}
+
 void printCertificate(std::ostream& out, const Certificate& certificate) {
     if (certificate.exactOnly) {
         out << "The proofs depend on the exact values of the input files, so the generated program\n"
@@ -1145,7 +1159,7 @@ std::string columnsJson(const TableCertificate& table, const std::string& indent
     for (size_t i = 0; i < table.columns.size(); ++i) {
         const ColumnFacts& c = table.columns[i];
         text += (i > 0 ? ",\n" + indent : "") + jsonString(c.name) +
-                ": {\"type\": " + (c.typeFixed ? jsonString(columnTypeName(c.type)) : "null") +
+                ": {\"type\": " + (c.typeFixed ? jsonString(requiredTypeName(c)) : "null") +
                 ", \"required\": " + (c.required ? "true" : "false");
         if (c.notNull) {
             text += ", \"not_null\": true, \"not_null_for\": " + jsonList(c.notNullFor);

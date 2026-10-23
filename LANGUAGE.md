@@ -149,7 +149,8 @@ with the statement that caused it and a hint (`CONVERT ... TO NPY` or `TO PNG`).
 | `PARSE_DATE t.col;` | a STRING column of ISO dates (`YYYY-MM-DD`, optionally ` HH:MM` or ` HH:MM:SS`, one layout per column) becomes DATETIME | the first value that is not a date is named; the column must be as the file has it (not changed after `LOAD`); not on Parquet columns (only the footer is read) or in a private compilation |
 | `DERIVE t.col = value;` | adds or replaces a column computed row by row (section 7) | numeric columns only (and DATETIME inside a date part); a division by a value that can be 0 is an error; the new column's interval is computed |
 | `JOIN t WITH u ON key;` | left lookup join: every row of `t` gets the columns of the one row of `u` with the same key, or missing values | the key must exist in both and have the same kind; a column (other than the key) in both tables is an error; a key repeated in `u` is an error naming its rows, and is checked again on new batches |
-| `AGGREGATE t BY [a, b] item, ...;` | one row per group; items are `COUNT AS n` and `SUM \| MEAN \| MIN \| MAX col AS name`; rows with a missing `BY` value belong to no group | `SUM`/`MEAN`/`MIN`/`MAX` need numeric columns; names must be distinct; `COUNT` is at least 1, `SUM` at least 0 when every value is, `MEAN`/`MIN`/`MAX` stay in the column's interval |
+| `JOIN t WITH u ON key MANY;` | left join with every row of `u` that has the key: a row of `t` is repeated once per match, in `u`'s order; a row without a match stays, with missing values | as above, but keys may repeat; the values of `t` are no longer the file's rows, so `UNIQUE` and `REFERENCES` on them are checked when the program runs |
+| `AGGREGATE t BY [a, b] item, ...;` | one row per group; items are `COUNT AS n`, `SUM \| MEAN \| MEDIAN \| MIN \| MAX \| STD col AS name` and `COUNT_DISTINCT col AS name`; rows with a missing `BY` value belong to no group | `SUM`/`MEAN`/`MEDIAN`/`MIN`/`MAX`/`STD` need numeric columns; names must be distinct; `COUNT` is at least 1, `SUM` at least 0 when every value is, `MEAN`/`MEDIAN`/`MIN`/`MAX` stay in the column's interval; `STD` (the sample standard deviation, FLOAT) is between 0 and (max - min)/sqrt(2) and missing for a group with one value; `COUNT_DISTINCT` (INTEGER, any column type) is at least 0 and counts no missing value |
 
 ### Image operations
 
@@ -234,9 +235,10 @@ select         = "SELECT" table_ref column_list ";" ;
 drop           = "DROP" table_selector column_list [ "IF_EXISTS" ] ";" ;
 parse_date     = "PARSE_DATE" column_selector ";" ;
 derive         = "DERIVE" path "=" sum ";" ;
-join           = "JOIN" table_ref "WITH" table_ref "ON" IDENT ";" ;
+join           = "JOIN" table_ref "WITH" table_ref "ON" IDENT [ "MANY" ] ";" ;
 aggregate      = "AGGREGATE" table_ref "BY" column_list aggregate_item { "," aggregate_item } ";" ;
-aggregate_item = ( "COUNT" | ( "SUM" | "MEAN" | "MIN" | "MAX" ) IDENT ) "AS" IDENT ;
+aggregate_item = ( "COUNT" | ( "SUM" | "MEAN" | "MEDIAN" | "MIN" | "MAX" | "STD" | "COUNT_DISTINCT" ) IDENT )
+                 "AS" IDENT ;
 expect         = "EXPECT" column_selector constraint [ "IF_EXISTS" ] ";" ;
 constraint     = "NUMBER" | "STRING" | "BOOLEAN" | "NOT_NULL" | "BETWEEN" number "AND" number | "UNIQUE"
                | "REFERENCES" path | "SCHEMA_SAME_AS" table_ref [ "EXCEPT" column_list ]

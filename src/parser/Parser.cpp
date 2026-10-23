@@ -207,7 +207,8 @@ std::unique_ptr<Stmt> Parser::deriveStatement() {
     return node;
 }
 
-// join -> JOIN table_ref WITH table_ref ON IDENTIFIER ;
+// join -> JOIN table_ref WITH table_ref ON IDENTIFIER [ MANY ] ;
+// MANY is matched as a word, not reserved.
 std::unique_ptr<Stmt> Parser::joinStatement() {
     auto node = std::make_unique<JoinStmt>();
     node->location = advance().location;
@@ -216,13 +217,16 @@ std::unique_ptr<Stmt> Parser::joinStatement() {
     node->other = tableRef();
     consume(TokenType::ON, "'ON' and the key column");
     node->key = identifier("the key column both tables have");
+    node->many = matchWord("MANY");
     endStatement();
     return node;
 }
 
 // aggregate      -> AGGREGATE table_ref BY column_list aggregate_item { , aggregate_item } ;
-// aggregate_item -> ( COUNT | ( SUM | MEAN | MIN | MAX ) IDENTIFIER ) AS IDENTIFIER
-// BY, COUNT, SUM, MIN and MAX are matched as words, not reserved: columns keep these names.
+// aggregate_item -> ( COUNT | ( SUM | MEAN | MEDIAN | MIN | MAX | STD | COUNT_DISTINCT ) IDENTIFIER )
+//                   AS IDENTIFIER
+// BY, COUNT, SUM, MIN, MAX, STD and COUNT_DISTINCT are matched as words, not reserved: columns keep
+// these names.
 std::unique_ptr<Stmt> Parser::aggregateStatement() {
     auto node = std::make_unique<AggregateStmt>();
     node->location = advance().location;
@@ -236,15 +240,17 @@ std::unique_ptr<Stmt> Parser::aggregateStatement() {
         item.location = peek().location;
         if (match(TokenType::MEAN)) {
             item.function = "MEAN";
+        } else if (match(TokenType::MEDIAN)) {
+            item.function = "MEDIAN";
         } else {
-            for (const char* function : {"COUNT", "SUM", "MIN", "MAX"}) {
+            for (const char* function : {"COUNT_DISTINCT", "COUNT", "SUM", "MIN", "MAX", "STD"}) {
                 if (item.function.empty() && matchWord(function)) {
                     item.function = function;
                 }
             }
         }
         if (item.function.empty()) {
-            errorExpected("COUNT, SUM, MEAN, MIN or MAX");
+            errorExpected("COUNT, SUM, MEAN, MEDIAN, MIN, MAX, STD or COUNT_DISTINCT");
         }
         if (item.function != "COUNT") {
             item.column = identifier("the column " + item.function + " reads");

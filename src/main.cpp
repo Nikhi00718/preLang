@@ -25,6 +25,7 @@
 #include "ast/ASTPrinter.h"
 #include "backend/ExecutionPlanner.h"
 #include "certify/Certifier.h"
+#include "certify/NumberKinds.h"
 #include "common/Diagnostics.h"
 #include "common/SourceManager.h"
 #include "explain/ExplainPlan.h"
@@ -327,7 +328,9 @@ int main(int argc, char* argv[]) {
 
     // Phase 5: optimization
     const std::vector<double> constants = programConstants(ir);  // before the optimizer removes instructions
-    const OptimizationReport report = PassManager({!options.noOptimize, options.approximate, !options.noDeopt}).run(ir);
+    const IRProgram unoptimized = ir;
+    const OptimizerOptions passes{!options.noOptimize, options.approximate, !options.noDeopt};
+    const OptimizationReport report = PassManager(passes).run(ir);
     if (options.ir) {
         printHeader("OPTIMIZATION REPORT (PassManager)");
         printReport(std::cout, report);
@@ -338,7 +341,13 @@ int main(int argc, char* argv[]) {
     // Phase 6: data certificate. The program is analysed again with weaker facts
     // to find the facts its proofs really need; another input with those facts
     // can then be given to the generated program without compiling again.
-    const Certificate certificate = Certifier(program, schemas, programFolder).certify(ir, analysis, constants);
+    Certificate certificate = Certifier(program, schemas, programFolder).certify(ir, analysis, constants);
+    // Columns that may be INTEGER in one input and FLOAT in another (not for a private
+    // compilation, whose facts are the data owner's released answers).
+    if (options.facts.empty()) {
+        markNumberKinds(certificate, numberKindColumns(program, schemas, programFolder, outputFolder, source.path(),
+                                                       unoptimized, ir, certificate, passes));
+    }
     if (options.certificate) {
         printHeader("DATA CERTIFICATE (Certifier)");
         printCertificate(std::cout, certificate);

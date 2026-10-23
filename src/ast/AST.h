@@ -249,16 +249,17 @@ struct DeriveStmt : Stmt {
 // JOIN trips WITH zones ON zone_id;   (a lookup: each row of trips gets the columns of the
 // one row of zones with its zone_id, or missing values if there is none)
 struct JoinStmt : Stmt {
-    Selector target;  // the table that gets the columns
-    Selector other;   // the lookup table
-    std::string key;  // the column both tables have
+    Selector target;    // the table that gets the columns
+    Selector other;     // the lookup table
+    std::string key;    // the column both tables have
+    bool many = false;  // MANY: a row gets every row of the other table with its key, not just one
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
 
 // One result column of AGGREGATE: COUNT AS trips, SUM fare AS total, MEAN fare AS average.
 struct AggregateItem {
     SourceLocation location;
-    std::string function;  // COUNT, SUM, MEAN, MIN or MAX
+    std::string function;  // COUNT, SUM, MEAN, MEDIAN, MIN, MAX, STD or COUNT_DISTINCT
     std::string column;    // the column it reads; empty for COUNT (the rows of the group)
     std::string name;      // the new column
 };

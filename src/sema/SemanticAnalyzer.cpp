@@ -899,7 +899,7 @@ void SemanticAnalyzer::visit(const JoinStmt& node) {
     }
     const bool valuesKnown = !other.schema.released && other.schema.format == TableFormat::Csv &&
                              other.schema.valuesKnown && otherKey->exact && !otherKey->valuesChanged;
-    if (valuesKnown) {
+    if (valuesKnown && !node.many) {
         std::map<std::string, std::vector<size_t>> rows;
         const std::vector<std::string> values = readColumnValues(other.schema, node.key);
         for (size_t i = 0; i < values.size(); ++i) {
@@ -923,6 +923,15 @@ void SemanticAnalyzer::visit(const JoinStmt& node) {
     if (diagnostics_.errorCount() > errorsBefore) {
         return;
     }
+    if (node.many) {
+        // A row is repeated once per matching row of the other table: every value it had is
+        // still there and no new one appears (ranges and missing values hold), but the rows
+        // are no longer the rows of the file, so their values cannot be read from it.
+        for (ColumnState& column : table.columns) {
+            column.exact = false;
+            column.rowsRemoved = true;
+        }
+    }
     for (const ColumnState& column : added) {
         table.columns.push_back(column);
         table.removedAt.erase(column.name);
@@ -933,8 +942,11 @@ void SemanticAnalyzer::visit(const JoinStmt& node) {
     target.args.insert(target.args.end(), addedNames.begin(), addedNames.end());
     addTarget(node, target);
     log(node, "JOIN " + columnDisplayName(dataset, table, "") + " WITH " + columnDisplayName(otherDataset, other, "") +
-                  " ON " + node.key + ": adds " + (addedNames.empty() ? "no column" : join(addedNames)) +
-                  (valuesKnown ? " (every key of the lookup table is different)" : " (keys checked when it runs)"));
+                  " ON " + node.key + (node.many ? " MANY" : "") + ": adds " +
+                  (addedNames.empty() ? "no column" : join(addedNames)) +
+                  (node.many     ? " (a row is repeated for each matching row)"
+                   : valuesKnown ? " (every key of the lookup table is different)"
+                                 : " (keys checked when it runs)"));
 }
 
 // AGGREGATE makes one row per group of BY values; rows with a missing BY value belong to
@@ -942,8 +954,11 @@ void SemanticAnalyzer::visit(const JoinStmt& node) {
 //   COUNT  INTEGER, at least 1, never missing
 //   SUM    the column's type, never missing (a group without values sums to 0); at least 0
 //          if every value is, at most 0 if every value is
-//   MEAN   FLOAT; MIN and MAX the column's type: within the column's range, missing if a
+//   MEAN, MEDIAN  FLOAT; MIN and MAX the column's type: within the column's range, missing if a
 //          group has no value of the column
+//   STD    FLOAT, the sample standard deviation: at least 0, at most (max - min) / sqrt(2), and
+//          missing for a group with fewer than two values
+//   COUNT_DISTINCT  INTEGER, the number of different values: at least 0, never missing
 void SemanticAnalyzer::visit(const AggregateStmt& node) {
     std::optional<TableResolution> resolution = resolver_.singleTable(node.target, "AGGREGATE");
     if (!resolution) {
@@ -983,6 +998,14 @@ void SemanticAnalyzer::visit(const AggregateStmt& node) {
             if (!column) {
                 continue;
             }
+            if (item.function == "COUNT_DISTINCT") {  // any type: missing values are not counted
+                result.range = {0, infinity};
+                if (addName(item.name, item.location)) {
+                    columns.push_back(result);
+                    types.push_back(columnTypeName(result.type));
+                }
+                continue;
+            }
             if (!isNumeric(column->type)) {
                 diagnostics_.error(Phase::Type, item.location,
                                    item.function + " needs a numeric column, but '" + item.column + "' is " +
@@ -991,9 +1014,15 @@ void SemanticAnalyzer::visit(const AggregateStmt& node) {
                 continue;
             }
             const Range& range = column->range;
-            result.type = item.function == "MEAN" ? ColumnType::Float : column->type;
+            const bool average = item.function == "MEAN" || item.function == "MEDIAN" || item.function == "STD";
+            result.type = average ? ColumnType::Float : column->type;
             if (item.function == "SUM") {
                 result.range = {range.min >= 0 ? 0 : -infinity, range.max <= 0 ? 0 : infinity};
+            } else if (item.function == "STD") {
+                // Over n >= 2 values in [min, max] the sample deviation is at most
+                // (max - min) * sqrt(n / (4 (n - 1))), largest for n = 2.
+                result.nullable = true;
+                result.range = {0, (range.max - range.min) / std::sqrt(2.0)};
             } else {
                 result.nullable = column->nullable;
                 result.range = range;

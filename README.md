@@ -258,9 +258,10 @@ select         = "SELECT" table_ref column_list ";" ;
 drop           = "DROP" table_selector column_list [ "IF_EXISTS" ] ";" ;
 parse_date     = "PARSE_DATE" column_selector ";" ;
 derive         = "DERIVE" path "=" sum ";" ;          (* path: table.column or tableset.table.column *)
-join           = "JOIN" table_ref "WITH" table_ref "ON" IDENT ";" ;
+join           = "JOIN" table_ref "WITH" table_ref "ON" IDENT [ "MANY" ] ";" ;
 aggregate      = "AGGREGATE" table_ref "BY" column_list aggregate_item { "," aggregate_item } ";" ;
-aggregate_item = ( "COUNT" | ( "SUM" | "MEAN" | "MIN" | "MAX" ) IDENT ) "AS" IDENT ;
+aggregate_item = ( "COUNT" | ( "SUM" | "MEAN" | "MEDIAN" | "MIN" | "MAX" | "STD" | "COUNT_DISTINCT" ) IDENT )
+                 "AS" IDENT ;
 expect         = "EXPECT" column_selector constraint [ "IF_EXISTS" ] ";" ;
 constraint     = "NUMBER" | "STRING" | "BOOLEAN" | "NOT_NULL" | "BETWEEN" number "AND" number | "UNIQUE"
                | "REFERENCES" path | "SCHEMA_SAME_AS" table_ref [ "EXCEPT" column_list ]

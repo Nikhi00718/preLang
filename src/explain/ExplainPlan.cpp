@@ -158,7 +158,8 @@ void printDryRun(std::ostream& out, const IRProgram& program, const std::string&
             case Opcode::Select:
             case Opcode::Drop:     changes.push_back(table + ": columns removed" + line); break;
             case Opcode::Join:
-                changes.push_back(table + ": columns added from " + tableKey(in.withDataset, in.withTable) + line);
+                changes.push_back(table + ": columns added from " + tableKey(in.withDataset, in.withTable) +
+                                  (in.text == "MANY" ? ", rows repeated for each match" : "") + line);
                 break;
             case Opcode::Aggregate: changes.push_back(table + ": one row per group" + line); break;
             case Opcode::Save:      writes.push_back(outputFolder + "/" + in.text); break;

@@ -8,6 +8,7 @@
 // Run: build/Debug/test_certificate.exe  (it writes small CSV files in the current folder)
 
 #include "certify/Certifier.h"
+#include "certify/NumberKinds.h"
 #include "common/Diagnostics.h"
 #include "ir/IRBuilder.h"
 #include "lexer/Lexer.h"
@@ -707,6 +708,61 @@ void testImageSoundness() {
     }
 }
 
+// Which numeric columns may change between INTEGER and FLOAT (certify/NumberKinds.h).
+std::set<TableColumn> numberKinds(const std::string& source) {
+    Diagnostics diagnostics;
+    SymbolTable symbols;
+    const Program parsed = Parser(Lexer(source, diagnostics).tokenize(), diagnostics).parse();
+    SchemaProvider schemas(diagnostics);
+    const AnalysisResult analysis = SemanticAnalyzer(symbols, schemas, ".", diagnostics).analyze(parsed);
+    if (diagnostics.hasErrors()) {
+        return {{"error", "error"}};
+    }
+    IRProgram ir = IRBuilder(symbols, analysis).build(parsed);
+    const IRProgram unoptimized = ir;
+    const std::vector<double> constants = programConstants(ir);
+    const OptimizerOptions passes{true, false, true};
+    PassManager(passes).run(ir);
+    const Certificate certificate = Certifier(parsed, schemas, ".").certify(ir, analysis, constants);
+    return numberKindColumns(parsed, schemas, ".", "output", "test.prep", unoptimized, ir, certificate, passes);
+}
+
+void testNumberKinds() {
+    std::cout << "Numeric columns that may change between INTEGER and FLOAT\n";
+    writeFile("test_certificate_kinds.csv", "n,x,label\n1,0.5,a\n7,2.25,b\n3,,c\n");
+    const std::set<TableColumn> plain = numberKinds(
+        "LOAD \"test_certificate_kinds.csv\" AS t;\nEXPECT t.n BETWEEN 0 AND 100;\nFILTER t WHERE x > 0;\n"
+        "FILL_NULL t.x WITH 0;\nSAVE t AS \"out.csv\";\n");
+    check(plain.count({"t", "n"}) && plain.count({"t", "x"}),
+          "columns that only meet constants may have either numeric type");
+    // A decimal fill value is an error for an INTEGER column: x must stay FLOAT.
+    const std::set<TableColumn> decimal =
+        numberKinds("LOAD \"test_certificate_kinds.csv\" AS t;\nFILL_NULL t.x WITH 0.5;\nSAVE t AS \"out.csv\";\n");
+    check(decimal.count({"t", "x"}) == 0, "a column filled with a decimal keeps its type");
+    // A DERIVE combines n with a constant into a new column: n is not tried.
+    const std::set<TableColumn> derived =
+        numberKinds("LOAD \"test_certificate_kinds.csv\" AS t;\nDERIVE t.m = n * 2;\nSAVE t AS \"out.csv\";\n");
+    check(derived.count({"t", "n"}) == 0, "a column a DERIVE reads keeps its type");
+
+    // Admission: the other numeric type is accepted only for a numberKind column.
+    ColumnFacts column;
+    column.name = "n";
+    column.type = ColumnType::Integer;
+    TableCertificate table;
+    table.key = "t";
+    table.columns = {column};
+    TableSchema input;
+    ColumnInfo info;
+    info.name = "n";
+    info.type = ColumnType::Float;
+    input.columns = {info};
+    check(!admissionProblems(table, input).empty(), "a FLOAT input is refused for an INTEGER column");
+    table.columns[0].numberKind = true;
+    check(admissionProblems(table, input).empty(), "a FLOAT input is admitted for a NUMBER column");
+    input.columns[0].type = ColumnType::String;
+    check(!admissionProblems(table, input).empty(), "a STRING input is refused for a NUMBER column");
+}
+
 }  // namespace
 
 int main() {
@@ -731,6 +787,7 @@ int main() {
     testDateSoundness();
     testImageFacts();
     testImageSoundness();
+    testNumberKinds();
     std::cout << (failures == 0 ? "All certificate tests passed\n"
                                 : std::to_string(failures) + " certificate test(s) FAILED\n");
     return failures == 0 ? 0 : 1;

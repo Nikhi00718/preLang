@@ -190,9 +190,10 @@ void IRBuilder::visit(const DeriveStmt& node) {
     }
 }
 
-void IRBuilder::visit(const JoinStmt&) {
+void IRBuilder::visit(const JoinStmt& node) {
     for (const Target& target : targets()) {
         Instruction instruction = make(Opcode::Join, target);
+        instruction.text = node.many ? "MANY" : "";
         instruction.withDataset = target.args[0];
         instruction.withTable = target.args[1];
         instruction.columns.assign(target.args.begin() + 2, target.args.end());
@@ -351,8 +352,8 @@ std::string instructionText(const Instruction& in) {
         case Opcode::ParseDate: return "PARSE_DATE " + target;
         case Opcode::Derive:    return "DERIVE " + target + " = " + in.text;
         case Opcode::Join:
-            return "JOIN " + table + " WITH " + tableKey(in.withDataset, in.withTable) + " ON " + in.column + " ADD " +
-                   listText(in.columns);
+            return "JOIN " + table + " WITH " + tableKey(in.withDataset, in.withTable) + " ON " + in.column +
+                   (in.text == "MANY" ? " MANY" : "") + " ADD " + listText(in.columns);
         case Opcode::Aggregate: {
             std::string text = "AGGREGATE " + table + " BY " + listText(in.columns);
             for (size_t i = 0; i < in.aggregates.size(); ++i) {

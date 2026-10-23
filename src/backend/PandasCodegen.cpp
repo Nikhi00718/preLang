@@ -129,8 +129,8 @@ std::string PandasCodegen::columnsDict(const TableCertificate& certificate) {
     };
     std::string code = "{";
     for (const ColumnFacts& column : table->columns) {
-        code += std::string(code.size() > 1 ? ",\n     " : "") + pythonString(column.name) + ": {\"type\": " +
-                (column.typeFixed ? "\"" + std::string(columnTypeName(column.type)) + "\"" : std::string("None")) +
+        code += std::string(code.size() > 1 ? ",\n     " : "") + pythonString(column.name) +
+                ": {\"type\": " + (column.typeFixed ? "\"" + requiredTypeName(column) + "\"" : std::string("None")) +
                 (column.required ? "" : ", \"optional\": True");
         if (column.notNull) {
             code += ", \"not_null\": " + join(column.notNullFor);
@@ -179,7 +179,15 @@ std::string PandasCodegen::helpers(bool csv, bool parquet) {
     "BOOLEAN": pd.api.types.is_bool_dtype,
     "STRING": lambda dtype: True,
     "DATETIME": pd.api.types.is_datetime64_any_dtype,
+    "NUMBER": lambda dtype: pd.api.types.is_numeric_dtype(dtype) and not pd.api.types.is_bool_dtype(dtype),
 }
+
+
+def resolved(frame, dtypes):
+    """The dtypes to apply: a "number" column (INTEGER or FLOAT in the certificate) keeps
+    the kind the input has, as a compilation of that input would read it."""
+    return {column: ("Int64" if pd.api.types.is_integer_dtype(frame[column].dtype) else "Float64")
+            if kind == "number" else kind for column, kind in dtypes.items() if column in frame.columns}
 
 
 def first_row(mask):
@@ -302,7 +310,7 @@ def table_problem(facts, certificate):
     if same_input[table]:
         frame = pd.read_csv(io.BytesIO(data), usecols=columns, keep_default_na=False, na_values=[""],
                             dtype_backend="numpy_nullable")
-        return frame.astype(dtypes)
+        return frame.astype(resolved(frame, dtypes))
     # Also the columns the program does not use but its proofs depend on.
     text = {column: "string" for column, kind in dtypes.items() if kind == "string"}
     frame = pd.read_csv(io.BytesIO(data), usecols=lambda column: column in columns or column in (certificate or {}),
@@ -310,7 +318,7 @@ def table_problem(facts, certificate):
     admit(table, path, frame, certificate, True)
     input_facts[table] = column_facts(frame, ITEM_COLUMNS.get(table, ()))
     present = [column for column in columns if column in frame.columns]
-    return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
+    return frame[present].astype(resolved(frame[present], dtypes))
 
 
 )";
@@ -328,7 +336,8 @@ def table_problem(facts, certificate):
         footer = file.read()
     same_input[table] = fingerprint is not None and (zlib.crc32(footer) == fingerprint or TRUST_INPUTS)
     if same_input[table]:
-        return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable").astype(dtypes)
+        frame = pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable")
+        return frame.astype(resolved(frame, dtypes))
     import pyarrow.parquet
     wanted = columns + [column for column in certificate or {} if column not in columns]
     present = [column for column in wanted if column in pyarrow.parquet.read_schema(path).names]
@@ -336,7 +345,7 @@ def table_problem(facts, certificate):
     admit(table, path, frame, certificate, False)
     input_facts[table] = column_facts(frame, ITEM_COLUMNS.get(table, ()))
     present = [column for column in columns if column in frame.columns]
-    return frame[present].astype({column: kind for column, kind in dtypes.items() if column in present})
+    return frame[present].astype(resolved(frame[present], dtypes))
 
 
 )";
@@ -361,12 +370,19 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
                 code = "tables_" + identifierPart(in.dataset) + " = {}\n";
             }
             const TableSchema& schema = program.tables.at(tableKey(in.dataset, in.table));
+            const TableCertificate* certified =
+                certificate_.exactOnly ? nullptr : certificate_.table(tableKey(in.dataset, in.table));
+            // A numberKind column is read as INTEGER or FLOAT, whichever the input has ("number").
+            const auto numberKind = [&](const std::string& name) {
+                return certified && std::any_of(certified->columns.begin(), certified->columns.end(),
+                                                [&](const ColumnFacts& c) { return c.name == name && c.numberKind; });
+            };
             std::string dtypes = "{";
             for (const ColumnInfo& info : schema.columns) {
                 for (const std::string& name : in.columns) {
                     if (name == info.name && info.type != ColumnType::DateTime) {
                         dtypes += (dtypes.size() > 1 ? ", " : "") + pythonString(name) + ": " +
-                                  pythonString(pandasDtype(info.type));
+                                  pythonString(numberKind(name) ? "number" : pandasDtype(info.type));
                     }
                 }
             }
@@ -443,6 +459,11 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             std::vector<std::string> read = {in.column};
             read.insert(read.end(), in.columns.begin(), in.columns.end());
             const std::string key = pythonString(in.column);
+            if (in.text == "MANY") {  // every matching row, in the order of the other table
+                return "right = " + tableVariable(in.withDataset, in.withTable) + "[" + pythonList(read) +
+                       "].dropna(subset=[" + key + "])\n" + table + " = " + table + ".merge(right, on=" + key +
+                       ", how=\"left\")\n";
+            }
             const std::string lookup = tableKey(in.withDataset, in.withTable) + "." + in.column;
             return "right = " + tableVariable(in.withDataset, in.withTable) + "[" + pythonList(read) +
                    "].dropna(subset=[" + key + "])\nif right[" + key + "].duplicated().any():\n" +
@@ -458,12 +479,16 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             std::string types;
             for (size_t i = 0; i < in.aggregates.size(); ++i) {
                 const AggregateResult& item = in.aggregates[i];
-                const std::string statistic = item.function == "COUNT" ? "grouped.size()"
-                                                                       : "grouped[" + pythonString(item.column) + "]." +
-                                                                             (item.function == "SUM"    ? "sum()"
-                                                                              : item.function == "MEAN" ? "mean()"
-                                                                              : item.function == "MIN"  ? "min()"
-                                                                                                        : "max()");
+                const std::string statistic = item.function == "COUNT"
+                                                  ? "grouped.size()"
+                                                  : "grouped[" + pythonString(item.column) + "]." +
+                                                        (item.function == "SUM"              ? "sum()"
+                                                         : item.function == "MEAN"           ? "mean()"
+                                                         : item.function == "MEDIAN"         ? "median()"
+                                                         : item.function == "STD"            ? "std()"
+                                                         : item.function == "COUNT_DISTINCT" ? "nunique()"
+                                                         : item.function == "MIN"            ? "min()"
+                                                                                             : "max()");
                 code += (i > 0 ? ", " : "") + pythonString(item.name) + ": " + statistic;
                 types += (i > 0 ? ", " : "") + pythonString(item.name) + ": " +
                          pythonString(item.type == "FLOAT" ? "Float64" : "Int64");

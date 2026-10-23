@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.1.0 (2026-10-24)
+
+### Added
+- A numeric column may change between INTEGER and FLOAT from one batch to the next. The certificate
+  marks a column `NUMBER` when compiling the program with the column's other numeric type gives the
+  same generated program, certificates included (`certify/NumberKinds.h`); the program then reads
+  the column with the type the batch has, as a fresh compilation of that batch would. Only columns
+  that no instruction combines with another column (DERIVE, JOIN, AGGREGATE, REFERENCES) are tried.
+  On the real monthly data this removes the refusals of months whose pressure or temperature
+  column switched between whole and decimal numbers.
+- `JOIN t WITH u ON key MANY;`: a left join with every matching row of `u`; rows of `t` repeat once
+  per match. Ranges and missing values of `t` still hold; `UNIQUE` and `REFERENCES` on `t` are
+  then checked when the program runs.
+- `AGGREGATE` items `MEDIAN`, `STD` (sample standard deviation, bounded by (max - min)/sqrt(2)) and
+  `COUNT_DISTINCT`.
+- The lifter (`frontend/pandas2prep.py`) follows reads with a path built from strings (`+`,
+  f-strings, `os.path.join`, pathlib's `/`), the options `sep=","`, `header=0`, `encoding="utf-8"`,
+  `low_memory` and `engine`, `parse_dates` (as `PARSE_DATE`) and `index_col="name"` (as `DROP`),
+  reads in a function that returns the file or the cleaned DataFrame, `main()`, `try` and `with`.
+  Tested in `tests/test_lifter.py`.
+- The differential test generates `MANY` joins and the new aggregates, and gives one numeric
+  column of the second batch the other numeric type in 3 of 10 programs.
+
 ## 2.0.0 (2026-10-23)
 
 ### Added

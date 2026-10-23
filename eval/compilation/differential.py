@@ -73,6 +73,20 @@ def random_table(rng):
     return columns
 
 
+def flip_kind(rng, table):
+    """Now and then (3 in 10) one numeric column of a second batch has the other numeric type:
+    whole numbers become x.5, decimals are rounded. Returns its name, or None."""
+    if rng.random() >= 0.3:
+        return None
+    name = rng.choice(["a", "b", "x", "y"])
+    kind, values = table[name]
+    if kind == "INTEGER":
+        table[name] = ("FLOAT", [None if v is None else v + 0.5 for v in values])
+    else:
+        table[name] = ("INTEGER", [None if v is None else int(round(v)) for v in values])
+    return name
+
+
 def random_lookup(rng):
     """The lookup table u: key k (some of 1..6, now and then one repeated), w (INTEGER) and
     label (STRING), with missing values in some tables."""
@@ -121,7 +135,7 @@ def random_program(rng, table):
     names = iter(f"d{i}" for i in range(1, 100))
     for step in range(count):
         if step == join_at and types.get("k") == "INTEGER" and "w" not in types and "label" not in types:
-            lines.append("JOIN t WITH u ON k;")
+            lines.append("JOIN t WITH u ON k MANY;" if rng.random() < 0.4 else "JOIN t WITH u ON k;")
             types.update(w="INTEGER", label="STRING")
         line = statement(rng, types, names)
         if line:
@@ -130,17 +144,23 @@ def random_program(rng, table):
         groups = [c for c, k in types.items() if k != "FLOAT"]
         by = rng.sample(groups, min(len(groups), rng.randint(1, 2)))
         numeric = [c for c, k in types.items() if k in ("INTEGER", "FLOAT") and c not in by]
+        others = [c for c in types if c not in by]
         items, new = [], {c: types[c] for c in by}
         for _ in range(rng.randint(1, 3)):
-            function = rng.choice(["COUNT", "SUM", "MEAN", "MIN", "MAX"]) if numeric else "COUNT"
+            function = rng.choice(["COUNT", "SUM", "MEAN", "MEDIAN", "MIN", "MAX", "STD"]) if numeric else "COUNT"
+            if others and rng.random() < 0.15:
+                function = "COUNT_DISTINCT"
             name = next(names)
             if function == "COUNT":
                 items.append(f"COUNT AS {name}")
                 new[name] = "INTEGER"
+            elif function == "COUNT_DISTINCT":
+                items.append(f"COUNT_DISTINCT {rng.choice(others)} AS {name}")
+                new[name] = "INTEGER"
             else:
                 column = rng.choice(numeric)
                 items.append(f"{function} {column} AS {name}")
-                new[name] = "FLOAT" if function == "MEAN" else types[column]
+                new[name] = "FLOAT" if function in ("MEAN", "MEDIAN", "STD") else types[column]
         lines.append(f"AGGREGATE t BY [{', '.join(by)}] {', '.join(items)};")
         types.clear()
         types.update(new)
@@ -331,6 +351,19 @@ def reference(source, table, lookup, failed=None):
                     columns.pop(x[0])
         elif word == "SELECT":
             columns = {x[0]: columns[x[0]] for x in t[3:-2] if isinstance(x, tuple)}
+        elif word == "JOIN" and len(t) > 7 and t[6] == ("MANY",):
+            # left join with every row of u that has the key, in u's order; a row without one stays,
+            # with missing values; a missing key matches nothing
+            key = t[5][0]
+            matches = [[j for j, value in enumerate(lookup[key][1]) if value is not None and value == v]
+                       for v in columns[key]]
+            order = [(i, j) for i, found in enumerate(matches) for j in (found or [None])]
+            for name in list(columns):
+                columns[name] = [columns[name][i] for i, _ in order]
+            for name, (kind, values) in lookup.items():
+                if name != key:
+                    columns[name] = [None if j is None else values[j] for _, j in order]
+                    kinds[name] = kind
         elif word == "JOIN":  # left join; each key once in u; a missing key matches nothing
             key = t[5][0]
             found = {}
@@ -372,14 +405,22 @@ def reference(source, table, lookup, failed=None):
                     continue
                 column = item[1][0]
                 values = [[columns[column][i] for i in groups[g] if columns[column][i] is not None] for g in ordered]
+                if function == "COUNT_DISTINCT":  # missing values are not counted
+                    result[name] = [len(set(v)) for v in values]
+                    new_kinds[name] = "INTEGER"
+                    continue
                 if function == "SUM":
                     zero = 0.0 if kinds[column] == "FLOAT" else 0
                     result[name] = [sum(v, zero) for v in values]
                 elif function == "MEAN":
                     result[name] = [statistics.fmean(v) if v else None for v in values]
+                elif function == "MEDIAN":
+                    result[name] = [float(statistics.median(v)) if v else None for v in values]
+                elif function == "STD":  # the sample standard deviation, as pandas computes it
+                    result[name] = [statistics.stdev(v) if len(v) >= 2 else None for v in values]
                 else:
                     result[name] = [(min(v) if function == "MIN" else max(v)) if v else None for v in values]
-                new_kinds[name] = "FLOAT" if function == "MEAN" else kinds[column]
+                new_kinds[name] = "FLOAT" if function in ("MEAN", "MEDIAN", "STD") else kinds[column]
             columns, kinds = result, new_kinds
     return columns, kinds
 
@@ -565,6 +606,8 @@ def check_one(index, seed):
     table, lookup = random_table(rng), random_lookup(rng)
     source = random_program(rng, table)
     batch, batch_lookup = random_table(rng), random_lookup(rng)  # the second batch, for reuse
+    # Its own random stream, so that the programs and batches of every seed stay as they were.
+    flipped = flip_kind(random.Random(seed * 7919 + index), batch)
     folder = WORK / f"p{index:04d}"
     if folder.exists():
         shutil.rmtree(folder)
@@ -577,7 +620,7 @@ def check_one(index, seed):
     expected = expectation(source, table, lookup)
     result = {"index": index, "program": source, "expected": expected["status"],
               "expected_rows": len(expected.get("rows", [])), "variants": {},
-              "join": "JOIN " in source, "aggregate": "AGGREGATE " in source}
+              "join": "JOIN " in source, "join_many": " MANY;" in source, "aggregate": "AGGREGATE " in source}
     for variant, extra in (("O0", ["--O0"]), ("optimized", [])):
         compiled = compile_program(folder, extra)
         run = compiled if compiled["status"] != "compiled" else run_generated(folder, "generated.py")
@@ -596,14 +639,28 @@ def check_one(index, seed):
     if result["variants"]["optimized"]["status"] != "compile error":
         run = run_generated(folder, "generated.py", [f"t={folder / 'data_b.csv'}", f"u={folder / 'lookup_b.csv'}"])
         truth = expectation(source, batch, batch_lookup)
-        if run["status"] == "refused":
+        if flipped is not None:
+            # With the other numeric type the program may not even compile (a decimal fill of a
+            # column that is now INTEGER, say); the reference does not model type errors, so a
+            # fresh compilation of the batch decides. Then only a refusal is right.
+            fresh = folder / "fresh"
+            fresh.mkdir()
+            shutil.copyfile(folder / "data_b.csv", fresh / "data.csv")
+            shutil.copyfile(folder / "lookup_b.csv", fresh / "lookup.csv")
+            shutil.copyfile(folder / "program.prep", fresh / "program.prep")
+            compiled = compile_program(fresh, [])
+            if compiled["status"] == "compile error" and "type" in compiled["kinds"]:
+                truth = {"status": "compile error"}
+        if truth["status"] == "compile error":
+            outcome, problem = ("refused", "") if run["status"] == "refused" else                 ("wrong", f"ran ({run['status']}) where a fresh compilation fails: {compiled['text'][-200:]}")
+        elif run["status"] == "refused":
             outcome, problem = "refused", ""
         else:
             # A compile error is not possible here, so a failure must be at the first failing line.
             problem = agrees(run, dict(truth, failing=[truth.get("line")]))
             outcome = "wrong" if problem else "correct stop" if run["status"] == "contract error" else "correct run"
         result["reuse"] = {"outcome": outcome, "problem": problem, "deopts": run.get("deopts", 0),
-                           "truth": truth["status"], "detail": run.get("reason", "")}
+                           "truth": truth["status"], "detail": run.get("reason", ""), "flipped": flipped}
     return result
 
 
@@ -626,8 +683,8 @@ def report(results, seconds):
               f"| optimized agrees with the reference | {agree['optimized']} / {n} |",
               f"| --O0 and optimized give byte-identical outputs or the same failure | {same} / {n} |",
               f"| failing contracts reported at compile time (before any data is processed) | {static} / {fails} |",
-              f"| programs with a JOIN / an AGGREGATE | {sum(r['join'] for r in results)} / "
-              f"{sum(r['aggregate'] for r in results)} |",
+              f"| programs with a JOIN (of them MANY) / an AGGREGATE | {sum(r['join'] for r in results)} "
+              f"({sum(r.get('join_many', False) for r in results)}) / {sum(r['aggregate'] for r in results)} |",
               f"| time for the whole run (s) | {seconds:.0f} |", ""]
     reused = [r["reuse"] for r in results if "reuse" in r]
     outcomes = {o: sum(1 for u in reused if u["outcome"] == o) for o in ("correct run", "correct stop", "refused", "wrong")}
@@ -641,6 +698,14 @@ def report(results, seconds):
               f"| wrong (other rows, another line, or a crash) | {outcomes['wrong']} |",
               f"| runs that re-enabled at least one removed check or operation | "
               f"{sum(1 for u in reused if u['deopts'])} |", ""]
+    flips = [u for u in reused if u.get("flipped")]
+    if flips:
+        count = {o: sum(1 for u in flips if u["outcome"] == o) for o in ("correct run", "correct stop", "refused", "wrong")}
+        lines += [f"In {len(flips)} of these batches one numeric column had the other numeric type (INTEGER "
+                  f"values made x.5, or FLOAT values rounded): {count['correct run']} ran with the reference's rows, "
+                  f"{count['correct stop']} stopped where it fails, {count['refused']} were refused "
+                  f"({sum(1 for u in flips if u['truth'] == 'compile error')} of the batches do not compile at all), "
+                  f"{count['wrong']} were wrong.", ""]
     wrong = [r for r in results if any(r["variants"][v]["problem"] for v in ("O0", "optimized")) or not r["same_O0_optimized"]
              or r.get("reuse", {}).get("outcome") == "wrong"]
     if wrong:

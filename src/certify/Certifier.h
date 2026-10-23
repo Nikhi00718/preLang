@@ -9,7 +9,9 @@
 #include <functional>
 #include <limits>
 #include <ostream>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Data certificates.
@@ -51,8 +53,11 @@ struct ColumnFacts {
     bool read = true;  // the optimized program loads it; otherwise it is loaded only to
                        // check it, because a proof depends on it
     ColumnType type = ColumnType::String;
-    bool typeFixed = true;                 // the type is required: always for a column the program reads
-    std::vector<std::string> typeFor;      // for a column it does not read: the proofs that need the type
+    bool typeFixed = true;             // the type is required: always for a column the program reads
+    std::vector<std::string> typeFor;  // for a column it does not read: the proofs that need the type
+    // An INTEGER or FLOAT column whose other numeric type gives the same generated program
+    // (markNumberKinds): an input may have either, and the program reads it as the input has it.
+    bool numberKind = false;
     bool required = true;                  // the column must exist; a column no instruction names, which is
     std::vector<std::string> requiredFor;  // only carried to the output, may be missing if no proof needs it
     bool notNull = false;
@@ -196,6 +201,14 @@ std::vector<double> programConstants(const IRProgram& program);
 // For the tables of an item certificate it says why the removal is not justified.
 std::vector<std::string> admissionProblems(const TableCertificate& certificate, const TableSchema& input);
 std::vector<std::string> admissionProblems(const ImageCertificate& certificate, const ImageSetSchema& input);
+
+// The type a certificate requires of a column, as printed and written: "NUMBER" for a
+// numberKind column, "INTEGER", "FLOAT", ... otherwise.
+std::string requiredTypeName(const ColumnFacts& column);
+
+// Marks numberKind on every column of the admission and full certificates that is in
+// `columns` (pairs of table key and column name).
+void markNumberKinds(Certificate& certificate, const std::set<std::pair<std::string, std::string>>& columns);
 
 void printCertificate(std::ostream& out, const Certificate& certificate);
 
