@@ -12,3 +12,6 @@
 *.parquet binary
 *.docx binary
 *.pdf binary
+
+# Fuzz seeds are raw bytes (CRLF line ends, invalid UTF-8): no line-ending conversion
+fuzz/corpus/** -text

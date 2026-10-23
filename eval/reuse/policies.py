@@ -140,7 +140,7 @@ def run_validators(anchor, batches, columns, out_json, tools=("pandera", "gx", "
     tfdv in WSL) and returns {tool: {batch path: admit or None}} for both the
     whole files (scope "all") and only `columns` (scope "read")."""
     root = Path(__file__).resolve().parents[2]
-    venv = root / "eval" / ".venv-baselines" / "Scripts" / "python.exe"
+    venv = root / "eval" / ".venv-baselines" / (Path("Scripts", "python.exe") if os.name == "nt" else Path("bin", "python"))
     decisions = {}
     for scope, extra in (("all", []), ("read", ["--columns", ",".join(columns)])):
         local = [t for t in tools if t != "tfdv"]
@@ -185,7 +185,7 @@ def run_validator_jobs(jobs, work, tools=("pandera", "gx", "tfdv"), workers=6):
     Returns {"tool/scope": {(anchor, batch): admit or None}}."""
     import json
     root = Path(__file__).resolve().parents[2]
-    venv = root / "eval" / ".venv-baselines" / "Scripts" / "python.exe"
+    venv = root / "eval" / ".venv-baselines" / (Path("Scripts", "python.exe") if os.name == "nt" else Path("bin", "python"))
     work = Path(work)
     work.mkdir(parents=True, exist_ok=True)
     linux = lambda p: "/mnt/" + str(Path(p).resolve())[0].lower() + str(Path(p).resolve())[2:].replace("\\", "/")  # noqa: E731

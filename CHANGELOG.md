@@ -17,6 +17,16 @@
   calendar parts); the lifter `frontend/pandas2prep.py` lifts them too.
 - Lean 4 mechanization of the core analysis (`proofs/`).
 - Continuous integration on Ubuntu (GCC), Windows (MSVC) and macOS (GCC); a Dockerfile.
+- CI also builds with AddressSanitizer and UndefinedBehaviorSanitizer, measures coverage (at least 85%
+  of the lines of `src/`), checks `clang-format` and `clang-tidy`, fuzzes the `.prep` front end, the
+  CSV scanner and the Parquet footer reader with libFuzzer (`fuzz/`), builds the Docker image and
+  checks the Lean proofs. Without libFuzzer the fuzz targets replay their corpus as tests.
+- `tests/test_examples.py`: every example compiled end to end, as a `ctest` test.
+- `preplang --version`; the MIT licence; a release workflow that publishes prebuilt compilers for
+  Linux, Windows and macOS and a Docker image for every version tag.
+- `LANGUAGE.md`: the complete language and command-line reference.
+- `eval/reproduce.sh` (the evaluation in three tiers), `eval/corpora.py` and `eval/corpora/` (the
+  GitHub script corpora frozen as evaluated, and checksums of the downloaded inputs).
 - `eval/compilation/differential.py`: random programs, with joins and groups, compared with `--O0`
   and a reference interpreter, and reused on a second batch; `eval/compilation/census.py`: work removed, run time and overhead on lifted programs.
 
@@ -27,6 +37,11 @@
   `TypeError` on data with missing values (string comparisons are `bool[pyarrow]`).
 - `FILL_NULL ... WHERE NULLABLE` in a certificate, and path-keyed tables in the release tool.
 - GCC warnings in `dateText` and in the private-compilation test.
+- `eval/paper_numbers.py` read the Kaggle Titanic file and the real monthly batches, and found the
+  test programs only in a Visual Studio build, so the paper's numbers could not be regenerated from
+  `eval/results/` alone or on Linux and macOS; the input sizes are kept in `results/inputs.json`.
+- The differential-privacy and validator baselines looked for their Python environments only in the
+  Windows layout (`Scripts/python.exe`).
 
 ## 1.0.0 (2026-10-08)
 

@@ -1,6 +1,6 @@
 # CMake build folder
 build/
-build-dev/
+build-*/
 
 # CSV files written by the unit tests when run from the project folder
 test_*.csv

@@ -1,0 +1,21 @@
+# Static analysis run by CI (clang-tidy 19). Every finding fails the job. Left out, as they flag
+# deliberate code rather than defects: easily-swappable-parameters and narrowing-conversions
+# (ordinary signatures; the scanners' int/double/size_t conversions), branch-clone (switch cases
+# kept apart to comment each one), enum-size, inefficient-string-concatenation and
+# inefficient-vector-operation (diagnostic text and short name lists), and the optin padding
+# checks (fields are ordered for reading).
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-branch-clone,
+  clang-analyzer-*,
+  -clang-analyzer-optin.*,
+  performance-*,
+  -performance-enum-size,
+  -performance-inefficient-string-concatenation,
+  -performance-inefficient-vector-operation,
+  portability-*
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'src/.*'

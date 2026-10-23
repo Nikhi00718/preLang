@@ -1,6 +1,7 @@
 // PrepLang compiler driver: runs every phase in order.
 //
 // usage: preplang <file.prep> [options]
+//        preplang --version
 //
 // Stage output:  --source --tokens --ast --schema --semantic --lineage --ir --certificate --python
 //                (with none of these, every stage except --lineage is printed)
@@ -167,12 +168,17 @@ int runPython(const std::filesystem::path& script) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
+    if (argc == 2 && std::string(argv[1]) == "--version") {
+        std::cout << "preplang " << PREPLANG_VERSION << '\n';
+        return 0;
+    }
     Options options;
     if (!parseArguments(argc, argv, options)) {
         std::cerr << "usage: preplang <file.prep> [--source] [--tokens] [--ast] [--schema] [--semantic]\n"
                   << "                            [--lineage] [--ir] [--certificate] [--python] [--explain]\n"
                   << "                            [--dry-run] [--run] [--dot] [--O0] [--approx] [--no-deopt]\n"
-                  << "                            [--queries] [--facts <file>]\n";
+                  << "                            [--queries] [--facts <file>]\n"
+                  << "       preplang --version\n";
         return 2;
     }
 

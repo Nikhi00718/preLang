@@ -103,7 +103,8 @@ inline DateLayout parseIsoDate(std::string_view text, double& seconds) {
         minute > 59 || second > 59) {
         return DateLayout::None;
     }
-    seconds = static_cast<double>(daysFromCivil(year, month, day) * 86400 + hour * 3600 + minute * 60 + second);
+    seconds = static_cast<double>(daysFromCivil(year, month, day) * 86400 + std::int64_t{hour} * 3600 +
+                                  std::int64_t{minute} * 60 + second);
     return layout;
 }
 

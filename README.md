@@ -33,7 +33,8 @@ images.
 
 **What is new** compared with existing work (F# type providers, data-frame abstract interpretation,
 compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
-[docs/NOVELTY.md](docs/NOVELTY.md).
+[docs/NOVELTY.md](docs/NOVELTY.md). The complete language and command-line reference is
+[LANGUAGE.md](LANGUAGE.md).
 
 ## Contents
 
@@ -70,7 +71,8 @@ compile-time schema contracts, TFDV/Deequ/Great Expectations) is explained in
    prints the execution plan and the data lineage, and writes no files.
 7. **Debug the compiler:** set a breakpoint in any `src/` file, open a `.prep` file and press `F5`
    (*Debug PrepLang on the open .prep file*).
-8. **Tests:** *Run Task... > PrepLang: run all tests* (207 unit tests in 9 executables).
+8. **Tests:** *Run Task... > PrepLang: run all tests* (the unit tests, every example compiled end to end, and the fuzz
+   corpora replayed).
 9. **See the errors:** open any file in `examples/errors/` and run step 5. Every error shows the
    line, a caret and a hint.
 
@@ -100,6 +102,10 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ctest -
 ```bash
 ./build/preplang examples/tabular/students.prep --run
 ```
+
+Each release on GitHub (from v2.0.0) has prebuilt compilers for Linux, Windows and macOS, which need
+no C++ toolchain, and the Docker image `ghcr.io/nikhi00718/preplang`. `preplang --version` prints the
+version.
 
 Or with Docker, which builds the compiler with the Python packages the generated programs need and
 runs the tests and the example (`docker run --rm -it preplang bash` for a shell):
@@ -500,6 +506,12 @@ regenerates it; `--run` first reruns the two experiments behind correctness and 
 `py -3 eval/evaluate.py --quick` runs a small version of both in a few minutes (also in Docker:
 `docker run --rm preplang python3 eval/evaluate.py --quick`).
 
+`eval/reproduce.sh` reproduces the evaluation in three tiers: `check` (about ten minutes, no network:
+build, every test, the paper's numbers regenerated from the committed results and compared, and the
+quick run above), `full` (hours: downloads the inputs, including the frozen GitHub script corpora of
+`eval/corpora/`, and reruns every experiment) and `baselines` (the validators and the differential
+privacy baselines, in their own Python environments). See [eval/README.md](eval/README.md).
+
 The `eval/` folder holds a small, reproducible evaluation (run with the Release build).
 
 ```bash
@@ -620,7 +632,9 @@ src/                 the compiler (C++17, no external libraries)
                      the contract file
   backend/           pandas and OpenCV code, deoptimization guards, the planner that joins them
   explain/           --explain, --dry-run, --lineage and the run manifest
-tests/               unit tests (10 suites), with randomized soundness tests
+tests/               unit tests (10 suites), with randomized soundness tests; test_examples.py
+fuzz/                libFuzzer targets for the .prep front end, the CSV scanner and the Parquet footer
+                     reader, with seed corpora; without libFuzzer they replay the corpus as tests
 proofs/              Lean 4: Deopt.lean (the theorems) and Core.lean (a core analysis, proven)
 frontend/            pandas2prep.py: lifts the cleaning part of pandas scripts into PrepLang
 tools/               contracts.py: composes compiled stages, synthesizes producer contracts;
@@ -635,13 +649,22 @@ eval/                the evaluation
   results/           every result as .json and .md (the largest as .json.gz); evaluation.md
   paper_numbers.py   writes paper/generated/ from eval/results/
   evaluate.py        writes results/evaluation.md: the six evaluation questions
+  reproduce.sh       the whole evaluation in three tiers (check, full, baselines)
+  corpora.py, corpora/  the frozen GitHub script corpora and checksums of the downloaded inputs
 paper/               the software article (PrepLang_Software_SCP.pdf) and the research article's source
   sections/ figures/ hand-written parts;  generated/: numbers and tables;  archive/: IEEE draft
 docs/                NOVELTY.md (novelty and prior work), DEMO_VIDEO_SCRIPT.md, USER_STUDY.md (protocol),
                      review2/ and review3/ (course reports)
 demo/ studio/        the live demo with slides, and PrepLang Studio (a local editor app)
-Dockerfile           Ubuntu build with the Python packages; .github/workflows/ci.yml: CI on Ubuntu, Windows and macOS
-ARCHITECTURE.md      the phases and modules;  CONTRIBUTING.md, CHANGELOG.md, CITATION.cff
+Dockerfile           Ubuntu build with the Python packages
+.github/workflows/   ci.yml: builds and tests on Ubuntu, Windows and macOS, sanitizers, coverage, format,
+                     clang-tidy, fuzzing, Docker, the Lean proofs; release.yml: binaries and image per tag
+LANGUAGE.md          the language and command-line reference
+ARCHITECTURE.md      the phases and modules;  CONTRIBUTING.md, CHANGELOG.md, CITATION.cff, LICENSE (MIT)
 ```
 
 Each of `eval/`, `paper/`, `proofs/` and `docs/` has a short README of its own.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

@@ -87,10 +87,11 @@ C1 & Current code version & \fillin{v2.0.0: tag this release} \\
 C2 & Permanent link to code/repository used for this code version &
   \url{https://github.com/Nikhi00718/preLang} \fillin{make it public} \\
 \hline
-C3 & Permanent link to Reproducible Capsule & None; the repository has a \texttt{Dockerfile} and a CI
-  workflow, and \texttt{eval/paper\_numbers.py} regenerates every number from the raw results \\
+C3 & Permanent link to Reproducible Capsule & \fillin{Docker image ghcr.io/nikhi00718/preplang:2.0.0, from the
+  release workflow}; \texttt{eval/reproduce.sh check} builds, tests and regenerates every number of this
+  article from the committed results \\
 \hline
-C4 & Legal Code License & \fillin{an OSI-approved licence, e.g.\ MIT, in a LICENSE file} \\
+C4 & Legal Code License & MIT \\
 \hline
 C5 & Code versioning system used & git \\
 \hline
@@ -102,7 +103,7 @@ C7 & Compilation requirements, operating environments and dependencies & CMake 3
   tested), PyArrow, OpenCV; Lean 4.34.1 (optional, for the proofs) \\
 \hline
 C8 & If available, link to developer documentation/manual & \texttt{README.md} (user manual),
-  \texttt{ARCHITECTURE.md}, \texttt{CONTRIBUTING.md}; the READMEs of \texttt{eval/}, \texttt{paper/},
+  \texttt{LANGUAGE.md} (reference), \texttt{ARCHITECTURE.md}, \texttt{CONTRIBUTING.md}; the READMEs of \texttt{eval/}, \texttt{paper/},
   \texttt{proofs/}, \texttt{docs/} \\
 \hline
 C9 & Support email for questions & atnikhil06@gmail.com \\

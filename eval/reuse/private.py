@@ -74,8 +74,9 @@ TITANIC = ROOT / "eval" / "data" / "titanic"
 CORPUS_WORK = ROOT / "eval" / "work" / "pandas_corpus"
 EPSILONS = (0.1, 1, 10, 100)
 DP_BASELINES = ROOT / "eval" / "reuse" / "private_dp_baselines.py"
-DP_PYTHON = {"hdmm": ROOT / "eval" / ".venv-hdmm" / "Scripts" / "python.exe",
-             "aim": ROOT / "eval" / ".venv-dp" / "Scripts" / "python.exe"}
+VENV_PYTHON = Path("Scripts", "python.exe") if os.name == "nt" else Path("bin", "python")
+DP_PYTHON = {"hdmm": ROOT / "eval" / ".venv-hdmm" / VENV_PYTHON,
+             "aim": ROOT / "eval" / ".venv-dp" / VENV_PYTHON}
 SYNTHETIC = ("synthetic", "aim-synthetic")  # compiled normally, from synthetic tables
 BASELINES = ("generic", "synthetic", "hdmm", "aim", "aim-marginals", "aim-synthetic")
 

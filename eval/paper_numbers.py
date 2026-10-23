@@ -7,6 +7,7 @@ The paper uses these macros instead of typed-in numbers, so it always matches th
 import gzip
 import json
 import math
+import os
 import statistics
 from collections import Counter
 from pathlib import Path
@@ -24,6 +25,28 @@ def load(name):
 
 def found(name):
     return (RESULTS / name).exists() or (RESULTS / (name + ".gz")).exists()
+
+
+def input_stats():
+    """Sizes of input files that are not committed (eval/data/): computed from the files when they are
+    there and kept in results/inputs.json, read from it otherwise, so the numbers can be regenerated
+    from eval/results/ alone."""
+    data = ROOT / "eval" / "data"
+    real = data / "real"
+    if not (data / "titanic" / "train.csv").exists() or not (real / "green").exists():
+        return load("inputs.json")
+    import pandas as pd
+    import pyarrow.parquet
+    tickets = pd.read_csv(data / "titanic" / "train.csv")["Ticket"].value_counts()
+    stats = {"titanic_tickets": len(tickets), "titanic_ticket_groups": int((tickets > 1).sum()),
+             "titanic_ticket_max": int(tickets.max())}
+    for folder in ("traffic", "bikes"):
+        stats[f"{folder}_month_rows"] = [len(path.read_text(encoding="utf-8").splitlines()) - 1
+                                         for path in sorted((real / folder).glob("*.csv"))]
+    stats["taxi_month_rows"] = [pyarrow.parquet.ParquetFile(path).metadata.num_rows
+                                for path in sorted((real / "green").glob("*.parquet"))]
+    (RESULTS / "inputs.json").write_text(json.dumps(stats, indent=1), encoding="utf-8")
+    return stats
 
 
 def main():
@@ -108,7 +131,7 @@ def main():
         census(load("census.json"), numbers)
 
     numbers["TestCount"] = test_count()
-    numbers["TestSuites"] = len(list((ROOT / "build" / "Release").glob("test_*.exe")))
+    numbers["TestSuites"] = len(test_programs())
     lean = {name: len((ROOT / "proofs" / f"{name}.lean").read_text(encoding="utf-8").splitlines())
             for name in ("Deopt", "Core", "Cells")}
     numbers.update(LeanLines=sum(lean.values()), LeanDeoptLines=lean["Deopt"], LeanCoreLines=lean["Core"],
@@ -209,11 +232,22 @@ def census(data, numbers):
                             key + "S": f"{row['compile_s']:.2f}"})
 
 
+def test_programs():
+    """The unit-test programs of the Release build: build/Release/ with Visual Studio, build/ otherwise."""
+    if (ROOT / "build" / "Release").is_dir():
+        return sorted((ROOT / "build" / "Release").glob("test_*.exe"))
+    return sorted(p for p in (ROOT / "build").glob("test_*") if p.is_file() and os.access(p, os.X_OK))
+
+
+def test_program(name):
+    return next((test for test in test_programs() if test.stem == name), None)
+
+
 def test_count():
     """Unit tests that pass, counted by running every test program of the Release build."""
     import subprocess
     total = 0
-    for test in sorted((ROOT / "build" / "Release").glob("test_*.exe")):
+    for test in test_programs():
         done = subprocess.run([str(test)], cwd=ROOT / "build", capture_output=True, text=True)
         total += done.stdout.count("  PASS  ")
     return total
@@ -667,20 +701,15 @@ def private(results, diagnostics, numbers):
     blocks = [shape for r in records if r["kind"].startswith("hdmm ")
               for shape in re.findall(r"\w+: (identity|\d+ queries) over \d+ cells", r["facts"])]
     numbers.update(PrivHdmmBlocks=f"{len(blocks):,}", PrivHdmmIdentity=f"{blocks.count('identity'):,}")
-    import pandas as pd
-    tickets = pd.read_csv(ROOT / "eval" / "data" / "titanic" / "train.csv")["Ticket"].value_counts()
-    numbers.update(PrivTicketCount=len(tickets), PrivTicketGroups=int((tickets > 1).sum()), PrivTicketMax=int(tickets.max()))
+    stats = input_stats()
+    numbers.update(PrivTicketCount=stats["titanic_tickets"], PrivTicketGroups=stats["titanic_ticket_groups"],
+                   PrivTicketMax=stats["titanic_ticket_max"])
     for kind, name in (("optimistic", "Optimistic"), ("none", "None")):
         numbers[f"Priv{name}Recall"] = pct(recall(of(kind)))
         numbers[f"Priv{name}Precision"] = pct(precision(of(kind)))
 
-    real = ROOT / "eval" / "data" / "real"
-    for name, folder in (("Traffic", "traffic"), ("Bikes", "bikes")):
-        sizes = [len(path.read_text(encoding="utf-8").splitlines()) - 1 for path in (real / folder).glob("*.csv")]
-        numbers[f"Priv{name}Rows"] = f"{statistics.median(sizes):,.0f}"
-    import pyarrow.parquet
-    sizes = [pyarrow.parquet.ParquetFile(path).metadata.num_rows for path in (real / "green").glob("*.parquet")]
-    numbers["PrivTaxiRows"] = f"{statistics.median(sizes):,.0f}"
+    for name, folder in (("Traffic", "traffic"), ("Bikes", "bikes"), ("Taxi", "taxi")):
+        numbers[f"Priv{name}Rows"] = f"{statistics.median(stats[f'{folder}_month_rows']):,.0f}"
 
     # Table: recall and precision against the normal removals, per workload and kind of facts.
     kinds = (["exact"] + [f"eps={e}" for e in ("0.1", "1", "10", "100")] + ["corpus eps=1", "corpus eps=10"] +
@@ -788,8 +817,8 @@ def private(results, diagnostics, numbers):
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
     write_generated("privatediagtable.tex", lines)
 
-    test = ROOT / "build" / "Release" / "test_private.exe"
-    if test.exists():
+    test = test_program("test_private")
+    if test:
         text = subprocess.run([str(test)], cwd=ROOT / "build", capture_output=True, text=True).stdout
         facts = re.search(r"(\d+) of \d+ random facts files compile", text)
         deopt = re.search(r"(\d+) inputs admitted, (\d+) of them deoptimize", text)
@@ -804,8 +833,8 @@ def soundness_tests(numbers):
     """The randomized soundness test of the running example: inputs admitted with and without deoptimization."""
     import re
     import subprocess
-    test = ROOT / "build" / "Release" / "test_certificate.exe"
-    if not test.exists():
+    test = test_program("test_certificate")
+    if not test:
         return
     text = subprocess.run([str(test)], cwd=ROOT / "build", capture_output=True, text=True).stdout
     full = re.search(r"(\d+) of 400 random inputs admitted by the full certificate", text)

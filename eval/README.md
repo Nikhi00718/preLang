@@ -1,9 +1,40 @@
 # Evaluation
 
 Every number in the paper comes from `results/` through `paper_numbers.py`. Run the scripts from the
-repository root with the Release build (`build/Release/preplang.exe`); each one writes a `.json` and a
+repository root with the Release build (`build/Release/preplang.exe`, or `build/preplang` with a
+single-configuration generator); each one writes a `.json` and a
 `.md` file to `results/`. Downloaded data goes to `data/` and scratch folders to `work/`; neither is
 committed.
+
+## Reproducing: `reproduce.sh`
+
+```bash
+eval/reproduce.sh check       # ~10 minutes, no network
+eval/reproduce.sh full        # hours, downloads the inputs, overwrites eval/results/
+eval/reproduce.sh baselines   # after full: validators and the private-compilation baselines
+```
+
+`check` builds the compiler, runs every test, regenerates `paper/generated/numbers.tex` from the
+committed results and fails if it changes, and runs `evaluate.py --quick`. `full` runs every
+script below in order. Set `PYTHON` to the interpreter to use (default `py -3` or `python3`).
+Times and memory depend on the machine; counts and correctness outcomes do not.
+
+**Inputs from elsewhere.** Nothing in `data/` is committed. `realbatches.py download` fetches the UCI
+traffic and bike files and the NYC TLC green taxi months. The Kaggle files cannot be redistributed;
+download them by hand into `data/`:
+
+- Titanic (kaggle.com/c/titanic): `train.csv` and `test.csv` into `data/titanic/`;
+- House Prices (kaggle.com/c/house-prices-advanced-regression-techniques): `train.csv` and `test.csv`
+  into `data/houses/` as `kaggle_train.csv` and `kaggle_test.csv`.
+
+The script corpora were collected with GitHub code search, whose results change, so `collect` cannot
+build the same corpus again. `corpora/` keeps each corpus as it was evaluated (every file's URL at a
+fixed commit and its SHA-256 prefix), and `corpora.py fetch` downloads exactly those files, reporting
+any that are no longer available instead of replacing them. `corpora.py verify` checks the downloaded
+inputs against `corpora/inputs.sha256`, the files the results were computed on.
+
+`paper_numbers.py` reads only `results/` (sizes of the inputs are kept in `results/inputs.json`), so
+the paper's numbers can be regenerated without any data.
 
 ## `evaluate.py`: the six questions
 
@@ -48,7 +79,7 @@ for the record (for House Prices, the run before the `None` fix that RQ5 describ
 the same corpora lifted with the second lifter version.
 
 The validators run in their own Python 3.11 environment (`.venv-baselines/`, not committed); TFDV runs
-in WSL. `reuse/tfdv.Dockerfile` is an alternative for machines with Docker.
+in WSL on Windows; `reuse/tfdv.Dockerfile` is an alternative for machines with Docker.
 
 HDMM and AIM (`reuse/private_dp_baselines.py`) run in two Python 3.12 environments, not committed, with
 the authors' code at fixed commits. HDMM needs numpy 1.x; AIM needs JAX, which needs numpy 2:

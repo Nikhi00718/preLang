@@ -1,0 +1,123 @@
+name: Release
+
+# Pushing a tag vX.Y.Z builds the compiler on Linux, Windows and macOS, tests it, and publishes a
+# GitHub release with one archive per platform (the compiler, the examples, the Python tools and
+# the documentation) and the Docker image ghcr.io/<owner>/preplang:X.Y.Z. The tag must match the
+# version in CMakeLists.txt, and CHANGELOG.md must have a section for it.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  binaries:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # The oldest supported Ubuntu runner, so the binary runs on older glibc versions too
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+          - os: windows-latest
+            platform: windows-x86_64
+          - os: macos-latest
+            platform: macos-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install numpy
+
+      - name: Use GCC on macOS
+        if: runner.os == 'macOS'
+        run: echo "CXX=$(brew --prefix gcc@14)/bin/g++-14" >> "$GITHUB_ENV"
+
+      # The C++ runtime is linked into the binary, so it needs no compiler installed to run
+      - name: Build
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            runtime=-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+          else
+            runtime=-DPREPLANG_STATIC_RUNTIME=ON
+          fi
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release $runtime \
+            -DPython3_EXECUTABLE="$pythonLocation/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}"
+          cmake --build build --config Release --parallel
+          ctest --test-dir build -C Release --output-on-failure
+
+      - name: Check the version
+        shell: bash
+        run: |
+          exe=build/preplang
+          [ -f build/Release/preplang.exe ] && exe=build/Release/preplang.exe
+          test "$("$exe" --version)" = "preplang ${GITHUB_REF_NAME#v}"
+          echo "EXE=$exe" >> "$GITHUB_ENV"
+
+      - name: Package
+        shell: bash
+        run: |
+          name=preplang-${GITHUB_REF_NAME#v}-${{ matrix.platform }}
+          mkdir -p "$name/bin"
+          cp "$EXE" "$name/bin/"
+          cp -r LICENSE README.md LANGUAGE.md CHANGELOG.md CITATION.cff examples frontend tools "$name/"
+          rm -rf "$name"/frontend/__pycache__ "$name"/tools/__pycache__
+          if [ "$RUNNER_OS" = Windows ]; then
+            7z a "$name.zip" "$name" > /dev/null
+          else
+            tar czf "$name.tar.gz" "$name"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}
+          path: preplang-*.*z*
+
+  publish:
+    needs: binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          awk -v v="## $version" 'index($0, v) == 1 {on = 1; next} /^## / {on = 0} on' CHANGELOG.md > notes.md
+          test -s notes.md
+
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "PrepLang ${GITHUB_REF_NAME#v}" --notes-file notes.md --verify-tag
+
+  docker:
+    needs: binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build, test and push ghcr.io/<owner>/preplang
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/preplang
+          version=${GITHUB_REF_NAME#v}
+          docker build -t "$image:$version" -t "$image:latest" .
+          docker run --rm "$image:$version"
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "$image:$version"
+          docker push "$image:latest"

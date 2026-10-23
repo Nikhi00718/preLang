@@ -1,0 +1,5 @@
+LOAD "a.csv" AS t;
+FILTER t WHERE (x >= 1 AND NOT y == "a") OR z != TRUE;
+DERIVE t.w = -(x + 2) * y / (HOUR(d) - 1);
+AGGREGATE t BY [a, b] COUNT AS n, SUM x AS s;
+SAVE t AS "o.csv";
