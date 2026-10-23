@@ -25,6 +25,7 @@
 - `preplang --version`; the MIT licence; a release workflow that publishes prebuilt compilers for
   Linux, Windows and macOS and a Docker image for every version tag.
 - `LANGUAGE.md`: the complete language and command-line reference.
+- `--json`: the diagnostics as one JSON object, for editors and other tools; writes nothing.
 - `eval/reproduce.sh` (the evaluation in three tiers), `eval/corpora.py` and `eval/corpora/` (the
   GitHub script corpora frozen as evaluated, and checksums of the downloaded inputs).
 - `eval/compilation/differential.py`: random programs, with joins and groups, compared with `--O0`

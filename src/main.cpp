@@ -6,6 +6,7 @@
 // Stage output:  --source --tokens --ast --schema --semantic --lineage --ir --certificate --python
 //                (with none of these, every stage except --lineage is printed)
 // Modes:         --explain   print the execution plan; write nothing
+//                --json      print only the diagnostics, as one JSON object; write nothing
 //                --dry-run   print what running would change and write; write nothing
 //                --run       run the generated program with Python afterwards
 // Other:         --dot       also write the AST as output/ast.dot (Graphviz)
@@ -60,6 +61,7 @@ struct Options {
     bool explain = false, dryRun = false, run = false, dot = false, noOptimize = false, approximate = false;
     bool noDeopt = false;
     bool queries = false;
+    bool json = false;
     std::string facts;  // --facts <file>: a private compilation
 };
 
@@ -72,7 +74,7 @@ bool parseArguments(int argc, char* argv[], Options& options) {
     const std::vector<std::pair<std::string, bool*>> otherFlags = {
         {"--explain", &options.explain},  {"--dry-run", &options.dryRun},  {"--run", &options.run},
         {"--dot", &options.dot},          {"--O0", &options.noOptimize},   {"--approx", &options.approximate},
-        {"--no-deopt", &options.noDeopt}, {"--queries", &options.queries},
+        {"--no-deopt", &options.noDeopt}, {"--queries", &options.queries}, {"--json", &options.json},
     };
     bool anyStage = false;
     for (int i = 1; i < argc; ++i) {
@@ -101,7 +103,7 @@ bool parseArguments(int argc, char* argv[], Options& options) {
             return false;
         }
     }
-    if (!anyStage && !options.explain && !options.dryRun && !options.queries) {
+    if (!anyStage && !options.explain && !options.dryRun && !options.queries && !options.json) {
         options.source = options.tokens = options.ast = options.schema = options.semantic = true;
         options.ir = options.certificate = options.python = true;
     }
@@ -112,8 +114,12 @@ void printHeader(const std::string& title) {
     std::cout << "\n==================== " << title << " ====================\n";
 }
 
-// Prints all errors and warnings, and returns the process exit code.
-int finish(const Diagnostics& diagnostics, const SourceManager& source) {
+// Prints all errors and warnings (as JSON with --json), and returns the process exit code.
+int finish(const Diagnostics& diagnostics, const SourceManager& source, bool json) {
+    if (json) {
+        diagnostics.printJson(std::cout, source);
+        return diagnostics.hasErrors() ? 1 : 0;
+    }
     if (!diagnostics.all().empty()) {
         printHeader("DIAGNOSTICS (Diagnostics)");
         diagnostics.print(std::cout, source);
@@ -177,7 +183,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "usage: preplang <file.prep> [--source] [--tokens] [--ast] [--schema] [--semantic]\n"
                   << "                            [--lineage] [--ir] [--certificate] [--python] [--explain]\n"
                   << "                            [--dry-run] [--run] [--dot] [--O0] [--approx] [--no-deopt]\n"
-                  << "                            [--queries] [--facts <file>]\n"
+                  << "                            [--queries] [--facts <file>] [--json]\n"
                   << "       preplang --version\n";
         return 2;
     }
@@ -201,14 +207,14 @@ int main(int argc, char* argv[]) {
         printTokens(std::cout, tokens);
     }
     if (diagnostics.hasErrors()) {
-        return finish(diagnostics, source);
+        return finish(diagnostics, source, options.json);
     }
     const ProgramWords words = programWords(tokens);  // for --queries
 
     // Phase 2: syntax analysis
     const Program program = Parser(std::move(tokens), diagnostics).parse();
     if (diagnostics.hasErrors()) {
-        return finish(diagnostics, source);
+        return finish(diagnostics, source, options.json);
     }
     if (options.ast) {
         printHeader("AST (Parser + ASTPrinter)");
@@ -235,9 +241,11 @@ int main(int argc, char* argv[]) {
             std::cerr << "error: " << problem << '\n';
             return 1;
         }
-        std::cout << "Private compilation: no input file is opened; the facts are the data owner's released "
-                     "answers ("
-                  << facts->mechanism << ").\n";
+        if (!options.json) {
+            std::cout << "Private compilation: no input file is opened; the facts are the data owner's released "
+                         "answers ("
+                      << facts->mechanism << ").\n";
+        }
         schemas.setReleased(std::move(facts->tables));
     }
     const AnalysisResult analysis = SemanticAnalyzer(symbols, schemas, programFolder, diagnostics).analyze(program);
@@ -307,7 +315,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     if (diagnostics.hasErrors()) {
-        return finish(diagnostics, source);
+        return finish(diagnostics, source, options.json);
     }
 
     // Phase 4: intermediate code generation
@@ -336,8 +344,8 @@ int main(int argc, char* argv[]) {
         printCertificate(std::cout, certificate);
     }
 
-    // --explain and --dry-run describe the program without writing anything.
-    if (options.explain || options.dryRun) {
+    // --explain, --dry-run and --json describe the program without writing anything.
+    if (options.explain || options.dryRun || options.json) {
         if (options.explain) {
             printHeader("EXPLAIN (ExplainPlan)");
             printExplain(std::cout, symbols, analysis, report, ir, certificate, diagnostics.warningCount());
@@ -346,7 +354,7 @@ int main(int argc, char* argv[]) {
             printHeader("DRY RUN (ExplainPlan)");
             printDryRun(std::cout, ir, outputFolder.generic_string());
         }
-        return finish(diagnostics, source);
+        return finish(diagnostics, source, options.json);
     }
 
     // Phase 7: target code generation
@@ -363,7 +371,7 @@ int main(int argc, char* argv[]) {
         std::cout << python;
     }
 
-    const int status = finish(diagnostics, source);
+    const int status = finish(diagnostics, source, options.json);
     if (status == 0 && options.run) {
         return runPython(script);
     }

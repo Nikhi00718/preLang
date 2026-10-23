@@ -2,6 +2,7 @@
 
 #include "common/Dates.h"
 #include "common/Diagnostics.h"
+#include "common/Json.h"
 #include "sema/SemanticAnalyzer.h"
 #include "sema/SymbolTable.h"
 
@@ -1120,21 +1121,6 @@ void printCertificate(std::ostream& out, const Certificate& certificate) {
 }
 
 namespace {
-
-std::string jsonString(const std::string& text) {
-    std::string quoted = "\"";
-    for (char c : text) {
-        if (c == '\\' || c == '"') {
-            quoted += '\\';
-            quoted += c;
-        } else if (static_cast<unsigned char>(c) < 0x20) {
-            quoted += ' ';
-        } else {
-            quoted += c;
-        }
-    }
-    return quoted + "\"";
-}
 
 std::string jsonNumber(double value) {
     if (std::isinf(value) || std::isnan(value)) {

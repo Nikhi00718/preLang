@@ -303,6 +303,7 @@ preplang --version
 |---|---|
 | `--explain` | prints the execution plan (inputs, contract verdicts, optimizations, back ends); writes nothing |
 | `--dry-run` | prints every file running the program would read and write; writes nothing |
+| `--json` | prints only the diagnostics, as one JSON object (below); writes nothing |
 | `--run` | runs the generated program afterwards (`py -3` on Windows, `python3` elsewhere) |
 | `--O0` | turns the optimizer off |
 | `--approx` | also applies rewrites that change the output slightly (RESIZE fusion); without it they are reported as suggestions |
@@ -375,3 +376,15 @@ error[type]: cannot save FLOAT32 pixels as PNG: NORMALIZE at line 10 scaled them
 | `contract` | VIOLATED contracts with the rows, values or files that break them; repeated join keys; division by zero in `DERIVE`; *likely violated* warnings in a private compilation |
 
 The programs in `examples/errors/` show one of each kind.
+
+**For tools.** `preplang file.prep --json` prints the same diagnostics as one JSON object and nothing
+else, with the exit code above, so editors and CI can read them:
+
+```json
+{"file": "examples/errors/semantic_error.prep", "errors": 8, "warnings": 1, "diagnostics": [
+  {"severity": "error", "phase": "semantic", "line": 8, "column": 11,
+   "message": "column 'mark' does not exist in 'students'", "hint": "did you mean 'marks'?", "notes": []}
+]}
+```
+
+Diagnostics are in source order; `line` and `column` count from 1; `hint` is `""` when there is none.

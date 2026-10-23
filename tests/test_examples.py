@@ -8,6 +8,7 @@ compile with exit code 0, and the Python program it generates must be valid Pyth
 byte-compiled, not run, so no pandas or OpenCV is needed). The compiler writes into output/ of the
 current folder, so run it from a scratch folder (ctest runs it in the build folder).
 """
+import json
 import py_compile
 import subprocess
 import sys
@@ -33,6 +34,14 @@ def compile_program(program, *flags):
 for program in sorted((ROOT / "examples").rglob("*.prep")):
     name = program.relative_to(ROOT).as_posix()
     failing = program.parent.name == "errors"
+    as_json = compile_program(program, "--json")
+    try:
+        report = json.loads(as_json.stdout)
+        check(as_json.returncode == (1 if failing else 0) and (report["errors"] > 0) == failing and
+              all({"severity", "phase", "line", "column", "message", "hint", "notes"} <= set(d)
+                  for d in report["diagnostics"]), f"{name}: --json")
+    except (json.JSONDecodeError, KeyError) as error:
+        check(False, f"{name}: --json prints one JSON object ({error})")
     done = compile_program(program)
     if failing:
         check(done.returncode == 1 and "error" in done.stdout, f"{name}: reported as an error")

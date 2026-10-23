@@ -41,6 +41,9 @@ public:
     // Prints every diagnostic in source order, with its line and a ^ under the column.
     void print(std::ostream& out, const SourceManager& source) const;
 
+    // The same diagnostics as one JSON object, for editors and other tools (--json).
+    void printJson(std::ostream& out, const SourceManager& source) const;
+
 private:
     std::vector<Diagnostic> all_;
     int errorCount_ = 0;

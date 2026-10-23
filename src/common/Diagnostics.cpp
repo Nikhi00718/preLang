@@ -1,5 +1,6 @@
 #include "common/Diagnostics.h"
 
+#include "common/Json.h"
 #include "common/SourceManager.h"
 
 #include <algorithm>
@@ -43,6 +44,14 @@ size_t editDistance(const std::string& a, const std::string& b) {
     return previousRow[b.size()];
 }
 
+std::vector<Diagnostic> inSourceOrder(std::vector<Diagnostic> diagnostics) {
+    std::stable_sort(diagnostics.begin(), diagnostics.end(), [](const Diagnostic& a, const Diagnostic& b) {
+        return a.location.line != b.location.line ? a.location.line < b.location.line
+                                                  : a.location.column < b.location.column;
+    });
+    return diagnostics;
+}
+
 }  // namespace
 
 Diagnostic& Diagnostics::error(Phase phase, SourceLocation location, std::string message, std::string hint) {
@@ -63,13 +72,7 @@ Diagnostic& Diagnostics::warning(Phase phase, SourceLocation location, std::stri
 //   10 | DROP_NULL students
 //     |                   ^
 void Diagnostics::print(std::ostream& out, const SourceManager& source) const {
-    std::vector<Diagnostic> sorted = all_;
-    std::stable_sort(sorted.begin(), sorted.end(), [](const Diagnostic& a, const Diagnostic& b) {
-        return a.location.line != b.location.line ? a.location.line < b.location.line
-                                                  : a.location.column < b.location.column;
-    });
-
-    for (const Diagnostic& d : sorted) {
+    for (const Diagnostic& d : inSourceOrder(all_)) {
         const std::string lineNumber = std::to_string(d.location.line);
         const std::string gutter(lineNumber.size(), ' ');
         const std::string caretIndent(static_cast<size_t>(d.location.column - 1), ' ');
@@ -88,6 +91,28 @@ void Diagnostics::print(std::ostream& out, const SourceManager& source) const {
         }
         out << '\n';
     }
+}
+
+// Output format (one object; diagnostics in source order, line and column from 1):
+//   {"file": "a.prep", "errors": 1, "warnings": 0, "diagnostics": [
+//     {"severity": "error", "phase": "syntax", "line": 10, "column": 19,
+//      "message": "...", "hint": "...", "notes": []}]}
+void Diagnostics::printJson(std::ostream& out, const SourceManager& source) const {
+    out << "{\"file\": " << jsonString(source.path()) << ", \"errors\": " << errorCount()
+        << ", \"warnings\": " << warningCount() << ", \"diagnostics\": [";
+    bool first = true;
+    for (const Diagnostic& d : inSourceOrder(all_)) {
+        out << (first ? "\n" : ",\n") << "  {\"severity\": \"" << (d.severity == Severity::Error ? "error" : "warning")
+            << "\", \"phase\": \"" << phaseName(d.phase) << "\", \"line\": " << d.location.line
+            << ", \"column\": " << d.location.column << ", \"message\": " << jsonString(d.message)
+            << ", \"hint\": " << jsonString(d.hint) << ", \"notes\": [";
+        for (size_t i = 0; i < d.notes.size(); ++i) {
+            out << (i > 0 ? ", " : "") << jsonString(d.notes[i]);
+        }
+        out << "]}";
+        first = false;
+    }
+    out << (first ? "]}\n" : "\n]}\n");
 }
 
 std::string suggestClosest(const std::string& word, const std::vector<std::string>& candidates) {
