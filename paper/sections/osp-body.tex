@@ -151,7 +151,9 @@ answers with every number below):
 groups), compiled with and without the optimizer, agree cell by cell with a reference interpreter that
 shares no code with the compiler, and reused on a second batch none of the \DiffReuse{} runs differs from
 it; before two fixes this test led to (a pruning bug, a pandas~3 incompatibility), \DiffBeforeWrongOpt{}
-optimized runs were wrong. Reused on new batches, \PrivRuns{} runs after \PrivCompilations{} private
+optimized runs were wrong. Three more seeds (\DiffSeedPrograms{} programs) found one more bug (a statistic
+fill removed as a dead store, though it can stop the program; \DiffSeedBeforeWrong{} wrong run), fixed with
+a regression test, after which all \DiffSeedAgree{} agree and none of \DiffSeedReuse{} reuses is wrong. Reused on new batches, \PrivRuns{} runs after \PrivCompilations{} private
 compilations and every run of the experiments below did what a fresh compilation does.
 \item \textbf{Performance.} An optimized table pipeline runs in \TabProcOpt\,s instead of \TabProcOz\,s
 after Python start-up, and an image pipeline as fast as a hand-written streaming script, in \ImgPlMem\,MiB
@@ -169,10 +171,9 @@ scripts written by others; on 16 million Parquet rows a misspelled column is rep
 Great Expectations and pandera refuse \RealValidatorStopMin--\RealValidatorStopMax\% of the months a fresh
 compilation runs, and TFDV admits months on which the program then differs. All 24 injected mistakes are
 reported at compile time, where a script-style program crashes on 20 and writes wrong output on 4.
-Compiling from private facts, the release at the program's numbers keeps every removal of the taxi and
-traffic pipelines at $\varepsilon=1$, where fixed bins keep \PrivGenTaxiEpsOneRecall\% and
-\PrivGenTrafficEpsOneRecall\%; HDMM~\cite{mckenna2018hdmm} and AIM~\cite{mckenna2022aim}, given the same
-cells, do no better.
+From private facts at $\varepsilon=1$ the taxi and traffic pipelines keep every removal (fixed bins:
+\PrivGenTaxiEpsOneRecall\%, \PrivGenTrafficEpsOneRecall\%); HDMM~\cite{mckenna2018hdmm} and
+AIM~\cite{mckenna2022aim} do no better.
 \item \textbf{Overhead.} Compiling takes a median of \CenCompileMed\,ms and at most \CenMemMax\,MiB
 (\CenCsvMillionMem\,MiB for a million CSV rows, \CenPqSixteenMem\,MiB for a \CenPqSixteenSize\,MiB Parquet
 file, of which only the footer is read); admitting a new batch changes run time by \OhPct\%.
