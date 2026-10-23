@@ -20,12 +20,12 @@ jobs:
 
       # The generated programs and tools/release_facts.py use these
       - name: Install Python packages
-        run: python -m pip install numpy pandas pyarrow opencv-python-headless
+        run: python -m pip install numpy pandas pyarrow opencv-python-headless matplotlib
 
       # On Windows, --run starts the generated program with the py launcher
       - name: Install Python packages for the py launcher
         if: runner.os == 'Windows'
-        run: py -3 -m pip install numpy pandas pyarrow opencv-python-headless
+        run: py -3 -m pip install numpy pandas pyarrow opencv-python-headless matplotlib
 
       # Apple's libc++ lacks floating-point std::from_chars (the CSV scanner uses it): GCC from Homebrew
       - name: Use GCC on macOS
@@ -54,6 +54,8 @@ jobs:
           [ -f build/Release/preplang.exe ] && exe=build/Release/preplang.exe
           "$exe" examples/tabular/students.prep --run
           test -s output/clean.csv
+          "$exe" examples/tabular/charts.prep --run
+          test -s output/charts/marks.png && test -s output/charts/students_clean.html
 
   # AddressSanitizer and UndefinedBehaviorSanitizer over every test and example
   sanitizers:
@@ -155,7 +157,7 @@ jobs:
         if: runner.os == 'macOS'
         run: echo "CXX=$(brew --prefix gcc@14)/bin/g++-14" >> "$GITHUB_ENV"
       - name: pip install
-        run: python -m pip install .
+        run: python -m pip install ".[charts]"
       - name: Use the installed commands
         shell: bash
         run: |
@@ -164,6 +166,9 @@ jobs:
           preplang examples/tabular/students.prep --python > /dev/null
           python output/generated.py
           test -s output/clean.csv
+          preplang examples/tabular/charts.prep --python > /dev/null
+          python output/generated.py
+          test -s output/charts/marks.png
           preplang examples/errors/semantic_error.prep --json > report.json || test $? -eq 1
           python -c "import json; assert json.load(open('report.json'))['errors'] > 0"
           printf 'import pandas as pd\ndf = pd.read_csv("examples/tabular/students.csv")\ndf = df.dropna()\ndf.to_csv("out.csv", index=False)\n' > clean.py

@@ -32,6 +32,8 @@ enum class Opcode {
     Derive,
     Join,
     Aggregate,
+    Plot,
+    Report,
     LoadImages,
     Resize,
     Grayscale,
@@ -65,6 +67,10 @@ enum class Opcode {
 //   JOIN          dataset, table, column = the key, withDataset, withTable = the lookup table,
 //                 columns = the columns it adds, text = MANY (every matching row) or empty (one)
 //   AGGREGATE     dataset, table, columns = the BY columns, aggregates = the new columns
+//   PLOT          dataset, table, column = HISTOGRAM | BAR | SCATTER | LINE, columns = the columns
+//                 (x, y for SCATTER and LINE), numbers = [bins (0: default)], text = file
+//   REPORT        dataset, table, text = file, columns = the facts the compiler knows there
+//                 ("column<TAB>name<TAB>INTEGER? [1, 9]", "contract<TAB>line 3: ...<TAB>verdict")
 //   LOAD_IMAGES   dataset, text = folder or file
 //   RESIZE        dataset, numbers = [width, height, keep aspect (0 or 1)]
 //   GRAYSCALE     dataset

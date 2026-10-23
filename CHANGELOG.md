@@ -20,6 +20,12 @@
   `low_memory` and `engine`, `parse_dates` (as `PARSE_DATE`) and `index_col="name"` (as `DROP`),
   reads in a function that returns the file or the cleaned DataFrame, `main()`, `try` and `with`.
   Tested in `tests/test_lifter.py`.
+- `PLOT t HISTOGRAM | BAR | SCATTER | LINE ... TO "file.png";` writes a chart with matplotlib (`.png`,
+  `.svg` or `.pdf`); a histogram shows the bounds of earlier `BETWEEN` contracts on its column.
+  `REPORT t TO "profile.html";` writes a web page with every column as the run finds it next to
+  what the compiler knew at that line, the contracts and their verdicts, which inputs were the
+  compiled files, and the removed checks that ran again. Columns, their types and the file kind are
+  checked at compile time; the plotted columns are kept by column pruning. `examples/tabular/charts.prep`.
 - The differential test generates `MANY` joins and the new aggregates, and gives one numeric
   column of the second batch the other numeric type in 3 of 10 programs.
 

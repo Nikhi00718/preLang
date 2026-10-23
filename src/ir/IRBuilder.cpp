@@ -213,6 +213,26 @@ void IRBuilder::visit(const AggregateStmt& node) {
     }
 }
 
+void IRBuilder::visit(const PlotStmt& node) {
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::Plot, target);
+        instruction.column = node.kind;
+        instruction.columns = target.args;
+        instruction.numbers = {node.bins};
+        instruction.text = node.path;
+        emit(std::move(instruction));
+    }
+}
+
+void IRBuilder::visit(const ReportStmt& node) {
+    for (const Target& target : targets()) {
+        Instruction instruction = make(Opcode::Report, target);
+        instruction.columns = target.args;
+        instruction.text = node.path;
+        emit(std::move(instruction));
+    }
+}
+
 void IRBuilder::visit(const SaveStmt& node) {
     for (const Target& target : targets()) {
         if (node.kind == DataKind::Image || node.kind == DataKind::ImageSet) {
@@ -349,6 +369,11 @@ std::string instructionText(const Instruction& in) {
         case Opcode::Select:    return "SELECT " + table + " " + listText(in.columns);
         case Opcode::Drop:      return "DROP " + table + " " + listText(in.columns);
         case Opcode::Save:      return "SAVE " + table + " -> \"" + in.text + "\"";
+        case Opcode::Plot:
+            return "PLOT " + table + " " + in.column + " " + listText(in.columns) +
+                   (in.numbers.empty() || in.numbers[0] == 0 ? "" : " BINS " + std::to_string(in.numbers[0])) +
+                   " -> \"" + in.text + "\"";
+        case Opcode::Report:    return "REPORT " + table + " -> \"" + in.text + "\"";
         case Opcode::ParseDate: return "PARSE_DATE " + target;
         case Opcode::Derive:    return "DERIVE " + target + " = " + in.text;
         case Opcode::Join:

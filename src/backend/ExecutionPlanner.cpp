@@ -82,6 +82,9 @@ def refuse(path, problem, needed_by):
     if (tables) {
         out << PandasCodegen::helpers(loads(TableFormat::Csv), loads(TableFormat::Parquet));
     }
+    if (uses([](const Instruction& in) { return in.op == Opcode::Plot || in.op == Opcode::Report; })) {
+        out << PandasCodegen::chartHelpers();
+    }
     if (images) {
         out << OpenCVCodegen::helpers(letterbox, grayscale);
     }

@@ -162,7 +162,9 @@ void printDryRun(std::ostream& out, const IRProgram& program, const std::string&
                                   (in.text == "MANY" ? ", rows repeated for each match" : "") + line);
                 break;
             case Opcode::Aggregate: changes.push_back(table + ": one row per group" + line); break;
-            case Opcode::Save:      writes.push_back(outputFolder + "/" + in.text); break;
+            case Opcode::Save:
+            case Opcode::Plot:
+            case Opcode::Report:    writes.push_back(outputFolder + "/" + in.text); break;
             case Opcode::SaveImages:
                 writes.push_back(outputFolder + "/" + in.text + " (" +
                                  std::to_string(program.images.at(in.dataset).images.size()) + " image file(s))");

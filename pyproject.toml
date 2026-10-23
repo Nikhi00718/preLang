@@ -26,6 +26,7 @@ classifiers = [
 
 [project.optional-dependencies]
 images = ["opencv-python-headless"]
+charts = ["matplotlib"]
 
 [project.urls]
 Repository = "https://github.com/Nikhi00718/preLang"

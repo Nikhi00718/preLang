@@ -21,6 +21,8 @@ public:
 
     // Helper functions the generated statements call: the CSV reader, the Parquet reader, or both.
     static std::string helpers(bool csv, bool parquet);
+    // matplotlib and the helpers of PLOT and REPORT, for a program that has one.
+    static std::string chartHelpers();
 
     // df_students for a TABLE, tables_company["staff"] for a table in a TABLESET
     static std::string tableVariable(const std::string& dataset, const std::string& table);

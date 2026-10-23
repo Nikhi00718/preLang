@@ -10,9 +10,10 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends g++ cmake ninja-build python3 python3-venv \
  && rm -rf /var/lib/apt/lists/*
 
-# The generated programs need pandas (tables) and OpenCV (images); the release tool needs numpy.
+# The generated programs need pandas (tables), OpenCV (images) and matplotlib (PLOT, REPORT);
+# the release tool needs numpy.
 RUN python3 -m venv /opt/venv \
- && /opt/venv/bin/pip install --no-cache-dir numpy pandas pyarrow opencv-python-headless
+ && /opt/venv/bin/pip install --no-cache-dir numpy pandas pyarrow opencv-python-headless matplotlib
 ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /preplang

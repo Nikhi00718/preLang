@@ -172,6 +172,114 @@ std::string PandasCodegen::tableVariable(const std::string& dataset, const std::
                          : "tables_" + identifierPart(dataset) + "[" + pythonString(table) + "]";
 }
 
+std::string PandasCodegen::chartHelpers() {
+    return R"py(import base64
+import html
+
+import matplotlib
+
+matplotlib.use("Agg")  # no window: the charts go to files
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+
+
+def draw(axes, kind, frame, columns, bins=0, bounds=()):
+    """One chart of PLOT on axes. Missing values are left out, except in BAR, which counts them."""
+    if kind == "HISTOGRAM":
+        values = frame[columns[0]].dropna().astype("float64")
+        axes.hist(values, bins=bins or 10, color="#4c72b0")
+        for low, high, contract in bounds:
+            for x in (low, high):
+                axes.axvline(x, color="#c44e52", linestyle="--", linewidth=1)
+            axes.text(high, axes.get_ylim()[1], contract + " ", color="#c44e52", fontsize=7, ha="right", va="top")
+        axes.set_xlabel(columns[0])
+        axes.set_ylabel("rows")
+        axes.yaxis.set_major_locator(MaxNLocator(integer=True))
+    elif kind == "BAR":
+        counts = frame[columns[0]].astype("string").fillna("(missing)").value_counts().sort_index()
+        axes.bar(list(counts.index), counts.to_numpy(), color="#4c72b0")
+        axes.set_xlabel(columns[0])
+        axes.set_ylabel("rows")
+        axes.tick_params(axis="x", labelrotation=45)
+    else:
+        data = frame[columns].dropna()
+        if kind == "LINE":
+            data = data.sort_values(columns[0])
+            axes.plot(data[columns[0]].to_numpy(), data[columns[1]].astype("float64").to_numpy(), color="#4c72b0")
+        else:
+            axes.scatter(data[columns[0]].astype("float64"), data[columns[1]].astype("float64"), s=8,
+                         color="#4c72b0")
+        axes.set_xlabel(columns[0])
+        axes.set_ylabel(columns[1])
+
+
+def plot(table, kind, frame, columns, path, bins=0, bounds=()):
+    """PLOT: one chart, as an image file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure, axes = plt.subplots(figsize=(6.4, 4.0))
+    draw(axes, kind, frame, columns, bins, bounds)
+    axes.set_title(f"{table}: {kind.lower()} of {' and '.join(columns)} ({len(frame)} rows)", fontsize=9)
+    figure.tight_layout()
+    figure.savefig(path)
+    plt.close(figure)
+    outputs.append({"file": path.name, "rows": len(frame)})
+    print("Plotted", kind.lower(), "of", ", ".join(columns), "to", path)
+
+
+def chart_html(kind, frame, column):
+    """A small chart of one column, as an <img> with the PNG inline."""
+    figure, axes = plt.subplots(figsize=(3.2, 1.8))
+    draw(axes, kind, frame, [column])
+    axes.set_xlabel("")
+    figure.tight_layout()
+    buffer = io.BytesIO()
+    figure.savefig(buffer, format="png")
+    plt.close(figure)
+    return '<img alt="" src="data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode() + '">'
+
+
+def write_report(table, frame, path, facts, contracts):
+    """REPORT: every column as this run has it, next to what the compiler knew about it here."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    known = dict(facts)
+    rows = []
+    for column in frame.columns:
+        values = frame[column]
+        present = values.dropna()
+        numeric = pd.api.types.is_numeric_dtype(values.dtype) and not pd.api.types.is_bool_dtype(values.dtype)
+        dated = pd.api.types.is_datetime64_any_dtype(values.dtype)
+        spread = f"{present.min()} to {present.max()}" if (numeric or dated) and len(present) else ""
+        if numeric and len(present):
+            chart = chart_html("HISTOGRAM", frame, column)
+        elif values.nunique(dropna=False) <= 30:
+            chart = chart_html("BAR", frame, column)
+        else:
+            chart = ""
+        rows.append("<tr>" + "".join(f"<td>{html.escape(str(cell))}</td>" for cell in (
+            column, known.get(column, ""), values.dtype, int(values.isna().sum()), values.nunique(), spread)) +
+            f"<td>{chart}</td></tr>")
+    checks = "".join(f"<li>{html.escape(text)}: {html.escape(verdict)}</li>" for text, verdict in contracts)
+    rerun = "".join(f"<li>{html.escape(item)}</li>" for item in deoptimized)
+    inputs = "".join(f"<li>{html.escape(name)}: " + ("the file it was compiled with" if same else
+                     "another file, admitted by its data certificate") + "</li>" for name, same in same_input.items())
+    page = f"""<!doctype html><html><head><meta charset="utf-8"><title>{html.escape(table)}</title>
+<style>body{{font-family:sans-serif;margin:24px;color:#222}}table{{border-collapse:collapse}}
+td,th{{border:1px solid #ccc;padding:4px 8px;text-align:left;vertical-align:top}}th{{background:#f2f2f2}}</style>
+</head><body><h1>{html.escape(table)}: {len(frame)} rows, {len(frame.columns)} columns</h1>
+<h2>Inputs</h2><ul>{inputs}</ul>
+<h2>Columns</h2><table><tr><th>column</th><th>known at compile time</th><th>dtype</th><th>missing</th>
+<th>distinct</th><th>range</th><th>values</th></tr>{"".join(rows)}</table>
+<h2>Contracts</h2><ul>{checks or "<li>none</li>"}</ul>
+<h2>Removed checks that ran again on this input</h2><ul>{rerun or "<li>none</li>"}</ul>
+</body></html>"""
+    path.write_text(page, encoding="utf-8")
+    outputs.append({"file": path.name, "rows": len(frame)})
+    print("Wrote the report of", table, "to", path)
+
+
+)py";
+}
+
 std::string PandasCodegen::helpers(bool csv, bool parquet) {
     std::string code = R"(KINDS = {
     "INTEGER": pd.api.types.is_integer_dtype,
@@ -494,6 +602,40 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
                          pythonString(item.type == "FLOAT" ? "Float64" : "Int64");
             }
             return code + "}).reset_index().astype({" + types + "})\n";
+        }
+        case Opcode::Plot: {
+            // The bounds of the BETWEEN contracts on the column so far, drawn on a histogram.
+            std::string bounds = "[";
+            if (in.column == "HISTOGRAM") {
+                for (const Instruction& check : program.code) {
+                    if (check.op == Opcode::Check && check.text == "BETWEEN" && check.line < in.line &&
+                        check.dataset == in.dataset && check.table == in.table && check.column == in.columns[0]) {
+                        bounds += std::string(bounds.size() > 1 ? ", " : "") + "(" + check.values[0].value + ", " +
+                                  check.values[1].value + ", " +
+                                  pythonString("line " + std::to_string(check.line) + ": BETWEEN " +
+                                               check.values[0].value + " AND " + check.values[1].value) +
+                                  ")";
+                    }
+                }
+            }
+            return "plot(" + pythonString(tableKey(in.dataset, in.table)) + ", " + pythonString(in.column) + ", " +
+                   table + ", " + pythonList(in.columns) + ", HERE / " + pythonString(in.text) + ", " +
+                   std::to_string(in.numbers.empty() ? 0 : in.numbers[0]) + ", " + bounds + "])\n";
+        }
+        case Opcode::Report: {
+            std::string facts = "[";
+            std::string contracts = "[";
+            for (const std::string& item : in.columns) {
+                const size_t first = item.find('\t');
+                const size_t second = item.find('\t', first + 1);
+                const std::string kind = item.substr(0, first);
+                const std::string pair = "(" + pythonString(item.substr(first + 1, second - first - 1)) + ", " +
+                                         pythonString(item.substr(second + 1)) + ")";
+                std::string& list = kind == "column" ? facts : contracts;
+                list += std::string(list.size() > 1 ? ", " : "") + pair;
+            }
+            return "write_report(" + pythonString(tableKey(in.dataset, in.table)) + ", " + table + ", HERE / " +
+                   pythonString(in.text) + ",\n       " + facts + "],\n       " + contracts + "])\n";
         }
         case Opcode::Save:
             return "path = HERE / " + pythonString(in.text) + "\npath.parent.mkdir(parents=True, exist_ok=True)\n" +

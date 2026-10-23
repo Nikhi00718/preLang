@@ -56,7 +56,7 @@ skipped, so all lexical errors of a file are reported at once).
 
 **Keywords.** Statement keywords: `LOAD LOAD_TABLES LOAD_IMAGE LOAD_IMAGES DROP_NULL FILL_NULL
 NORMALIZE FILTER SELECT DROP PARSE_DATE DERIVE JOIN AGGREGATE SAVE SAVE_TABLES SAVE_IMAGE SAVE_IMAGES
-EXPECT RESIZE GRAYSCALE COMPRESS CONVERT REMOVE_CORRUPT LINK`. Other keywords: `AS WITH TO ON USING
+EXPECT RESIZE GRAYSCALE COMPRESS CONVERT REMOVE_CORRUPT LINK PLOT REPORT`. Other keywords: `AS WITH TO ON USING
 ZSCORE MINMAX RANGE WHERE TYPE EXCEPT IF_EXISTS RECURSIVE MEAN MEDIAN MODE NUMBER NUMERIC STRING
 BOOLEAN NULLABLE NOT_NULL BETWEEN UNIQUE REFERENCES SCHEMA_SAME_AS CHANNELS MIN_WIDTH MIN_HEIGHT
 MATCH_RATE KEEP_ASPECT QUALITY JPG PNG NPY AND OR NOT TRUE FALSE`.
@@ -126,6 +126,11 @@ runs. *No effect* warnings mark statements the optimizer removes (section 9, `--
 | `LOAD_IMAGE "path" AS i;` | reads one PNG or JPG file | file cannot be opened or is not PNG/JPG |
 | `LOAD_IMAGES "folder/" AS i [RECURSIVE];` | reads every PNG and JPG of a folder | folder cannot be opened or has no images |
 | `SAVE t AS "out.csv";` | writes a table; `.parquet` writes Parquet, anything else CSV | `t` is not a TABLE (use `SAVE_TABLES` for a TABLESET) |
+| `PLOT t HISTOGRAM c [BINS n] TO "c.png";` | a histogram of a numeric column (matplotlib); the bounds of earlier `BETWEEN` contracts on it are drawn as red lines | `c` must be numeric; `n` from 1 to 1000; the file must be `.png`, `.svg` or `.pdf` |
+| `PLOT t BAR c TO "c.svg";` | the rows of each value of a column, missing values included | `c` must not be FLOAT (use `HISTOGRAM`) |
+| `PLOT t SCATTER x, y TO "xy.png";` | one point per row with both values | both numeric |
+| `PLOT t LINE x, y TO "xy.pdf";` | `y` against `x`, sorted by `x` | `x` numeric or DATETIME, `y` numeric |
+| `REPORT t TO "profile.html";` | one web page: for every column its type, missing values, distinct values, range and a small chart as this run has them, next to what the compiler knew there; the contracts on `t` so far with their verdicts; which input files were the compiled ones; the removed checks that ran again | the file must be `.html` |
 | `SAVE_TABLES ts TO "folder/";` | writes every table of a TABLESET | `ts` is not a TABLESET |
 | `SAVE_IMAGE i AS "out.png";` | writes one image | pixels that the format cannot store (below) |
 | `SAVE_IMAGES i TO "folder/";` | writes every image, keeping subfolders | the same |
@@ -221,11 +226,14 @@ is an error.
 program        = { statement } EOF ;
 statement      = load | drop_null | fill_null | normalize | filter | select | drop | parse_date | derive
                | join | aggregate | save | expect | resize | grayscale | compress | convert | remove_corrupt
-               | link ;
+               | link | plot | report ;
 
 load           = ( "LOAD" | "LOAD_TABLES" | "LOAD_IMAGE" | "LOAD_IMAGES" ) STRING "AS" IDENT [ "RECURSIVE" ] ";" ;
 save           = "SAVE" table_ref "AS" STRING ";"  | "SAVE_TABLES" IDENT "TO" STRING ";"
                | "SAVE_IMAGE" IDENT "AS" STRING ";" | "SAVE_IMAGES" IDENT "TO" STRING ";" ;
+plot           = "PLOT" table_ref ( "HISTOGRAM" IDENT [ "BINS" integer ] | "BAR" IDENT
+                                  | ( "SCATTER" | "LINE" ) IDENT "," IDENT ) "TO" STRING ";" ;
+report         = "REPORT" table_ref "TO" STRING ";" ;
 drop_null      = "DROP_NULL" table_selector [ column_list ] ";" ;
 fill_null      = "FILL_NULL" column_selector "WITH" ( literal | "MEAN" | "MEDIAN" | "MODE" ) [ "IF_EXISTS" ] ";" ;
 normalize      = "NORMALIZE" column_selector ( "RANGE" number number

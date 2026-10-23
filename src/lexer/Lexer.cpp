@@ -25,6 +25,7 @@ const std::unordered_map<std::string, TokenType>& keywordTable() {
         {"EXPECT", TokenType::EXPECT}, {"RESIZE", TokenType::RESIZE}, {"GRAYSCALE", TokenType::GRAYSCALE},
         {"COMPRESS", TokenType::COMPRESS}, {"CONVERT", TokenType::CONVERT},
         {"REMOVE_CORRUPT", TokenType::REMOVE_CORRUPT}, {"LINK", TokenType::LINK},
+        {"PLOT", TokenType::PLOT}, {"REPORT", TokenType::REPORT},
         {"AS", TokenType::AS}, {"WITH", TokenType::WITH}, {"TO", TokenType::TO}, {"ON", TokenType::ON},
         {"USING", TokenType::USING}, {"ZSCORE", TokenType::ZSCORE}, {"MINMAX", TokenType::MINMAX},
         {"MEAN", TokenType::MEAN}, {"MEDIAN", TokenType::MEDIAN}, {"MODE", TokenType::MODE},

@@ -215,6 +215,22 @@ value is, and `MEAN`, `MIN` and `MAX` stay within the column's range, so contrac
 be proven (`examples/tabular/join_aggregate.prep`). `BY`, `COUNT`, `SUM`, `MIN` and `MAX` are not
 reserved words: columns may have these names.
 
+**Charts and reports.** `PLOT` writes a chart with matplotlib (`pip install matplotlib`), and
+`REPORT` a web page that profiles a table: each column as the run finds it, next to what the compiler
+knew about it at that line, the contracts with their verdicts, and the removed checks a new batch made
+run again. Both are checked like any statement (the columns exist and have a type the chart can show,
+the file is an image or a web page), change no data, and keep their columns from being pruned.
+
+```text
+PLOT students HISTOGRAM marks BINS 10 TO "charts/marks.png";      # EXPECT bounds drawn as red lines
+PLOT students BAR department TO "charts/departments.svg";
+PLOT students SCATTER attendance, marks TO "charts/attendance_vs_marks.png";
+PLOT traffic LINE date_time, traffic_volume TO "charts/volume.pdf";
+REPORT students TO "charts/students_clean.html";
+```
+
+`examples/tabular/charts.prep` profiles the student data before and after cleaning.
+
 **Column types** are BOOLEAN, INTEGER, FLOAT and STRING, inferred from the CSV cells, plus DATETIME
 for the date and timestamp columns of Parquet files and the columns `PARSE_DATE` reads. A DATETIME
 column can be kept, dropped, saved, checked with `NOT_NULL` and taken apart with `DERIVE`; comparing
@@ -244,11 +260,14 @@ FILL_NULL company.*.age WITH 0 IF_EXISTS;            # skip the tables without t
 program        = { statement } EOF ;
 statement      = load | drop_null | fill_null | normalize | filter | select | drop | parse_date | derive
                | join | aggregate | save | expect | resize | grayscale | compress | convert | remove_corrupt
-               | link ;
+               | link | plot | report ;
 
 load           = ( "LOAD" | "LOAD_TABLES" | "LOAD_IMAGE" | "LOAD_IMAGES" ) STRING "AS" IDENT [ "RECURSIVE" ] ";" ;
 save           = "SAVE" table_ref "AS" STRING ";"  | "SAVE_TABLES" IDENT "TO" STRING ";"
                | "SAVE_IMAGE" IDENT "AS" STRING ";" | "SAVE_IMAGES" IDENT "TO" STRING ";" ;
+plot           = "PLOT" table_ref ( "HISTOGRAM" IDENT [ "BINS" integer ] | "BAR" IDENT
+                                  | ( "SCATTER" | "LINE" ) IDENT "," IDENT ) "TO" STRING ";" ;
+report         = "REPORT" table_ref "TO" STRING ";" ;
 drop_null      = "DROP_NULL" table_selector [ column_list ] ";" ;
 fill_null      = "FILL_NULL" column_selector "WITH" ( literal | "MEAN" | "MEDIAN" | "MODE" ) [ "IF_EXISTS" ] ";" ;
 normalize      = "NORMALIZE" column_selector ( "RANGE" number number
