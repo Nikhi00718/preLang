@@ -64,10 +64,11 @@ generates one Python program that admits a batch and guards every removed instru
 
 \input{figures/figure-arch}
 
-The repository also holds \texttt{proofs/} (\LeanLines{} lines of Lean~4~\cite{lean4}), which prove that
-for any sound and monotone analysis the generated program gives the output of a fresh compilation on every
-batch it admits, and that the analysis of a core of the language without joins and groups is sound and
-monotone. It also holds \texttt{tests/} (\TestCount{} checks in \TestSuites{} suites), the pandas lifter
+The repository also holds \texttt{proofs/} (\LeanLines{} lines of Lean~4~\cite{lean4}). They prove two
+things: for any sound and monotone analysis, the generated program gives the output of a fresh compilation
+on every batch it admits; and the analysis of a core of the language is sound and monotone. Joins, groups,
+dates and images are outside that core. Joins and groups are checked by the differential test of
+Section~\ref{sec:impact}, dates and images only by unit tests and the examples. The other folders are \texttt{tests/} (\TestCount{} checks in \TestSuites{} suites), the pandas lifter
 (\texttt{frontend/}), the tools below (\texttt{tools/}), a VS Code extension and the evaluation
 (\texttt{eval/}).
 
@@ -94,8 +95,8 @@ two \texttt{RESIZE}s, are applied only with \texttt{--approx}.
 guarantees against the next stage's certificates; \texttt{frontend/\allowbreak pandas2prep.py} lifts the
 cleaning part of pandas scripts into \PL, up to the first statement the language cannot express; and with
 \texttt{--facts} a program compiles from differentially private facts that its data owner released
-(\texttt{tools/\allowbreak release\_facts.py}), without opening an input file. The data owner then runs the
-generated program, which checks the facts on the real data, so every run stays exact.
+(\texttt{tools/\allowbreak release\_facts.py}) without opening an input file; the generated program checks
+those facts on the real data, so every run stays exact.
 \item \textbf{Inspection.} Every phase can be printed (\texttt{--tokens} to \texttt{--python}), together with
 an execution plan (\texttt{--explain}), the files a run would touch (\texttt{--dry-run}) and the
 diagnostics as JSON (\texttt{--json}).
@@ -156,30 +157,33 @@ test found two bugs (column pruning, a pandas~3 incompatibility) that had made \
 optimized runs wrong, and three more seeds (\DiffSeedPrograms{} programs) found a third (a statistic fill
 removed as a dead store, \DiffSeedBeforeWrong{} wrong run); after the fixes all \DiffSeedAgree{} agree
 and none of \DiffSeedReuse{} reuses is wrong. The CSV fuzzer found an out-of-bounds read on a NUL byte.
-Each fix has a regression test. The random programs do not cover dates and images.
+Each fix has a regression test.
 \item \textbf{Performance.} On a table of 200{,}000 rows the optimized program runs in \TabProcOpt\,s
-instead of \TabProcOz\,s after Python start-up; on the small inputs of the programs below, the median
-speedup is \CenSpeedMed$\times$. An image
-pipeline runs as fast as a hand-written streaming script, in \ImgPlMem\,MiB instead of the
-\ImgBaseMem\,MiB of a script that loads every image.
+instead of \TabProcOz\,s after Python start-up. An image pipeline runs as fast as a hand-written
+streaming script, in \ImgPlMem\,MiB instead of the \ImgBaseMem\,MiB of a script that loads every image.
 \item \textbf{Optimization.} On \CenPrograms{} programs (the examples and programs lifted from GitHub
 scripts) the optimizer removes \CenInstrCut\% of the instructions (\CenInstrBefore{} to \CenInstrAfter),
 \CenChecksBefore{} to \CenChecksAfter{} run-time checks and \CenColsCut\% of the columns read, and changes
 \CenChanged{} programs; all \CenSame{} write the same files with and without it. The lifted scripts
-contain no contracts, so nearly all removed checks come from the examples and the three monthly pipelines.
+contain no contracts, so all removed checks come from the examples and the three monthly pipelines.
 \item \textbf{Real programs.} Of \RbTotal{} data-preparation failures reported in GitHub issues, \RbEarly{}
 are reported before any data is processed (\RbContract{} of them only after the requirement is written as an
 \texttt{EXPECT}). Of \CorpusBothScripts{} Titanic and House Prices scripts from GitHub the lifter
 translates \CorpusBothLifted{}; their programs reproduce a fresh compilation in \CorpusBothSame{} of
 \CorpusBothRuns{} runs on new batches, refuse the other 14, and are never wrong. Of \DriftAll{} traffic and
 bike scripts it translates \DriftCompiled{}, which reproduce a fresh run on all \DriftRuns{} later real
-months.
+months. Most untranslated scripts fail before the language matters: 547 of the 945 never call
+\texttt{pd.read\_csv} on a file path, which the lifter needs to find the input.
 \item \textbf{Comparison.} Three monthly pipelines, compiled once and run on \RealRuns{} later real months
 (UCI traffic and bikes, NYC taxi), handle \RealDeoptCorrect{} (\RealDeoptCorrectPct\%) as a fresh
 compilation would and none wrongly; the \RealDeoptNeedless{} they refuse are taxi months in which
-\texttt{passenger\_count} changed type. Great Expectations and pandera, given the same first month, refuse
+\texttt{passenger\_count} changed type. The validators answer the same question, whether the pipeline may
+run on a month: each learns from the month the pipeline was compiled on, as its documentation suggests
+(Great Expectations profiles the columns, pandera and TFDV infer a schema), and every answer is scored against a fresh
+compilation of the month. Great Expectations and pandera refuse
 \RealValidatorStopMin--\RealValidatorStopMax\% of the months, and TFDV admits \RealValidatorWrongMax{}
-months on which the program then differs. All 24 mistakes injected into 5 example programs are reported at
+months on which the program then differs. The validators were not built for this decision; the numbers
+show what it costs to use them for it. All 24 mistakes injected into 5 example programs are reported at
 compile time, where a script-style pandas program crashes on 20 and writes wrong output on 4.
 \item \textbf{Private compilation.} At $\varepsilon=1$ the private facts keep every removal of the taxi
 and traffic pipelines but only 14\% of the bikes pipeline's, where AIM~\cite{mckenna2022aim} with its
@@ -192,18 +196,18 @@ from a fresh compilation.
 by \OhPctLow\% to \OhPctHigh\%, within measurement noise.
 \end{itemize}
 
-\noindent \texttt{eval/\allowbreak reproduce.sh check} rebuilds the compiler, runs every test and regenerates
-every number above from the committed results without network access; \texttt{full} reruns the
-experiments in pinned environments. The GitHub script corpora are frozen as evaluated, each file by its
-URL at a fixed commit and its hash, so other pipeline analyses can be compared on the same programs and
-batches.
+\noindent \texttt{eval/\allowbreak reproduce.sh check} (about ten minutes, no network) rebuilds the compiler,
+runs every test, regenerates every number above from the committed results, and reruns small versions of
+the differential test and the optimization census, which the Docker image can also run.
+\texttt{full} (several hours) downloads the inputs and reruns every experiment, and \texttt{baselines}
+reruns the validators, in pinned environments. The GitHub script corpora are frozen as evaluated, each
+file by its URL at a fixed commit and its hash.
 
 \section{Limitations and conclusions}
 
 Joins are lookups on a key with one name in both tables (no many-to-many joins), groups have five
 aggregates, and only Python is generated. A changed column type is refused rather than handled. The
-mechanized proofs cover a core of the analysis without joins and groups; the rest is tested. The lifter
-translates only the part of a pandas script the language can express, which was a minority of the scripts
-above. The comparison with validators uses three pipelines written by the author, and no user study has
-been run; \texttt{docs/\allowbreak USER\_STUDY.md} is its protocol. Planned work is general joins,
+mechanized proofs do not cover joins, groups, dates or images. The lifter translated a minority of the
+GitHub scripts above. The comparison with validators uses three pipelines written by the author, and
+\PL has no outside users yet and no user study; \texttt{docs/\allowbreak USER\_STUDY.md} is its protocol. Planned work is general joins,
 generated code that adapts to type changes, and that study, with people who write pandas cleaning scripts.
