@@ -13,6 +13,7 @@ bool isWordPart(char c) { return isWordStart(c) || isDigit(c); }
 
 const std::unordered_map<std::string, TokenType>& keywordTable() {
     static const std::unordered_map<std::string, TokenType> keywords = {
+        // clang-format off
         {"LOAD", TokenType::LOAD}, {"LOAD_TABLES", TokenType::LOAD_TABLES},
         {"LOAD_IMAGE", TokenType::LOAD_IMAGE}, {"LOAD_IMAGES", TokenType::LOAD_IMAGES},
         {"DROP_NULL", TokenType::DROP_NULL}, {"FILL_NULL", TokenType::FILL_NULL},
@@ -38,6 +39,7 @@ const std::unordered_map<std::string, TokenType>& keywordTable() {
         {"QUALITY", TokenType::QUALITY}, {"JPG", TokenType::JPG}, {"PNG", TokenType::PNG}, {"NPY", TokenType::NPY},
         {"AND", TokenType::AND}, {"OR", TokenType::OR}, {"NOT", TokenType::NOT},
         {"TRUE", TokenType::TRUE}, {"FALSE", TokenType::FALSE},
+        // clang-format on
     };
     return keywords;
 }
@@ -93,11 +95,9 @@ const char* categoryName(TokenType type) {
         return "KEYWORD";
     }
     switch (type) {
-        case TokenType::IDENTIFIER:
-            return "IDENTIFIER";
+        case TokenType::IDENTIFIER:     return "IDENTIFIER";
         case TokenType::NUMBER_LITERAL:
-        case TokenType::STRING_LITERAL:
-            return "LITERAL";
+        case TokenType::STRING_LITERAL: return "LITERAL";
         case TokenType::EQUAL_EQUAL:
         case TokenType::NOT_EQUAL:
         case TokenType::LESS:
@@ -107,19 +107,15 @@ const char* categoryName(TokenType type) {
         case TokenType::MINUS:
         case TokenType::PLUS:
         case TokenType::SLASH:
-        case TokenType::EQUAL:
-            return "OPERATOR";
-        case TokenType::END_OF_FILE:
-            return "END";
-        default:
-            return "PUNCTUATION";
+        case TokenType::EQUAL:          return "OPERATOR";
+        case TokenType::END_OF_FILE:    return "END";
+        default:                        return "PUNCTUATION";
     }
 }
 
 }  // namespace
 
-Lexer::Lexer(std::string source, Diagnostics& diagnostics)
-    : source_(std::move(source)), diagnostics_(diagnostics) {}
+Lexer::Lexer(std::string source, Diagnostics& diagnostics) : source_(std::move(source)), diagnostics_(diagnostics) {}
 
 std::vector<Token> Lexer::tokenize() {
     while (true) {
@@ -193,9 +189,7 @@ void Lexer::scanToken() {
             }
             return;
 
-        default:
-            report(std::string("unexpected character '") + c + "'", "");
-            return;
+        default: report(std::string("unexpected character '") + c + "'", ""); return;
     }
 }
 
@@ -237,9 +231,7 @@ void Lexer::scanQuoted(char quote, TokenType type) {
     addToken(type, source_.substr(tokenStart_ + 1, position_ - tokenStart_ - 2));
 }
 
-void Lexer::addToken(TokenType type) {
-    addToken(type, source_.substr(tokenStart_, position_ - tokenStart_));
-}
+void Lexer::addToken(TokenType type) { addToken(type, source_.substr(tokenStart_, position_ - tokenStart_)); }
 
 void Lexer::addToken(TokenType type, std::string lexeme) {
     const int length = static_cast<int>(position_ - tokenStart_);
@@ -250,9 +242,7 @@ void Lexer::report(const std::string& message, const std::string& hint) {
     diagnostics_.error(Phase::Lexical, tokenLocation_, message, hint);
 }
 
-bool Lexer::isAtEnd() const {
-    return position_ >= source_.size();
-}
+bool Lexer::isAtEnd() const { return position_ >= source_.size(); }
 
 char Lexer::peek(size_t offset) const {
     const size_t index = position_ + offset;
@@ -279,12 +269,12 @@ bool Lexer::match(char expected) {
 }
 
 void printTokens(std::ostream& out, const std::vector<Token>& tokens) {
-    out << std::left << std::setw(10) << "LINE:COL" << std::setw(17) << "TYPE"
-        << std::setw(13) << "CATEGORY" << "LEXEME\n";
+    out << std::left << std::setw(10) << "LINE:COL" << std::setw(17) << "TYPE" << std::setw(13) << "CATEGORY"
+        << "LEXEME\n";
     for (const Token& token : tokens) {
         const std::string position = std::to_string(token.location.line) + ":" + std::to_string(token.location.column);
         const std::string lexeme = token.type == TokenType::STRING_LITERAL ? "\"" + token.lexeme + "\"" : token.lexeme;
-        out << std::setw(10) << position << std::setw(17) << typeName(token.type)
-            << std::setw(13) << categoryName(token.type) << lexeme << '\n';
+        out << std::setw(10) << position << std::setw(17) << typeName(token.type) << std::setw(13)
+            << categoryName(token.type) << lexeme << '\n';
     }
 }

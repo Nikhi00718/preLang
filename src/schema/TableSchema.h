@@ -15,16 +15,16 @@ struct ColumnInfo {
     bool hasRange = false;          // true once a numeric value has been seen
     double min = 0;
     double max = 0;
-    bool boundsExact = true;        // min and max are values in the data, not just bounds
-    std::string stringReason;       // for STRING columns with other values too: e.g. line 4 has "abc"
+    bool boundsExact = true;   // min and max are values in the data, not just bounds
+    std::string stringReason;  // for STRING columns with other values too: e.g. line 4 has "abc"
     // Dates, for a STRING column that PARSE_DATE reads. They are computed from the values
     // only for such a column (no other program pays for them); a certificate may weaken them.
-    bool datesKnown = false;        // the date facts below are set
-    bool allDates = false;          // every present value is a date in one ISO layout
-    bool hasDates = false;          // a value is present: dateMin and dateMax are bounds of the dates
-    double dateMin = 0;             // seconds since 1970-01-01 (no time zone)
+    bool datesKnown = false;  // the date facts below are set
+    bool allDates = false;    // every present value is a date in one ISO layout
+    bool hasDates = false;    // a value is present: dateMin and dateMax are bounds of the dates
+    double dateMin = 0;       // seconds since 1970-01-01 (no time zone)
     double dateMax = 0;
-    std::string notDateReason;      // e.g. row 5 has "n/a"
+    std::string notDateReason;  // e.g. row 5 has "n/a"
     // Private compilation: where the released answers saw values, enough of them to reach the
     // release's threshold: below seenBelow (at or below it if seenBelowOrAt) and above seenAbove
     // (at or above it if seenAboveOrAt); infinite if no value was seen on that side. The
@@ -42,16 +42,16 @@ enum class TableFormat { Csv, Parquet };
 
 // One table file as it was read at compile time.
 struct TableSchema {
-    std::string name;               // table name: the dataset name, or the file name inside a TABLESET
-    std::string file;               // path of the file
+    std::string name;  // table name: the dataset name, or the file name inside a TABLESET
+    std::string file;  // path of the file
     TableFormat format = TableFormat::Csv;
     std::uint64_t fingerprint = 0;  // CRC-32 of the file (Parquet: of its footer), checked again at run time
     std::int64_t rowCount = 0;
     std::vector<ColumnInfo> columns;
-    bool valuesKnown = true;        // false when these facts describe every file a data certificate
-                                    // admits, not the values of one file
-    bool released = false;          // private compilation: the facts are the data owner's released
-                                    // answers (schema/ReleasedFacts.h); no file was read
+    bool valuesKnown = true;  // false when these facts describe every file a data certificate
+                              // admits, not the values of one file
+    bool released = false;    // private compilation: the facts are the data owner's released
+                              // answers (schema/ReleasedFacts.h); no file was read
 };
 
 // LOAD_TABLES reads every CSV and Parquet file of a folder.

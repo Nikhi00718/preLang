@@ -105,7 +105,7 @@ struct Expr {
 struct ComparisonExpr : Expr {
     SourceLocation location;  // where the column name is
     std::string column;
-    std::string op;           // ==  !=  <  <=  >  >=
+    std::string op;  // ==  !=  <  <=  >  >=
     Literal value;
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
@@ -282,10 +282,18 @@ struct SaveStmt : Stmt {
 };
 
 enum class ConstraintKind {
-    IsNumber, IsString, IsBoolean, NotNull, Between, Unique,  // column contracts
-    References, SchemaSameAs,                                 // cross-table contracts
-    Channels, MinWidth, MinHeight,                            // image contracts
-    MatchRate,                                                // linked dataset contract
+    IsNumber,
+    IsString,
+    IsBoolean,
+    NotNull,
+    Between,
+    Unique,  // column contracts
+    References,
+    SchemaSameAs,  // cross-table contracts
+    Channels,
+    MinWidth,
+    MinHeight,  // image contracts
+    MatchRate,  // linked dataset contract
 };
 
 // EXPECT students.marks BETWEEN 0 AND 100;   EXPECT company.*.id UNIQUE IF_EXISTS;

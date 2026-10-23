@@ -38,9 +38,9 @@ bool contains(const std::vector<std::string>& items, const std::string& item) {
 bool sameKind(ColumnType type, const Literal& value) {
     switch (type) {
         case ColumnType::Integer:
-        case ColumnType::Float:   return value.kind == LiteralKind::Number;
-        case ColumnType::String:  return value.kind == LiteralKind::String;
-        case ColumnType::Boolean: return value.kind == LiteralKind::Boolean;
+        case ColumnType::Float:    return value.kind == LiteralKind::Number;
+        case ColumnType::String:   return value.kind == LiteralKind::String;
+        case ColumnType::Boolean:  return value.kind == LiteralKind::Boolean;
         case ColumnType::DateTime: return false;  // there are no date literals
     }
     return false;
@@ -64,10 +64,10 @@ std::string describe(const Literal& value) {
 
 std::string valueHint(ColumnType type) {
     switch (type) {
-        case ColumnType::Integer: return "use a whole number, e.g. 0";
-        case ColumnType::Float:   return "use a number, e.g. 0.5";
-        case ColumnType::String:  return "put the text in double quotes";
-        case ColumnType::Boolean: return "use TRUE or FALSE";
+        case ColumnType::Integer:  return "use a whole number, e.g. 0";
+        case ColumnType::Float:    return "use a number, e.g. 0.5";
+        case ColumnType::String:   return "put the text in double quotes";
+        case ColumnType::Boolean:  return "use TRUE or FALSE";
         case ColumnType::DateTime: return "DATETIME columns can be kept, dropped, saved or checked with NOT_NULL";
     }
     return "";
@@ -166,7 +166,7 @@ Range datePartRange(const std::string& part, const Range& dates) {
     }
     // WEEKDAY
     return known && b.days - a.days < 7 && a.weekday <= b.weekday ? Range{double(a.weekday), double(b.weekday)}
-                                                                   : Range{0, 6};
+                                                                  : Range{0, 6};
 }
 
 ImageState makeImageState(const ImageSetSchema& set) {
@@ -263,11 +263,11 @@ bool SemanticAnalyzer::checkTypes(const Selector& selector, const DatasetSymbol&
                            rule + ", but " + badName + " is " + columnTypeName(firstBad->column->type),
                            hintFor(*firstBad->column));
     } else {
-        Diagnostic& error = diagnostics_.error(Phase::Type, selector.location,
-                                               rule + ": " + std::to_string(bad) + " of " +
-                                                   std::to_string(matched.size()) + " columns matched by '" +
-                                                   selector.text() + "' break it",
-                                               "narrow the selector, e.g. WHERE TYPE NUMERIC or EXCEPT [...]");
+        Diagnostic& error =
+            diagnostics_.error(Phase::Type, selector.location,
+                               rule + ": " + std::to_string(bad) + " of " + std::to_string(matched.size()) +
+                                   " columns matched by '" + selector.text() + "' break it",
+                               "narrow the selector, e.g. WHERE TYPE NUMERIC or EXCEPT [...]");
         error.notes = notes;
     }
     return false;
@@ -300,10 +300,10 @@ bool SemanticAnalyzer::decodable(DatasetSymbol& images, const Stmt& node) {
 
 void SemanticAnalyzer::visit(const LoadStmt& node) {
     if (const DatasetSymbol* existing = symbols_.lookup(node.dataset)) {
-        diagnostics_.error(Phase::Semantic, node.location,
-                           "dataset '" + node.dataset + "' is already defined at line " +
-                               std::to_string(existing->definedAt.line),
-                           "choose another name after AS");
+        diagnostics_.error(
+            Phase::Semantic, node.location,
+            "dataset '" + node.dataset + "' is already defined at line " + std::to_string(existing->definedAt.line),
+            "choose another name after AS");
         return;
     }
     const std::string path = (baseFolder_ / node.path).lexically_normal().generic_string();
@@ -328,9 +328,10 @@ void SemanticAnalyzer::visit(const LoadStmt& node) {
         dataset.kind = node.kind == DataKind::Table ? DatasetKind::Table : DatasetKind::TableSet;
         std::vector<std::string> summary;
         for (TableSchema& schema : *tables) {
-            summary.push_back(schema.name + " (" +
-                              (schema.released ? std::string("released facts") : std::to_string(schema.rowCount) + " rows") +
-                              ", " + std::to_string(schema.columns.size()) + " columns)");
+            summary.push_back(
+                schema.name + " (" +
+                (schema.released ? std::string("released facts") : std::to_string(schema.rowCount) + " rows") + ", " +
+                std::to_string(schema.columns.size()) + " columns)");
             dataset.tables.push_back(makeTable(std::move(schema)));
         }
         for (const TableState& table : dataset.tables) {
@@ -448,8 +449,9 @@ void SemanticAnalyzer::visit(const FillNullStmt& node) {
     DatasetSymbol& dataset = *resolution->dataset;
     const std::string method = literal ? literalText(node.value) : fillMethodName(node.method);
     const auto hint = [&](const ColumnState& column) {
-        return literal ? valueHint(column) : "use MODE (the most frequent value) for a " +
-                                                 std::string(columnTypeName(column.type)) + " column";
+        return literal
+                   ? valueHint(column)
+                   : "use MODE (the most frequent value) for a " + std::string(columnTypeName(column.type)) + " column";
     };
     const std::string rule = literal ? "FILL_NULL with " + describe(node.value) + " needs a matching column type"
                                      : "FILL_NULL with " + method + " needs a numeric column";
@@ -562,19 +564,21 @@ void SemanticAnalyzer::visit(const FilterStmt& node) {
     const Target target = tableTarget(*filterDataset_, *filterTable_);
     const std::string tableName = columnDisplayName(*filterDataset_, *filterTable_, "");
     if (truth_ == Truth::AlwaysTrue) {
-        diagnostics_.warning(Phase::Semantic, node.location,
-                             noEffectText(filterTable_->schema.released, "FILTER", "the condition is true for every row"),
-                             "the compared columns have no missing values and their ranges always pass");
+        diagnostics_.warning(
+            Phase::Semantic, node.location,
+            noEffectText(filterTable_->schema.released, "FILTER", "the condition is true for every row"),
+            "the compared columns have no missing values and their ranges always pass");
         addTarget(node, target, "the condition is true for every row of " + tableName);
         log(node, "FILTER " + tableName + " has no effect");
         return;
     }
     if (truth_ == Truth::NeverTrue) {
-        diagnostics_.warning(Phase::Semantic, node.location,
-                             filterTable_->schema.released
-                                 ? "FILTER probably removes every row: by the released facts, the condition is never true"
-                                 : "FILTER removes every row: the condition is never true",
-                             neverTrueReason_);
+        diagnostics_.warning(
+            Phase::Semantic, node.location,
+            filterTable_->schema.released
+                ? "FILTER probably removes every row: by the released facts, the condition is never true"
+                : "FILTER removes every row: the condition is never true",
+            neverTrueReason_);
     }
 
     std::vector<std::string> learned;
@@ -733,9 +737,8 @@ void SemanticAnalyzer::visit(const ParseDateStmt& node) {
         column.valuesChanged = true;  // the values are dates now, not the text of the file
         recordColumn(dataset, table, column, node.location.line, "PARSE_DATE");
         addTarget(node, target);
-        parsed.push_back(name + (info->hasDates ? " (" + dateText(info->dateMin) + " to " +
-                                                       dateText(info->dateMax) + ")"
-                                                 : ""));
+        parsed.push_back(
+            name + (info->hasDates ? " (" + dateText(info->dateMin) + " to " + dateText(info->dateMax) + ")" : ""));
     }
     log(node, "PARSE_DATE " + (parsed.empty() ? "has no effect" : join(parsed)) +
                   (idle.empty() || parsed.empty() ? "" : "; no effect on " + join(idle)));
@@ -798,11 +801,11 @@ void SemanticAnalyzer::visit(const DeriveStmt& node) {
                 const ValueFacts left = facts(*expr.left);
                 const ValueFacts right = facts(*expr.right);
                 if (expr.text == "/" && right.range.min <= 0 && right.range.max >= 0) {
-                    diagnostics_.error(Phase::Contract, expr.right->location,
-                                       "DERIVE divides by " + valueText(*expr.right) + ", which can be 0 here (" +
-                                           (right.range.isKnown() ? "it is in " + right.range.text()
-                                                                  : "its range is not known") + ")",
-                                       "FILTER the rows where it is 0 first, or EXPECT it BETWEEN two bounds above 0");
+                    diagnostics_.error(
+                        Phase::Contract, expr.right->location,
+                        "DERIVE divides by " + valueText(*expr.right) + ", which can be 0 here (" +
+                            (right.range.isKnown() ? "it is in " + right.range.text() : "its range is not known") + ")",
+                        "FILTER the rows where it is 0 first, or EXPECT it BETWEEN two bounds above 0");
                 }
                 result.type = expr.text == "/" || left.type == ColumnType::Float || right.type == ColumnType::Float
                                   ? ColumnType::Float
@@ -867,11 +870,11 @@ void SemanticAnalyzer::visit(const JoinStmt& node) {
                                columnTypeName(otherKey->type) + " column " + otherName + ": no row would match",
                            "both keys must hold the same kind of value");
     } else if (key->type == ColumnType::Float || key->type == ColumnType::DateTime) {
-        diagnostics_.error(Phase::Type, node.location,
-                           "JOIN needs an INTEGER, STRING or BOOLEAN key, but " + name + " is " +
-                               columnTypeName(key->type),
-                           key->type == ColumnType::Float ? "equal decimals can print differently; DERIVE an integer key"
-                                                          : "DERIVE a key from its parts, such as YEAR and MONTH");
+        diagnostics_.error(
+            Phase::Type, node.location,
+            "JOIN needs an INTEGER, STRING or BOOLEAN key, but " + name + " is " + columnTypeName(key->type),
+            key->type == ColumnType::Float ? "equal decimals can print differently; DERIVE an integer key"
+                                           : "DERIVE a key from its parts, such as YEAR and MONTH");
     }
     std::vector<ColumnState> added;
     std::vector<std::string> addedNames;
@@ -1020,8 +1023,7 @@ void SemanticAnalyzer::visit(const AggregateStmt& node) {
     for (const ColumnState& column : columns) {
         described.push_back(column.name + " " + column.typeText());
     }
-    log(node, "AGGREGATE " + columnDisplayName(dataset, table, "") + " BY " + join(node.by) + ": " +
-                  join(described));
+    log(node, "AGGREGATE " + columnDisplayName(dataset, table, "") + " BY " + join(node.by) + ": " + join(described));
 }
 
 void SemanticAnalyzer::visit(const SaveStmt& node) {
@@ -1098,16 +1100,13 @@ void SemanticAnalyzer::visit(const ExpectStmt& node) {
             std::optional<TableResolution> left = resolver_.singleTable(node.target, "SCHEMA_SAME_AS");
             std::optional<TableResolution> right = resolver_.singleTable(node.other, "SCHEMA_SAME_AS");
             if (left && right) {
-                contracts_.schemaSameAs(node, columnDisplayName(*left->dataset, *left->tables.front(), ""),
-                                        *left->tables.front(),
-                                        columnDisplayName(*right->dataset, *right->tables.front(), ""),
-                                        *right->tables.front());
+                contracts_.schemaSameAs(
+                    node, columnDisplayName(*left->dataset, *left->tables.front(), ""), *left->tables.front(),
+                    columnDisplayName(*right->dataset, *right->tables.front(), ""), *right->tables.front());
             }
             return;
         }
-        default:
-            expectColumns(node);
-            return;
+        default: expectColumns(node); return;
     }
 }
 
@@ -1143,7 +1142,8 @@ void SemanticAnalyzer::expectColumns(const ExpectStmt& node) {
 // ---------- Image statements ----------
 
 void SemanticAnalyzer::normalizeImages(const NormalizeStmt& node) {
-    DatasetSymbol* images = resolver_.imageDataset(node.target.parts.front(), node.target.location, "NORMALIZE ... RANGE");
+    DatasetSymbol* images =
+        resolver_.imageDataset(node.target.parts.front(), node.target.location, "NORMALIZE ... RANGE");
     if (!images || !decodable(*images, node)) {
         return;
     }
@@ -1322,9 +1322,9 @@ void SemanticAnalyzer::saveImages(const SaveStmt& node) {
                                images->name + " TO NPY; to keep the float values");
         return;
     }
-    const int alpha = static_cast<int>(std::count_if(state.shapes.begin(), state.shapes.end(), [&](const ImageShape& s) {
-        return s.channels == 4 && becomesJpg(s);
-    }));
+    const int alpha =
+        static_cast<int>(std::count_if(state.shapes.begin(), state.shapes.end(),
+                                       [&](const ImageShape& s) { return s.channels == 4 && becomesJpg(s); }));
     if (alpha > 0) {
         diagnostics_.error(Phase::Type, node.location,
                            "JPG cannot store transparency, but " + std::to_string(alpha) + " image(s) have 4 channels",
@@ -1347,9 +1347,9 @@ void SemanticAnalyzer::saveImages(const SaveStmt& node) {
 
 void SemanticAnalyzer::visit(const LinkStmt& node) {
     if (const DatasetSymbol* existing = symbols_.lookup(node.dataset)) {
-        diagnostics_.error(Phase::Semantic, node.location,
-                           "dataset '" + node.dataset + "' is already defined at line " +
-                               std::to_string(existing->definedAt.line));
+        diagnostics_.error(
+            Phase::Semantic, node.location,
+            "dataset '" + node.dataset + "' is already defined at line " + std::to_string(existing->definedAt.line));
         return;
     }
     DatasetSymbol* images = resolver_.imageDataset(node.images, node.location, "LINK");
@@ -1358,9 +1358,9 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
         return;
     }
     if (labels->kind != DatasetKind::Table) {
-        diagnostics_.error(Phase::Type, node.location,
-                           "LINK needs a TABLE of labels, but '" + labels->name + "' is a " +
-                               datasetKindName(labels->kind));
+        diagnostics_.error(
+            Phase::Type, node.location,
+            "LINK needs a TABLE of labels, but '" + labels->name + "' is a " + datasetKindName(labels->kind));
         return;
     }
     TableState& table = labels->tables.front();
@@ -1369,10 +1369,10 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
         return;
     }
     if (column->type != ColumnType::String) {
-        diagnostics_.error(Phase::Type, node.location,
-                           "LINK matches file names, but " + labels->name + "." + column->name + " is " +
-                               columnTypeName(column->type),
-                           "the column must hold names such as \"cats/001.jpg\"");
+        diagnostics_.error(
+            Phase::Type, node.location,
+            "LINK matches file names, but " + labels->name + "." + column->name + " is " + columnTypeName(column->type),
+            "the column must hold names such as \"cats/001.jpg\"");
         return;
     }
 
@@ -1393,9 +1393,9 @@ void SemanticAnalyzer::visit(const LinkStmt& node) {
     dataset.link = link;
     const std::string summary = link.exact ? std::to_string(link.matched) + " of " + std::to_string(link.imageCount) +
                                                  " images match one of " + std::to_string(link.labelCount) + " labels"
-                                           : parquet ? "only the footer of " + table.schema.file +
-                                                           " is read at compile time, so matching is checked at run time"
-                                                     : "labels changed before LINK, so matching is checked at run time";
+                                : parquet ? "only the footer of " + table.schema.file +
+                                                " is read at compile time, so matching is checked at run time"
+                                          : "labels changed before LINK, so matching is checked at run time";
     result_.lineage.record(node.dataset, node.location.line,
                            "LINK " + images->name + " WITH " + labels->name + " ON " + column->name, summary);
     log(node, "LINK " + node.dataset + ": " + summary);
@@ -1419,9 +1419,10 @@ void SemanticAnalyzer::visit(const ComparisonExpr& node) {
     }
     if (!isNumeric(column->type)) {
         if (node.op != "==" && node.op != "!=") {
-            diagnostics_.error(Phase::Type, node.location,
-                               "operator '" + node.op + "' needs a numeric column, but '" + node.column + "' is " + type,
-                               "use == or != for " + type + " columns");
+            diagnostics_.error(
+                Phase::Type, node.location,
+                "operator '" + node.op + "' needs a numeric column, but '" + node.column + "' is " + type,
+                "use == or != for " + type + " columns");
         }
         return;
     }
@@ -1470,11 +1471,11 @@ void SemanticAnalyzer::visit(const LogicalExpr& node) {
     const Truth right = truth_;
 
     if (node.op == LogicalOp::And) {
-        truth_ = (left == Truth::NeverTrue || right == Truth::NeverTrue)       ? Truth::NeverTrue
+        truth_ = (left == Truth::NeverTrue || right == Truth::NeverTrue)     ? Truth::NeverTrue
                  : (left == Truth::AlwaysTrue && right == Truth::AlwaysTrue) ? Truth::AlwaysTrue
                                                                              : Truth::Unknown;
     } else {
-        truth_ = (left == Truth::AlwaysTrue || right == Truth::AlwaysTrue)   ? Truth::AlwaysTrue
+        truth_ = (left == Truth::AlwaysTrue || right == Truth::AlwaysTrue) ? Truth::AlwaysTrue
                  : (left == Truth::NeverTrue && right == Truth::NeverTrue) ? Truth::NeverTrue
                                                                            : Truth::Unknown;
     }

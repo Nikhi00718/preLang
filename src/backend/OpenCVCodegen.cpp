@@ -62,17 +62,17 @@ std::string OpenCVCodegen::imageDict(const ImageCertificate& certificate) {
         }
         return text + "]";
     };
-    std::string code = "{\"depths\": " + numbers(image->depths) + ", \"broken_allowed\": " +
-                       (image->brokenAllowed ? "True" : "False") + ", \"broken_for\": " + join(image->brokenFor) +
-                       ",\n     \"groups\": {";
+    std::string code = "{\"depths\": " + numbers(image->depths) +
+                       ", \"broken_allowed\": " + (image->brokenAllowed ? "True" : "False") +
+                       ", \"broken_for\": " + join(image->brokenFor) + ",\n     \"groups\": {";
     for (size_t i = 0; i < image->groups.size(); ++i) {
         const ImageGroupFacts& g = image->groups[i];
-        code += std::string(i > 0 ? ",\n                " : "") + "\"" + g.extension + "\": {\"channels\": " +
-                numbers(g.channels) + ", \"channels_for\": " + join(g.channelsFor) +
+        code += std::string(i > 0 ? ",\n                " : "") + "\"" + g.extension +
+                "\": {\"channels\": " + numbers(g.channels) + ", \"channels_for\": " + join(g.channelsFor) +
                 ", \"width\": [" + std::to_string(g.minWidth) + ", " + std::to_string(g.maxWidth) +
-                "], \"width_for\": [" + join(g.minWidthFor) + ", " + join(g.maxWidthFor) +
-                "], \"height\": [" + std::to_string(g.minHeight) + ", " + std::to_string(g.maxHeight) +
-                "], \"height_for\": [" + join(g.minHeightFor) + ", " + join(g.maxHeightFor) + "]}";
+                "], \"width_for\": [" + join(g.minWidthFor) + ", " + join(g.maxWidthFor) + "], \"height\": [" +
+                std::to_string(g.minHeight) + ", " + std::to_string(g.maxHeight) + "], \"height_for\": [" +
+                join(g.minHeightFor) + ", " + join(g.maxHeightFor) + "]}";
     }
     return code + "}}";
 }
@@ -266,22 +266,23 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program,
                 }
             }
             return images + "_folder, " + images + "_files = list_images_checked(\n    " + pythonString(in.dataset) +
-                   ", HERE / " + pythonString(pathFrom(outputFolder_, schema.root)) + ", recursive=" +
-                   (schema.recursive ? "True" : "False") + ", single=" + (schema.singleFile ? "True" : "False") +
-                   ", fingerprint=" + hex(schema.fingerprint) + ",\n    broken=" + pythonList(broken) +
-                   ",\n    certificate=" + certificateDict(in.dataset) + ",\n)\n";
+                   ", HERE / " + pythonString(pathFrom(outputFolder_, schema.root)) +
+                   ", recursive=" + (schema.recursive ? "True" : "False") +
+                   ", single=" + (schema.singleFile ? "True" : "False") + ", fingerprint=" + hex(schema.fingerprint) +
+                   ",\n    broken=" + pythonList(broken) + ",\n    certificate=" + certificateDict(in.dataset) +
+                   ",\n)\n";
         }
         case Opcode::Resize: {
             const std::string width = std::to_string(in.numbers[0]);
             const std::string height = std::to_string(in.numbers[1]);
-            pipeline.steps.push_back(when + (in.numbers[2] ? "img = letterbox(img, " + width + ", " + height + ")"
-                                                           : "img = cv2.resize(img, (" + width + ", " + height +
-                                                                 "), interpolation=cv2.INTER_AREA)") + origin);
+            pipeline.steps.push_back(when +
+                                     (in.numbers[2] ? "img = letterbox(img, " + width + ", " + height + ")"
+                                                    : "img = cv2.resize(img, (" + width + ", " + height +
+                                                          "), interpolation=cv2.INTER_AREA)") +
+                                     origin);
             break;
         }
-        case Opcode::Grayscale:
-            pipeline.steps.push_back(when + "img = to_gray(img)" + origin);
-            break;
+        case Opcode::Grayscale:       pipeline.steps.push_back(when + "img = to_gray(img)" + origin); break;
         case Opcode::NormalizeImages: {
             // Maps the known source range [from, to] onto [low, high].
             const double low = std::stod(in.values[0].value);
@@ -295,20 +296,17 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program,
         }
         case Opcode::Compress:
             pipeline.quality = guard.empty() ? std::to_string(in.numbers[0])
-                                             : "(" + std::to_string(in.numbers[0]) + " if deopt(" + pythonString(guard) +
-                                                   ") else " + pipeline.quality + ")";
+                                             : "(" + std::to_string(in.numbers[0]) + " if deopt(" +
+                                                   pythonString(guard) + ") else " + pipeline.quality + ")";
             break;
         case Opcode::Convert:
             pipeline.formatBefore = guard.empty() ? "" : pipeline.format;
             pipeline.formatGuard = guard;
             pipeline.format = in.text;
             break;
-        case Opcode::RemoveCorrupt:
-            pipeline.skipBroken = true;
-            break;
-        case Opcode::SaveImages:
-            return saveLoop(in);
-        case Opcode::Check: {  // MATCH_RATE: labels and images are compared at run time
+        case Opcode::RemoveCorrupt: pipeline.skipBroken = true; break;
+        case Opcode::SaveImages:    return saveLoop(in);
+        case Opcode::Check:         {  // MATCH_RATE: labels and images are compared at run time
             const std::string labels = PandasCodegen::tableVariable(in.columns[1], "");
             std::string files = variable(in.columns[0]) + "_files";
             if (in.columns.size() > 3) {  // REMOVE_CORRUPT ran before the LINK: broken files are not linked
@@ -325,8 +323,7 @@ std::string OpenCVCodegen::code(const Instruction& in, const IRProgram& program,
                    pythonString("line " + std::to_string(in.line) + ": " + in.dataset + " match rate is ") +
                    " + f\"{rate:.2f}%\")\n";
         }
-        default:
-            break;
+        default: break;
     }
     return "# applied to each image in the streaming loop of SAVE_IMAGES\n";
 }

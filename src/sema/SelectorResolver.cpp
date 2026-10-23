@@ -78,8 +78,8 @@ bool SelectorResolver::requireTabular(const DatasetSymbol& found, SourceLocation
         hint = "images are normalized with NORMALIZE " + found.name + " RANGE 0 1;";
     }
     diagnostics_.error(Phase::Type, location,
-                       statement + " expects a TABLE or TABLESET, but '" + found.name + "' is " +
-                           article(found.kind) + datasetKindName(found.kind),
+                       statement + " expects a TABLE or TABLESET, but '" + found.name + "' is " + article(found.kind) +
+                           datasetKindName(found.kind),
                        hint);
     return false;
 }
@@ -141,7 +141,8 @@ std::optional<ColumnResolution> SelectorResolver::columns(const Selector& select
         // FILL_NULL resolves WHERE NULLABLE itself (a fill of a column without missing values does nothing).
         diagnostics_.error(Phase::Semantic, selector.location,
                            "WHERE NULLABLE is allowed only in FILL_NULL: which columns have missing values depends "
-                           "on the batch, so " + statement + " would act on other columns of the next one",
+                           "on the batch, so " +
+                               statement + " would act on other columns of the next one",
                            "name the columns, or select them with WHERE TYPE");
         return std::nullopt;
     }
@@ -223,9 +224,9 @@ std::optional<ColumnResolution> SelectorResolver::columns(const Selector& select
         resolution.skipped.push_back(table + " (no column " + columnPart + ")");
     }
     if (resolution.matched.empty()) {
-        Diagnostic& problem = diagnostics_.warning(Phase::Semantic, selector.location,
-                                                   "'" + selector.text() + "' matches no columns, so " + statement +
-                                                       " does nothing");
+        Diagnostic& problem =
+            diagnostics_.warning(Phase::Semantic, selector.location,
+                                 "'" + selector.text() + "' matches no columns, so " + statement + " does nothing");
         problem.notes = resolution.skipped;
     }
     return resolution;
@@ -249,10 +250,10 @@ ColumnState* SelectorResolver::column(const DatasetSymbol& owner, TableState& ta
     const std::string tableName = columnDisplayName(owner, table, "");
     const auto removed = table.removedAt.find(name);
     if (removed != table.removedAt.end()) {
-        diagnostics_.error(Phase::Semantic, location,
-                           "column '" + name + "' was removed from '" + tableName + "' at line " +
-                               std::to_string(removed->second),
-                           "use the column before that line, or keep it in the SELECT/DROP");
+        diagnostics_.error(
+            Phase::Semantic, location,
+            "column '" + name + "' was removed from '" + tableName + "' at line " + std::to_string(removed->second),
+            "use the column before that line, or keep it in the SELECT/DROP");
         return nullptr;
     }
     std::string hint = suggestClosest(name, table.columnNames());

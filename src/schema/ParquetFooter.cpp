@@ -19,8 +19,18 @@ namespace {
 // ---------- Thrift compact protocol ----------
 
 enum CompactType {
-    BoolTrue = 1, BoolFalse = 2, Byte = 3, I16 = 4, I32 = 5, I64 = 6,
-    Double = 7, Binary = 8, List = 9, Set = 10, Map = 11, Struct = 12,
+    BoolTrue = 1,
+    BoolFalse = 2,
+    Byte = 3,
+    I16 = 4,
+    I32 = 5,
+    I64 = 6,
+    Double = 7,
+    Binary = 8,
+    List = 9,
+    Set = 10,
+    Map = 11,
+    Struct = 12,
 };
 
 // Decodes the few fields PrepLang needs and skips all others. Every read
@@ -89,24 +99,15 @@ public:
         }
         switch (type) {
             case BoolTrue:
-            case BoolFalse:
-                break;  // a boolean field is stored in its type
-            case Byte:
-                next();
-                break;
+            case BoolFalse: break;  // a boolean field is stored in its type
+            case Byte:      next(); break;
             case I16:
             case I32:
-            case I64:
-                varint();
-                break;
-            case Double:
-                advance(8);
-                break;
-            case Binary:
-                binary();
-                break;
+            case I64:       varint(); break;
+            case Double:    advance(8); break;
+            case Binary:    binary(); break;
             case List:
-            case Set: {
+            case Set:       {
                 int elementType = 0;
                 const int size = listSize(elementType);
                 for (int i = 0; i < size && !failed_; ++i) {
@@ -130,8 +131,7 @@ public:
                 }
                 break;
             }
-            default:
-                failed_ = true;
+            default: failed_ = true;
         }
         --depth_;
     }
@@ -171,11 +171,20 @@ private:
 // ---------- The parts of FileMetaData PrepLang uses ----------
 
 // Physical types (enum Type)
-enum PhysicalType { Boolean = 0, Int32 = 1, Int64 = 2, Int96 = 3, Float = 4, DoubleType = 5, ByteArray = 6, FixedLen = 7 };
+enum PhysicalType {
+    Boolean = 0,
+    Int32 = 1,
+    Int64 = 2,
+    Int96 = 3,
+    Float = 4,
+    DoubleType = 5,
+    ByteArray = 6,
+    FixedLen = 7
+};
 
 struct SchemaElement {
-    int type = -1;         // physical type; -1 for a group
-    int repetition = 0;    // 0 REQUIRED, 1 OPTIONAL, 2 REPEATED
+    int type = -1;       // physical type; -1 for a group
+    int repetition = 0;  // 0 REQUIRED, 1 OPTIONAL, 2 REPEATED
     std::string name;
     int children = 0;
     int converted = -1;    // ConvertedType, the older way to annotate a type
@@ -190,7 +199,7 @@ struct ChunkStatistics {
     bool hasNaNs = false;
     std::int64_t nans = 0;
     bool hasMin = false, hasMax = false;
-    std::string min, max;     // plain-encoded values
+    std::string min, max;  // plain-encoded values
     bool minExact = false, maxExact = false;
 };
 
@@ -228,11 +237,11 @@ SchemaElement readSchemaElement(CompactReader& in) {
     int lastId = 0, id = 0, type = 0;
     while (in.field(lastId, id, type)) {
         switch (id) {
-            case 1: element.type = static_cast<int>(in.integer()); break;
-            case 3: element.repetition = static_cast<int>(in.integer()); break;
-            case 4: element.name = in.binary(); break;
-            case 5: element.children = static_cast<int>(in.integer()); break;
-            case 6: element.converted = static_cast<int>(in.integer()); break;
+            case 1:  element.type = static_cast<int>(in.integer()); break;
+            case 3:  element.repetition = static_cast<int>(in.integer()); break;
+            case 4:  element.name = in.binary(); break;
+            case 5:  element.children = static_cast<int>(in.integer()); break;
+            case 6:  element.converted = static_cast<int>(in.integer()); break;
             case 10: readLogicalType(in, element); break;
             default: in.skip(type);
         }
@@ -247,12 +256,24 @@ void readStatistics(CompactReader& in, ChunkStatistics& stats) {
     int lastId = 0, id = 0, type = 0;
     while (in.field(lastId, id, type)) {
         switch (id) {
-            case 3: stats.hasNulls = true; stats.nulls = in.integer(); break;
-            case 5: stats.hasMax = true; stats.max = in.binary(); break;
-            case 6: stats.hasMin = true; stats.min = in.binary(); break;
+            case 3:
+                stats.hasNulls = true;
+                stats.nulls = in.integer();
+                break;
+            case 5:
+                stats.hasMax = true;
+                stats.max = in.binary();
+                break;
+            case 6:
+                stats.hasMin = true;
+                stats.min = in.binary();
+                break;
             case 7: stats.maxExact = type == BoolTrue; break;
             case 8: stats.minExact = type == BoolTrue; break;
-            case 9: stats.hasNaNs = true; stats.nans = in.integer(); break;
+            case 9:
+                stats.hasNaNs = true;
+                stats.nans = in.integer();
+                break;
             default: in.skip(type);  // 1 and 2 are the deprecated min/max
         }
     }
@@ -310,9 +331,7 @@ FileMetaData readFileMetaData(CompactReader& in) {
                 }
                 break;
             }
-            case 3:
-                meta.rows = in.integer();
-                break;
+            case 3: meta.rows = in.integer(); break;
             case 4: {
                 const int size = in.listSize(elementType);
                 for (int i = 0; i < size && !in.failed(); ++i) {
@@ -320,8 +339,7 @@ FileMetaData readFileMetaData(CompactReader& in) {
                 }
                 break;
             }
-            default:
-                in.skip(type);
+            default: in.skip(type);
         }
     }
     return meta;
@@ -334,12 +352,10 @@ bool columnType(const SchemaElement& element, ColumnType& type, std::string& pro
     const bool dateOrTime = element.logical == 6 || element.logical == 7 || element.logical == 8 ||
                             (element.converted >= 6 && element.converted <= 10);
     const bool decimal = element.logical == 5 || element.converted == 5;
-    const bool text = element.logical == 1 || element.logical == 4 || element.logical == 12 ||
-                      element.converted == 0 || element.converted == 4 || element.converted == 19;
+    const bool text = element.logical == 1 || element.logical == 4 || element.logical == 12 || element.converted == 0 ||
+                      element.converted == 4 || element.converted == 19;
     switch (element.type) {
-        case Boolean:
-            type = ColumnType::Boolean;
-            return true;
+        case Boolean: type = ColumnType::Boolean; return true;
         case Int32:
         case Int64:
             if (dateOrTime) {
@@ -364,8 +380,7 @@ bool columnType(const SchemaElement& element, ColumnType& type, std::string& pro
                 return true;
             }
             break;
-        default:
-            break;
+        default: break;
     }
     problem = decimal ? "a decimal" : "a binary or other special";
     problem = "column '" + element.name + "' is " + problem +
@@ -386,17 +401,20 @@ std::uint64_t littleEndian(const std::string& bytes) {
 bool decodeNumber(const std::string& bytes, const SchemaElement& element, double& value) {
     switch (element.type) {
         case Int32:
-            if (bytes.size() != 4) return false;
+            if (bytes.size() != 4)
+                return false;
             value = element.isSigned ? static_cast<double>(static_cast<std::int32_t>(littleEndian(bytes)))
                                      : static_cast<double>(static_cast<std::uint32_t>(littleEndian(bytes)));
             return true;
         case Int64:
-            if (bytes.size() != 8) return false;
+            if (bytes.size() != 8)
+                return false;
             value = element.isSigned ? static_cast<double>(static_cast<std::int64_t>(littleEndian(bytes)))
                                      : static_cast<double>(littleEndian(bytes));
             return true;
         case Float: {
-            if (bytes.size() != 4) return false;
+            if (bytes.size() != 4)
+                return false;
             const std::uint32_t bits = static_cast<std::uint32_t>(littleEndian(bytes));
             float number = 0;
             std::memcpy(&number, &bits, sizeof number);
@@ -404,13 +422,13 @@ bool decodeNumber(const std::string& bytes, const SchemaElement& element, double
             return !std::isnan(value);
         }
         case DoubleType: {
-            if (bytes.size() != 8) return false;
+            if (bytes.size() != 8)
+                return false;
             const std::uint64_t bits = littleEndian(bytes);
             std::memcpy(&value, &bits, sizeof value);
             return !std::isnan(value);
         }
-        default:
-            return false;
+        default: return false;
     }
 }
 

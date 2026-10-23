@@ -52,7 +52,8 @@ void testAllStatements() {
         DROP s [phone];
         SELECT s [name, age];
         SAVE s AS "clean.csv";
-    )", diagnostics);
+    )",
+                                  diagnostics);
 
     check(!diagnostics.hasErrors() && program.statements.size() == 9, "all 9 statement types parse");
     check(statementAs<LoadStmt>(program, 0) && statementAs<ExpectStmt>(program, 1) &&
@@ -110,8 +111,7 @@ void testPrecedence() {
     const Program program = parse("FILTER s WHERE a > 1 OR b > 2 AND c > 3;", diagnostics);
     const auto* root = dynamic_cast<const LogicalExpr*>(filterCondition(program));
     const auto* right = root ? dynamic_cast<const LogicalExpr*>(root->right.get()) : nullptr;
-    check(root && root->op == LogicalOp::Or && right && right->op == LogicalOp::And,
-          "AND binds tighter than OR");
+    check(root && root->op == LogicalOp::Or && right && right->op == LogicalOp::And, "AND binds tighter than OR");
 }
 
 void testParentheses() {
@@ -119,8 +119,7 @@ void testParentheses() {
     const Program program = parse("FILTER s WHERE (a > 1 OR b > 2) AND c > 3;", diagnostics);
     const auto* root = dynamic_cast<const LogicalExpr*>(filterCondition(program));
     const auto* left = root ? dynamic_cast<const LogicalExpr*>(root->left.get()) : nullptr;
-    check(root && root->op == LogicalOp::And && left && left->op == LogicalOp::Or,
-          "parentheses override precedence");
+    check(root && root->op == LogicalOp::And && left && left->op == LogicalOp::Or, "parentheses override precedence");
 }
 
 void testNot() {
@@ -156,7 +155,8 @@ void testRecovery() {
         NORMALIZE s.;
         SELECT s [name,];
         SAVE s AS "b.csv";
-    )", diagnostics);
+    )",
+                                  diagnostics);
     check(diagnostics.all().size() == 2, "two broken statements give two errors");
     check(program.statements.size() == 2, "the two valid statements are kept");
 }
@@ -177,9 +177,10 @@ void testKeywordAsName() {
 
 void testWildcardSelector() {
     Diagnostics diagnostics;
-    const Program program =
-        parse("NORMALIZE company.*.* WHERE TYPE NUMERIC EXCEPT [id, year] USING MINMAX;"
-              "FILL_NULL company.*.age WITH 0 IF_EXISTS;", diagnostics);
+    const Program program = parse(
+        "NORMALIZE company.*.* WHERE TYPE NUMERIC EXCEPT [id, year] USING MINMAX;"
+        "FILL_NULL company.*.age WITH 0 IF_EXISTS;",
+        diagnostics);
     const auto* normalize = statementAs<NormalizeStmt>(program, 0);
     const auto* fill = statementAs<FillNullStmt>(program, 1);
     check(normalize && normalize->target.parts == std::vector<std::string>{"company", "*", "*"} &&
@@ -199,7 +200,8 @@ void testImageStatements() {
         CONVERT imgs TO jpg;
         COMPRESS imgs QUALITY 80;
         SAVE_IMAGES imgs TO "out/";
-    )", diagnostics);
+    )",
+                                  diagnostics);
     const auto* load = statementAs<LoadStmt>(program, 0);
     const auto* resize = statementAs<ResizeStmt>(program, 1);
     const auto* normalize = statementAs<NormalizeStmt>(program, 2);
@@ -220,7 +222,8 @@ void testDatasetContracts() {
         EXPECT train SCHEMA_SAME_AS test EXCEPT [label];
         LINK imgs WITH labels ON filename AS training;
         EXPECT training MATCH_RATE 99.5%;
-    )", diagnostics);
+    )",
+                                  diagnostics);
     const auto* references = statementAs<ExpectStmt>(program, 0);
     const auto* schema = statementAs<ExpectStmt>(program, 1);
     const auto* link = statementAs<LinkStmt>(program, 2);
@@ -245,9 +248,10 @@ void testWholeNumbers() {
 
 void testDerive() {
     Diagnostics diagnostics;
-    const Program program = parse("DERIVE t.c = a + b * 2 - (c - d) / 4;\nDERIVE t.h = hour(stamp);\n"
-                                  "DERIVE ts.x.n = -a - -3;\nPARSE_DATE t.stamp;\n",
-                                  diagnostics);
+    const Program program = parse(
+        "DERIVE t.c = a + b * 2 - (c - d) / 4;\nDERIVE t.h = hour(stamp);\n"
+        "DERIVE ts.x.n = -a - -3;\nPARSE_DATE t.stamp;\n",
+        diagnostics);
     const auto* first = statementAs<DeriveStmt>(program, 0);
     const auto* second = statementAs<DeriveStmt>(program, 1);
     const auto* third = statementAs<DeriveStmt>(program, 2);

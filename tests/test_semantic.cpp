@@ -28,11 +28,12 @@ void check(bool passed, const std::string& name) {
 // age: INTEGER with one missing value, marks: INTEGER in [42, 91],
 // city: STRING with one missing value, code: STRING because of "x7".
 const char* const csvFile = "test_semantic_students.csv";
-const char* const csvText = "name,age,marks,city,code\n"
-                            "Asha,20,85,Chennai,10\n"
-                            "Ravi,,42,,x7\n"
-                            "Mina,22,91,Pune,12\n"
-                            "Joe,21,60,Delhi,15\n";
+const char* const csvText =
+    "name,age,marks,city,code\n"
+    "Asha,20,85,Chennai,10\n"
+    "Ravi,,42,,x7\n"
+    "Mina,22,91,Pune,12\n"
+    "Joe,21,60,Delhi,15\n";
 
 struct Analysis {
     Diagnostics diagnostics;
@@ -102,7 +103,8 @@ void testRedefinedDataset() {
 void testUnknownColumnSuggestion() {
     Analysis a;
     analyze("NORMALIZE s.mark;", a);
-    check(reported(a, Severity::Error, Phase::Semantic, "did you mean 'marks'?"), "unknown column suggests a close name");
+    check(reported(a, Severity::Error, Phase::Semantic, "did you mean 'marks'?"),
+          "unknown column suggests a close name");
 }
 
 void testNormalizeNeedsNumber() {
@@ -219,7 +221,8 @@ void testScientificNotation() {
     const ColumnInfo& y = table->columns[1];
     check(x.type == ColumnType::Float && x.min == 6.4e-05 && x.max == 0.5 && x.missingCount == 1,
           "numbers written with an exponent (6.4e-05) are FLOAT");
-    check(y.type == ColumnType::Float && y.min == -3 && y.max == 1000, "1e3, 2E+2 and -3e0 are FLOAT with the right range");
+    check(y.type == ColumnType::Float && y.min == -3 && y.max == 1000,
+          "1e3, 2E+2 and -3e0 are FLOAT with the right range");
     check(table->columns[2].type == ColumnType::String, "an exponent without digits (1e) is text");
 }
 
@@ -244,11 +247,12 @@ void testDates() {
     std::ofstream("test_semantic_dates.csv") << "stamp,day,amount\n2024-03-30 22:00:00,2024-03-30,5\n"
                                                 ",2024-03-31,7\n2024-04-02 06:30:00,2024-04-02,9\n";
     Analysis a;
-    analyze("SAVE s AS \"o.csv\";\nLOAD \"test_semantic_dates.csv\" AS d;\nPARSE_DATE d.stamp;\nPARSE_DATE d.day;\n"
-            "DERIVE d.year = YEAR(day);\nDERIVE d.month = MONTH(stamp);\nDERIVE d.dom = DAY(day);\n"
-            "DERIVE d.hour = HOUR(stamp);\nDERIVE d.weekday = WEEKDAY(day);\nDERIVE d.cents = amount * 100 + 1;\n"
-            "DERIVE d.half = amount / 2;\nFILTER d WHERE year == 2024;\nSAVE d AS \"d.csv\";",
-            a);
+    analyze(
+        "SAVE s AS \"o.csv\";\nLOAD \"test_semantic_dates.csv\" AS d;\nPARSE_DATE d.stamp;\nPARSE_DATE d.day;\n"
+        "DERIVE d.year = YEAR(day);\nDERIVE d.month = MONTH(stamp);\nDERIVE d.dom = DAY(day);\n"
+        "DERIVE d.hour = HOUR(stamp);\nDERIVE d.weekday = WEEKDAY(day);\nDERIVE d.cents = amount * 100 + 1;\n"
+        "DERIVE d.half = amount / 2;\nFILTER d WHERE year == 2024;\nSAVE d AS \"d.csv\";",
+        a);
     TableState& d = a.symbols.lookup("d")->tables.front();
     const auto range = [&](const std::string& name) { return d.column(name)->range; };
     check(!a.diagnostics.hasErrors() && d.column("stamp")->type == ColumnType::DateTime && d.column("stamp")->nullable,
@@ -267,10 +271,11 @@ void testDates() {
 void testDateAndDivisionErrors() {
     std::ofstream("test_semantic_dates2.csv") << "when,size,zero\n2024-01-05,3,0\nsoon,4,2\n";
     Analysis a;
-    analyze("SAVE s AS \"o.csv\";\nLOAD \"test_semantic_dates2.csv\" AS d;\nPARSE_DATE d.when;\n"
-            "DERIVE d.r = size / zero;\nDERIVE d.q = size / (zero + 1);\nDERIVE d.h = HOUR(size);\n"
-            "PARSE_DATE d.size;\nSAVE d AS \"d.csv\";",
-            a);
+    analyze(
+        "SAVE s AS \"o.csv\";\nLOAD \"test_semantic_dates2.csv\" AS d;\nPARSE_DATE d.when;\n"
+        "DERIVE d.r = size / zero;\nDERIVE d.q = size / (zero + 1);\nDERIVE d.h = HOUR(size);\n"
+        "PARSE_DATE d.size;\nSAVE d AS \"d.csv\";",
+        a);
     check(reported(a, Severity::Error, Phase::Contract, "row 2 has \"soon\""),
           "PARSE_DATE of a column with text that is not a date names the row");
     check(reported(a, Severity::Error, Phase::Contract, "divides by zero, which can be 0 here (it is in [0, 2])") &&
@@ -283,7 +288,9 @@ void testDateAndDivisionErrors() {
 
 void testDeriveReplacesAndDefines() {
     Analysis a;
-    analyze("DERIVE s.marks = marks - 40;\nDERIVE s.total = marks + age;\nEXPECT s.total NOT_NULL;\nSAVE s AS \"o.csv\";", a);
+    analyze(
+        "DERIVE s.marks = marks - 40;\nDERIVE s.total = marks + age;\nEXPECT s.total NOT_NULL;\nSAVE s AS \"o.csv\";",
+        a);
     const ColumnState* marks = column(a, "marks");
     const ColumnState* total = column(a, "total");
     check(!a.diagnostics.hasErrors() && marks && marks->range.min == 2 && marks->range.max == 51 && !marks->exact,
@@ -333,9 +340,10 @@ void testJoinErrors() {
 
 void testAggregate() {
     Analysis a;
-    analyze("AGGREGATE s BY [city] COUNT AS n, SUM marks AS total, MEAN age AS average, MAX marks AS top;\n"
-            "SAVE s AS \"out.csv\";",
-            a);
+    analyze(
+        "AGGREGATE s BY [city] COUNT AS n, SUM marks AS total, MEAN age AS average, MAX marks AS top;\n"
+        "SAVE s AS \"out.csv\";",
+        a);
     const ColumnState* city = column(a, "city");
     const ColumnState* n = column(a, "n");
     const ColumnState* total = column(a, "total");

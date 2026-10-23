@@ -18,12 +18,9 @@ bool isImageInstruction(const Instruction& instruction) {
         case Opcode::Compress:
         case Opcode::Convert:
         case Opcode::RemoveCorrupt:
-        case Opcode::SaveImages:
-            return true;
-        case Opcode::Check:
-            return instruction.text == "MATCH_RATE";
-        default:
-            return false;
+        case Opcode::SaveImages:      return true;
+        case Opcode::Check:           return instruction.text == "MATCH_RATE";
+        default:                      return false;
     }
 }
 
@@ -55,7 +52,8 @@ std::string ExecutionPlanner::generate(const IRProgram& program, const std::stri
         out << "import pandas as pd\n\nif int(pd.__version__.split(\".\")[0]) < 3:\n"
             << "    pd.options.mode.copy_on_write = True\n";
     }
-    out << "\nHERE = Path(__file__).resolve().parent\n\n\nclass ContractError(Exception):\n    pass\n\n\n" << R"(def report(kind, error, trace):
+    out << "\nHERE = Path(__file__).resolve().parent\n\n\nclass ContractError(Exception):\n    pass\n\n\n"
+        << R"(def report(kind, error, trace):
     """A refused input or a broken contract is reported in one line, not as a traceback."""
     if issubclass(kind, ContractError):
         print(f"ContractError: {error}", file=sys.stderr)
@@ -128,9 +126,8 @@ def refuse(path, problem, needed_by):
 std::string ExecutionPlanner::deoptimization(const IRProgram& program) const {
     std::string items;
     for (const ItemCertificate& item : certificate_.items) {
-        const bool used = std::any_of(program.code.begin(), program.code.end(), [&](const Instruction& in) {
-            return in.speculative && in.proofKey == item.key;
-        });
+        const bool used = std::any_of(program.code.begin(), program.code.end(),
+                                      [&](const Instruction& in) { return in.speculative && in.proofKey == item.key; });
         if (item.empty() || !used) {
             continue;
         }
@@ -139,14 +136,16 @@ std::string ExecutionPlanner::deoptimization(const IRProgram& program) const {
             tables += (tables.empty() ? "" : ", ") + pythonString(table.key) + ": " + PandasCodegen::columnsDict(table);
         }
         for (const ImageCertificate& image : item.images) {
-            images += (images.empty() ? "" : ", ") + pythonString(image.dataset) + ": " + OpenCVCodegen::imageDict(image);
+            images +=
+                (images.empty() ? "" : ", ") + pythonString(image.dataset) + ": " + OpenCVCodegen::imageDict(image);
         }
         items += "    " + pythonString(item.key) + ": {\"description\": " + pythonString(item.description) +
                  ",\n        \"tables\": {" + tables + "},\n        \"images\": {" + images + "}},\n";
     }
     return "# Speculatively removed checks and operations, with the facts each needs beyond\n"
            "# admission (its item certificate). An admitted input that breaks them runs them after all.\n"
-           "ITEMS = {\n" + items + "}\n" + R"(ITEM_COLUMNS = {}
+           "ITEMS = {\n" +
+           items + "}\n" + R"(ITEM_COLUMNS = {}
 for _item in ITEMS.values():
     for _table, _columns in _item["tables"].items():
         ITEM_COLUMNS.setdefault(_table, set()).update(_columns)
@@ -194,22 +193,14 @@ std::vector<std::string> ExecutionPlanner::imagePasses(const IRProgram& program)
                                             std::to_string(in.numbers[1]) + (in.numbers[2] ? " KEEP_ASPECT" : "") +
                                             mark);
                 break;
-            case Opcode::Grayscale:
-                steps[in.dataset].push_back("GRAYSCALE" + mark);
-                break;
+            case Opcode::Grayscale: steps[in.dataset].push_back("GRAYSCALE" + mark); break;
             case Opcode::NormalizeImages:
                 steps[in.dataset].push_back("NORMALIZE " + in.values[0].value + ".." + in.values[1].value + mark);
                 break;
-            case Opcode::RemoveCorrupt:
-                steps[in.dataset].push_back("skip broken files");
-                break;
-            case Opcode::Convert:
-                format[in.dataset] = in.text + mark;
-                break;
-            case Opcode::Compress:
-                format[in.dataset] += " quality " + std::to_string(in.numbers[0]);
-                break;
-            case Opcode::SaveImages: {
+            case Opcode::RemoveCorrupt: steps[in.dataset].push_back("skip broken files"); break;
+            case Opcode::Convert:       format[in.dataset] = in.text + mark; break;
+            case Opcode::Compress:      format[in.dataset] += " quality " + std::to_string(in.numbers[0]); break;
+            case Opcode::SaveImages:    {
                 const size_t files = program.images.at(in.dataset).images.size();
                 std::string chain;
                 for (const std::string& step : steps[in.dataset]) {
@@ -221,8 +212,7 @@ std::vector<std::string> ExecutionPlanner::imagePasses(const IRProgram& program)
                                  format[in.dataset]);
                 break;
             }
-            default:
-                break;
+            default: break;
         }
     }
     return passes;

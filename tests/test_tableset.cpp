@@ -126,8 +126,11 @@ void testBatchTypeError() {
 
 void testCrossTableContracts() {
     Compiled c;
-    compile("EXPECT company.*.id UNIQUE IF_EXISTS;\n"
-            "EXPECT company.interns.team REFERENCES company.teams.name;" + save, c);
+    compile(
+        "EXPECT company.*.id UNIQUE IF_EXISTS;\n"
+        "EXPECT company.interns.team REFERENCES company.teams.name;" +
+            save,
+        c);
     // The proofs read the values, so they hold for these files only: the checks
     // stay, but run only if the program is given other files.
     const bool allConditional = std::all_of(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) {

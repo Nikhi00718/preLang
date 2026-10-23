@@ -172,8 +172,11 @@ size_t invalidUtf8(std::string_view text) {
             }
         }
         const unsigned char c = static_cast<unsigned char>(text[i]);
-        const size_t length = c < 0x80 ? 1 : (c >= 0xC2 && c <= 0xDF) ? 2 : (c >> 4) == 0xE ? 3
-                                             : (c >= 0xF0 && c <= 0xF4) ? 4 : 0;
+        const size_t length = c < 0x80                   ? 1
+                              : (c >= 0xC2 && c <= 0xDF) ? 2
+                              : (c >> 4) == 0xE          ? 3
+                              : (c >= 0xF0 && c <= 0xF4) ? 4
+                                                         : 0;
         if (length == 0 || i + length > text.size()) {
             return i;
         }
@@ -222,7 +225,7 @@ struct PieceFacts {
     std::int64_t lines = 0;  // every line, blank ones too
     std::int64_t rows = 0;
     std::vector<ColumnFacts> columns;
-    CsvProblem problem;      // line is an index inside the piece
+    CsvProblem problem;  // line is an index inside the piece
 };
 
 void notice(std::int64_t& first, std::string& cell, std::int64_t line, std::string_view text) {
@@ -329,7 +332,8 @@ void merge(ColumnFacts& total, const ColumnFacts& piece, std::int64_t offset) {
         total.max = total.hasRange ? std::max(total.max, piece.max) : piece.max;
         total.hasRange = true;
     }
-    const auto first = [&](std::int64_t& line, std::string& cell, std::int64_t pieceLine, const std::string& pieceCell) {
+    const auto first = [&](std::int64_t& line, std::string& cell, std::int64_t pieceLine,
+                           const std::string& pieceCell) {
         if (line < 0 && pieceLine >= 0) {
             line = pieceLine + offset;
             cell = pieceCell;

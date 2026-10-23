@@ -30,11 +30,12 @@ void check(bool passed, const std::string& name) {
 
 // age has a missing value; marks is in [42, 91] with none missing.
 const char* const csvFile = "test_optimizer_students.csv";
-const char* const csvText = "name,age,marks,city,code\n"
-                            "Asha,20,85,Chennai,10\n"
-                            "Ravi,,42,,17\n"
-                            "Mina,22,91,Pune,12\n"
-                            "Joe,21,60,Delhi,15\n";
+const char* const csvText =
+    "name,age,marks,city,code\n"
+    "Asha,20,85,Chennai,10\n"
+    "Ravi,,42,,17\n"
+    "Mina,22,91,Pune,12\n"
+    "Joe,21,60,Delhi,15\n";
 
 struct Compiled {
     IRProgram ir;
@@ -44,8 +45,7 @@ struct Compiled {
 
 // Compiles `body`, placed between  LOAD "<test csv>" AS s;  and  SAVE s AS "out.csv";
 Compiled compile(const std::string& body, OptimizerOptions options = {true, false}) {
-    const std::string source =
-        "LOAD \"" + std::string(csvFile) + "\" AS s;\n" + body + "\nSAVE s AS \"out.csv\";";
+    const std::string source = "LOAD \"" + std::string(csvFile) + "\" AS s;\n" + body + "\nSAVE s AS \"out.csv\";";
     Diagnostics diagnostics;
     const Program program = Parser(Lexer(source, diagnostics).tokenize(), diagnostics).parse();
     SymbolTable symbols;
@@ -136,8 +136,7 @@ void testFilterColumnsStayLive() {
 
 void testDropNullBlocksPruning() {
     const Compiled c = compile("DROP_NULL s;\nSELECT s [name];");
-    check(c.ok && loadedColumns(c.ir).size() == 5,
-          "DROP_NULL reads every column, so nothing is pruned before it");
+    check(c.ok && loadedColumns(c.ir).size() == 5, "DROP_NULL reads every column, so nothing is pruned before it");
 }
 
 void testDerive() {
@@ -152,8 +151,9 @@ void testDerive() {
 // JOIN adds only the lookup columns used later, so the lookup LOAD reads only those and the key.
 void testJoinPruning() {
     std::ofstream("test_optimizer_zones.csv") << "city,zone,pin\nChennai,South,1\nPune,West,2\n";
-    const Compiled c = compile("LOAD \"test_optimizer_zones.csv\" AS z;\nJOIN s WITH z ON city;\n"
-                               "SELECT s [name, zone];");
+    const Compiled c = compile(
+        "LOAD \"test_optimizer_zones.csv\" AS z;\nJOIN s WITH z ON city;\n"
+        "SELECT s [name, zone];");
     const Instruction* join = nullptr;
     std::vector<std::string> lookup;
     for (const Instruction& in : c.ir.code) {

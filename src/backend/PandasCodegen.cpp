@@ -31,10 +31,10 @@ std::string identifierPart(const std::string& name) {
 
 const char* pandasDtype(ColumnType type) {
     switch (type) {
-        case ColumnType::Boolean: return "boolean";
-        case ColumnType::Integer: return "Int64";
-        case ColumnType::Float:   return "Float64";
-        case ColumnType::String:  return "string";
+        case ColumnType::Boolean:  return "boolean";
+        case ColumnType::Integer:  return "Int64";
+        case ColumnType::Float:    return "Float64";
+        case ColumnType::String:   return "string";
         case ColumnType::DateTime: return "";  // kept as pandas reads it (datetime64)
     }
     return "";
@@ -56,10 +56,8 @@ std::string hex(std::uint64_t value) {
 // A DERIVE value as a pandas expression over the columns of `table`.
 std::string pandasValue(const ValueExpr& expr, const std::string& table) {
     switch (expr.kind) {
-        case ValueKind::Number:
-            return expr.text;
-        case ValueKind::Column:
-            return table + "[" + pythonString(expr.text) + "]";
+        case ValueKind::Number: return expr.text;
+        case ValueKind::Column: return table + "[" + pythonString(expr.text) + "]";
         case ValueKind::Binary:
             return "(" + pandasValue(*expr.left, table) + " " + expr.text + " " + pandasValue(*expr.right, table) + ")";
         case ValueKind::DatePart: {
@@ -149,12 +147,12 @@ std::string PandasCodegen::columnsDict(const TableCertificate& certificate) {
             code += ", \"dates\": " + join(column.datesFor);
         }
         if (!std::isinf(column.dateMin)) {
-            code += ", \"date_min\": " + pythonString(dateText(column.dateMin)) + ", \"date_min_for\": " +
-                    join(column.dateMinFor);
+            code += ", \"date_min\": " + pythonString(dateText(column.dateMin)) +
+                    ", \"date_min_for\": " + join(column.dateMinFor);
         }
         if (!std::isinf(column.dateMax)) {
-            code += ", \"date_max\": " + pythonString(dateText(column.dateMax)) + ", \"date_max_for\": " +
-                    join(column.dateMaxFor);
+            code += ", \"date_max\": " + pythonString(dateText(column.dateMax)) +
+                    ", \"date_max_for\": " + join(column.dateMaxFor);
         }
         code += "}";
     }
@@ -350,7 +348,8 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
     const std::string table = tableVariable(in.dataset, in.table);
     const std::string column = table + "[" + pythonString(in.column) + "]";
     const std::string temp = "t" + std::to_string(in.result);
-    const std::string where = "line " + std::to_string(in.line) + ": " + tableKey(in.dataset, in.table) + "." + in.column;
+    const std::string where =
+        "line " + std::to_string(in.line) + ": " + tableKey(in.dataset, in.table) + "." + in.column;
     const auto fail = [&](const std::string& message) {
         return "    raise ContractError(" + pythonString(where + " " + message) + ")\n";
     };
@@ -375,9 +374,8 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             const std::string key = tableKey(in.dataset, in.table);
             return code + table + " = " + reader + "(\n    " + pythonString(key) + ",\n    HERE / " +
                    pythonString(pathFrom(outputFolder_, schema.file)) + ",\n    " +
-                   (schema.released ? std::string("None") : hex(schema.fingerprint)) +
-                   ",\n    " + pythonList(in.columns) + ",\n    " + dtypes + "},\n    " + certificateDict(key) +
-                   ",\n)\n";
+                   (schema.released ? std::string("None") : hex(schema.fingerprint)) + ",\n    " +
+                   pythonList(in.columns) + ",\n    " + dtypes + "},\n    " + certificateDict(key) + ",\n)\n";
         }
         case Opcode::Check: {
             // A check proven from the values runs only when an input changed.
@@ -403,11 +401,12 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             }
             // The statistic is computed from the data; MEAN and MEDIAN make the column FLOAT.
             // With missing values but no value to compute it from, the fill would do nothing.
-            const std::string statistic = in.text == "MEAN"     ? "column.mean()"
-                                          : in.text == "MEDIAN" ? "column.median()"
-                                                                : "column.mode().iloc[0] if column.notna().any() else pd.NA";
-            return "column = " + column + (in.text == "MODE" ? "" : ".astype(\"Float64\")") + "\nvalue = " +
-                   statistic + "\nif column.isna().any() and pd.isna(value):\n" +
+            const std::string statistic = in.text == "MEAN" ? "column.mean()"
+                                          : in.text == "MEDIAN"
+                                              ? "column.median()"
+                                              : "column.mode().iloc[0] if column.notna().any() else pd.NA";
+            return "column = " + column + (in.text == "MODE" ? "" : ".astype(\"Float64\")") + "\nvalue = " + statistic +
+                   "\nif column.isna().any() and pd.isna(value):\n" +
                    fail("has no values to compute the " + in.text + " from") + column + " = column.fillna(value)\n";
         }
         case Opcode::DropNull:
@@ -431,29 +430,25 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             return temp + " = " + column + " " + in.text + " " + pythonValue(in.values[0]) + "\n";
         case Opcode::And:
             return temp + " = t" + std::to_string(in.uses[0]) + " & t" + std::to_string(in.uses[1]) + "\n";
-        case Opcode::Or:
-            return temp + " = t" + std::to_string(in.uses[0]) + " | t" + std::to_string(in.uses[1]) + "\n";
-        case Opcode::Not:
-            return temp + " = ~t" + std::to_string(in.uses[0]) + "\n";
+        case Opcode::Or:  return temp + " = t" + std::to_string(in.uses[0]) + " | t" + std::to_string(in.uses[1]) + "\n";
+        case Opcode::Not: return temp + " = ~t" + std::to_string(in.uses[0]) + "\n";
         case Opcode::Filter:  // rows where the condition is missing (NA) are dropped, like in SQL
             return table + " = " + table + "[t" + std::to_string(in.uses[0]) + "]\n";
-        case Opcode::Select:
-            return table + " = " + table + "[" + pythonList(in.columns) + "]\n";
+        case Opcode::Select: return table + " = " + table + "[" + pythonList(in.columns) + "]\n";
         case Opcode::ParseDate:  // the compiler checked that every value is a date in one ISO layout
             return column + " = pd.to_datetime(" + column + ")\n";
-        case Opcode::Derive:
-            return column + " = " + pandasValue(*in.value, table) + "\n";
-        case Opcode::Drop:
-            return table + " = " + table + ".drop(columns=" + pythonList(in.columns) + ")\n";
-        case Opcode::Join: {  // a left join on a key the lookup table has once; a missing key matches nothing
+        case Opcode::Derive: return column + " = " + pandasValue(*in.value, table) + "\n";
+        case Opcode::Drop:   return table + " = " + table + ".drop(columns=" + pythonList(in.columns) + ")\n";
+        case Opcode::Join:   {  // a left join on a key the lookup table has once; a missing key matches nothing
             std::vector<std::string> read = {in.column};
             read.insert(read.end(), in.columns.begin(), in.columns.end());
             const std::string key = pythonString(in.column);
             const std::string lookup = tableKey(in.withDataset, in.withTable) + "." + in.column;
             return "right = " + tableVariable(in.withDataset, in.withTable) + "[" + pythonList(read) +
                    "].dropna(subset=[" + key + "])\nif right[" + key + "].duplicated().any():\n" +
-                   "    raise ContractError(" + pythonString("line " + std::to_string(in.line) + ": JOIN needs each " +
-                                                           lookup + " once, but it repeats ") +
+                   "    raise ContractError(" +
+                   pythonString("line " + std::to_string(in.line) + ": JOIN needs each " + lookup +
+                                " once, but it repeats ") +
                    " + repr(str(right.loc[right[" + key + "].duplicated(), " + key + "].iloc[0])))\n" + table + " = " +
                    table + ".merge(right, on=" + key + ", how=\"left\")\n";
         }
@@ -464,11 +459,11 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             for (size_t i = 0; i < in.aggregates.size(); ++i) {
                 const AggregateResult& item = in.aggregates[i];
                 const std::string statistic = item.function == "COUNT" ? "grouped.size()"
-                                              : "grouped[" + pythonString(item.column) + "]." +
-                                                    (item.function == "SUM"    ? "sum()"
-                                                     : item.function == "MEAN" ? "mean()"
-                                                     : item.function == "MIN"  ? "min()"
-                                                                               : "max()");
+                                                                       : "grouped[" + pythonString(item.column) + "]." +
+                                                                             (item.function == "SUM"    ? "sum()"
+                                                                              : item.function == "MEAN" ? "mean()"
+                                                                              : item.function == "MIN"  ? "min()"
+                                                                                                        : "max()");
                 code += (i > 0 ? ", " : "") + pythonString(item.name) + ": " + statistic;
                 types += (i > 0 ? ", " : "") + pythonString(item.name) + ": " +
                          pythonString(item.type == "FLOAT" ? "Float64" : "Int64");
@@ -476,12 +471,10 @@ std::string PandasCodegen::code(const Instruction& in, const IRProgram& program)
             return code + "}).reset_index().astype({" + types + "})\n";
         }
         case Opcode::Save:
-            return "path = HERE / " + pythonString(in.text) +
-                   "\npath.parent.mkdir(parents=True, exist_ok=True)\n" + table +
-                   (isParquetPath(in.text) ? ".to_parquet(path, index=False)" : ".to_csv(path, index=False)") +
-                   "\noutputs.append({\"file\": " + pythonString(in.text) +
-                   ", \"rows\": len(" + table + ")})\nprint(\"Saved\", len(" + table + "), \"rows to\", path)\n";
-        default:
-            return "";  // image instructions belong to the OpenCV backend
+            return "path = HERE / " + pythonString(in.text) + "\npath.parent.mkdir(parents=True, exist_ok=True)\n" +
+                   table + (isParquetPath(in.text) ? ".to_parquet(path, index=False)" : ".to_csv(path, index=False)") +
+                   "\noutputs.append({\"file\": " + pythonString(in.text) + ", \"rows\": len(" + table +
+                   ")})\nprint(\"Saved\", len(" + table + "), \"rows to\", path)\n";
+        default: return "";  // image instructions belong to the OpenCV backend
     }
 }

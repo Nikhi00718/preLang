@@ -20,9 +20,7 @@ const char* phaseName(Phase phase) {
     return "";
 }
 
-char upper(char c) {
-    return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-}
+char upper(char c) { return static_cast<char>(std::toupper(static_cast<unsigned char>(c))); }
 
 // Levenshtein distance ignoring case: the number of single-character edits
 // (insert, delete, replace) that turn `a` into `b`.

@@ -69,9 +69,7 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
         std::set<std::string>& liveColumns = live[tableKey(instruction.dataset, instruction.table)];
 
         switch (instruction.op) {
-            case Opcode::Save:
-                liveColumns.insert(before[i].begin(), before[i].end());
-                break;
+            case Opcode::Save: liveColumns.insert(before[i].begin(), before[i].end()); break;
             case Opcode::DropNull:  // DROP_NULL checks its columns (all, by default) to decide which rows to remove
                 if (instruction.columns.empty()) {
                     liveColumns.insert(before[i].begin(), before[i].end());
@@ -104,9 +102,7 @@ void ColumnPruningPass::run(IRProgram& program, OptimizationReport& report) {
                 }
                 break;  // if kept, it reads the column, which is already live
 
-            case Opcode::Compare:
-                liveColumns.insert(instruction.column);
-                break;
+            case Opcode::Compare: liveColumns.insert(instruction.column); break;
 
             case Opcode::Check:
                 // A speculatively removed check does not keep its column loaded: if the

@@ -43,9 +43,7 @@ void check(bool passed, const std::string& name) {
     }
 }
 
-void writeFile(const std::string& name, const std::string& text) {
-    std::ofstream(name, std::ios::binary) << text;
-}
+void writeFile(const std::string& name, const std::string& text) { std::ofstream(name, std::ios::binary) << text; }
 
 struct Compiled {
     Diagnostics diagnostics;
@@ -111,7 +109,8 @@ void testReadFacts() {
     const TableSchema& table = facts->tables.begin()->second;
     check(facts->tables.begin()->first == SchemaProvider::overrideKey("test_private_t.csv", "s"),
           "it is keyed like the LOAD that reads it");
-    check(table.released && !table.valuesKnown && table.fingerprint == 0, "it is released, inexact, without a checksum");
+    check(table.released && !table.valuesKnown && table.fingerprint == 0,
+          "it is released, inexact, without a checksum");
     const ColumnInfo& name = table.columns[0];
     const ColumnInfo& age = table.columns[1];
     const ColumnInfo& marks = table.columns[2];
@@ -138,22 +137,22 @@ void testCompilesWithoutTheFile() {
                                             "column\tage\tINTEGER\t?\t-inf\t0\tinf\t0\t-\t-\t-\t-\n"
                                             "column\tmarks\tINTEGER\t0\t0\t0\t100\t0\t-\t-\t-\t-\n");
     Compiled c;
-    compile("LOAD \"test_private_t.csv\" AS s;\n"         // line 1
-            "EXPECT s.marks BETWEEN 0 AND 100;\n"         // line 2: proven from the facts
-            "EXPECT s.marks UNIQUE;\n"                    // line 3: needs the values: checked at run time
-            "FILL_NULL s.marks WITH 0;\n"                 // line 4: no missing values: removed
-            "FILL_NULL s.age WITH 0;\n"                   // line 5: may have missing values: kept
-            "SAVE s AS \"test_private_out.csv\";\n",
-            c, "test_private_facts.tsv");
+    compile(
+        "LOAD \"test_private_t.csv\" AS s;\n"  // line 1
+        "EXPECT s.marks BETWEEN 0 AND 100;\n"  // line 2: proven from the facts
+        "EXPECT s.marks UNIQUE;\n"             // line 3: needs the values: checked at run time
+        "FILL_NULL s.marks WITH 0;\n"          // line 4: no missing values: removed
+        "FILL_NULL s.age WITH 0;\n"            // line 5: may have missing values: kept
+        "SAVE s AS \"test_private_out.csv\";\n",
+        c, "test_private_facts.tsv");
     check(!c.diagnostics.hasErrors(), "it compiles although the file does not exist");
     check(contract(c, 2) && contract(c, 2)->verdict == Verdict::Proven, "a range contract is proven from the facts");
     check(contract(c, 3) && contract(c, 3)->verdict == Verdict::Deferred &&
               contract(c, 3)->reason.find("private compilation") != std::string::npos,
           "UNIQUE is checked at run time: the values are not known");
     const auto speculative = [&](int line, Opcode op) {
-        return std::any_of(c.ir.code.begin(), c.ir.code.end(), [&](const Instruction& in) {
-            return in.line == line && in.op == op && in.speculative;
-        });
+        return std::any_of(c.ir.code.begin(), c.ir.code.end(),
+                           [&](const Instruction& in) { return in.line == line && in.op == op && in.speculative; });
     };
     check(speculative(2, Opcode::Check) && speculative(4, Opcode::FillNull),
           "the proven check and the useless fill are removed speculatively, not for good");
@@ -186,22 +185,23 @@ void testNothingExact() {
                                             "column\tage\tINTEGER\t0\t-inf\t0\tinf\t0\t-\t-\t-\t-\n"
                                             "column\tmarks\tINTEGER\t0\t0\t0\tinf\t0\t-\t-\t100\t>\n");
     Compiled c;
-    compile("LOAD \"test_private_t.csv\" AS s;\n"   // line 1
-            "EXPECT s.marks BETWEEN 0 AND 100;\n"   // line 2
-            "EXPECT s.name NOT_NULL;\n"             // line 3
-            "FILTER s WHERE age > 18;\n"            // line 4
-            "EXPECT s.marks BETWEEN 0 AND 100;\n"   // line 5: rows were removed: no warning
-            "SAVE s AS \"test_private_out.csv\";\n",
-            c, "test_private_facts.tsv");
+    compile(
+        "LOAD \"test_private_t.csv\" AS s;\n"  // line 1
+        "EXPECT s.marks BETWEEN 0 AND 100;\n"  // line 2
+        "EXPECT s.name NOT_NULL;\n"            // line 3
+        "FILTER s WHERE age > 18;\n"           // line 4
+        "EXPECT s.marks BETWEEN 0 AND 100;\n"  // line 5: rows were removed: no warning
+        "SAVE s AS \"test_private_out.csv\";\n",
+        c, "test_private_facts.tsv");
     check(!c.diagnostics.hasErrors(), "no contract is reported violated");
     check(contract(c, 2)->verdict == Verdict::Deferred && contract(c, 3)->verdict == Verdict::Deferred,
           "both contracts are checked at run time");
     check(hasMessage(c, Severity::Warning, "EXPECT s.marks BETWEEN 0 AND 100 is likely violated") &&
               hasMessage(c, Severity::Warning, "EXPECT s.name NOT_NULL is likely violated"),
           "the analyst is warned that both are likely violated");
-    const auto warnings = std::count_if(c.diagnostics.all().begin(), c.diagnostics.all().end(), [](const Diagnostic& d) {
-        return d.message.find("likely violated") != std::string::npos;
-    });
+    const auto warnings =
+        std::count_if(c.diagnostics.all().begin(), c.diagnostics.all().end(),
+                      [](const Diagnostic& d) { return d.message.find("likely violated") != std::string::npos; });
     check(warnings == 2, "no warning after a FILTER: the released facts describe the file, not the rows left");
 }
 
@@ -216,11 +216,12 @@ void testNoReleasedFactDecidesAdmission() {
                                             "column\tage\tINTEGER\t?\t-inf\t0\tinf\t0\t-\t-\t-\t-\n"
                                             "column\tmarks\tINTEGER\t0\t0\t0\t100\t0\t-\t-\t-\t-\n");
     Compiled c;
-    compile("LOAD \"test_private_t.csv\" AS s;\n"   // line 1
-            "EXPECT s.name NOT_NULL;\n"             // line 2: proven from the facts
-            "SELECT s [age];\n"                     // name is not used again
-            "SAVE s AS \"test_private_out.csv\";\n",
-            c, "test_private_facts.tsv");
+    compile(
+        "LOAD \"test_private_t.csv\" AS s;\n"  // line 1
+        "EXPECT s.name NOT_NULL;\n"            // line 2: proven from the facts
+        "SELECT s [age];\n"                    // name is not used again
+        "SAVE s AS \"test_private_out.csv\";\n",
+        c, "test_private_facts.tsv");
     const bool speculative = std::any_of(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) {
         return in.op == Opcode::Check && in.line == 2 && in.speculative;
     });
@@ -288,13 +289,14 @@ std::string decisions(const Compiled& c) {
 // Proved for the core in proofs/Cells.lean (cells_decide); tested here for the compiler.
 void testCellsDecide() {
     std::cout << "Tables with the same occupied cells get the same decisions\n";
-    const std::string program = "LOAD \"test_private_cells.csv\" AS s;\n"
-                                "EXPECT s.marks BETWEEN 0 AND 100;\n"
-                                "FILL_NULL s.age WITH 0;\n"
-                                "FILTER s WHERE marks >= 40 AND age < 30;\n"
-                                "EXPECT s.name NOT_NULL;\n"
-                                "DROP_NULL s;\n"
-                                "SAVE s AS \"test_private_out.csv\";\n";
+    const std::string program =
+        "LOAD \"test_private_cells.csv\" AS s;\n"
+        "EXPECT s.marks BETWEEN 0 AND 100;\n"
+        "FILL_NULL s.age WITH 0;\n"
+        "FILTER s WHERE marks >= 40 AND age < 30;\n"
+        "EXPECT s.name NOT_NULL;\n"
+        "DROP_NULL s;\n"
+        "SAVE s AS \"test_private_out.csv\";\n";
     const std::vector<int> anchors = {0, 30, 40, 100};
     std::mt19937 random(7);
     const auto pick = [&](int n) { return static_cast<int>(random() % static_cast<unsigned>(n)); };
@@ -407,13 +409,14 @@ bool sameRun(const Compiled& base, const Compiled& again, const std::set<std::st
 
 void testAnyFactsAreSafe() {
     std::cout << "Random facts, true or false, and random inputs\n";
-    const std::string program = "LOAD \"test_private_t.csv\" AS s;\n"   // line 1
-                                "EXPECT s.marks BETWEEN 0 AND 100;\n"   // line 2
-                                "FILL_NULL s.age WITH 0;\n"             // line 3
-                                "FILTER s WHERE marks >= 40;\n"         // line 4
-                                "EXPECT s.name NOT_NULL;\n"             // line 5
-                                "DROP_NULL s;\n"                        // line 6
-                                "SAVE s AS \"test_private_out.csv\";\n";
+    const std::string program =
+        "LOAD \"test_private_t.csv\" AS s;\n"  // line 1
+        "EXPECT s.marks BETWEEN 0 AND 100;\n"  // line 2
+        "FILL_NULL s.age WITH 0;\n"            // line 3
+        "FILTER s WHERE marks >= 40;\n"        // line 4
+        "EXPECT s.name NOT_NULL;\n"            // line 5
+        "DROP_NULL s;\n"                       // line 6
+        "SAVE s AS \"test_private_out.csv\";\n";
     const double infinity = std::numeric_limits<double>::infinity();
     const std::vector<double> anchors = {-infinity, -10, 0, 40, 100, 150, infinity};
     std::mt19937 random(2026);
@@ -429,10 +432,13 @@ void testAnyFactsAreSafe() {
             if (low > high) {
                 std::swap(low, high);
             }
-            const auto text = [](double v) { return std::isinf(v) ? std::string(v < 0 ? "-inf" : "inf") : std::to_string(v); };
-            facts += std::string("column\t") + column + "\t" + (numeric ? "INTEGER" : "STRING") + "\t" + missing[pick(3)] +
-                     "\t" + text(low) + "\t" + (low < high && !std::isinf(low) && pick(2) ? "1" : "0") + "\t" + text(high) +
-                     "\t" + (low < high && !std::isinf(high) && pick(2) ? "1" : "0") + "\t-\t-\t-\t-\n";
+            const auto text = [](double v) {
+                return std::isinf(v) ? std::string(v < 0 ? "-inf" : "inf") : std::to_string(v);
+            };
+            facts += std::string("column\t") + column + "\t" + (numeric ? "INTEGER" : "STRING") + "\t" +
+                     missing[pick(3)] + "\t" + text(low) + "\t" +
+                     (low < high && !std::isinf(low) && pick(2) ? "1" : "0") + "\t" + text(high) + "\t" +
+                     (low < high && !std::isinf(high) && pick(2) ? "1" : "0") + "\t-\t-\t-\t-\n";
         }
         writeFile("test_private_facts.tsv", facts);
         Compiled base;

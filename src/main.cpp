@@ -64,14 +64,13 @@ struct Options {
 
 bool parseArguments(int argc, char* argv[], Options& options) {
     const std::vector<std::pair<std::string, bool*>> stageFlags = {
-        {"--source", &options.source},     {"--tokens", &options.tokens}, {"--ast", &options.ast},
-        {"--schema", &options.schema},     {"--semantic", &options.semantic}, {"--lineage", &options.lineage},
-        {"--ir", &options.ir},             {"--certificate", &options.certificate},
-        {"--python", &options.python},
+        {"--source", &options.source}, {"--tokens", &options.tokens},           {"--ast", &options.ast},
+        {"--schema", &options.schema}, {"--semantic", &options.semantic},       {"--lineage", &options.lineage},
+        {"--ir", &options.ir},         {"--certificate", &options.certificate}, {"--python", &options.python},
     };
     const std::vector<std::pair<std::string, bool*>> otherFlags = {
-        {"--explain", &options.explain}, {"--dry-run", &options.dryRun}, {"--run", &options.run},
-        {"--dot", &options.dot},         {"--O0", &options.noOptimize},  {"--approx", &options.approximate},
+        {"--explain", &options.explain},  {"--dry-run", &options.dryRun},  {"--run", &options.run},
+        {"--dot", &options.dot},          {"--O0", &options.noOptimize},   {"--approx", &options.approximate},
         {"--no-deopt", &options.noDeopt}, {"--queries", &options.queries},
     };
     bool anyStage = false;
@@ -231,7 +230,8 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         std::cout << "Private compilation: no input file is opened; the facts are the data owner's released "
-                     "answers (" << facts->mechanism << ").\n";
+                     "answers ("
+                  << facts->mechanism << ").\n";
         schemas.setReleased(std::move(facts->tables));
     }
     const AnalysisResult analysis = SemanticAnalyzer(symbols, schemas, programFolder, diagnostics).analyze(program);
@@ -239,7 +239,8 @@ int main(int argc, char* argv[]) {
         printHeader("SCHEMA (SchemaProvider)");
         for (const DatasetSymbol& dataset : symbols.datasets()) {
             for (const TableState& table : dataset.tables) {
-                printTableSchema(std::cout, dataset.name + (dataset.kind == DatasetKind::TableSet ? "." + table.name : ""),
+                printTableSchema(std::cout,
+                                 dataset.name + (dataset.kind == DatasetKind::TableSet ? "." + table.name : ""),
                                  table.schema);
             }
             if (dataset.isImage()) {

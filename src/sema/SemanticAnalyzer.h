@@ -69,8 +69,8 @@ private:
 
     DatasetSymbol* filterDataset_ = nullptr;  // table that column names in WHERE belong to
     TableState* filterTable_ = nullptr;
-    Truth truth_ = Truth::Unknown;            // result of the condition visited last
-    std::string neverTrueReason_;             // why a comparison can never be true
+    Truth truth_ = Truth::Unknown;  // result of the condition visited last
+    std::string neverTrueReason_;   // why a comparison can never be true
 
     void normalizeImages(const NormalizeStmt& node);
     void saveImages(const SaveStmt& node);

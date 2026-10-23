@@ -73,7 +73,8 @@ void RedundantOpPass::mergeResizes(IRProgram& program, OptimizationReport& repor
                     report.changes.push_back("RESIZE fusion (approximate): removed " + describe(first) + ", " +
                                              describe(next) + " alone gives almost the same pixels");
                 } else {
-                    report.suggestions.push_back("RESIZE fusion: removing " + describe(first) + " saves one resize "
+                    report.suggestions.push_back("RESIZE fusion: removing " + describe(first) +
+                                                 " saves one resize "
                                                  "per image, but pixels differ slightly; use --approx to apply it");
                 }
             }

@@ -23,9 +23,7 @@ inline std::string tableKey(const std::string& dataset, const std::string& table
     return table.empty() ? dataset : dataset + "." + table;
 }
 
-inline std::string targetKey(const Target& target) {
-    return target.dataset + "." + target.table + "." + target.column;
-}
+inline std::string targetKey(const Target& target) { return target.dataset + "." + target.table + "." + target.column; }
 
 // A stable name for one no-effect fact (statement, target), the same in every run of
 // the analysis: "line:column:dataset.table.column". The IR, the certificate and the
@@ -41,8 +39,8 @@ struct ContractRecord {
     std::string contract;  // e.g. "students.marks BETWEEN 0 AND 100"
     Verdict verdict;
     std::string reason;
-    bool fromValues = false;  // proven by reading the values (UNIQUE, REFERENCES, MATCH_RATE),
-                              // so the proof holds for those exact files only
+    bool fromValues = false;    // proven by reading the values (UNIQUE, REFERENCES, MATCH_RATE),
+                                // so the proof holds for those exact files only
     bool runtimeCheck = false;  // a run-time check exists for it (proven: the check was removed);
                                 // type and image contracts have none
 };
@@ -51,7 +49,7 @@ struct ContractRecord {
 // file of the program has, for inputs with the analysed facts (a guarantee).
 struct SavedColumn {
     std::string name;
-    std::string type;    // INTEGER, FLOAT, STRING, BOOLEAN, DATETIME
+    std::string type;  // INTEGER, FLOAT, STRING, BOOLEAN, DATETIME
     bool nullable = true;
     double min = 0, max = 0;
     bool hasRange = false;

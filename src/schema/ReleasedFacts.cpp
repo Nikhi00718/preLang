@@ -45,8 +45,8 @@ bool parseNumber(const std::string& text, double& value) {
 }
 
 bool parseType(const std::string& text, ColumnType& type) {
-    for (ColumnType candidate : {ColumnType::Boolean, ColumnType::Integer, ColumnType::Float, ColumnType::String,
-                                 ColumnType::DateTime}) {
+    for (ColumnType candidate :
+         {ColumnType::Boolean, ColumnType::Integer, ColumnType::Float, ColumnType::String, ColumnType::DateTime}) {
         if (text == columnTypeName(candidate)) {
             type = candidate;
             return true;

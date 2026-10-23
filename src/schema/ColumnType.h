@@ -13,18 +13,16 @@ enum class ColumnType { Boolean, Integer, Float, String, DateTime };
 
 inline const char* columnTypeName(ColumnType type) {
     switch (type) {
-        case ColumnType::Boolean: return "BOOLEAN";
-        case ColumnType::Integer: return "INTEGER";
-        case ColumnType::Float:   return "FLOAT";
-        case ColumnType::String:  return "STRING";
+        case ColumnType::Boolean:  return "BOOLEAN";
+        case ColumnType::Integer:  return "INTEGER";
+        case ColumnType::Float:    return "FLOAT";
+        case ColumnType::String:   return "STRING";
         case ColumnType::DateTime: return "DATETIME";
     }
     return "";
 }
 
-inline bool isNumeric(ColumnType type) {
-    return type == ColumnType::Integer || type == ColumnType::Float;
-}
+inline bool isNumeric(ColumnType type) { return type == ColumnType::Integer || type == ColumnType::Float; }
 
 // 20 -> "20", 92.5 -> "92.5", infinity -> "inf"
 inline std::string formatNumber(double value) {

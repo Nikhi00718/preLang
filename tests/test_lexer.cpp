@@ -32,8 +32,8 @@ using T = TokenType;
 void testStatement() {
     Diagnostics diagnostics;
     const auto tokens = Lexer("NORMALIZE students.age;", diagnostics).tokenize();
-    check(typesOf(tokens) == std::vector<T>{T::NORMALIZE, T::IDENTIFIER, T::DOT, T::IDENTIFIER, T::SEMICOLON,
-                                            T::END_OF_FILE},
+    check(typesOf(tokens) ==
+              std::vector<T>{T::NORMALIZE, T::IDENTIFIER, T::DOT, T::IDENTIFIER, T::SEMICOLON, T::END_OF_FILE},
           "keyword, identifiers and punctuation");
     check(!diagnostics.hasErrors(), "valid input gives no errors");
 }

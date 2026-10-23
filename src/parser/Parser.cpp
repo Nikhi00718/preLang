@@ -11,9 +11,10 @@ namespace {
 struct ParseError {};
 
 const std::vector<std::string> statementKeywords = {
-    "LOAD", "LOAD_TABLES", "LOAD_IMAGE", "LOAD_IMAGES", "DROP_NULL", "FILL_NULL", "NORMALIZE", "FILTER",
-    "SELECT", "DROP", "PARSE_DATE", "DERIVE", "JOIN", "AGGREGATE", "SAVE", "SAVE_TABLES", "SAVE_IMAGE", "SAVE_IMAGES", "EXPECT", "RESIZE", "GRAYSCALE",
-    "COMPRESS", "CONVERT", "REMOVE_CORRUPT", "LINK"};
+    "LOAD",     "LOAD_TABLES", "LOAD_IMAGE",     "LOAD_IMAGES", "DROP_NULL", "FILL_NULL", "NORMALIZE",
+    "FILTER",   "SELECT",      "DROP",           "PARSE_DATE",  "DERIVE",    "JOIN",      "AGGREGATE",
+    "SAVE",     "SAVE_TABLES", "SAVE_IMAGE",     "SAVE_IMAGES", "EXPECT",    "RESIZE",    "GRAYSCALE",
+    "COMPRESS", "CONVERT",     "REMOVE_CORRUPT", "LINK"};
 
 // How a token is shown in "found ..." messages.
 std::string describe(const Token& token) {
@@ -460,13 +461,10 @@ std::unique_ptr<Expr> Parser::primary() {
         case TokenType::LESS:
         case TokenType::LESS_EQUAL:
         case TokenType::GREATER:
-        case TokenType::GREATER_EQUAL:
-            node->op = advance().lexeme;
-            break;
+        case TokenType::GREATER_EQUAL: node->op = advance().lexeme; break;
         case TokenType::EQUAL:
             errorAt(peek().location, "expected a comparison operator, found '='", "use '==' to compare values");
-        default:
-            errorExpected("a comparison operator (==, !=, <, <=, >, >=)");
+        default: errorExpected("a comparison operator (==, !=, <, <=, >, >=)");
     }
     node->value = literal();
     return node;
@@ -636,9 +634,7 @@ Selector Parser::path() {
     return selector;
 }
 
-void Parser::optionalIfExists(Selector& selector) {
-    selector.ifExists = match(TokenType::IF_EXISTS);
-}
+void Parser::optionalIfExists(Selector& selector) { selector.ifExists = match(TokenType::IF_EXISTS); }
 
 // ---------- Shared pieces ----------
 
@@ -658,15 +654,11 @@ std::vector<std::string> Parser::columnList() {
 Literal Parser::literal() {
     switch (peek().type) {
         case TokenType::NUMBER_LITERAL:
-        case TokenType::MINUS:
-            return {LiteralKind::Number, number()};
-        case TokenType::STRING_LITERAL:
-            return {LiteralKind::String, advance().lexeme};
+        case TokenType::MINUS:          return {LiteralKind::Number, number()};
+        case TokenType::STRING_LITERAL: return {LiteralKind::String, advance().lexeme};
         case TokenType::TRUE:
-        case TokenType::FALSE:
-            return {LiteralKind::Boolean, advance().type == TokenType::TRUE ? "TRUE" : "FALSE"};
-        default:
-            errorExpected("a value (a number, \"text\", TRUE or FALSE)");
+        case TokenType::FALSE:          return {LiteralKind::Boolean, advance().type == TokenType::TRUE ? "TRUE" : "FALSE"};
+        default:                        errorExpected("a value (a number, \"text\", TRUE or FALSE)");
     }
 }
 
@@ -714,27 +706,17 @@ std::string Parser::identifier(const std::string& what) {
     errorExpected(what, hint);
 }
 
-void Parser::endStatement() {
-    consume(TokenType::SEMICOLON, "';' at the end of the statement");
-}
+void Parser::endStatement() { consume(TokenType::SEMICOLON, "';' at the end of the statement"); }
 
 // ---------- Reading tokens ----------
 
-const Token& Parser::peek() const {
-    return tokens_[current_];
-}
+const Token& Parser::peek() const { return tokens_[current_]; }
 
-const Token& Parser::previous() const {
-    return tokens_[current_ - 1];
-}
+const Token& Parser::previous() const { return tokens_[current_ - 1]; }
 
-bool Parser::isAtEnd() const {
-    return peek().type == TokenType::END_OF_FILE;
-}
+bool Parser::isAtEnd() const { return peek().type == TokenType::END_OF_FILE; }
 
-bool Parser::check(TokenType type) const {
-    return peek().type == type;
-}
+bool Parser::check(TokenType type) const { return peek().type == type; }
 
 bool Parser::match(TokenType type) {
     if (!check(type)) {

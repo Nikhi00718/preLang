@@ -53,11 +53,12 @@ std::string constraintText(const ExpectStmt& node) {
         case ConstraintKind::Unique:     return "UNIQUE";
         case ConstraintKind::References: return "REFERENCES " + node.other.text();
         case ConstraintKind::SchemaSameAs:
-            return "SCHEMA_SAME_AS " + node.other.text() + (node.except.empty() ? "" : " EXCEPT " + listText(node.except));
-        case ConstraintKind::Channels:   return "CHANNELS " + node.low;
-        case ConstraintKind::MinWidth:   return "MIN_WIDTH " + node.low;
-        case ConstraintKind::MinHeight:  return "MIN_HEIGHT " + node.low;
-        case ConstraintKind::MatchRate:  return "MATCH_RATE " + node.low + "%";
+            return "SCHEMA_SAME_AS " + node.other.text() +
+                   (node.except.empty() ? "" : " EXCEPT " + listText(node.except));
+        case ConstraintKind::Channels:  return "CHANNELS " + node.low;
+        case ConstraintKind::MinWidth:  return "MIN_WIDTH " + node.low;
+        case ConstraintKind::MinHeight: return "MIN_HEIGHT " + node.low;
+        case ConstraintKind::MatchRate: return "MATCH_RATE " + node.low + "%";
     }
     return "";
 }
@@ -69,11 +70,9 @@ std::string literalText(const Literal& literal) {
 std::string valueText(const ValueExpr& expr) {
     switch (expr.kind) {
         case ValueKind::Number:
-        case ValueKind::Column:
-            return expr.text;
-        case ValueKind::DatePart:
-            return expr.text + "(" + expr.left->text + ")";
-        case ValueKind::Binary: {
+        case ValueKind::Column:   return expr.text;
+        case ValueKind::DatePart: return expr.text + "(" + expr.left->text + ")";
+        case ValueKind::Binary:   {
             // Parentheses only where the tree needs them: a - (b - c), a * (b + c), a / (b * c)
             const bool multiplies = expr.text == "*" || expr.text == "/";
             const auto operand = [&](const ValueExpr& side, bool right) {
@@ -94,8 +93,7 @@ std::string valueText(const ValueExpr& expr) {
 std::vector<std::string> valueColumns(const ValueExpr& expr) {
     std::vector<std::string> columns;
     const std::function<void(const ValueExpr&)> collect = [&](const ValueExpr& node) {
-        if (node.kind == ValueKind::Column &&
-            std::find(columns.begin(), columns.end(), node.text) == columns.end()) {
+        if (node.kind == ValueKind::Column && std::find(columns.begin(), columns.end(), node.text) == columns.end()) {
             columns.push_back(node.text);
         }
         if (node.left) {
@@ -130,8 +128,8 @@ void ASTPrinter::visit(const LoadStmt& node) {
 }
 
 void ASTPrinter::visit(const DropNullStmt& node) {
-    printNode("DropNull", {"target: " + selectorText(node.target) +
-                               (node.columns.empty() ? "" : " " + listText(node.columns))});
+    printNode("DropNull",
+              {"target: " + selectorText(node.target) + (node.columns.empty() ? "" : " " + listText(node.columns))});
 }
 
 void ASTPrinter::visit(const FillNullStmt& node) {
@@ -165,9 +163,7 @@ void ASTPrinter::visit(const DropStmt& node) {
     printNode("Drop", {"tables: " + selectorText(node.target), "columns: " + listText(node.columns)});
 }
 
-void ASTPrinter::visit(const ParseDateStmt& node) {
-    printNode("ParseDate", {"column: " + selectorText(node.target)});
-}
+void ASTPrinter::visit(const ParseDateStmt& node) { printNode("ParseDate", {"column: " + selectorText(node.target)}); }
 
 void ASTPrinter::visit(const DeriveStmt& node) {
     printNode("Derive", {"column: " + node.target.text(), "value: " + valueText(*node.value)});
@@ -194,14 +190,12 @@ void ASTPrinter::visit(const ExpectStmt& node) {
 }
 
 void ASTPrinter::visit(const ResizeStmt& node) {
-    printNode("Resize", {"images: " + node.dataset,
-                         "size: " + std::to_string(node.width) + " x " + std::to_string(node.height),
-                         std::string("keep aspect: ") + (node.keepAspect ? "yes" : "no")});
+    printNode("Resize",
+              {"images: " + node.dataset, "size: " + std::to_string(node.width) + " x " + std::to_string(node.height),
+               std::string("keep aspect: ") + (node.keepAspect ? "yes" : "no")});
 }
 
-void ASTPrinter::visit(const GrayscaleStmt& node) {
-    printNode("Grayscale", {"images: " + node.dataset});
-}
+void ASTPrinter::visit(const GrayscaleStmt& node) { printNode("Grayscale", {"images: " + node.dataset}); }
 
 void ASTPrinter::visit(const CompressStmt& node) {
     printNode("Compress", {"images: " + node.dataset, "quality: " + std::to_string(node.quality)});
@@ -211,13 +205,10 @@ void ASTPrinter::visit(const ConvertStmt& node) {
     printNode("Convert", {"images: " + node.dataset, "format: " + node.format});
 }
 
-void ASTPrinter::visit(const RemoveCorruptStmt& node) {
-    printNode("RemoveCorrupt", {"images: " + node.dataset});
-}
+void ASTPrinter::visit(const RemoveCorruptStmt& node) { printNode("RemoveCorrupt", {"images: " + node.dataset}); }
 
 void ASTPrinter::visit(const LinkStmt& node) {
-    printNode("Link", {"images: " + node.images, "table: " + node.table, "on: " + node.column,
-                       "as: " + node.dataset});
+    printNode("Link", {"images: " + node.images, "table: " + node.table, "on: " + node.column, "as: " + node.dataset});
 }
 
 // ---------- Conditions ----------

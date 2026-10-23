@@ -18,8 +18,8 @@ public:
     ContractAnalyzer(Diagnostics& diagnostics, AnalysisResult& result);
 
     // NUMBER, STRING, BOOLEAN, NOT_NULL, BETWEEN or UNIQUE on one matched column.
-    void columnContract(const ExpectStmt& node, const std::string& name, const Target& target,
-                        const TableState& table, ColumnState& column);
+    void columnContract(const ExpectStmt& node, const std::string& name, const Target& target, const TableState& table,
+                        ColumnState& column);
     // column REFERENCES otherColumn (a foreign key)
     void references(const ExpectStmt& node, const std::string& name, const Target& target, const TableState& table,
                     const ColumnState& column, const std::string& otherName, const TableState& otherTable,

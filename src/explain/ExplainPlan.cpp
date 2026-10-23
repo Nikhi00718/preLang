@@ -91,8 +91,8 @@ void printExplain(std::ostream& out, const SymbolTable& symbols, const AnalysisR
     for (const auto& [kind, count] : kinds) {
         row(out, kind, std::to_string(count));
     }
-    row(out, "instructions", std::to_string(report.instructionsBefore) + " -> " +
-                                 std::to_string(report.instructionsAfter));
+    row(out, "instructions",
+        std::to_string(report.instructionsBefore) + " -> " + std::to_string(report.instructionsAfter));
     if (!report.suggestions.empty()) {
         row(out, "approximate rewrites skipped", std::to_string(report.suggestions.size()) + " (use --approx)");
     }
@@ -113,8 +113,9 @@ void printExplain(std::ostream& out, const SymbolTable& symbols, const AnalysisR
         folders += !image.fixed;
     }
     row(out, "image folders certified", std::to_string(folders) + " of " + std::to_string(certificate.images.size()));
-    row(out, "other inputs", certificate.exactOnly ? "only the compiled files are accepted"
-                                                   : "admitted by generated.py name=file-or-folder");
+    row(out, "other inputs",
+        certificate.exactOnly ? "only the compiled files are accepted"
+                              : "admitted by generated.py name=file-or-folder");
 
     section(out, "BACKENDS");
     int tableInstructions = 0;
@@ -148,35 +149,24 @@ void printDryRun(std::ostream& out, const IRProgram& program, const std::string&
                 reads.push_back(in.dataset + ": " + std::to_string(program.images.at(in.dataset).images.size()) +
                                 " image file(s)");
                 break;
-            case Opcode::FillNull:
-                changes.push_back(table + "." + in.column + ": missing values filled" + line);
-                break;
+            case Opcode::FillNull: changes.push_back(table + "." + in.column + ": missing values filled" + line); break;
             case Opcode::Normalize:
                 changes.push_back(table + "." + in.column + ": rescaled with " + in.text + line);
                 break;
             case Opcode::DropNull:
-            case Opcode::Filter:
-                changes.push_back(table + ": rows removed" + line);
-                break;
+            case Opcode::Filter:   changes.push_back(table + ": rows removed" + line); break;
             case Opcode::Select:
-            case Opcode::Drop:
-                changes.push_back(table + ": columns removed" + line);
-                break;
+            case Opcode::Drop:     changes.push_back(table + ": columns removed" + line); break;
             case Opcode::Join:
                 changes.push_back(table + ": columns added from " + tableKey(in.withDataset, in.withTable) + line);
                 break;
-            case Opcode::Aggregate:
-                changes.push_back(table + ": one row per group" + line);
-                break;
-            case Opcode::Save:
-                writes.push_back(outputFolder + "/" + in.text);
-                break;
+            case Opcode::Aggregate: changes.push_back(table + ": one row per group" + line); break;
+            case Opcode::Save:      writes.push_back(outputFolder + "/" + in.text); break;
             case Opcode::SaveImages:
                 writes.push_back(outputFolder + "/" + in.text + " (" +
                                  std::to_string(program.images.at(in.dataset).images.size()) + " image file(s))");
                 break;
-            default:
-                break;
+            default: break;
         }
     }
     writes.push_back(outputFolder + "/preplang_manifest.json");

@@ -53,9 +53,7 @@ void ASTDot::visit(const LoadStmt& node) {
     addStatement("Load " + dataKindName(node.kind), {"\"" + node.path + "\"", node.dataset});
 }
 
-void ASTDot::visit(const DropNullStmt& node) {
-    addStatement("DropNull", {selectorText(node.target)});
-}
+void ASTDot::visit(const DropNullStmt& node) { addStatement("DropNull", {selectorText(node.target)}); }
 
 void ASTDot::visit(const FillNullStmt& node) {
     addStatement("FillNull", {selectorText(node.target), node.method == FillMethod::Value
@@ -63,9 +61,7 @@ void ASTDot::visit(const FillNullStmt& node) {
                                                              : std::string(fillMethodName(node.method))});
 }
 
-void ASTDot::visit(const NormalizeStmt& node) {
-    addStatement("Normalize", {selectorText(node.target)});
-}
+void ASTDot::visit(const NormalizeStmt& node) { addStatement("Normalize", {selectorText(node.target)}); }
 
 void ASTDot::visit(const FilterStmt& node) {
     addStatement("Filter", {selectorText(node.target)});
@@ -84,13 +80,9 @@ void ASTDot::visit(const DropStmt& node) {
     addStatement("Drop", fields);
 }
 
-void ASTDot::visit(const ParseDateStmt& node) {
-    addStatement("ParseDate", {selectorText(node.target)});
-}
+void ASTDot::visit(const ParseDateStmt& node) { addStatement("ParseDate", {selectorText(node.target)}); }
 
-void ASTDot::visit(const DeriveStmt& node) {
-    addStatement("Derive", {node.target.text(), valueText(*node.value)});
-}
+void ASTDot::visit(const DeriveStmt& node) { addStatement("Derive", {node.target.text(), valueText(*node.value)}); }
 
 void ASTDot::visit(const JoinStmt& node) {
     addStatement("Join", {node.target.text(), "WITH " + node.other.text(), "ON " + node.key});
@@ -120,21 +112,15 @@ void ASTDot::visit(const ResizeStmt& node) {
                                               (node.keepAspect ? " KEEP_ASPECT" : "")});
 }
 
-void ASTDot::visit(const GrayscaleStmt& node) {
-    addStatement("Grayscale", {node.dataset});
-}
+void ASTDot::visit(const GrayscaleStmt& node) { addStatement("Grayscale", {node.dataset}); }
 
 void ASTDot::visit(const CompressStmt& node) {
     addStatement("Compress", {node.dataset, "QUALITY " + std::to_string(node.quality)});
 }
 
-void ASTDot::visit(const ConvertStmt& node) {
-    addStatement("Convert", {node.dataset, node.format});
-}
+void ASTDot::visit(const ConvertStmt& node) { addStatement("Convert", {node.dataset, node.format}); }
 
-void ASTDot::visit(const RemoveCorruptStmt& node) {
-    addStatement("RemoveCorrupt", {node.dataset});
-}
+void ASTDot::visit(const RemoveCorruptStmt& node) { addStatement("RemoveCorrupt", {node.dataset}); }
 
 void ASTDot::visit(const LinkStmt& node) {
     addStatement("Link", {node.images, node.table, "ON " + node.column, "AS " + node.dataset});

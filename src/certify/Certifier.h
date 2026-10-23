@@ -48,8 +48,8 @@
 
 struct ColumnFacts {
     std::string name;
-    bool read = true;                      // the optimized program loads it; otherwise it is loaded only to
-                                           // check it, because a proof depends on it
+    bool read = true;  // the optimized program loads it; otherwise it is loaded only to
+                       // check it, because a proof depends on it
     ColumnType type = ColumnType::String;
     bool typeFixed = true;                 // the type is required: always for a column the program reads
     std::vector<std::string> typeFor;      // for a column it does not read: the proofs that need the type
@@ -72,8 +72,8 @@ struct ColumnFacts {
 };
 
 struct TableCertificate {
-    std::string key;   // table key: "students", or "company.staff" in a TABLESET
-    std::string file;  // the file it was compiled with
+    std::string key;                   // table key: "students", or "company.staff" in a TABLESET
+    std::string file;                  // the file it was compiled with
     std::vector<ColumnFacts> columns;  // every column the program reads, and every other one a proof needs
 };
 
@@ -88,11 +88,11 @@ struct ImageGroupFacts {
 
 struct ImageCertificate {
     std::string dataset;
-    std::string root;           // the folder it was compiled with
-    bool fixed = false;         // no box keeps the proofs: the folder must stay exactly as compiled
+    std::string root;    // the folder it was compiled with
+    bool fixed = false;  // no box keeps the proofs: the folder must stay exactly as compiled
     std::vector<std::string> fixedFor;
-    std::vector<int> depths;    // 8 and/or 16 bits, exactly as compiled (they decide the pixel type)
-    bool brokenAllowed = false; // files whose header cannot be read
+    std::vector<int> depths;     // 8 and/or 16 bits, exactly as compiled (they decide the pixel type)
+    bool brokenAllowed = false;  // files whose header cannot be read
     std::vector<std::string> brokenFor;
     std::vector<ImageGroupFacts> groups;
 };
@@ -114,7 +114,7 @@ struct ItemCertificate {
 struct Certificate {
     std::vector<TableCertificate> tables;  // admission: an input outside is refused
     std::vector<ImageCertificate> images;
-    std::vector<ItemCertificate> items;    // one per speculatively removed instruction (proofKey)
+    std::vector<ItemCertificate> items;        // one per speculatively removed instruction (proofKey)
     std::vector<TableCertificate> fullTables;  // every proof, i.e. the certificate without deoptimization
     std::vector<ImageCertificate> fullImages;
     std::vector<std::string> recheckedIfChanged;  // contracts proven from the values
@@ -122,8 +122,8 @@ struct Certificate {
     // input (the analysis run on the admission certificate): the program's guarantee
     // to the next stage of a pipeline (see tools/contracts.py).
     std::vector<SavedTable> guarantees;
-    int analysisRuns = 0;                         // how many times the program was analysed again
-    bool exactOnly = false;                       // no certificate: only the compiled files are accepted
+    int analysisRuns = 0;    // how many times the program was analysed again
+    bool exactOnly = false;  // no certificate: only the compiled files are accepted
 
     const TableCertificate* table(const std::string& key) const;
     const ImageCertificate* image(const std::string& dataset) const;
@@ -138,7 +138,8 @@ public:
     // `optimized` gives the columns each LOAD reads and the speculative instructions;
     // `constants` are the numbers in the program (programConstants of the IR before
     // optimization), the only places where widening a range can change a decision.
-    Certificate certify(const IRProgram& optimized, const AnalysisResult& analysis, const std::vector<double>& constants);
+    Certificate certify(const IRProgram& optimized, const AnalysisResult& analysis,
+                        const std::vector<double>& constants);
 
 private:
     // What a run of the analysis proved, each with a description: "contract ..."

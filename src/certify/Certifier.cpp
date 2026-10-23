@@ -42,9 +42,7 @@ std::string listText(const std::vector<int>& values) {
     return text;
 }
 
-int depthOf(const ImageInfo& image) {
-    return image.bitDepth > 8 ? 16 : 8;
-}
+int depthOf(const ImageInfo& image) { return image.bitDepth > 8 ? 16 : 8; }
 
 // "students.marks" for the target key "students..marks", "company.staff.age" for "company.staff.age"
 std::string targetName(const std::string& key) {
@@ -71,17 +69,15 @@ std::optional<ColumnFacts> beyond(const ColumnFacts& item, const ColumnFacts* ad
         facts.notNullFor = item.notNullFor;
         any = true;
     }
-    if (!std::isinf(item.min) &&
-        (!admission || item.min > admission->min ||
-         (item.min == admission->min && item.minStrict && !admission->minStrict))) {
+    if (!std::isinf(item.min) && (!admission || item.min > admission->min ||
+                                  (item.min == admission->min && item.minStrict && !admission->minStrict))) {
         facts.min = item.min;
         facts.minStrict = item.minStrict;
         facts.minFor = item.minFor;
         any = true;
     }
-    if (!std::isinf(item.max) &&
-        (!admission || item.max < admission->max ||
-         (item.max == admission->max && item.maxStrict && !admission->maxStrict))) {
+    if (!std::isinf(item.max) && (!admission || item.max < admission->max ||
+                                  (item.max == admission->max && item.maxStrict && !admission->maxStrict))) {
         facts.max = item.max;
         facts.maxStrict = item.maxStrict;
         facts.maxFor = item.maxFor;
@@ -776,16 +772,16 @@ ImageCertificate Certifier::certifyImages(const std::string& dataset, const Imag
             allowed.push_back(count);
             const std::vector<std::string> problems = run();
             if (!problems.empty()) {
-                image.groups[g].channels.erase(std::find(image.groups[g].channels.begin(),
-                                                         image.groups[g].channels.end(), count));
+                image.groups[g].channels.erase(
+                    std::find(image.groups[g].channels.begin(), image.groups[g].channels.end(), count));
                 addAll(image.groups[g].channelsFor, problems);
             }
         }
         std::sort(image.groups[g].channels.begin(), image.groups[g].channels.end());
 
         // Size bounds, widened like column bounds: no bound, else the loosest program size.
-        const auto widen = [&](int ImageGroupFacts::*bound, int loosest, bool lower,
-                               std::vector<std::string> ImageGroupFacts::*neededBy) {
+        const auto widen = [&](int ImageGroupFacts::* bound, int loosest, bool lower,
+                               std::vector<std::string> ImageGroupFacts::* neededBy) {
             const int original = image.groups[g].*bound;
             if (original == loosest) {
                 return;
@@ -884,8 +880,8 @@ std::vector<double> programConstants(const IRProgram& program) {
         if (in.op == Opcode::Derive) {
             numbersOf(*in.value);
         }
-        const bool numbers = in.op == Opcode::Compare || in.op == Opcode::FillNull ||
-                             (in.op == Opcode::Check && in.text == "BETWEEN");
+        const bool numbers =
+            in.op == Opcode::Compare || in.op == Opcode::FillNull || (in.op == Opcode::Check && in.text == "BETWEEN");
         for (const Literal& value : in.values) {
             if (numbers && value.kind == LiteralKind::Number) {
                 constants.push_back(std::stod(value.value));
@@ -990,7 +986,6 @@ std::vector<std::string> admissionProblems(const ImageCertificate& certificate, 
     }
     return problems;
 }
-
 
 namespace {
 
@@ -1163,8 +1158,8 @@ std::string columnsJson(const TableCertificate& table, const std::string& indent
     std::string text = "{";
     for (size_t i = 0; i < table.columns.size(); ++i) {
         const ColumnFacts& c = table.columns[i];
-        text += (i > 0 ? ",\n" + indent : "") + jsonString(c.name) + ": {\"type\": " +
-                (c.typeFixed ? jsonString(columnTypeName(c.type)) : "null") +
+        text += (i > 0 ? ",\n" + indent : "") + jsonString(c.name) +
+                ": {\"type\": " + (c.typeFixed ? jsonString(columnTypeName(c.type)) : "null") +
                 ", \"required\": " + (c.required ? "true" : "false");
         if (c.notNull) {
             text += ", \"not_null\": true, \"not_null_for\": " + jsonList(c.notNullFor);
@@ -1181,12 +1176,12 @@ std::string columnsJson(const TableCertificate& table, const std::string& indent
             text += ", \"dates\": true, \"dates_for\": " + jsonList(c.datesFor);
         }
         if (!std::isinf(c.dateMin)) {
-            text += ", \"date_min\": " + jsonString(dateText(c.dateMin)) + ", \"date_min_for\": " +
-                    jsonList(c.dateMinFor);
+            text +=
+                ", \"date_min\": " + jsonString(dateText(c.dateMin)) + ", \"date_min_for\": " + jsonList(c.dateMinFor);
         }
         if (!std::isinf(c.dateMax)) {
-            text += ", \"date_max\": " + jsonString(dateText(c.dateMax)) + ", \"date_max_for\": " +
-                    jsonList(c.dateMaxFor);
+            text +=
+                ", \"date_max\": " + jsonString(dateText(c.dateMax)) + ", \"date_max_for\": " + jsonList(c.dateMaxFor);
         }
         text += "}";
     }
@@ -1196,8 +1191,8 @@ std::string columnsJson(const TableCertificate& table, const std::string& indent
 }  // namespace
 
 void writeContract(std::ostream& out, const Certificate& certificate, const std::string& program) {
-    out << "{\n  \"program\": " << jsonString(program) << ",\n  \"exact_only\": "
-        << (certificate.exactOnly ? "true" : "false") << ",\n  \"inputs\": {";
+    out << "{\n  \"program\": " << jsonString(program)
+        << ",\n  \"exact_only\": " << (certificate.exactOnly ? "true" : "false") << ",\n  \"inputs\": {";
     for (size_t i = 0; i < certificate.tables.size(); ++i) {
         const TableCertificate& table = certificate.tables[i];
         out << (i > 0 ? "," : "") << "\n    " << jsonString(table.key) << ": {\"file\": " << jsonString(table.file)
@@ -1225,8 +1220,9 @@ void writeContract(std::ostream& out, const Certificate& certificate, const std:
             << ", \"columns\": {";
         for (size_t c = 0; c < saved.columns.size(); ++c) {
             const SavedColumn& column = saved.columns[c];
-            out << (c > 0 ? ",\n        " : "\n        ") << jsonString(column.name) << ": {\"type\": "
-                << jsonString(column.type) << ", \"nullable\": " << (column.nullable ? "true" : "false");
+            out << (c > 0 ? ",\n        " : "\n        ") << jsonString(column.name)
+                << ": {\"type\": " << jsonString(column.type)
+                << ", \"nullable\": " << (column.nullable ? "true" : "false");
             if (column.hasRange) {
                 out << ", \"min\": " << jsonNumber(column.min) << ", \"max\": " << jsonNumber(column.max);
             }

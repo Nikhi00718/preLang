@@ -80,9 +80,7 @@ std::set<std::string> proofs(const Compiled& c) {
 
 bool mentions(const std::vector<std::string>& proofs, const std::string& text);
 
-void writeFile(const std::string& name, const std::string& text) {
-    std::ofstream(name, std::ios::binary) << text;
-}
+void writeFile(const std::string& name, const std::string& text) { std::ofstream(name, std::ios::binary) << text; }
 
 const ColumnFacts* factIn(const std::vector<TableCertificate>& tables, const std::string& table,
                           const std::string& column) {
@@ -184,18 +182,20 @@ bool deoptSound(const Compiled& base, const Compiled& again, const std::vector<s
 }
 
 // marks: INTEGER in [35, 95], no missing values; age: one missing value; city: text.
-const char* const students = "name,age,marks,city\n"
-                             "Asha,20,85,Chennai\n"
-                             "Ravi,,35,Pune\n"
-                             "Mina,22,95,Delhi\n"
-                             "Joe,21,60,Pune\n";
+const char* const students =
+    "name,age,marks,city\n"
+    "Asha,20,85,Chennai\n"
+    "Ravi,,35,Pune\n"
+    "Mina,22,95,Delhi\n"
+    "Joe,21,60,Pune\n";
 
-const std::string program = "LOAD \"test_certificate_students.csv\" AS s;\n"   // line 1
-                            "EXPECT s.marks BETWEEN 0 AND 100;\n"  // line 2: proven, needs 0 <= marks <= 100
-                            "EXPECT s.name NOT_NULL;\n"            // line 3: proven, needs name without missing values
-                            "FILL_NULL s.marks WITH 0;\n"          // line 4: removed, needs marks without missing values
-                            "FILTER s WHERE marks >= 10;\n"        // line 5: removed (always true), needs marks >= 10
-                            "SAVE s AS \"out.csv\";\n";
+const std::string program =
+    "LOAD \"test_certificate_students.csv\" AS s;\n"  // line 1
+    "EXPECT s.marks BETWEEN 0 AND 100;\n"             // line 2: proven, needs 0 <= marks <= 100
+    "EXPECT s.name NOT_NULL;\n"                       // line 3: proven, needs name without missing values
+    "FILL_NULL s.marks WITH 0;\n"                     // line 4: removed, needs marks without missing values
+    "FILTER s WHERE marks >= 10;\n"                   // line 5: removed (always true), needs marks >= 10
+    "SAVE s AS \"out.csv\";\n";
 
 void testFacts() {
     std::cout << "Certified facts\n";
@@ -274,9 +274,9 @@ void testAdmission() {
         }
         return text;
     };
-    check(problems("name,age,marks,city\nZoe,,100,\nLi,19,10,Goa\n").empty() &&
-              deoptimized(c.certificate, facts).empty(),
-          "marks 10 and 100, a missing age and city: admitted, nothing deoptimized");
+    check(
+        problems("name,age,marks,city\nZoe,,100,\nLi,19,10,Goa\n").empty() && deoptimized(c.certificate, facts).empty(),
+        "marks 10 and 100, a missing age and city: admitted, nothing deoptimized");
     check(problems("name,age,marks,city\nZoe,,100,\nLi,,10,Goa\n").size() == 1,
           "a batch without any age is refused: the compiler would type that column STRING");
     check(problems("name,age,marks,city\nZoe,30,101,Goa\n").empty() &&
@@ -287,10 +287,11 @@ void testAdmission() {
     check(problems("name,age,marks,city\nZoe,30,5,Goa\n").empty() &&
               lines(deoptimized(c.certificate, facts)) == "line 5;",
           "marks 5 is admitted; only the FILTER at line 5 runs again");
-    check(problems("name,age,marks,city\n,30,50,Goa\n").empty() &&
-              lines(deoptimized(c.certificate, facts)) == "line 3;",
-          "a missing name is admitted; only the check at line 3 runs again");
-    check(problems("name,age,marks,city\nZoe,30,50.5,Goa\n").size() == 1, "FLOAT marks are refused (INTEGER certified)");
+    check(
+        problems("name,age,marks,city\n,30,50,Goa\n").empty() && lines(deoptimized(c.certificate, facts)) == "line 3;",
+        "a missing name is admitted; only the check at line 3 runs again");
+    check(problems("name,age,marks,city\nZoe,30,50.5,Goa\n").size() == 1,
+          "FLOAT marks are refused (INTEGER certified)");
     check(problems("name,age,city\nZoe,30,Goa\n").size() == 1, "a missing column is refused");
 }
 
@@ -300,9 +301,10 @@ void testUnreadColumns() {
     std::cout << "Columns the program does not read\n";
     writeFile("test_certificate_students.csv", students);
     Compiled c;
-    compile("LOAD \"test_certificate_students.csv\" AS s;\nEXPECT s.name NOT_NULL;\nEXPECT s.marks NUMBER;\n"
-            "SELECT s [age];\nSAVE s AS \"out.csv\";\n",
-            c);
+    compile(
+        "LOAD \"test_certificate_students.csv\" AS s;\nEXPECT s.name NOT_NULL;\nEXPECT s.marks NUMBER;\n"
+        "SELECT s [age];\nSAVE s AS \"out.csv\";\n",
+        c);
     const ColumnFacts* name = fact(c.certificate, "s", "name");
     const ColumnFacts* marks = fact(c.certificate, "s", "marks");
     check(name && !name->read && name->notNull && !name->typeFixed,
@@ -313,7 +315,8 @@ void testUnreadColumns() {
     Diagnostics diagnostics;
     SchemaProvider schemas(diagnostics);
     writeFile("test_certificate_batch.csv", "name,age,marks,city\n,30,50,Goa\n");
-    check(admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {})).size() == 1,
+    check(admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {}))
+                  .size() == 1,
           "a batch with a missing name is refused although the program never reads name");
 }
 
@@ -324,16 +327,18 @@ void testDeadStoreNeedsNoFact() {
     std::cout << "A dead store needs no fact\n";
     writeFile("test_certificate_students.csv", students);  // marks has no missing values
     Compiled c;
-    compile("LOAD \"test_certificate_students.csv\" AS s;\nFILL_NULL s.marks WITH 0;\nDROP s [marks];\n"
-            "SAVE s AS \"out.csv\";\n",
-            c);
+    compile(
+        "LOAD \"test_certificate_students.csv\" AS s;\nFILL_NULL s.marks WITH 0;\nDROP s [marks];\n"
+        "SAVE s AS \"out.csv\";\n",
+        c);
     const ColumnFacts* marks = fact(c.certificate, "s", "marks");
     check(!marks || !marks->notNull, "marks may have missing values: the dead fill needs no fact");
     Diagnostics diagnostics;
     SchemaProvider schemas(diagnostics);
     writeFile("test_certificate_batch.csv", "name,age,marks,city\nAsha,20,,Chennai\nRavi,21,40,Pune\n");
-    check(admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {})).empty(),
-          "a batch with missing marks is admitted");
+    check(
+        admissionProblems(*c.certificate.table("s"), *schemas.readTable("test_certificate_batch.csv", "s", {})).empty(),
+        "a batch with missing marks is admitted");
 }
 
 // WHERE NULLABLE selects the columns with missing values, which depends on the batch. A fill of a
@@ -343,16 +348,19 @@ void testNullableSelector() {
     std::cout << "WHERE NULLABLE: a fill that matched nothing here runs on a batch with missing values\n";
     writeFile("test_certificate_students.csv", students);  // age has a missing value, marks none
     Compiled c;
-    compile("LOAD \"test_certificate_students.csv\" AS s;\nFILL_NULL s.* WHERE NULLABLE WITH 0;\n"
-            "SAVE s AS \"out.csv\";\n",
-            c);
-    const bool guarded = std::any_of(c.certificate.items.begin(), c.certificate.items.end(), [](const ItemCertificate& item) {
-        return item.description.rfind("line 2:", 0) == 0 && std::any_of(item.tables.begin(), item.tables.end(),
-            [](const TableCertificate& table) {
-                return std::any_of(table.columns.begin(), table.columns.end(),
-                                   [](const ColumnFacts& column) { return column.name == "marks" && column.notNull; });
-            });
-    });
+    compile(
+        "LOAD \"test_certificate_students.csv\" AS s;\nFILL_NULL s.* WHERE NULLABLE WITH 0;\n"
+        "SAVE s AS \"out.csv\";\n",
+        c);
+    const bool guarded =
+        std::any_of(c.certificate.items.begin(), c.certificate.items.end(), [](const ItemCertificate& item) {
+            return item.description.rfind("line 2:", 0) == 0 &&
+                   std::any_of(item.tables.begin(), item.tables.end(), [](const TableCertificate& table) {
+                       return std::any_of(table.columns.begin(), table.columns.end(), [](const ColumnFacts& column) {
+                           return column.name == "marks" && column.notNull;
+                       });
+                   });
+        });
     check(!c.diagnostics.hasErrors() && guarded, "the fill of marks is removed behind 'no missing values in marks'");
     const ColumnFacts* name = fact(c.certificate, "s", "name");
     check(name && name->notNull, "a text column the number cannot fill must keep no missing values to be admitted");
@@ -367,10 +375,10 @@ void testValueProofs() {
     writeFile("test_certificate_keys.csv", "id,city\n1,Pune\n2,Goa\n3,Pune\n");
     Compiled c;
     compile("LOAD \"test_certificate_keys.csv\" AS k;\nEXPECT k.id UNIQUE;\nSAVE k AS \"out.csv\";\n", c);
-    const auto check = std::find_if(c.ir.code.begin(), c.ir.code.end(),
-                                    [](const Instruction& in) { return in.op == Opcode::Check; });
-    ::check(check != c.ir.code.end() && check->onlyIfInputChanged && check->provenFromValuesOf ==
-                                                                          std::vector<std::string>{"k"},
+    const auto check =
+        std::find_if(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) { return in.op == Opcode::Check; });
+    ::check(check != c.ir.code.end() && check->onlyIfInputChanged &&
+                check->provenFromValuesOf == std::vector<std::string>{"k"},
             "UNIQUE proven from the values keeps a check that runs only if k changes");
     ::check(c.certificate.recheckedIfChanged.size() == 1, "the certificate lists it as checked again");
 }
@@ -400,8 +408,9 @@ void testSoundness(const std::string& source, const std::string& title) {
         for (int i = 0; i < rows; ++i) {
             const bool noName = random() % 25 == 0;
             const bool noMarks = random() % 25 == 0;
-            text += (noName ? "" : "N" + std::to_string(i)) + "," + (random() % 3 ? std::to_string(18 + random() % 10) : "") +
-                    "," + (noMarks ? "" : std::to_string(static_cast<int>(random() % 115) - 5)) + (city ? ",C\n" : "\n");
+            text += (noName ? "" : "N" + std::to_string(i)) + "," +
+                    (random() % 3 ? std::to_string(18 + random() % 10) : "") + "," +
+                    (noMarks ? "" : std::to_string(static_cast<int>(random() % 115) - 5)) + (city ? ",C\n" : "\n");
         }
         writeFile("test_certificate_random.csv", text);
         Diagnostics diagnostics;
@@ -429,10 +438,11 @@ void testSoundness(const std::string& source, const std::string& title) {
     }
     check(admitted >= 40, std::to_string(admitted) + " of 400 random inputs admitted by the full certificate");
     if (source == program) {
-        check(outsideData > 0, std::to_string(outsideData) + " admitted inputs lie outside the compiled file's own ranges");
+        check(outsideData > 0,
+              std::to_string(outsideData) + " admitted inputs lie outside the compiled file's own ranges");
     }
-    check(unsound == 0, "every input the full certificate admits keeps every proof (" + std::to_string(unsound) +
-                            " did not)");
+    check(unsound == 0,
+          "every input the full certificate admits keeps every proof (" + std::to_string(unsound) + " did not)");
     check(admittedDeopt >= admitted, std::to_string(admittedDeopt) + " admitted with deoptimization, " +
                                          std::to_string(deopts) + " of them deoptimize something");
     check(unsoundDeopt == 0, "every input admitted with deoptimization keeps every removal it does not deoptimize (" +
@@ -444,14 +454,15 @@ void testSoundness(const std::string& source, const std::string& title) {
 // Trips from March to June 2024; fares 7 to 30, distances 1 to 8.
 const char* const trips = "day,fare,km\n2024-03-05,12,3\n2024-04-10,30,8\n2024-06-20,7,1\n2024-05-02,25,6\n";
 
-const std::string tripProgram = "LOAD \"test_certificate_trips.csv\" AS t;\n"  // line 1
-                                "PARSE_DATE t.day;\n"                            // line 2: needs dates (admission)
-                                "DERIVE t.month = MONTH(day);\n"                 // line 3
-                                "FILTER t WHERE month >= 3;\n"                   // line 4: removed, needs dates Mar-Dec of one year
-                                "DERIVE t.per_km = fare / km;\n"                 // line 5: needs km > 0 (admission)
-                                "EXPECT t.per_km BETWEEN 0 AND 100;\n"           // line 6: proven from fare and km
-                                "FILL_NULL t.fare WITH 0;\n"                     // line 7: removed, needs fare without missing values
-                                "SAVE t AS \"out.csv\";\n";
+const std::string tripProgram =
+    "LOAD \"test_certificate_trips.csv\" AS t;\n"  // line 1
+    "PARSE_DATE t.day;\n"                          // line 2: needs dates (admission)
+    "DERIVE t.month = MONTH(day);\n"               // line 3
+    "FILTER t WHERE month >= 3;\n"                 // line 4: removed, needs dates Mar-Dec of one year
+    "DERIVE t.per_km = fare / km;\n"               // line 5: needs km > 0 (admission)
+    "EXPECT t.per_km BETWEEN 0 AND 100;\n"         // line 6: proven from fare and km
+    "FILL_NULL t.fare WITH 0;\n"                   // line 7: removed, needs fare without missing values
+    "SAVE t AS \"out.csv\";\n";
 
 // The facts of a batch file as the compiler would see them, with the date facts of `day`.
 TableSchema tripFacts(const std::string& file) {
@@ -504,9 +515,11 @@ void testDateSoundness() {
             std::snprintf(day, sizeof day, "%04d-%02d-%02d", oneYear ? year : 2023 + static_cast<int>(random() % 3),
                           1 + static_cast<int>(random() % 12), 1 + static_cast<int>(random() % 28));
             const int kind = static_cast<int>(random() % 40);
-            text += std::string(kind == 0 ? "soon" : kind == 1 ? "" : day) + "," +
-                    (random() % 20 == 0 ? "" : std::to_string(random() % 150)) + "," + std::to_string(random() % 10) +
-                    "\n";
+            text += std::string(kind == 0   ? "soon"
+                                : kind == 1 ? ""
+                                            : day) +
+                    "," + (random() % 20 == 0 ? "" : std::to_string(random() % 150)) + "," +
+                    std::to_string(random() % 10) + "\n";
         }
         writeFile("test_certificate_rtrips.csv", text);
         const TableSchema facts = tripFacts("test_certificate_rtrips.csv");
@@ -521,11 +534,12 @@ void testDateSoundness() {
         deopts += !deopt.empty();
         unsound += !deoptSound(base, again, deopt);
     }
-    check(admitted >= 40 && notDates > 0,
-          std::to_string(admitted) + " of 400 random inputs admitted with deoptimization, " + std::to_string(deopts) +
-              " of them deoptimize something");
-    check(unsound == 0, "every admitted input compiles without errors and keeps every removal it does not deoptimize (" +
-                            std::to_string(unsound) + " did not)");
+    check(admitted >= 40 && notDates > 0, std::to_string(admitted) +
+                                              " of 400 random inputs admitted with deoptimization, " +
+                                              std::to_string(deopts) + " of them deoptimize something");
+    check(unsound == 0,
+          "every admitted input compiles without errors and keeps every removal it does not deoptimize (" +
+              std::to_string(unsound) + " did not)");
 }
 
 // ---------- Image folders ----------
@@ -552,21 +566,23 @@ void writeJpeg(const std::string& path, unsigned width, unsigned height) {
 }
 
 // Color images; the contract needs width >= 100, GRAYSCALE needs readable files.
-const std::string colorProgram = "LOAD_IMAGES \"test_certificate_color/\" AS imgs;\n"  // line 1
-                                 "EXPECT imgs MIN_WIDTH 100;\n"                         // line 2
-                                 "GRAYSCALE imgs;\n"                                    // line 3
-                                 "EXPECT imgs CHANNELS 1;\n"                            // line 4
-                                 "RESIZE imgs TO 64 64;\n"                              // line 5
-                                 "RESIZE imgs TO 64 64;\n"                              // line 6: removed
-                                 "CONVERT imgs TO JPG;\n"
-                                 "SAVE_IMAGES imgs TO \"out/\";\n";
+const std::string colorProgram =
+    "LOAD_IMAGES \"test_certificate_color/\" AS imgs;\n"  // line 1
+    "EXPECT imgs MIN_WIDTH 100;\n"                        // line 2
+    "GRAYSCALE imgs;\n"                                   // line 3
+    "EXPECT imgs CHANNELS 1;\n"                           // line 4
+    "RESIZE imgs TO 64 64;\n"                             // line 5
+    "RESIZE imgs TO 64 64;\n"                             // line 6: removed
+    "CONVERT imgs TO JPG;\n"
+    "SAVE_IMAGES imgs TO \"out/\";\n";
 
 // Gray 64x64 images: GRAYSCALE and RESIZE are removed, so the shapes matter.
-const std::string grayProgram = "LOAD_IMAGES \"test_certificate_gray/\" AS g;\n"  // line 1
-                                "GRAYSCALE g;\n"                                   // line 2: removed
-                                "RESIZE g TO 64 64;\n"                             // line 3: removed
-                                "CONVERT g TO PNG;\n"
-                                "SAVE_IMAGES g TO \"out2/\";\n";
+const std::string grayProgram =
+    "LOAD_IMAGES \"test_certificate_gray/\" AS g;\n"  // line 1
+    "GRAYSCALE g;\n"                                  // line 2: removed
+    "RESIZE g TO 64 64;\n"                            // line 3: removed
+    "CONVERT g TO PNG;\n"
+    "SAVE_IMAGES g TO \"out2/\";\n";
 
 void writeImageFolders() {
     std::filesystem::create_directories("test_certificate_color");
@@ -601,10 +617,12 @@ void testImageFacts() {
           "the color folder is certified with one box per extension (jpg, png)");
     check(imgs && !imgs->brokenAllowed && mentions(imgs->brokenFor, "line 3"),
           "broken files are not allowed: GRAYSCALE at line 3 must decode every file");
-    check(imgs && std::all_of(imgs->groups.begin(), imgs->groups.end(), [](const ImageGroupFacts& g) {
-              return g.channels == std::vector<int>{1, 3, 4} && g.minWidth == 100 && mentions(g.minWidthFor, "line 2") &&
-                     g.maxWidth == 65535 && g.minHeight == 1 && g.maxHeight == 65535;
-          }),
+    check(imgs && std::all_of(imgs->groups.begin(), imgs->groups.end(),
+                              [](const ImageGroupFacts& g) {
+                                  return g.channels == std::vector<int>{1, 3, 4} && g.minWidth == 100 &&
+                                         mentions(g.minWidthFor, "line 2") && g.maxWidth == 65535 && g.minHeight == 1 &&
+                                         g.maxHeight == 65535;
+                              }),
           "any channels and heights; width >= 100 for MIN_WIDTH 100 at line 2 (the data had 120 to 200)");
 
     Compiled gray;
@@ -701,9 +719,10 @@ int main() {
     testValueProofs();
     testSoundness(program, "Soundness on 400 random inputs");
     // name and marks are not read after the SELECT, but proofs depend on them.
-    testSoundness("LOAD \"test_certificate_students.csv\" AS s;\nEXPECT s.name NOT_NULL;\n"
-                  "EXPECT s.marks BETWEEN 0 AND 100;\nSELECT s [age];\nSAVE s AS \"out.csv\";\n",
-                  "Soundness on 400 random inputs, with proofs about columns that are not read");
+    testSoundness(
+        "LOAD \"test_certificate_students.csv\" AS s;\nEXPECT s.name NOT_NULL;\n"
+        "EXPECT s.marks BETWEEN 0 AND 100;\nSELECT s [age];\nSAVE s AS \"out.csv\";\n",
+        "Soundness on 400 random inputs, with proofs about columns that are not read");
     // DROP of a column that is never used is removed by the optimizer, but a file
     // without that column would not compile: it must exist.
     testSoundness("LOAD \"test_certificate_students.csv\" AS s;\nDROP s [city];\nSAVE s AS \"out.csv\";\n",

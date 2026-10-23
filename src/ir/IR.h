@@ -15,9 +15,31 @@
 // instruction per table), and FILTER conditions become three-address code:
 //   t1 = s.marks >= 50;  t2 = s.passed == TRUE;  t3 = t1 AND t2;  FILTER s IF t3
 enum class Opcode {
-    Load, Check, FillNull, DropNull, Normalize, Compare, And, Or, Not, Filter, Select, Drop, Save,
-    ParseDate, Derive, Join, Aggregate,
-    LoadImages, Resize, Grayscale, NormalizeImages, Compress, Convert, RemoveCorrupt, SaveImages,
+    Load,
+    Check,
+    FillNull,
+    DropNull,
+    Normalize,
+    Compare,
+    And,
+    Or,
+    Not,
+    Filter,
+    Select,
+    Drop,
+    Save,
+    ParseDate,
+    Derive,
+    Join,
+    Aggregate,
+    LoadImages,
+    Resize,
+    Grayscale,
+    NormalizeImages,
+    Compress,
+    Convert,
+    RemoveCorrupt,
+    SaveImages,
 };
 
 // One instruction: a quadruple (operation, arguments, result) with extra slots
@@ -56,7 +78,7 @@ struct AggregateResult {
     std::string function;  // COUNT, SUM, MEAN, MIN or MAX
     std::string column;    // empty for COUNT
     std::string name;
-    std::string type;      // INTEGER or FLOAT
+    std::string type;  // INTEGER or FLOAT
 };
 
 struct Instruction {

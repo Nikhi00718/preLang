@@ -27,9 +27,7 @@ void check(bool passed, const std::string& name) {
     }
 }
 
-std::string dataFile(const std::string& name) {
-    return std::string(PREPLANG_TEST_DATA) + "/" + name;
-}
+std::string dataFile(const std::string& name) { return std::string(PREPLANG_TEST_DATA) + "/" + name; }
 
 const ColumnInfo* column(const TableSchema& table, const std::string& name) {
     for (const ColumnInfo& info : table.columns) {
@@ -144,7 +142,8 @@ void testUnsupported() {
     check(!readParquetFooter(dataFile("broken.parquet"), "s", problem) && problem.find("damaged") != std::string::npos,
           "a damaged footer is an error, not a crash");
     problem.clear();
-    check(!readParquetFooter(dataFile("make_parquet.py"), "s", problem) && problem.find("not a Parquet") != std::string::npos,
+    check(!readParquetFooter(dataFile("make_parquet.py"), "s", problem) &&
+              problem.find("not a Parquet") != std::string::npos,
           "a file without the Parquet footer is rejected");
 }
 
@@ -161,7 +160,8 @@ void testContracts() {
 
     Compiled bounds;
     compile("nostats.parquet", "EXPECT s.marks BETWEEN 0 AND 100;\nSAVE s AS \"o.csv\";", bounds);
-    check(!bounds.diagnostics.hasErrors() && verdictIs(bounds, Verdict::Deferred), "without statistics BETWEEN is deferred");
+    check(!bounds.diagnostics.hasErrors() && verdictIs(bounds, Verdict::Deferred),
+          "without statistics BETWEEN is deferred");
 
     Compiled unique;
     compile("students.parquet", "EXPECT s.id UNIQUE;\nSAVE s AS \"o.csv\";", unique);
@@ -180,7 +180,8 @@ void testContracts() {
     // score may have no missing values at all, so 5 need not appear after FILL_NULL:
     // reporting the contract as violated would be wrong.
     Compiled fill;
-    compile("students.parquet", "FILL_NULL s.score WITH 5;\nEXPECT s.score BETWEEN 0 AND 1;\nSAVE s AS \"o.csv\";", fill);
+    compile("students.parquet", "FILL_NULL s.score WITH 5;\nEXPECT s.score BETWEEN 0 AND 1;\nSAVE s AS \"o.csv\";",
+            fill);
     check(!fill.diagnostics.hasErrors() && verdictIs(fill, Verdict::Deferred),
           "a fill value that may not appear does not make a contract violated");
 }

@@ -59,9 +59,7 @@ bool isImageOperation(Opcode op) {
         case Opcode::NormalizeImages:
         case Opcode::Compress:
         case Opcode::Convert:
-        case Opcode::RemoveCorrupt:
-            return true;
-        default:
-            return false;
+        case Opcode::RemoveCorrupt:   return true;
+        default:                      return false;
     }
 }

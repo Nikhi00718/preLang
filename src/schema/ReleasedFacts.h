@@ -50,10 +50,10 @@ std::optional<ReleasedFacts> readReleasedFacts(const std::filesystem::path& file
 
 // One LOAD of a table, as the data owner needs it to release facts.
 struct QueryTable {
-    std::string loadPath;  // as written in the LOAD statement
-    std::string name;      // the dataset name after AS
-    TableSchema schema;    // read from the file by the data owner's compiler: its names and types
-                           // are the owner's draft of the public schema
+    std::string loadPath;           // as written in the LOAD statement
+    std::string name;               // the dataset name after AS
+    TableSchema schema;             // read from the file by the data owner's compiler: its names and types
+                                    // are the owner's draft of the public schema
     std::set<std::string> ranged;   // columns the program names: missing values and bounds are asked
     std::set<std::string> missing;  // other columns whose missing values matter (DROP_NULL of whole rows)
 };

@@ -51,14 +51,12 @@ bool readPngHeader(std::istream& in, ImageInfo& info) {
     info.height = static_cast<int>(bigEndian32(header + 20));
     info.bitDepth = header[24];
     switch (header[25]) {
-        case 0: info.channels = 1; break;  // grayscale
-        case 2: info.channels = 3; break;  // RGB
-        case 3: info.channels = 3; break;  // palette, decoded as RGB
-        case 4: info.channels = 4; break;  // grayscale + alpha, decoded as RGBA
-        case 6: info.channels = 4; break;  // RGBA
-        default:
-            info.problem = "unknown PNG color type";
-            return false;
+        case 0:  info.channels = 1; break;  // grayscale
+        case 2:  info.channels = 3; break;  // RGB
+        case 3:  info.channels = 3; break;  // palette, decoded as RGB
+        case 4:  info.channels = 4; break;  // grayscale + alpha, decoded as RGBA
+        case 6:  info.channels = 4; break;  // RGBA
+        default: info.problem = "unknown PNG color type"; return false;
     }
     return true;
 }
@@ -157,7 +155,8 @@ std::optional<TableSchema> SchemaProvider::readTable(const std::string& path, co
     if (private_) {
         const auto released = released_.find(overrideKey(path, name));
         if (released == released_.end()) {
-            diagnostics_.error(Phase::Schema, location, "the facts file has no table '" + name + "' from '" + path + "'",
+            diagnostics_.error(Phase::Schema, location,
+                               "the facts file has no table '" + name + "' from '" + path + "'",
                                "release facts for this program: preplang <file.prep> --queries, then "
                                "tools/release_facts.py");
             return std::nullopt;
@@ -189,8 +188,7 @@ std::optional<TableSchema> SchemaProvider::readCsv(const std::string& csvPath, c
     const CsvProblem& problem = scan.problem;
     const std::string line = "line " + std::to_string(problem.line) + " of '" + csvPath + "'";
     switch (problem.kind) {
-        case CsvProblem::Kind::None:
-            break;
+        case CsvProblem::Kind::None: break;
         case CsvProblem::Kind::Empty:
             diagnostics_.error(Phase::Schema, location, "CSV file '" + csvPath + "' is empty",
                                "the first line must list the column names");
@@ -199,11 +197,11 @@ std::optional<TableSchema> SchemaProvider::readCsv(const std::string& csvPath, c
             // pandas reads CSV files as UTF-8, so a file saved in another encoding
             // would stop the generated program. Every line is read here anyway, so say it now.
             const char* digits = "0123456789ABCDEF";
-            diagnostics_.error(Phase::Schema, location,
-                               line + " is not UTF-8 text (byte 0x" + digits[problem.byte >> 4] +
-                                   digits[problem.byte & 15] + ")",
-                               "the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 "
-                               "(in Excel: Save As > CSV UTF-8)");
+            diagnostics_.error(
+                Phase::Schema, location,
+                line + " is not UTF-8 text (byte 0x" + digits[problem.byte >> 4] + digits[problem.byte & 15] + ")",
+                "the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 "
+                "(in Excel: Save As > CSV UTF-8)");
             return std::nullopt;
         }
         case CsvProblem::Kind::FieldCount:
@@ -224,8 +222,10 @@ std::optional<TableSchema> SchemaProvider::readCsv(const std::string& csvPath, c
 
 std::optional<TableSetSchema> SchemaProvider::readTableFolder(const std::string& folder, SourceLocation location) {
     if (private_) {
-        diagnostics_.error(Phase::Schema, location, "a private compilation (--facts) cannot load the folder '" +
-                           folder + "': its files are not known without opening it", "LOAD each table instead");
+        diagnostics_.error(Phase::Schema, location,
+                           "a private compilation (--facts) cannot load the folder '" + folder +
+                               "': its files are not known without opening it",
+                           "LOAD each table instead");
         return std::nullopt;
     }
     std::error_code error;
@@ -299,7 +299,8 @@ std::optional<ImageSetSchema> SchemaProvider::readImages(const std::string& path
         }
         const auto add = [&](const fs::directory_entry& entry) {
             if (entry.is_regular_file(error) && isImageFile(entry.path())) {
-                set.images.push_back(readImageHeader(entry.path(), entry.path().lexically_relative(path).generic_u8string()));
+                set.images.push_back(
+                    readImageHeader(entry.path(), entry.path().lexically_relative(path).generic_u8string()));
             }
         };
         if (recursive) {
@@ -346,10 +347,10 @@ void readDateFacts(const TableSchema& schema, ColumnInfo& info) {
         if (layout == DateLayout::None || (first != DateLayout::None && layout != first)) {
             info.allDates = false;
             info.hasDates = false;
-            info.notDateReason = "row " + std::to_string(i + 1) + " has \"" + values[i] + "\"" +
-                                 (layout == DateLayout::None ? std::string()
-                                                             : ", not " + std::string(dateLayoutText(first)) +
-                                                                   " like the rows before");
+            info.notDateReason =
+                "row " + std::to_string(i + 1) + " has \"" + values[i] + "\"" +
+                (layout == DateLayout::None ? std::string()
+                                            : ", not " + std::string(dateLayoutText(first)) + " like the rows before");
             return;
         }
         first = layout;
@@ -383,8 +384,8 @@ void printTableSchema(std::ostream& out, const std::string& title, const TableSc
         nameWidth = std::max(nameWidth, column.name.size() + 2);
     }
     const int width = static_cast<int>(nameWidth);
-    out << std::left << "  " << std::setw(width) << "COLUMN" << std::setw(10) << "TYPE" << std::setw(10)
-        << "NULLABLE" << std::setw(9) << "MISSING" << "RANGE\n";
+    out << std::left << "  " << std::setw(width) << "COLUMN" << std::setw(10) << "TYPE" << std::setw(10) << "NULLABLE"
+        << std::setw(9) << "MISSING" << "RANGE\n";
     for (const ColumnInfo& column : table.columns) {
         std::string range = "-";
         if (isNumeric(column.type) && column.hasRange) {
@@ -393,8 +394,8 @@ void printTableSchema(std::ostream& out, const std::string& title, const TableSc
         }
         const std::string nullable = column.missingCount > 0 ? "yes" : column.missingKnown ? "no" : "maybe";
         const std::string missing = (column.missingKnown ? "" : ">=") + std::to_string(column.missingCount);
-        out << "  " << std::setw(width) << column.name << std::setw(10) << columnTypeName(column.type)
-            << std::setw(10) << nullable << std::setw(9) << missing << range << '\n';
+        out << "  " << std::setw(width) << column.name << std::setw(10) << columnTypeName(column.type) << std::setw(10)
+            << nullable << std::setw(9) << missing << range << '\n';
     }
 }
 
@@ -418,9 +419,8 @@ void printImageSetSchema(std::ostream& out, const std::string& title, const Imag
         ++good;
     }
 
-    out << title << " from " << set.root << " (" << set.images.size() << " image"
-        << (set.images.size() == 1 ? "" : "s") << ", fingerprint " << std::hex << std::showbase << set.fingerprint
-        << std::dec << std::noshowbase << ")\n";
+    out << title << " from " << set.root << " (" << set.images.size() << " image" << (set.images.size() == 1 ? "" : "s")
+        << ", fingerprint " << std::hex << std::showbase << set.fingerprint << std::dec << std::noshowbase << ")\n";
     out << "  formats:  ";
     for (const auto& [format, count] : formats) {
         out << format << " " << count << "  ";

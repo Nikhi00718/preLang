@@ -29,14 +29,15 @@ std::string manifestCode(const IRProgram& program, const AnalysisResult& analysi
          << "    \"source_program\": " << pythonString(sourceName) << ",\n"
          << "    \"compiler\": \"PrepLang 1.0\",\n    \"inputs\": [\n";
     for (const auto& [key, table] : program.tables) {
-        code << "        {\"table\": " << pythonString(key) << ", \"path\": "
-             << pythonString(pathFrom(outputFolder, table.file)) << ", \"fingerprint\": "
-             << (table.released ? "None" : "\"" + hex(table.fingerprint) + "\"") << "},\n";
+        code << "        {\"table\": " << pythonString(key)
+             << ", \"path\": " << pythonString(pathFrom(outputFolder, table.file))
+             << ", \"fingerprint\": " << (table.released ? "None" : "\"" + hex(table.fingerprint) + "\"") << "},\n";
     }
     for (const auto& [name, images] : program.images) {
-        code << "        {\"images\": " << pythonString(name) << ", \"path\": "
-             << pythonString(pathFrom(outputFolder, images.root)) << ", \"files\": " << images.images.size()
-             << ", \"fingerprint\": \"" << hex(images.fingerprint) << "\"},\n";
+        code << "        {\"images\": " << pythonString(name)
+             << ", \"path\": " << pythonString(pathFrom(outputFolder, images.root))
+             << ", \"files\": " << images.images.size() << ", \"fingerprint\": \"" << hex(images.fingerprint)
+             << "\"},\n";
     }
     code << "    ],\n    \"contracts\": {\"proven_at_compile_time\": " << proven
          << ", \"checked_at_run_time\": " << deferred << "},\n    \"operations\": [\n";

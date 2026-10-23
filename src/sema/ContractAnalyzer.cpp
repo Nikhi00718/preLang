@@ -38,13 +38,9 @@ const ColumnInfo* releasedInput(const TableState& table, const ColumnState& colu
     return nullptr;
 }
 
-std::string rowText(size_t index) {
-    return "row " + std::to_string(index + 1);
-}
+std::string rowText(size_t index) { return "row " + std::to_string(index + 1); }
 
-std::string percent(double value) {
-    return formatNumber(std::round(value * 100) / 100) + "%";
-}
+std::string percent(double value) { return formatNumber(std::round(value * 100) / 100) + "%"; }
 
 }  // namespace
 
@@ -57,7 +53,8 @@ void ContractAnalyzer::proven(const ExpectStmt& node, const std::string& contrac
                               const Target* runtimeTarget, const std::vector<std::string>& valueTables) {
     result_.contracts.push_back(
         {node.location.line, contract, Verdict::Proven, reason, !valueTables.empty(), runtimeTarget != nullptr});
-    result_.log.push_back("line " + std::to_string(node.location.line) + ": EXPECT " + contract + ": PROVEN, " + reason);
+    result_.log.push_back("line " + std::to_string(node.location.line) + ": EXPECT " + contract + ": PROVEN, " +
+                          reason);
     if (runtimeTarget) {
         result_.noEffect[{&node, targetKey(*runtimeTarget)}] = "contract proven at compile time: " + reason;
         if (!valueTables.empty()) {
@@ -81,7 +78,8 @@ void ContractAnalyzer::deferred(const ExpectStmt& node, const std::string& contr
 // A private compilation cannot report a contract as violated: the released answers are
 // noisy and name no row. When they say the data has many values that break it, the
 // contract stays a run-time check and the analyst gets this warning instead.
-void ContractAnalyzer::likelyViolated(const ExpectStmt& node, const std::string& contract, const std::string& evidence) {
+void ContractAnalyzer::likelyViolated(const ExpectStmt& node, const std::string& contract,
+                                      const std::string& evidence) {
     diagnostics_.warning(Phase::Contract, node.target.location,
                          "EXPECT " + contract + " is likely violated: the released facts report " + evidence,
                          "the data owner's answers are differentially private; the check runs on the real data");
@@ -106,10 +104,10 @@ void ContractAnalyzer::columnContract(const ExpectStmt& node, const std::string&
             if (holds) {
                 proven(node, contract, "the column is " + type, nullptr);
             } else {
-                const std::string hint = column.stringReason.empty()
-                                             ? ""
-                                             : "'" + column.name + "' is STRING because " + column.stringReason +
-                                                   " in " + table.schema.file;
+                const std::string hint =
+                    column.stringReason.empty()
+                        ? ""
+                        : "'" + column.name + "' is STRING because " + column.stringReason + " in " + table.schema.file;
                 violated(node, contract, name + " should be " + constraintText(node) + " but it is " + type, hint);
             }
             return;
@@ -139,19 +137,14 @@ void ContractAnalyzer::columnContract(const ExpectStmt& node, const std::string&
             }
             column.nullable = false;  // rows only get past the run-time check if nothing is missing
             deferred(node, contract,
-                     missingKnown              ? "missing values may remain after earlier statements"
+                     missingKnown            ? "missing values may remain after earlier statements"
                      : table.schema.released ? "the released facts do not say that no value is missing"
-                                               : "the file's statistics do not say whether values are missing");
+                                             : "the file's statistics do not say whether values are missing");
             return;
         }
-        case ConstraintKind::Between:
-            between(node, contract, name, target, table, column);
-            return;
-        case ConstraintKind::Unique:
-            unique(node, contract, name, target, table, column);
-            return;
-        default:
-            return;  // the other contracts have their own functions
+        case ConstraintKind::Between: between(node, contract, name, target, table, column); return;
+        case ConstraintKind::Unique:  unique(node, contract, name, target, table, column); return;
+        default:                      return;  // the other contracts have their own functions
     }
 }
 
@@ -174,8 +167,8 @@ void ContractAnalyzer::between(const ExpectStmt& node, const std::string& contra
     if (column.range.min >= low && column.range.max <= high) {
         proven(node, contract, "values are in " + column.range.text(), &target);
     } else if (column.exact && column.range.isKnown()) {
-        std::string message = name + " has values from " + formatNumber(column.range.min) + " to " +
-                              formatNumber(column.range.max);
+        std::string message =
+            name + " has values from " + formatNumber(column.range.min) + " to " + formatNumber(column.range.max);
         if (valuesUnknown(table, column).empty()) {  // name the first bad row
             const std::vector<std::string> values = readColumnValues(table.schema, column.name);
             for (size_t i = 0; i < values.size(); ++i) {
@@ -191,18 +184,21 @@ void ContractAnalyzer::between(const ExpectStmt& node, const std::string& contra
     } else {
         if (const ColumnInfo* info = releasedInput(table, column)) {
             // values < k (or <= k) were seen: below `low` if k <= low (or k < low); likewise above
-            if (!std::isinf(info->seenBelow) && (info->seenBelowOrAt ? info->seenBelow < low : info->seenBelow <= low)) {
-                likelyViolated(node, contract, "values of " + name + (info->seenBelowOrAt ? " at or below " : " below ") +
-                                                   formatNumber(info->seenBelow));
+            if (!std::isinf(info->seenBelow) &&
+                (info->seenBelowOrAt ? info->seenBelow < low : info->seenBelow <= low)) {
+                likelyViolated(node, contract,
+                               "values of " + name + (info->seenBelowOrAt ? " at or below " : " below ") +
+                                   formatNumber(info->seenBelow));
             } else if (!std::isinf(info->seenAbove) &&
                        (info->seenAboveOrAt ? info->seenAbove > high : info->seenAbove >= high)) {
-                likelyViolated(node, contract, "values of " + name + (info->seenAboveOrAt ? " at or above " : " above ") +
-                                                   formatNumber(info->seenAbove));
+                likelyViolated(node, contract,
+                               "values of " + name + (info->seenAboveOrAt ? " at or above " : " above ") +
+                                   formatNumber(info->seenAbove));
             }
         }
         column.range.min = std::max(column.range.min, low);  // true after the run-time check passes
         column.range.max = std::min(column.range.max, high);
-        column.exact = false;                                // but low and high need not occur
+        column.exact = false;  // but low and high need not occur
         deferred(node, contract, "the exact values are not known here");
     }
 }
@@ -360,11 +356,13 @@ void ContractAnalyzer::imageContract(const ExpectStmt& node, const DatasetSymbol
         }
     }
     if (bad.empty()) {
-        proven(node, contract, "all " + std::to_string(valid) + " images satisfy it (read from the file headers)", nullptr);
+        proven(node, contract, "all " + std::to_string(valid) + " images satisfy it (read from the file headers)",
+               nullptr);
         return;
     }
-    const std::string hint = node.constraint == ConstraintKind::Channels ? "use GRAYSCALE, or fix the files"
-                                                                         : "RESIZE before this EXPECT, or fix the files";
+    const std::string hint = node.constraint == ConstraintKind::Channels
+                                 ? "use GRAYSCALE, or fix the files"
+                                 : "RESIZE before this EXPECT, or fix the files";
     Diagnostic& error = violated(node, contract,
                                  std::to_string(bad.size()) + " of " + std::to_string(valid) + " images in " +
                                      images.name + " break " + constraintText(node),
@@ -391,12 +389,12 @@ void ContractAnalyzer::matchRate(const ExpectStmt& node, const DatasetSymbol& li
         proven(node, contract, "match rate is " + percent(rate), &target, {link.table, link.images});
         return;
     }
-    Diagnostic& error = violated(node, contract,
-                                 "match rate of " + linked.name + " is " + percent(rate) + ", expected at least " +
-                                     node.low + "%",
-                                 "fix the file names in " + link.table + "." + link.column + " or the image files");
-    error.notes.push_back("images: " + std::to_string(link.imageCount) + ", labels: " + std::to_string(link.labelCount) +
-                          ", matched: " + std::to_string(link.matched));
+    Diagnostic& error =
+        violated(node, contract,
+                 "match rate of " + linked.name + " is " + percent(rate) + ", expected at least " + node.low + "%",
+                 "fix the file names in " + link.table + "." + link.column + " or the image files");
+    error.notes.push_back("images: " + std::to_string(link.imageCount) + ", labels: " +
+                          std::to_string(link.labelCount) + ", matched: " + std::to_string(link.matched));
     const auto examples = [](const std::vector<std::string>& items) {
         std::string text;
         for (size_t i = 0; i < items.size() && i < 3; ++i) {

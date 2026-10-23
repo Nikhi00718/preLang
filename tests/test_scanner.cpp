@@ -89,8 +89,8 @@ void testProblems() {
     const size_t middle = text.find('\n', text.size() / 2) + 1;
     const size_t late = text.find('\n', text.size() * 9 / 10) + 1;
     std::string twoProblems = text;
-    twoProblems.insert(late, "1,2,true,4,5\n");     // too many values, late in the file
-    twoProblems.insert(middle, "1,2,\xFF,4\n");     // not UTF-8, earlier
+    twoProblems.insert(late, "1,2,true,4,5\n");  // too many values, late in the file
+    twoProblems.insert(middle, "1,2,\xFF,4\n");  // not UTF-8, earlier
     const CsvScan one = scanCsv(twoProblems, 1);
     const CsvScan many = scanCsv(twoProblems, 12);
     check(many.problem.kind == CsvProblem::Kind::NotUtf8 && many.problem.byte == 0xFF, "the earlier problem wins");
@@ -104,7 +104,9 @@ void testProblems() {
 
 void testCells() {
     std::cout << "Cells\n";
-    const CsvScan scan = scanCsv("\xEF\xBB\xBF" "name, city ,n\r\n\"Doe, J\",\"say \"\"hi\"\"\",1\r\nAl,,-2e3\r\n");
+    const CsvScan scan = scanCsv(
+        "\xEF\xBB\xBF"
+        "name, city ,n\r\n\"Doe, J\",\"say \"\"hi\"\"\",1\r\nAl,,-2e3\r\n");
     check(scan.columns[0].name == "name" && scan.columns[1].name == "city", "BOM removed, names trimmed");
     check(scan.columns[1].missingCount == 1 && scan.columns[1].type == ColumnType::String, "quoted cell, one missing");
     check(scan.columns[2].type == ColumnType::Float && scan.columns[2].min == -2000 && scan.columns[2].max == 1,
@@ -112,7 +114,8 @@ void testCells() {
     const CsvScan mix = scanCsv("v\n1\ntrue\n");
     check(mix.columns[0].type == ColumnType::String && mix.columns[0].stringReason == "line 3 has \"true\"",
           "number then boolean: STRING because of line 3");
-    check(scanCsv("v\n.5\n").columns[0].type == ColumnType::String, ".5 is STRING: a number needs a digit before the point");
+    check(scanCsv("v\n.5\n").columns[0].type == ColumnType::String,
+          ".5 is STRING: a number needs a digit before the point");
 }
 
 // Every number the fast path accepts must equal std::from_chars exactly.
@@ -122,7 +125,8 @@ void testNumbersExact() {
     const char* forms[] = {"%.0f", "%.1f", "%.3f", "%.7f", "%.12f", "%.15g", "%.17g", "%.4e", "%.9e"};
     int bad = 0;
     for (int i = 0; i < 20000; ++i) {
-        const double magnitude = std::ldexp(static_cast<double>(random() % 1000000) / 1000.0, static_cast<int>(random() % 60) - 30);
+        const double magnitude =
+            std::ldexp(static_cast<double>(random() % 1000000) / 1000.0, static_cast<int>(random() % 60) - 30);
         char cell[64];
         std::snprintf(cell, sizeof cell, forms[i % 9], (i % 2 ? -1 : 1) * magnitude);
         const std::string text = std::string("v\n") + cell + "\n";
@@ -146,6 +150,7 @@ int main() {
     testProblems();
     testCells();
     testNumbersExact();
-    std::cout << (failures == 0 ? "All scanner tests passed\n" : std::to_string(failures) + " scanner test(s) FAILED\n");
+    std::cout << (failures == 0 ? "All scanner tests passed\n"
+                                : std::to_string(failures) + " scanner test(s) FAILED\n");
     return failures == 0 ? 0 : 1;
 }

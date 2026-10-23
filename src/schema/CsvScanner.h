@@ -17,15 +17,15 @@
 struct CsvProblem {
     enum class Kind { None, Empty, NotUtf8, FieldCount };
     Kind kind = Kind::None;
-    std::int64_t line = 0;      // 1-based line number in the file
-    unsigned char byte = 0;     // NotUtf8: the first byte that is not UTF-8
-    size_t fields = 0;          // FieldCount: values found on the line
+    std::int64_t line = 0;   // 1-based line number in the file
+    unsigned char byte = 0;  // NotUtf8: the first byte that is not UTF-8
+    size_t fields = 0;       // FieldCount: values found on the line
 };
 
 struct CsvScan {
     std::vector<ColumnInfo> columns;  // names from the header; type, missing values and range from the cells
     std::int64_t rowCount = 0;
-    std::uint32_t fingerprint = 0;    // CRC-32 of the file bytes
+    std::uint32_t fingerprint = 0;  // CRC-32 of the file bytes
     CsvProblem problem;
 };
 

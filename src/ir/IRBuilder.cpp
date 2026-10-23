@@ -7,9 +7,7 @@
 
 namespace {
 
-std::string temp(int number) {
-    return "t" + std::to_string(number);
-}
+std::string temp(int number) { return "t" + std::to_string(number); }
 
 std::string literalText(const Literal& literal) {
     return literal.kind == LiteralKind::String ? "\"" + literal.value + "\"" : literal.value;
@@ -35,9 +33,7 @@ std::string changedText(const Instruction& in) {
     return text;
 }
 
-Literal number(const std::string& value) {
-    return {LiteralKind::Number, value};
-}
+Literal number(const std::string& value) { return {LiteralKind::Number, value}; }
 
 // A file inside a folder path written in the program, e.g. "company/" + "staff.csv".
 std::string inFolder(const std::string& folder, const std::string& file) {
@@ -81,9 +77,7 @@ Instruction IRBuilder::make(Opcode op, const Target& target) const {
     return instruction;
 }
 
-void IRBuilder::emit(Instruction instruction) {
-    program_.code.push_back(std::move(instruction));
-}
+void IRBuilder::emit(Instruction instruction) { program_.code.push_back(std::move(instruction)); }
 
 // ---------- Table statements ----------
 
@@ -101,8 +95,8 @@ void IRBuilder::visit(const LoadStmt& node) {
     for (const TableState& table : dataset.tables) {
         const bool inSet = dataset.kind == DatasetKind::TableSet;
         Instruction instruction = make(Opcode::Load, {dataset.name, inSet ? table.name : "", "", {}});
-        instruction.text = inSet ? inFolder(node.path, std::filesystem::path(table.schema.file).filename().u8string())
-                                 : node.path;
+        instruction.text =
+            inSet ? inFolder(node.path, std::filesystem::path(table.schema.file).filename().u8string()) : node.path;
         for (const ColumnInfo& column : table.schema.columns) {
             instruction.columns.push_back(column.name);
         }
@@ -266,9 +260,7 @@ void IRBuilder::visit(const ResizeStmt& node) {
     emit(std::move(instruction));
 }
 
-void IRBuilder::visit(const GrayscaleStmt&) {
-    emit(make(Opcode::Grayscale, targets().front()));
-}
+void IRBuilder::visit(const GrayscaleStmt&) { emit(make(Opcode::Grayscale, targets().front())); }
 
 void IRBuilder::visit(const CompressStmt& node) {
     Instruction instruction = make(Opcode::Compress, targets().front());
@@ -282,9 +274,7 @@ void IRBuilder::visit(const ConvertStmt& node) {
     emit(std::move(instruction));
 }
 
-void IRBuilder::visit(const RemoveCorruptStmt&) {
-    emit(make(Opcode::RemoveCorrupt, targets().front()));
-}
+void IRBuilder::visit(const RemoveCorruptStmt&) { emit(make(Opcode::RemoveCorrupt, targets().front())); }
 
 // LINK is fully decided at compile time; only a deferred MATCH_RATE contract
 // needs run-time work, and it has its own CHECK.
@@ -335,44 +325,31 @@ std::string instructionText(const Instruction& in) {
     const std::string table = tableKey(in.dataset, in.table);
     const std::string target = table + "." + in.column;
     switch (in.op) {
-        case Opcode::Load:
-            return "LOAD " + table + " <- \"" + in.text + "\" " + listText(in.columns);
+        case Opcode::Load: return "LOAD " + table + " <- \"" + in.text + "\" " + listText(in.columns);
         case Opcode::Check:
             if (in.text == "MATCH_RATE") {
                 return "CHECK " + in.dataset + " MATCH_RATE " + in.values[0].value + "%" + changedText(in);
             }
             if (in.text == "REFERENCES") {
-                return "CHECK " + target + " REFERENCES " + tableKey(in.columns[0], in.columns[1]) + "." + in.columns[2] +
-                       changedText(in);
+                return "CHECK " + target + " REFERENCES " + tableKey(in.columns[0], in.columns[1]) + "." +
+                       in.columns[2] + changedText(in);
             }
             return "CHECK " + target + " " + in.text +
                    (in.values.empty() ? "" : " " + in.values[0].value + " AND " + in.values[1].value) + changedText(in);
         case Opcode::FillNull:
             return "FILL_NULL " + target + " WITH " + (in.values.empty() ? in.text : literalText(in.values[0]));
-        case Opcode::DropNull:
-            return "DROP_NULL " + table + (in.columns.empty() ? "" : " " + listText(in.columns));
-        case Opcode::Normalize:
-            return "NORMALIZE " + target + " " + in.text;
-        case Opcode::Compare:
-            return temp(in.result) + " = " + target + " " + in.text + " " + literalText(in.values[0]);
-        case Opcode::And:
-            return temp(in.result) + " = " + temp(in.uses[0]) + " AND " + temp(in.uses[1]);
-        case Opcode::Or:
-            return temp(in.result) + " = " + temp(in.uses[0]) + " OR " + temp(in.uses[1]);
-        case Opcode::Not:
-            return temp(in.result) + " = NOT " + temp(in.uses[0]);
-        case Opcode::Filter:
-            return "FILTER " + table + " IF " + temp(in.uses[0]);
-        case Opcode::Select:
-            return "SELECT " + table + " " + listText(in.columns);
-        case Opcode::Drop:
-            return "DROP " + table + " " + listText(in.columns);
-        case Opcode::Save:
-            return "SAVE " + table + " -> \"" + in.text + "\"";
-        case Opcode::ParseDate:
-            return "PARSE_DATE " + target;
-        case Opcode::Derive:
-            return "DERIVE " + target + " = " + in.text;
+        case Opcode::DropNull:  return "DROP_NULL " + table + (in.columns.empty() ? "" : " " + listText(in.columns));
+        case Opcode::Normalize: return "NORMALIZE " + target + " " + in.text;
+        case Opcode::Compare:   return temp(in.result) + " = " + target + " " + in.text + " " + literalText(in.values[0]);
+        case Opcode::And:       return temp(in.result) + " = " + temp(in.uses[0]) + " AND " + temp(in.uses[1]);
+        case Opcode::Or:        return temp(in.result) + " = " + temp(in.uses[0]) + " OR " + temp(in.uses[1]);
+        case Opcode::Not:       return temp(in.result) + " = NOT " + temp(in.uses[0]);
+        case Opcode::Filter:    return "FILTER " + table + " IF " + temp(in.uses[0]);
+        case Opcode::Select:    return "SELECT " + table + " " + listText(in.columns);
+        case Opcode::Drop:      return "DROP " + table + " " + listText(in.columns);
+        case Opcode::Save:      return "SAVE " + table + " -> \"" + in.text + "\"";
+        case Opcode::ParseDate: return "PARSE_DATE " + target;
+        case Opcode::Derive:    return "DERIVE " + target + " = " + in.text;
         case Opcode::Join:
             return "JOIN " + table + " WITH " + tableKey(in.withDataset, in.withTable) + " ON " + in.column + " ADD " +
                    listText(in.columns);
@@ -380,27 +357,22 @@ std::string instructionText(const Instruction& in) {
             std::string text = "AGGREGATE " + table + " BY " + listText(in.columns);
             for (size_t i = 0; i < in.aggregates.size(); ++i) {
                 const AggregateResult& item = in.aggregates[i];
-                text += (i > 0 ? ", " : " ") + item.function + (item.column.empty() ? "" : " " + item.column) +
-                        " AS " + item.name;
+                text += (i > 0 ? ", " : " ") + item.function + (item.column.empty() ? "" : " " + item.column) + " AS " +
+                        item.name;
             }
             return text;
         }
-        case Opcode::LoadImages:
-            return "LOAD_IMAGES " + in.dataset + " <- \"" + in.text + "\"";
+        case Opcode::LoadImages: return "LOAD_IMAGES " + in.dataset + " <- \"" + in.text + "\"";
         case Opcode::Resize:
-            return "RESIZE " + in.dataset + " TO " + std::to_string(in.numbers[0]) + " " + std::to_string(in.numbers[1]) +
-                   (in.numbers[2] ? " KEEP_ASPECT" : "");
-        case Opcode::Grayscale:
-            return "GRAYSCALE " + in.dataset;
+            return "RESIZE " + in.dataset + " TO " + std::to_string(in.numbers[0]) + " " +
+                   std::to_string(in.numbers[1]) + (in.numbers[2] ? " KEEP_ASPECT" : "");
+        case Opcode::Grayscale: return "GRAYSCALE " + in.dataset;
         case Opcode::NormalizeImages:
             return "NORMALIZE " + in.dataset + " RANGE " + in.values[0].value + " " + in.values[1].value + " (from " +
                    in.values[2].value + ".." + in.values[3].value + ")";
-        case Opcode::Compress:
-            return "COMPRESS " + in.dataset + " QUALITY " + std::to_string(in.numbers[0]);
-        case Opcode::Convert:
-            return "CONVERT " + in.dataset + " TO " + in.text;
-        case Opcode::RemoveCorrupt:
-            return "REMOVE_CORRUPT " + in.dataset;
+        case Opcode::Compress:      return "COMPRESS " + in.dataset + " QUALITY " + std::to_string(in.numbers[0]);
+        case Opcode::Convert:       return "CONVERT " + in.dataset + " TO " + in.text;
+        case Opcode::RemoveCorrupt: return "REMOVE_CORRUPT " + in.dataset;
         case Opcode::SaveImages:
             return (in.numbers[0] ? "SAVE_IMAGE " : "SAVE_IMAGES ") + in.dataset + " -> \"" + in.text + "\"";
     }
@@ -410,8 +382,8 @@ std::string instructionText(const Instruction& in) {
 void printIR(std::ostream& out, const IRProgram& program) {
     for (size_t i = 0; i < program.code.size(); ++i) {
         const Instruction& instruction = program.code[i];
-        out << std::right << std::setw(3) << i + 1 << "  " << std::left << std::setw(62)
-            << instructionText(instruction) << "  ; line " << instruction.line
+        out << std::right << std::setw(3) << i + 1 << "  " << std::left << std::setw(62) << instructionText(instruction)
+            << "  ; line " << instruction.line
             << (instruction.speculative ? "  (speculative: runs only if deoptimized)" : "") << '\n';
     }
 }

@@ -51,15 +51,16 @@ std::string ImageState::summary() const {
         channels.insert(shape.channels);
         ++count;
     }
-    const auto span = [](int low, int high) { return low == high ? std::to_string(low) : std::to_string(low) + ".." + std::to_string(high); };
+    const auto span = [](int low, int high) {
+        return low == high ? std::to_string(low) : std::to_string(low) + ".." + std::to_string(high);
+    };
     std::string channelText;
     for (int c : channels) {
         channelText += (channelText.empty() ? "" : " or ") + std::to_string(c);
     }
     std::string text = std::to_string(count) + " image" + (count == 1 ? "" : "s") + ", " + span(minWidth, maxWidth) +
                        "x" + span(minHeight, maxHeight) + ", " + channelText + " channel" +
-                       (channels.size() == 1 && *channels.begin() == 1 ? "" : "s") + ", " + dtype + " " +
-                       values.text();
+                       (channels.size() == 1 && *channels.begin() == 1 ? "" : "s") + ", " + dtype + " " + values.text();
     const int corrupt = corruptCount();
     if (corrupt > 0) {
         text += ", plus " + std::to_string(corrupt) + " corrupt file" + (corrupt == 1 ? "" : "s");
@@ -113,9 +114,7 @@ const DatasetSymbol* SymbolTable::lookup(const std::string& name) const {
     return nullptr;
 }
 
-void SymbolTable::insert(DatasetSymbol symbol) {
-    datasets_.push_back(std::move(symbol));
-}
+void SymbolTable::insert(DatasetSymbol symbol) { datasets_.push_back(std::move(symbol)); }
 
 std::vector<std::string> SymbolTable::names() const {
     std::vector<std::string> result;
@@ -149,9 +148,7 @@ void SymbolTable::print(std::ostream& out) const {
     for (const DatasetSymbol& symbol : datasets_) {
         out << symbol.name << " : " << datasetKindName(symbol.kind) << "   (line " << symbol.definedAt.line << ")\n";
         switch (symbol.kind) {
-            case DatasetKind::Table:
-                printTable(out, symbol.tables.front(), "  ");
-                break;
+            case DatasetKind::Table: printTable(out, symbol.tables.front(), "  "); break;
             case DatasetKind::TableSet:
                 for (const TableState& table : symbol.tables) {
                     out << "  " << table.name << '\n';

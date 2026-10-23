@@ -118,7 +118,8 @@ void testHeaders() {
     Compiled c;
     compile("REMOVE_CORRUPT imgs;" + save, c);
     const ImageSetSchema& schema = c.symbols.lookup("imgs")->imageSchema;
-    const auto corrupt = std::count_if(schema.images.begin(), schema.images.end(), [](const ImageInfo& i) { return i.corrupt; });
+    const auto corrupt =
+        std::count_if(schema.images.begin(), schema.images.end(), [](const ImageInfo& i) { return i.corrupt; });
     const ImageShape* one = shape(c, "a/one.png");
     const ImageShape* two = shape(c, "a/two.jpg");
     check(!c.diagnostics.hasErrors() && schema.images.size() == 5 && corrupt == 1,
@@ -156,8 +157,11 @@ void testKindErrors() {
 
 void testShapeTracking() {
     Compiled c;
-    compile("REMOVE_CORRUPT imgs;\nRESIZE imgs TO 32 32;\nEXPECT imgs MIN_WIDTH 32;\nGRAYSCALE imgs;\n"
-            "EXPECT imgs CHANNELS 1;" + save, c);
+    compile(
+        "REMOVE_CORRUPT imgs;\nRESIZE imgs TO 32 32;\nEXPECT imgs MIN_WIDTH 32;\nGRAYSCALE imgs;\n"
+        "EXPECT imgs CHANNELS 1;" +
+            save,
+        c);
     check(!c.diagnostics.hasErrors() && c.analysis.contracts.size() == 2 &&
               std::all_of(c.analysis.contracts.begin(), c.analysis.contracts.end(),
                           [](const ContractRecord& r) { return r.verdict == Verdict::Proven; }),
@@ -198,8 +202,11 @@ void testAlphaNeedsPng() {
 
 void testNoEffectOperations() {
     Compiled c;
-    compile("REMOVE_CORRUPT imgs;\nGRAYSCALE imgs;\nGRAYSCALE imgs;\nRESIZE imgs TO 16 16;\nRESIZE imgs TO 16 16;\n"
-            "CONVERT imgs TO PNG;\nCONVERT imgs TO PNG;" + save, c);
+    compile(
+        "REMOVE_CORRUPT imgs;\nGRAYSCALE imgs;\nGRAYSCALE imgs;\nRESIZE imgs TO 16 16;\nRESIZE imgs TO 16 16;\n"
+        "CONVERT imgs TO PNG;\nCONVERT imgs TO PNG;" +
+            save,
+        c);
     check(countOf(c.ir, Opcode::Grayscale) == 1 && countOf(c.ir, Opcode::Resize) == 1 &&
               countOf(c.ir, Opcode::Convert) == 1,
           "repeating GRAYSCALE, RESIZE to the same size or CONVERT to the same format is removed");
@@ -224,16 +231,17 @@ void testResizeFusionIsOptIn() {
 
 void testLinkMatchRate() {
     Compiled c;
-    compile("LOAD \"test_imageset_labels.csv\" AS labels;\nREMOVE_CORRUPT imgs;\n"
-            "LINK imgs WITH labels ON filename AS pairs;\nEXPECT pairs MATCH_RATE 100%;" + save +
-                "\nSAVE labels AS \"labels.csv\";",
-            c);
+    compile(
+        "LOAD \"test_imageset_labels.csv\" AS labels;\nREMOVE_CORRUPT imgs;\n"
+        "LINK imgs WITH labels ON filename AS pairs;\nEXPECT pairs MATCH_RATE 100%;" +
+            save + "\nSAVE labels AS \"labels.csv\";",
+        c);
     check(!c.diagnostics.hasErrors() && c.analysis.contracts.front().verdict == Verdict::Proven,
           "every image has a label: MATCH_RATE 100% is proven");
     // The check stays for other inputs; it must leave out broken files, which
     // REMOVE_CORRUPT removed before the LINK, as the compile-time proof did.
-    const auto matchRate = std::find_if(c.ir.code.begin(), c.ir.code.end(),
-                                        [](const Instruction& in) { return in.text == "MATCH_RATE"; });
+    const auto matchRate =
+        std::find_if(c.ir.code.begin(), c.ir.code.end(), [](const Instruction& in) { return in.text == "MATCH_RATE"; });
     check(matchRate != c.ir.code.end() && matchRate->onlyIfInputChanged && matchRate->columns.size() == 4 &&
               matchRate->columns[3] == "SKIP_BROKEN" &&
               matchRate->provenFromValuesOf == std::vector<std::string>{"labels", "imgs"},
@@ -241,9 +249,11 @@ void testLinkMatchRate() {
           "if the labels or the images change");
 
     Compiled bad;
-    compile("LOAD \"test_imageset_partial.csv\" AS labels;\nREMOVE_CORRUPT imgs;\n"
-            "LINK imgs WITH labels ON filename AS pairs;\nEXPECT pairs MATCH_RATE 100%;" + save,
-            bad);
+    compile(
+        "LOAD \"test_imageset_partial.csv\" AS labels;\nREMOVE_CORRUPT imgs;\n"
+        "LINK imgs WITH labels ON filename AS pairs;\nEXPECT pairs MATCH_RATE 100%;" +
+            save,
+        bad);
     const Diagnostic* error = reported(bad, Phase::Contract, "match rate of pairs is 50%");
     check(error && error->notes.size() == 3, "the report counts matches and lists unmatched images and labels");
 }
@@ -264,9 +274,9 @@ void testFormatFromContent() {
     Diagnostics diagnostics;
     SchemaProvider schemas(diagnostics);
     const auto set = schemas.readImages("test_imageset_misnamed", false, false, {});
-    check(set && !set->images.front().corrupt && set->images.front().format == "PNG" &&
-              set->images.front().channels == 4,
-          "the format comes from the file's content, not its name");
+    check(
+        set && !set->images.front().corrupt && set->images.front().format == "PNG" && set->images.front().channels == 4,
+        "the format comes from the file's content, not its name");
 
     Compiled c;
     const std::string source = "LOAD_IMAGES \"test_imageset_misnamed/\" AS shots;\nSAVE_IMAGES shots TO \"out/\";";

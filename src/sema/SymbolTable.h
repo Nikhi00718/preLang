@@ -41,10 +41,10 @@ struct ColumnState {
 };
 
 struct TableState {
-    std::string name;                     // the dataset name for a TABLE, the file name in a TABLESET
-    TableSchema schema;                   // the CSV file as read by LOAD
-    std::vector<ColumnState> columns;     // current columns, in order
-    std::map<std::string, int> removedAt; // removed column -> line of the SELECT or DROP that removed it
+    std::string name;                      // the dataset name for a TABLE, the file name in a TABLESET
+    TableSchema schema;                    // the CSV file as read by LOAD
+    std::vector<ColumnState> columns;      // current columns, in order
+    std::map<std::string, int> removedAt;  // removed column -> line of the SELECT or DROP that removed it
 
     ColumnState* column(const std::string& name);
     std::vector<std::string> columnNames() const;
@@ -71,7 +71,7 @@ struct ImageState {
     bool brokenRemoved = false;      // REMOVE_CORRUPT ran: files that fail to decode are skipped
 
     int corruptCount() const;
-    std::string summary() const;     // e.g. "12 images, 224x224, 3 channels, UINT8 [0, 255]"
+    std::string summary() const;  // e.g. "12 images, 224x224, 3 channels, UINT8 [0, 255]"
 };
 
 // A DATASET made by LINK: images matched with table rows by file name.

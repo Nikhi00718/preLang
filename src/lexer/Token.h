@@ -8,6 +8,7 @@
 // first, then the other keywords, so isStatementKeyword() and isKeyword() are
 // simple range checks.
 enum class TokenType {
+    // clang-format off
     // Statement keywords: every statement starts with one of these
     LOAD, LOAD_TABLES, LOAD_IMAGE, LOAD_IMAGES,
     DROP_NULL, FILL_NULL, NORMALIZE, FILTER, SELECT, DROP, PARSE_DATE, DERIVE, JOIN, AGGREGATE,
@@ -34,6 +35,7 @@ enum class TokenType {
     DOT, COMMA, SEMICOLON, LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, MINUS, STAR, PERCENT,
 
     END_OF_FILE
+    // clang-format on
 };
 
 struct Token {
