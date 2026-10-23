@@ -4,10 +4,12 @@
     py -3 eval/reuse/realbatches.py [path/to/preplang.exe]
     py -3 eval/reuse/realbatches.py validators   # then: pandera, Great Expectations and TFDV on the same months
 
-Three public datasets with real monthly batches:
+Five public datasets with real monthly batches:
   * traffic  UCI Metro Interstate Traffic Volume, hourly 2012-2018, one CSV per month
   * bikes    UCI Bike Sharing, daily 2011-2012, one CSV per month
   * taxi     NYC TLC green taxi trip records 2022-2024, the published Parquet file of each month
+  * citibike Citi Bike Jersey City trips 2022-2024, the published CSV of each month
+  * air      UCI Beijing PM2.5, hourly 2010-2014, one CSV per month (`NA` cells made empty)
 
 Each pipeline is written once, as a data engineer would, and deployed in two ways:
   * anchor=first     compiled on the first month, then run on every later month
@@ -78,11 +80,48 @@ SELECT trips [lpep_pickup_datetime, PULocationID, DOLocationID, passenger_count,
 SAVE trips AS "trips_clean.parquet";
 """
 
+CITIBIKE = """# Citi Bike trips of one month in Jersey City, cleaned for a demand model.
+LOAD "rides.csv" AS rides;
+EXPECT rides.ride_id NOT_NULL;
+EXPECT rides.ride_id UNIQUE;
+EXPECT rides.rideable_type NOT_NULL;
+EXPECT rides.member_casual NOT_NULL;
+EXPECT rides.start_lat BETWEEN 40.5 AND 41;          # the New York area
+EXPECT rides.start_lng BETWEEN -74.5 AND -73.5;
+DROP_NULL rides [end_lat, end_lng];                   # rides without an end are lost bikes
+EXPECT rides.end_lat BETWEEN 40.5 AND 41;
+EXPECT rides.end_lng BETWEEN -74.5 AND -73.5;
+FILL_NULL rides.start_station_id WITH "none";         # electric bikes can start away from a station
+FILL_NULL rides.end_station_id WITH "none";
+SELECT rides [started_at, ended_at, rideable_type, start_station_id, end_station_id, start_lat, start_lng, end_lat, end_lng, member_casual];
+SAVE rides AS "rides_clean.csv";
+"""
+
+AIR = """# Hourly air quality and weather in Beijing, one month, cleaned for a PM2.5 forecast.
+LOAD "air.csv" AS air;
+EXPECT air.month BETWEEN 1 AND 12;
+EXPECT air.hour BETWEEN 0 AND 23;
+EXPECT air.TEMP BETWEEN -40 AND 50;                   # degrees Celsius
+EXPECT air.DEWP BETWEEN -50 AND 40;
+EXPECT air.PRES BETWEEN 950 AND 1070;                 # hPa
+EXPECT air.cbwd NOT_NULL;
+DROP_NULL air [`pm2.5`];                              # hours without a reading
+EXPECT air.`pm2.5` BETWEEN 0 AND 1000;                # micrograms per cubic metre
+FILTER air WHERE Iws >= 0;                            # cumulated wind speed
+NORMALIZE air.`pm2.5` USING ZSCORE;
+SELECT air [year, month, day, hour, `pm2.5`, DEWP, TEMP, PRES, cbwd, Iws];
+SAVE air AS "air_clean.csv";
+"""
+
 WORKLOADS = {  # name -> (program, input file name, input name, folder of monthly batches)
     "traffic": (TRAFFIC, "traffic.csv", "traffic", REAL / "traffic"),
     "bikes": (BIKES, "days.csv", "days", REAL / "bikes"),
     "taxi": (TAXI, "trips.parquet", "trips", REAL / "green"),
 }
+# This experiment also runs two later pipelines; private.py, certcost.py and overhead.py keep the three above.
+ALL_WORKLOADS = dict(WORKLOADS,
+                     citibike=(CITIBIKE, "rides.csv", "rides", REAL / "citibike"),
+                     air=(AIR, "air.csv", "air", REAL / "air"))
 
 
 def download():
@@ -105,6 +144,45 @@ def download():
         (REAL / "Metro_Interstate_Traffic_Volume.csv").write_bytes(packed.read())
     split_by_month(REAL / "Metro_Interstate_Traffic_Volume.csv", "date_time", REAL / "traffic")
     split_by_month(REAL / "day.csv", "dteday", REAL / "bikes")
+    download_citibike()
+    download_air()
+
+
+def download_citibike():
+    """Citi Bike Jersey City trips, the published CSV of each month, unchanged."""
+    folder = REAL / "citibike"
+    folder.mkdir(exist_ok=True)
+    for year in (2022, 2023, 2024):
+        for month in range(1, 13):
+            target = folder / f"{year}-{month:02d}.csv"
+            if target.exists():
+                continue
+            packed = REAL / f"JC-{year}{month:02d}.zip"
+            spelling = "citbike" if (year, month) == (2022, 7) else "citibike"  # the bucket's file name
+            urllib.request.urlretrieve(
+                f"https://s3.amazonaws.com/tripdata/JC-{year}{month:02d}-{spelling}-tripdata.csv.zip", packed)
+            with zipfile.ZipFile(packed) as archive:
+                name = next(n for n in archive.namelist() if n.endswith(".csv") and not n.startswith("__"))
+                target.write_bytes(archive.read(name))
+            packed.unlink()
+
+
+def download_air():
+    """UCI Beijing PM2.5, hourly 2010-2014, one CSV per month cut from the raw lines. The one change:
+    a cell `NA` becomes empty, the missing value of PrepLang (and of pandas' default reader)."""
+    packed = REAL / "air.zip"
+    if not packed.exists():
+        urllib.request.urlretrieve("https://archive.ics.uci.edu/static/public/381/beijing+pm2+5+data.zip", packed)
+    with zipfile.ZipFile(packed) as archive:
+        lines = archive.read("PRSA_data_2010.1.1-2014.12.31.csv").decode("utf-8").splitlines(keepends=True)
+    folder = REAL / "air"
+    folder.mkdir(exist_ok=True)
+    months = defaultdict(list)
+    for line in lines[1:]:
+        cells = line.rstrip("\r\n").split(",")
+        months[f"{cells[1]}-{int(cells[2]):02d}"].append(",".join("" if c == "NA" else c for c in cells) + "\n")
+    for month, rows in months.items():
+        (folder / f"{month}.csv").write_text(lines[0].rstrip("\r\n") + "\n" + "".join(rows), encoding="utf-8")
 
 
 def split_by_month(source, column, folder):
@@ -141,7 +219,7 @@ POLICIES = ("fingerprint", "file facts", "pandera", "gx", "tfdv", "full", "deopt
 
 def main(compiler):
     rows = []
-    for workload, (program, input_file, name, folder) in WORKLOADS.items():
+    for workload, (program, input_file, name, folder) in ALL_WORKLOADS.items():
         batches = sorted(folder.glob("*.*"))
         for mode in ("first", "previous"):
             anchor_folder = WORK / workload / "compiled"
@@ -239,7 +317,7 @@ def write_markdown(rows):
         correct = counts["correct run"] + counts["correct stop"]
         return f"{correct} / {counts['needless stop']} / {counts['unsound'] + counts['wrong stop']}"
 
-    for workload in WORKLOADS:
+    for workload in ALL_WORKLOADS:
         for mode in ("first", "previous"):
             items = [r for r in rows if r["workload"] == workload and r["mode"] == mode]
             if items:

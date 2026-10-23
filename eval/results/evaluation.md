@@ -13,8 +13,8 @@ file and the script behind it.
 - Reused on a second random batch, the optimized programs ended as the reference does on that batch in 1,198 runs (same rows) and 301 stops (same failing line), refused 36 batches, and were wrong 0 times; 348 runs re-enabled a removed check or operation.
 - In an earlier run of 2,000 programs (before `JOIN` and `AGGREGATE`), the compiler before two fixes gave a wrong result in 109 optimized runs and 36 `--O0` runs (`differential_prefix.md`): 76 from column pruning keeping a `DROP` of a column a pruned `SELECT` had already removed (`KeyError`), and 33 from pandas 3, where a text comparison is `bool[pyarrow]` and combining it with a mask holding NA raises `TypeError`. Both are fixed, with regression tests in `tests/test_optimizer.cpp`.
 - Injected mistakes (`rq1.md`): 24 of 24 reported before any data is processed, 0 false alarms on the 5 original programs.
-- Reuse on new data is checked against a fresh compilation of every batch: 0 unsound outcomes in 244 edited batches (`certificates.md`), 238 real monthly batches (`realbatches.md`), 3212 runs of lifted Titanic and House Prices scripts (`pandas_corpus*.md`), 3255 runs of lifted traffic and bike scripts (`drift_corpus_*.md`), and 64,179 runs after 4,879 private compilations (`private.md`).
-- 299 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
+- Reuse on new data is checked against a fresh compilation of every batch: 0 unsound outcomes in 244 edited batches (`certificates.md`), 426 real monthly batches (`realbatches.md`), 3212 runs of lifted Titanic and House Prices scripts (`pandas_corpus*.md`), 3255 runs of lifted traffic and bike scripts (`drift_corpus_*.md`), and 64,179 runs after 4,879 private compilations (`private.md`).
+- 300 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
 
 Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` included, but not dates and images; image pipelines are checked pixel by pixel against a hand-written script (`rq3.md`), not by a reference interpreter.
 
@@ -45,13 +45,13 @@ On 436 programs (the examples and programs lifted from other people's GitHub pan
 
 What the passes did, over all programs: column pruning 384, no-effect elimination 38, contract check elimination 21, dead store elimination 8, contract check made conditional 5, dead image operation 1.
 
-Removed checks are not lost: each is kept with the facts its proof needs and runs again on a new input that breaks them (deoptimization: 9 of 238 real monthly batches, `realbatches.md`).
+Removed checks are not lost: each is kept with the facts its proof needs and runs again on a new input that breaks them (deoptimization: 32 of 426 real monthly batches, `realbatches.md`).
 
 ## 4. Practical usefulness: does it work on real programs and datasets?
 
 - Real bugs (`realbugs.md`): of 44 data-preparation failures from GitHub issues, 18 (41%) are reported before any data is processed, 3 cannot occur in a PrepLang program, 23 are not covered (input formats, operations the language lacks, dates, ...).
 - Other people's scripts: 733 Titanic and House Prices scripts from GitHub; 292 lifted by `frontend/pandas2prep.py` and compiled; 3198 of 3212 runs on new batches identical to a fresh compilation, 0 unsound. 945 traffic and bike scripts; 72 lifted and compiled; 3255 of 3255 runs on every later real month identical to a fresh run.
-- Real monthly data (UCI traffic and bikes, NYC taxi; `realbatches.md`): a program compiled once is reused correctly on 221 of 238 months (93%) without recompiling, against 17 with a checksum guard.
+- Real monthly data (UCI traffic, bikes and Beijing air quality, NYC taxi, Citi Bike; `realbatches.md`): a program compiled once is reused correctly on 400 of 426 months (94%) without recompiling, against 17 with a checksum guard.
 - Scale (`scale.md`): a 16M-row, 346 MiB Parquet file compiles in 0.018 s (footer only); 1M CSV rows in 0.13 s.
 
 Limits: the scripts are lifted only as far as the language reaches (the lifter stops at the first statement it cannot express); no user study has been run yet (`docs/USER_STUDY.md` is the protocol).
@@ -62,12 +62,12 @@ Deciding whether a compiled pipeline may run on a new batch (`realbatches.md`, `
 
 | Policy | Real months: correct / needless stops / unsound | Edited batches: correct / needless / unsound |
 |---|---|---|
-| PrepLang (certificate + deoptimization) | 221 / 17 / 0 | 244 / 0 / 0 |
-| PrepLang (full certificate) | 215 / 23 / 0 | 244 / 0 / 0 |
-| Great Expectations (profile of the columns read) | 17 / 221 / 0 | 140 / 104 / 0 |
-| pandera (inferred schema) | 19 / 219 / 0 | 124 / 79 / 41 |
-| TFDV (inferred schema) | 138 / 73 / 27 | 150 / 28 / 66 |
-| checksum (recompile on any change) | 17 / 221 / 0 | 115 / 129 / 0 |
+| PrepLang (certificate + deoptimization) | 400 / 26 / 0 | 244 / 0 / 0 |
+| PrepLang (full certificate) | 371 / 55 / 0 | 244 / 0 / 0 |
+| Great Expectations (profile of the columns read) | 17 / 409 / 0 | 140 / 104 / 0 |
+| pandera (inferred schema) | 19 / 407 / 0 | 124 / 79 / 41 |
+| TFDV (inferred schema) | 200 / 199 / 27 | 150 / 28 / 66 |
+| checksum (recompile on any change) | 17 / 409 / 0 | 115 / 129 / 0 |
 
 - Against a script-style pandas program (`rq1.md`): PrepLang reports 24 of 24 injected mistakes before processing data; the script crashes on 20 while processing and finishes with silently wrong output on 4.
 - Compile-time CSV analysis of 1M rows (0.13 s) is 4.7x faster than one `pandas.read_csv`; pandas' multi-threaded pyarrow reader takes 0.11 s, so the analysis runs at about pyarrow speed, not faster.

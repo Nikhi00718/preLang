@@ -353,7 +353,8 @@ def realbatches(rows, numbers):
     numbers.update(RealRuns=len(rows), RealDeopted=sum(bool(r["deopts"]) for r in rows),
                    RealRescued=sum(r["full"] == "refused" and r["deopt"] != "refused" for r in rows),
                    RealFreshFails=sum(r["fresh"] != "finished" for r in rows),
-                   RealTypeRefusals=sum(r["deopt"] == "refused" and "is Int64, not" in r["reason"] for r in rows))
+                   RealTypeRefusals=sum(r["deopt"] == "refused" and "' is " in r["reason"] and ", not " in r["reason"]
+                                        for r in rows))
     policy_numbers(rows, "Real", numbers)
     stops = [100 * tally(rows, key)[1] / tally(rows, key)[3] for key, _, _ in POLICIES[2:8]
              if tally(rows, key) and tally(rows, key)[2] == 0]
@@ -361,7 +362,20 @@ def realbatches(rows, numbers):
     numbers["RealValidatorStopMax"] = f"{max(stops):.0f}" if stops else "--"
     numbers["RealValidatorWrongMax"] = max([tally(rows, key)[2] for key, _, _ in POLICIES[2:8] if tally(rows, key)]
                                            or [0])
-    names = {"traffic": "Traffic (CSV)", "bikes": "Bikes (CSV)", "taxi": "Taxi (Parquet)"}
+    workloads = sorted({r["workload"] for r in rows})
+    numbers["RealPipelines"] = len(workloads)
+    for w in workloads:  # per pipeline, selective deoptimization: RealCitibikeRuns, RealCitibikeCorrect, ...
+        items = [r for r in rows if r["workload"] == w]
+        outcomes = [r["outcome"]["deopt"] for r in items]
+        key = "Real" + w.capitalize()
+        numbers[key + "Runs"] = len(items)
+        numbers[key + "Correct"] = sum(o in ("correct run", "correct stop") for o in outcomes)
+        numbers[key + "Needless"] = sum(o == "needless stop" for o in outcomes)
+        numbers[key + "Unsound"] = sum(o in ("unsound", "wrong stop") for o in outcomes)
+        numbers[key + "Deopted"] = sum(bool(r["deopts"]) for r in items)
+    names = {"traffic": "Traffic (CSV)", "bikes": "Bikes (CSV)", "taxi": "Taxi (Parquet)",
+             "citibike": "Citi Bike (CSV)", "air": "Air quality (CSV)"}
+    names = {w: name for w, name in names.items() if any(r["workload"] == w for r in rows)}
     policy_table(rows, [(names[w], (lambda w: lambda r: r["workload"] == w)(w)) for w in names] +
                  [(f"all {len(rows)}", lambda r: True)],
                  "Reusing compiled pipelines on real monthly batches (RQ4), both deployments (compiled on the first "

@@ -20,7 +20,7 @@ script below in order. Set `PYTHON` to the interpreter to use (default `py -3` o
 Times and memory depend on the machine; counts and correctness outcomes do not.
 
 **Inputs from elsewhere.** Nothing in `data/` is committed. `realbatches.py download` fetches the UCI
-traffic and bike files and the NYC TLC green taxi months. The Kaggle files cannot be redistributed;
+traffic, bike and Beijing PM2.5 files, the NYC TLC green taxi months and the Citi Bike Jersey City months. The Kaggle files cannot be redistributed;
 download them by hand into `data/`:
 
 - Titanic (kaggle.com/c/titanic): `train.csv` and `test.csv` into `data/titanic/`;
@@ -66,7 +66,7 @@ The largest result files are kept gzipped (`private.json.gz`, `private_diagnosti
 | `baselines.py` | pandera, Great Expectations and TFDV set up on a file and checking batches | |
 | `certificates.py` | edited batches of the examples and a sensor pipeline (RQ3) | `certificates.*` |
 | `imagebatches.py` | new image folders for a compiled image pipeline (RQ3) | `imagebatches.*` |
-| `realbatches.py` | real monthly traffic, bike and taxi data, every policy and validator (RQ4) | `realbatches.*` |
+| `realbatches.py` | real monthly traffic, bike, taxi, Citi Bike and air-quality data, every policy and validator (RQ4) | `realbatches.*` |
 | `pandas_corpus.py` | Titanic and House Prices scripts from GitHub, lifted and run on new batches (RQ5) | `pandas_corpus*.*` |
 | `drift_corpus.py` | other people's traffic and bike scripts, run on every real month (RQ5) | `drift_corpus_*.*` |
 | `composition.py` | two compiled stages over the real months (RQ6) | `composition.*` |

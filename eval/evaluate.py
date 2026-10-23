@@ -147,7 +147,7 @@ def report(n):
         f"{n['CorpusBothDerRuns']} runs on new batches identical to a fresh compilation, 0 unsound. "
         f"{n['DriftAll']} traffic and bike scripts; {n['DriftCompiled']} lifted and compiled; "
         f"{n['DriftSame']} of {n['DriftRuns']} runs on every later real month identical to a fresh run.",
-        f"- Real monthly data (UCI traffic and bikes, NYC taxi; `realbatches.md`): a program compiled once is "
+        f"- Real monthly data (UCI traffic, bikes and Beijing air quality, NYC taxi, Citi Bike; `realbatches.md`): a program compiled once is "
         f"reused correctly on {n['RealDeoptCorrect']} of {n['RealRuns']} months ({n['RealDeoptCorrectPct']}%) "
         f"without recompiling, against {n['RealFpCorrect']} with a checksum guard.",
         f"- Scale (`scale.md`): a 16M-row, {n['PqSixteenSize']} MiB Parquet file compiles in {n['PqSixteen']} s "

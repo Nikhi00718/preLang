@@ -552,8 +552,8 @@ py -3 eval/compilation/bench.py
   fresh compilation for that batch (paper RQ3); `py -3 eval/reuse/certificates.py validators` adds pandera,
   Great Expectations and TFDV (`eval/reuse/baselines.py`, set up in `eval/.venv-baselines` and WSL).
 - `eval/reuse/imagebatches.py` reuses a compiled image pipeline on 30 new folders (paper RQ3).
-- `eval/reuse/realbatches.py` does the same with real monthly data: UCI traffic and bike-sharing data and
-  NYC green-taxi Parquet files (paper RQ4; `py -3 eval/reuse/realbatches.py download` first, then
+- `eval/reuse/realbatches.py` does the same with real monthly data: UCI traffic, bike-sharing and Beijing
+  air-quality data, NYC green-taxi Parquet files and Citi Bike Jersey City trips (paper RQ4; `py -3 eval/reuse/realbatches.py download` first, then
   `py -3 eval/reuse/realbatches.py validators`).
 - `eval/reuse/pandas_corpus.py [titanic|houses]` lifts real Titanic or House Prices scripts from GitHub,
   compiles them, and compares the compiled program with the script's own pandas statements on new
@@ -595,10 +595,11 @@ before any data is processed; all 21 reproductions behave as classified. Details
 **Reusing compiled programs (paper RQ3-RQ7).** Every new batch is also compiled fresh as the ground
 truth. On 244 edited batches both certificates handle every batch correctly; selective deoptimization
 runs 35 of them with removed checks re-enabled, while pandera's inferred schema lets 41 wrong runs
-through, TFDV's 66, and Great Expectations refuses 106 that a fresh compilation runs. On 238 real
-monthly batches, selective deoptimization handles 221 (93%) exactly as a fresh compilation would and
-none wrongly; the 17 refusals are one event (the taxi publisher changed two column types).
-Great Expectations and pandera refuse 92-93% of the months; TFDV admits 27 on which the optimized
+through, TFDV's 66, and Great Expectations refuses 106 that a fresh compilation runs. On 426 real
+monthly batches of five public datasets, selective deoptimization handles 400 (94%) exactly as a fresh
+compilation would and none wrongly; all 26 refusals are column type changes (the taxi publisher's
+`passenger_count`, and Beijing pressure and temperature switching between whole and decimal numbers).
+Great Expectations and pandera refuse 96% of the months; TFDV admits 27 on which the optimized
 program does not do what a fresh compilation does. On 292 held-out Titanic and House Prices scripts,
 3,198 of 3,212 runs reproduce the scripts' results and none differ; 72 scripts written by others for
 the traffic and bike data, compiled on the first month, reproduce their results on all 3,255 later
