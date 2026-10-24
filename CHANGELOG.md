@@ -29,6 +29,21 @@
 - The differential test generates `MANY` joins and the new aggregates, and gives one numeric
   column of the second batch the other numeric type in 3 of 10 programs.
 
+### Fixed
+- Compile time on wide tables. Deciding which numeric columns may change type compiled the program
+  twice per column; columns that no instruction names besides LOAD, SELECT, DROP, SAVE and REPORT are
+  now tried together, the certifier tests columns that may be absent in one analysis when it can, and its
+  repeated analyses no longer build the `--lineage` history. A lifted House Prices script that loads two
+  81-column files twice took 182 s with the Windows build and now takes 0.4 s; the generated programs
+  of 559 evaluated programs (the monthly pipelines, 400 differential programs and lifted scripts) are
+  byte-identical before and after.
+- The lifter translated `!=` and `~` in row conditions, where pandas keeps a row with a missing value
+  and PrepLang drops it; one traffic script was wrong on all 62 months. Both are now left untranslated.
+- `PLOT` wrote SVG and PDF files with the current time and random element ids, so two runs of the same
+  program gave different files; charts are now byte-identical across runs.
+- `eval/reproduce.sh full` reruns all four differential seeds and both lifter versions, and stops with a
+  message when the Kaggle files are missing.
+
 ## 2.0.0 (2026-10-23)
 
 ### Added

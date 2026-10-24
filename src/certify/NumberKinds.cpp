@@ -91,7 +91,8 @@ std::set<TableColumn> numberKindColumns(const Program& program, SchemaProvider& 
         schemas.setOverrides(facts);
         Diagnostics quiet;
         SymbolTable symbols;
-        const AnalysisResult analysis = SemanticAnalyzer(symbols, schemas, programFolder, quiet).analyze(program);
+        const AnalysisResult analysis =
+            SemanticAnalyzer(symbols, schemas, programFolder, quiet).withoutLineage().analyze(program);
         if (quiet.hasErrors()) {
             schemas.setOverrides({});
             return std::nullopt;
@@ -105,7 +106,44 @@ std::set<TableColumn> numberKindColumns(const Program& program, SchemaProvider& 
         return ExecutionPlanner(outputFolder, sourcePath, certified)
             .generate(code, manifestCode(code, analysis, sourcePath, outputFolder));
     };
+    // A candidate that no instruction names besides LOAD, SELECT, DROP, SAVE, REPORT and a DROP_NULL
+    // of whole rows is only carried to the output: no decision of the analysis looks at its type.
+    // These are tried together, in one compilation, so that a wide table does not cost one
+    // compilation per column; each named candidate is tried on its own.
+    std::set<TableColumn> named;
+    for (const Instruction& in : unoptimized.code) {
+        const std::string key = tableKey(in.dataset, in.table);
+        switch (in.op) {
+            case Opcode::Load:
+            case Opcode::Select:
+            case Opcode::Drop:
+            case Opcode::Save:
+            case Opcode::Report: break;
+            default:
+                named.insert({key, in.column});
+                for (const std::string& name : in.columns) {
+                    named.insert({key, name});
+                }
+        }
+    }
+    std::set<TableColumn> carried;
+    std::vector<TableColumn> tried;
     for (const TableColumn& column : candidates) {
+        if (named.count(column) == 0) {
+            carried.insert(column);
+        } else {
+            tried.push_back(column);
+        }
+    }
+    if (!carried.empty()) {
+        const std::optional<std::string> same = compile({}, carried);
+        if (same && compile(carried, carried) == same) {
+            accepted = carried;
+        } else {
+            tried.insert(tried.end(), carried.begin(), carried.end());  // then one by one, as below
+        }
+    }
+    for (const TableColumn& column : tried) {
         const std::set<TableColumn> marked = {column};
         const std::optional<std::string> same = compile({}, marked);
         if (same && compile(marked, marked) == same) {

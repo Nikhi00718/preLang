@@ -179,6 +179,7 @@ import html
 import matplotlib
 
 matplotlib.use("Agg")  # no window: the charts go to files
+matplotlib.rcParams["svg.hashsalt"] = "preplang"  # the same element ids on every run
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
@@ -220,7 +221,9 @@ def plot(table, kind, frame, columns, path, bins=0, bounds=()):
     draw(axes, kind, frame, columns, bins, bounds)
     axes.set_title(f"{table}: {kind.lower()} of {' and '.join(columns)} ({len(frame)} rows)", fontsize=9)
     figure.tight_layout()
-    figure.savefig(path)
+    # No creation date in SVG and PDF files, so that a chart of the same data is the same file.
+    dates = {".svg": {"Date": None}, ".pdf": {"CreationDate": None, "ModDate": None}}
+    figure.savefig(path, metadata=dates.get(path.suffix.lower()))
     plt.close(figure)
     outputs.append({"file": path.name, "rows": len(frame)})
     print("Plotted", kind.lower(), "of", ", ".join(columns), "to", path)

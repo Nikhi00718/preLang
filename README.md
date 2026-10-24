@@ -5,8 +5,8 @@
 PrepLang is a small language for preparing datasets — CSV tables, folders of CSV tables, and
 image datasets — and this is its compiler, written in C++17. It reads the data a program uses
 **at compile time** (every CSV cell, and the header of every image file), follows what is known
-about the data through every statement, proves or refutes the program's data contracts before
-anything runs, optimizes the pipeline, and generates one Python program that uses pandas for
+about the data through every statement, proves contracts or diagnoses definite violations where the
+analysis can decide them, retains unresolved checks for runtime, and generates one optimized Python program that uses pandas for
 tables and OpenCV for images.
 
 ```text

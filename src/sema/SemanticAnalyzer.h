@@ -30,6 +30,13 @@ public:
 
     AnalysisResult analyze(const Program& program);
 
+    // Without lineage the result has no --lineage history, and nothing else changes. The
+    // certifier analyses a program hundreds of times and never reads it.
+    SemanticAnalyzer& withoutLineage() {
+        recordLineage_ = false;
+        return *this;
+    }
+
     void visit(const LoadStmt& node) override;
     void visit(const DropNullStmt& node) override;
     void visit(const FillNullStmt& node) override;
@@ -63,6 +70,7 @@ private:
     SchemaProvider& schemas_;
     std::filesystem::path baseFolder_;
     Diagnostics& diagnostics_;
+    bool recordLineage_ = true;
     AnalysisResult result_;
     std::set<std::string> unreadable_;  // datasets whose files could not be read
     SelectorResolver resolver_;

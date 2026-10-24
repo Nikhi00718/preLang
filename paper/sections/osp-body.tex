@@ -1,38 +1,39 @@
-% The body of the software article (preplang-osp.tex), from the motivation to the conclusions.
+% Software article: motivation, implementation, examples, evidence and limits.
 \section{Motivation and significance}
 
-Much of the hidden cost of machine-learning systems sits in their data dependencies and glue code rather
-than in the models~\cite{sculley2015}. A large share of that glue is data preparation: a script over
-pandas~\cite{mckinney2010} or OpenCV~\cite{bradski2000} that finds out only at run time whether the column it
-scales holds numbers, or whether the pixels it saves as PNG are floats. Validators such as
-TFDV~\cite{breck2019}, Deequ~\cite{schelter2018}, Great Expectations~\cite{gx} and pandera~\cite{bantilan2020}
-check the data, yet they never look at the code that transforms it.
+Data preparation makes assumptions that are often absent from a script's interface: a column contains
+numbers, a value lies within a range, or an image operation preserves a usable output type. Such
+assumptions contribute to the maintenance cost of machine-learning systems~\cite{sculley2015}.
+A pandas~\cite{mckinney2010} or OpenCV~\cite{bradski2000} script may discover a violation only after
+processing has started. Validators such as TFDV~\cite{breck2019}, Deequ~\cite{schelter2018}, Great
+Expectations~\cite{gx} and pandera~\cite{bantilan2020} check datasets against constraints. They do not,
+by themselves, propagate those constraints through a program and generate guarded optimizations.
 
-Batch preparation offers something a compiler can rarely count on: the input is already on disk when the
-pipeline is compiled. \PL reads it. Where F\# type providers infer types from a sample~\cite{petricek2016},
-\PL takes values from every CSV cell, Parquet footer and image header and carries what it learns from
-one statement to the next. Each contract is proven or refuted before any row is processed, and checks or
-operations that the input makes pointless are removed.
+\PL~\cite{preplang2026} targets batch workflows in which a representative input is available before the
+pipeline runs. Its compiler scans CSV values, reads Parquet metadata and inspects image headers, then
+propagates an abstract description of the data through the program. A contract is proven, definitely
+violated, or unresolved: proven checks can be removed, violations are diagnosed, and unresolved checks
+remain in the generated program.
 
-A proof about this month's file does not carry over to next month's, even when the layout is unchanged.
-For each removal, \PL therefore records the facts it relied on, the removal's \emph{item certificate}, and
-the generated program tests them against every new batch. While they hold, the removal stands. When a batch
-breaks them, the removed code runs again for that batch, much as dynamic compilers fall back from
-optimized code~\cite{holzle1992,barriere2021}; we call this \emph{selective deoptimization}. A numeric
-column may also switch between whole and decimal numbers when compiling with the other type yields the
-same program. A batch is refused only when no run-time code can recover a fact, for instance when a
-numeric column arrives as text.
+The complication is reuse. A check that is redundant for one batch may be necessary for the next.
+For each speculative removal, \PL records an \emph{item certificate}, the input facts that justify it.
+The generated program checks the certificates on later batches and restores an instruction when its
+certificate fails. A separate \emph{admission certificate} holds requirements for which the program has
+no fallback, such as an incompatible column type; failing it stops execution. A changed value range
+therefore restores one check without recompiling the rest of the pipeline.
 
-Table~\ref{tab:related} sets \PL against the closest tools. Validators see the values but check them away
-from the code, on every batch; static analyses follow the code but see only declared or inferred structure;
-provenance-based screening~\cite{schelter2024screening} runs the pipeline to catch issues such as leakage
-between training and test data, but keeps nothing for the next batch.
-We know of no other tool that decides value contracts at each point of a program from the real data and
-carries those decisions forward to later batches.
+The underlying ideas have precedents (Table~\ref{tab:related}). Type providers derive types from external
+data~\cite{petricek2016}; soft constraints use properties observed in a database for query
+optimization~\cite{godfrey2001}; dynamic deoptimization restores execution when speculative assumptions
+fail~\cite{holzle1992,barriere2021}; Tuplex compiles a common path from sampled data with fallbacks for
+exceptions~\cite{spiegelberg2021}; and provenance-based screening runs a preparation pipeline to catch
+issues such as train/test leakage~\cite{schelter2024screening}. \PL combines these ideas in a small
+preparation language whose certificates track the value facts behind individual removals. It does not
+claim to have introduced data-dependent optimization or deoptimization.
 
 \begin{table}[t]
 \footnotesize
-\caption{\PL and the closest tools. \emph{Values}: missing values and value ranges.}
+\caption{\PL and related tools. \emph{Values}: missing values and value ranges.}
 \label{tab:related}
 \renewcommand{\arraystretch}{1.15}
 \begin{tabular}{@{}>{\raggedright}p{2.9cm}>{\raggedright}p{1.9cm}>{\raggedright}p{2.9cm}>{\raggedright}p{1.1cm}
@@ -43,6 +44,7 @@ Tool & Decides at & Knows about the data & Follows code & On a new batch \\
 TFDV~\cite{breck2019}, Deequ~\cite{schelter2018}, GX~\cite{gx}, pandera~\cite{bantilan2020}
   & run time & values, from each batch & no & validates it again \\
 F\# type providers~\cite{petricek2016} & compile time & types, from a sample & no & -- \\
+Tuplex~\cite{spiegelberg2021} & compile time & types and cases, from a sample & yes & falls back per exceptional row \\
 Zhuang and Lu~\cite{zhuang2022} & compile time & column types, from the code & yes & -- \\
 Gerstl et al.~\cite{gerstl2026} & compile time & R data-frame shapes, optionally from the data & yes & -- \\
 Mirji~\cite{mirji2026} & compile time & declared schemas & yes & checks the output schema \\
@@ -57,60 +59,42 @@ Schelter et al.~\cite{schelter2024screening} & development time, by running it &
 
 \subsection{Software architecture}
 
-The compiler~\cite{preplang2026} (\texttt{src/}, about 11{,}800 lines of C++17 with no external libraries) is a conventional
-pipeline of lexer, LL(1) parser, semantic analysis, IR, optimizer, certifier and code generator
-(Fig.~\ref{fig:arch}). Its schema readers scan CSV files in parallel and read only the footers of Parquet
-files and the headers of PNG and JPEG images. The semantic analyzer builds an abstract state of each dataset
-(types, missing values, value intervals, image properties) and decides every contract against it. The
-optimizer removes, speculatively, whatever that state shows to have no effect. The certifier then
-reanalyzes the program under weaker input facts, without touching the data, to find the admission
-certificate and one item certificate per removal. Finally, the back end emits a single Python program that
-admits or refuses each batch, guards every removed instruction with \texttt{deopt(i)}, and writes the
-certificates to \texttt{preplang\_contract.json}.
+The C++17 compiler uses only the standard library and has seven phases: lexing, parsing, semantic
+analysis, intermediate representation, optimization, certification and Python code generation
+(Fig.~\ref{fig:arch}). Semantic analysis tracks types, missing values, numeric intervals and image
+properties at each statement. Parquet analysis uses footer statistics and image analysis reads headers,
+so some facts stay unknown and the relevant checks are kept. After optimization the certifier weakens
+input facts and reanalyzes the program, without rereading the input, to find what each certificate must
+contain. The output is one Python program, which checks admission and guards speculative removals with
+\texttt{deopt(i)}, and a machine-readable \texttt{preplang\_contract.json}.
 
 \input{figures/figure-arch}
 
-\texttt{proofs/} holds \LeanLines{} lines of
-Lean~4~\cite{lean4} that prove two results: for any sound and monotone analysis, the generated program
-agrees with a fresh compilation on every batch it admits; and the analysis of a core of the language is
-sound and monotone. Joins, groups, dates and images fall outside that core. The differential test of
-Section~\ref{sec:impact} covers joins and groups, while dates and images are covered only by unit tests and
-the examples. \texttt{tests/} contains \TestCount{} checks in \TestSuites{} suites.
-
-\PL installs with \texttt{pip} or runs from the \texttt{Dockerfile}; releases ship prebuilt compilers for
-Windows, Linux and macOS, and a VS Code extension shows the diagnostics on save. Continuous integration
-builds and tests on all three systems, runs the tests under AddressSanitizer and UndefinedBehaviorSanitizer
-with a coverage gate, fuzzes the parsers of untrusted input with libFuzzer and checks the Lean proofs.
-\texttt{LANGUAGE.md} documents the language and \texttt{ARCHITECTURE.md} maps each phase to its files.
+The Lean~4 development~\cite{lean4} proves selective deoptimization correct for any sound, monotone
+analysis, and establishes those assumptions for a core of numeric columns, missing values, interval
+filters, null filling, addition and range/not-null contracts. The C++ compiler, its parsers, pandas and
+OpenCV are outside the proof, as are joins, aggregation, dates and images; differential tests cover joins
+and aggregation. The repository contains \TestCount{} C++ checks in \TestSuites{} suites, integration tests
+and parser fuzz targets, run in CI on Windows, Ubuntu and macOS with sanitizers, a coverage gate and the
+Lean build.
 
 \subsection{Software functionalities}
 
-{\sloppy
-\begin{itemize}
-\item \textbf{Compile-time checking.} Misspelled or dropped columns, type errors and broken contracts
-(\texttt{NOT\_NULL}, \texttt{BETWEEN}, \texttt{UNIQUE}, \texttt{REFERENCES}, schemas, image channels and
-sizes, match rates between images and labels) are reported with the line, an offending row and a hint, as
-are joins on keys of different types. A lookup join expects each key once, while \texttt{JOIN ... MANY}
-keeps every match. Groups (\texttt{AGGREGATE}, with eight functions from \texttt{COUNT} to \texttt{STD})
-keep their facts.
-\item \textbf{Data-driven optimization.} Proven checks and operations without effect are removed, unread
-columns are never loaded, and image pipelines stream one file at a time; rewrites that alter the output
-need \texttt{--approx}.
-\item \textbf{Tools around the compiler.} \texttt{tools/\allowbreak contracts.py} checks the guarantees of
-one compiled stage against the certificates of the next. \texttt{frontend/\allowbreak pandas2prep.py}
-translates the cleaning statements of a pandas script into \PL, up to the first statement it cannot express.
-With \texttt{--facts}, a program compiles from differentially private facts released by the data owner
-(\texttt{tools/\allowbreak release\_facts.py}) without opening any input; since the generated program checks
-those facts on the real data, every run is still exact.
-\item \textbf{Inspection.} Each phase can be printed (\texttt{--tokens} through \texttt{--python}), along with
-an execution plan (\texttt{--explain}) and JSON diagnostics (\texttt{--json}). \texttt{PLOT} draws
-histograms and bar, scatter and line charts with matplotlib, marking contract bounds, and \texttt{REPORT}
-writes a web page comparing each column of a run with the compiler's view of it.
-\end{itemize}
-}
+A program loads CSV or Parquet tables, selects and derives columns, filters rows, fills or drops missing
+values, joins on one key and aggregates groups. Contracts cover types, nullability, ranges, uniqueness and
+references; image pipelines check channels and dimensions, link labels, resize and convert. Diagnostics
+give a source location and, where available, a witness row and a hint. Optimization removes proven checks
+and redundant operations, prunes unread columns and streams images; rewrites that may change the output
+need \texttt{--approx}, and the exactness results here exclude them. Every phase can be printed, with an
+execution plan and JSON diagnostics, and \texttt{PLOT} and \texttt{REPORT} chart a batch. A translator lifts
+the supported prefix of a pandas script, and with \texttt{--facts} a program compiles from differentially
+private facts released by a data owner, while run-time checks still read the real data. \PL installs with
+\texttt{pip install .}; \texttt{README.md}, \texttt{LANGUAGE.md} and \texttt{ARCHITECTURE.md} document
+installation, the language and the implementation.
 
 \section{Illustrative examples}\label{sec:example}
 
+Consider this program with the eight-row \texttt{examples/\allowbreak tabular/\allowbreak students.csv}:
 \begin{lstlisting}
 LOAD "students.csv" AS students;
 EXPECT students.age NUMBER;
@@ -121,101 +105,96 @@ EXPECT students.marks BETWEEN 60 AND 100;
 SAVE students AS "clean.csv";
 \end{lstlisting}
 
-Compiled against the eight-row \texttt{students.csv} in \texttt{examples/\allowbreak tabular/}, \PL proves
-the first three contracts. The fourth stays a run-time check: after the filter, all the compiler knows is
-that the marks lie in $[50, 95]$. The range and not-null checks are removed speculatively, and
-\texttt{--certificate} lists what the range check depends on, namely marks of at least 0 and at most 100.
-Given a later batch that contains a mark of 104, the generated program puts the check back and stops
-exactly where a fresh compilation would:
-\par\smallskip\noindent\begin{minipage}{\linewidth}\small\begin{verbatim}
-Deoptimized line 3: EXPECT students.marks BETWEEN 0 AND 100:
-  marks goes up to 104, above 100
-ContractError: line 3: students.marks has values outside 0 to 100
-\end{verbatim}\end{minipage}\par\smallskip
-\noindent A batch that stays within the facts runs with both checks removed. A batch in which \texttt{age}
-holds text is refused, because no generated code can stand in for analysing the column under another type.
-
-Image pipelines get the same treatment, from file headers alone. \texttt{examples/\allowbreak images/\allowbreak
-linked.prep} links images with their labels, checks them, resizes them, scales the pixels to $[0, 1]$ and
-saves NumPy arrays. Switching the output format to PNG produces this error before a single pixel is
-decoded:
-\par\smallskip\noindent\begin{minipage}{\linewidth}\small\begin{verbatim}
-error[type]: cannot save FLOAT32 pixels as PNG:
-             NORMALIZE at line 10 scaled them to [0, 1]
-   --> examples/images/linked.prep:13:1
-13 | SAVE_IMAGES imgs TO "processed/ml_ready/";
-   = hint: image files store 8-bit pixels, so these would come out
-     almost black; add CONVERT imgs TO NPY; to keep the float
-     values
-\end{verbatim}\end{minipage}\par\smallskip
-\noindent The equivalent OpenCV script runs to completion and writes images that are nearly black.
+The compiler proves the first three contracts. After the filter it knows only that marks lie in
+$[50,95]$, so the last check remains at run time. The range and not-null checks are removed
+speculatively. On a new batch containing a mark of 104, the generated program restores the line-3 check
+and rejects the batch, as a fresh compilation does (there, during compilation). A batch within the
+certificates runs with both checks removed; text in the numeric \texttt{age} column fails admission.
+For images, \texttt{examples/\allowbreak images/\allowbreak linked.prep} scales pixels to $[0,1]$ and saves
+arrays. Requesting PNG output for those floating-point pixels gives a compile-time type error before any
+pixel is decoded; the equivalent OpenCV script writes almost-black images without an error.
 
 \section{Impact}\label{sec:impact}
 
-\PL is a research prototype, started in a compiler-design course, and has not yet been used outside the
-authors' own experiments. The evidence for it is the evaluation in \texttt{eval/};
-\texttt{eval/\allowbreak evaluate.py} derives every number below from the raw results.
+\PL began as a compiler-design project and has no independent deployment or user study yet. Its
+evidence is the stored evaluation in \texttt{eval/results/}, from which every number below is generated.
 
-\begin{itemize}
-\item \textbf{Correctness.} We generated \DiffAll{} random programs over four seeds, with groups, lookup
-joins and \texttt{MANY} joins (\DiffMany{} programs). Compiled with and without the optimizer, each produces
-the same table, value for value, as an independent Python interpreter of the language that shares no code
-with the compiler. Run again on a second random batch, none of the \DiffReuse{} and \DiffSeedReuse{} reuses
-disagrees with the interpreter. In \DiffFlipBatches{} of those batches we flipped one numeric column
-between whole and decimal values: \DiffFlipRight{} ran or stopped as the interpreter did, \DiffFlipRefused{} were refused
-(\DiffFlipNoCompile{} of them could not be compiled at all), and none was wrong. Earlier runs exposed
-three optimizer bugs, which had made \DiffBeforeWrongOpt{} and \DiffSeedBeforeWrong{} runs wrong, and the
-CSV fuzzer found an out-of-bounds read; each fix has a regression test.
-\item \textbf{Performance.} On a 200{,}000-row table the optimized program needs \TabProcOpt\,s instead of
-\TabProcOz\,s after Python start-up; on the smaller inputs of the census below the median speedup is only
-\CenSpeedMed$\times$ (at most \CenSpeedMax$\times$). The image pipeline is as fast as a hand-written streaming script and uses
-\ImgPlMem\,MiB ($2^{20}$ bytes), against \ImgBaseMem\,MiB for a script that loads every image first.
-\item \textbf{Optimization.} Over \CenPrograms{} programs (the examples and the programs lifted from GitHub
-scripts), the optimizer cuts \CenInstrCut\% of the instructions (\CenInstrBefore{} to \CenInstrAfter), the
-run-time checks from \CenChecksBefore{} to \CenChecksAfter{} and \CenColsCut\% of the columns read. It
-changes \CenChanged{} programs, and all \CenSame{} write identical files with and without it. The lifted
-scripts carry no contracts, so every removed check comes from the examples or the monthly pipelines.
-\item \textbf{Real programs.} Of \RbTotal{} data-preparation bugs reported in GitHub issues, \PL catches
-\RbEarly{} at compile time, \RbContract{} of them once the requirement is written down as an
-\texttt{EXPECT}. The lifter translates \CorpusBothDerCompiled{} of \CorpusBothScripts{} public scripts
-written for the Kaggle Titanic and House Prices data. Their programs match the original script on
-\CorpusBothDerSame{} of \CorpusBothDerRuns{} new batches and stop or refuse on the rest; none is wrong.
-Among \DriftAll{} traffic and bike-sharing scripts it translates \DriftCompiled{}, and these match the
-script on every one of \DriftRuns{} later months of real data; for \DriftNoRead{} of the 945 the lifter
-cannot tell which file is read. It leaves \texttt{!=} and \texttt{\textasciitilde} untranslated, because on a
-missing value pandas keeps the row and \PL drops it.
-\item \textbf{Comparison.} Five monthly pipelines on public data (NYC green taxi, Citi Bike Jersey City, and the UCI
-traffic, bike-sharing and Beijing air-quality sets) were each compiled on one month and run on the months
-after it. They match a fresh compilation on \RealDeoptCorrect{} of \RealRuns{} months
-(\RealDeoptCorrectPct\%), including months in which a column switched between whole and decimal numbers,
-and never produce a different result. The Citi Bike and air-quality pipelines take their bounds from the
-domain, not from the data. Each validator learned from the compiled month as its documentation recommends
-and then judged every later month, scored against the same fresh compilation: Great Expectations and
-pandera reject \RealValidatorStopMax\% of the months, and TFDV accepts \RealValidatorWrongMax{} on which the
-program then differs. These tools were not built for this decision; the figures show what it costs to use
-them for it. All 24 mistakes injected
-into 5 example programs are reported at compile time, whereas the same steps written as a pandas script
-crash on 20 of them and quietly produce wrong tables for the other 4.
-\item \textbf{Private compilation.} At $\varepsilon=1$, compiling from released facts keeps every removal in
-the taxi and traffic pipelines but only 14\% in the bike pipeline, where AIM~\cite{mckenna2022aim} keeps
-54\%; in \PrivTitanicDeoptEpsOne{} of \PrivTitanicScripts{} Titanic compilations a released fact proves
-false and a removal is undone. No output of \PrivRuns{} runs differs from a fresh compilation.
-\item \textbf{Overhead.} Compilation takes a median of \CenCompileMed\,ms, most of it spent on the extra
-compilations that decide which numeric columns may change type, and never more than \CenMemMax\,MiB of
-memory (\CenCsvMillionMem\,MiB for a million CSV rows). Admitting a new batch by its certificate changes
-the run time by \OhPctLow\% to \OhPctHigh\%, which is within measurement noise.
-\end{itemize}
+\begin{table}[t]
+\footnotesize
+\caption{Main results of the evaluation (stored in \texttt{eval/results/}).}
+\label{tab:results}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{@{}>{\raggedright}p{3.7cm}>{\raggedright\arraybackslash}p{9.4cm}@{}}
+\toprule
+Experiment & Result \\
+\midrule
+Differential test, 4 seeds & \DiffAll{} random programs (\DiffMany{} with many-to-many joins) agree with an
+  independent interpreter, with and without optimization; 0 of \DiffReuse{} and \DiffSeedReuse{} reuses wrong \\
+Numeric type changes & \DiffFlipBatches{} batches: \DiffFlipRight{} agree, \DiffFlipRefused{} refused
+  (\DiffFlipNoCompile{} of them fail fresh compilation too), 0 wrong \\
+Five monthly pipelines & \RealRuns{} pipeline--batch trials agree with fresh compilation, \RealFreshFails{}
+  of them on a contract failure; \RealDeopted{} restore an instruction \\
+Validators as admission gates & GX rejects \RealGxReadNeedless{}, pandera \RealPanderaReadNeedless{} executable
+  trials; TFDV admits \RealTfdvReadUnsound{} that disagree \\
+Lifted pandas scripts & \CorpusBothDerCompiled{} of \CorpusBothScripts{} Kaggle scripts lifted, \CorpusBothDerSame{}
+  of \CorpusBothDerRuns{} batches agree; \DriftCompiled{} of \DriftAll{} traffic and bike scripts, all \DriftRuns{} months agree \\
+GitHub preparation bugs & \RbEarly{} of \RbTotal{} reported at compile time (\RbContract{} need an \texttt{EXPECT}) \\
+Census of \CenPrograms{} programs & \CenChanged{} changed by the optimizer, median speedup \CenSpeedMed$\times$, all
+  outputs identical; compile time median \CenCompileMed\,ms, maximum \CenCompileMaxSeconds\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\noindent \texttt{eval/\allowbreak reproduce.sh check} (ten minutes, offline) regenerates these numbers from
-the committed results; \texttt{full} (several hours) downloads the inputs and reruns every experiment.
+\paragraph{Correctness and reuse}
+Across four seeds, \DiffAll{} generated tabular programs were checked with and without optimization
+against a separate Python interpreter that shares no compiler code. Agreement means the same output
+values (within relative and absolute tolerances of $10^{-9}$) or the same failing contract. All agreed,
+and no admitted reuse gave a wrong outcome (Table~\ref{tab:results}). Of the batches in which one numeric
+column changed between integer and float, \DiffFlipRefused{} were refused. Most refusals are deliberate:
+the type rule only relaxes columns that no \texttt{DERIVE}, join key or aggregate combines with another
+column, and \DiffFlipRefusedCombined{} of the \DiffFlipRefusedCompiles{} refused batches that a fresh compilation
+accepts changed such a combined column. The test shows that
+admitted batches are handled correctly, not that admission accepts every safe batch.
+
+Five authored pipelines use NYC green taxi, Citi Bike Jersey City, and UCI traffic, bike-sharing and
+Beijing air-quality data. Each is compiled on the first month, or on the preceding month, and run on the
+later ones: \RealRuns{} pipeline--batch trials, with target months repeated across the two schedules. All
+agreed with fresh compilation, \RealFreshFails{} of them on a contract failure. Fresh compilation shares
+the implementation under test, so this checks reuse consistency; the independent interpreter above checks
+correctness.
+
+\paragraph{Coverage and cost}
+The translator lifts only supported prefixes, and the script corpora are tied to particular datasets, so
+the coverage figures in Table~\ref{tab:results} do not describe Python programs in general. Speed is not
+\PL's main benefit: on a synthetic 200{,}000-row table the optimized program took \TabOpt\,s against
+\TabBase\,s for a script (median of three runs, including Python start-up, on an Intel Core i5-12450H
+with Windows~11, pandas~3.0 and Python~3.14), and the census median speedup is \CenSpeedMed$\times$.
+Compilation is paid once per pipeline, not per batch: admitting a later batch by its certificate changed
+the run time by \OhPctLow\% to \OhPctHigh\%. The benefit lies in errors reported before data is processed
+and in batches that run without recompilation, with removed checks restored only where needed.
+
+The validators (Great Expectations~0.18.22, pandera~0.34, TFDV~1.21) were used as admission gates
+inferred from the compiled batch. Their results measure those gates, not the tools' ability to enforce
+hand-written contracts. With private facts at $\varepsilon=1$, compilation kept every removal in the taxi
+and traffic pipelines but 14\% in the bike pipeline, against 54\% for the AIM-based
+configuration~\cite{mckenna2022aim}; no output of \PrivRuns{} later runs disagreed with fresh compilation.
+
+\paragraph{Reproduction}
+The release in Table~\ref{tab:metadata} pins the compiler and the stored results.
+\texttt{eval/\allowbreak reproduce.sh check} builds and tests the software and regenerates every number
+from those results; \texttt{full} reruns the experiments, including all four seeds and both lifter
+versions, and \texttt{baselines} the validators and private compilation. Kaggle inputs must be downloaded
+by hand; the GitHub corpora are pinned by commit and hash.
 
 \section{Conclusions}
 
-\PL compiles a preparation pipeline once against real data and reuses its proofs on later batches,
-rerunning only the removals a batch breaks. Joins match on a single key column, Python is the only target,
-a numeric column may change type only if no statement combines it with another column, and the
-mechanized proofs leave out joins, groups, dates and images.
+\PL makes data assumptions explicit before a preparation pipeline runs and keeps the conditions behind
+removed work when the compiled program is reused. Joins use one key, Python is the only backend, numeric
+type changes are admitted only for uncombined columns, and the proof covers a restricted core; the
+implementation is tested, not verified. Whether \PL pays off depends on whether a pipeline fits the
+language and is run on many batches.
 
 \section{Future plans}
 
-Joins on several key columns and code generation for targets other than pandas and OpenCV.
+Joins on several key columns, code generation for other targets, and a study with users who write
+preparation scripts.

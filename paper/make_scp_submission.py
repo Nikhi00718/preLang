@@ -13,12 +13,14 @@ and a zip of the three.
 Run from any folder: py -3 paper/make_scp_submission.py [research|osp]  (default: both)
 """
 import re
+import hashlib
 import shutil
 import sys
 import zipfile
 from pathlib import Path
 
 PAPER = Path(__file__).resolve().parent
+ROOT = PAPER.parent
 
 
 def number(name):
@@ -39,11 +41,11 @@ ARTICLES = {
         f"Compiling from differentially private facts kept all {number('PrivRuns')} runs exact",
     ]),
     "osp": ("preplang-osp", "scp-osp-submission", "PrepLang_SCP_OSP_submission.zip", lambda: [
-        "PrepLang compiles data-preparation pipelines against the data they first run on",
-        "Generated programs rerun only the removed checks that a new batch makes unsafe",
-        f"Compiled pipelines handled {number('RealDeoptCorrectPct')}% of real new months exactly, none wrongly",
-        "Lean 4 proofs for a core and randomized tests back the exactness guarantee",
-        "One script regenerates every reported number from the raw evaluation results",
+        "PrepLang analyzes preparation pipelines using an available input batch",
+        "Item certificates restore removed instructions when their input facts fail",
+        f"Reuse matched fresh compilation in {number('RealRuns')} pipeline-batch trials",
+        "Lean proves a restricted core; differential tests check generated programs",
+        "Stored results, reproduction scripts and user documentation are provided",
     ]),
 }
 
@@ -71,7 +73,7 @@ def flatten(path, depth=0):
 def highlights_docx(target, highlights):
     import docx  # python-docx
     document = docx.Document()
-    document.add_heading("Highlights", level=1)
+    document.add_paragraph("PrepLang highlights", style="Title")
     for item in highlights:
         document.add_paragraph(item, style="List Bullet")
     document.save(target)
@@ -91,8 +93,50 @@ def build(kind):
     (out / f"{stem}.tex").write_text(flatten(PAPER / f"{stem}.tex"), encoding="utf-8", newline="\n")
     shutil.copyfile(pdf, out / f"{stem}.pdf")
     highlights_docx(out / "highlights.docx", highlights)
+    members = [f"{stem}.tex", f"{stem}.pdf", "highlights.docx"]
+    if kind == "osp":
+        # SCP asks for documentary material as part of the submission, not only repository links.
+        documentation = {
+            "README.md": "documentation/README.md",
+            "LANGUAGE.md": "documentation/LANGUAGE.md",
+            "ARCHITECTURE.md": "documentation/ARCHITECTURE.md",
+            "CONTRIBUTING.md": "documentation/CONTRIBUTING.md",
+            "LICENSE": "documentation/LICENSE",
+            "eval/README.md": "documentation/eval/README.md",
+            "proofs/README.md": "documentation/proofs/README.md",
+        }
+        for source, destination in documentation.items():
+            target = out / destination
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / source, target)
+            members.append(destination)
+        source_zip = out / "PrepLang_LaTeX_sources.zip"
+        with zipfile.ZipFile(source_zip, "w", zipfile.ZIP_DEFLATED) as bundle:
+            bundle.write(out / f"{stem}.tex", f"{stem}.tex")
+        members.append(source_zip.name)
+        instructions = out / "SUBMISSION_README.md"
+        instructions.write_text(
+            "# PrepLang submission files\n\n"
+            "Article type: Original Software Publication, Science of Computer Programming.\n\n"
+            "Upload preplang-osp.pdf as the manuscript; PrepLang_LaTeX_sources.zip as the LaTeX "
+            "source; highlights.docx as highlights; and documentation/ as documentary material. "
+            "The outer archive is a convenience bundle, not the source-only upload.\n\n"
+            "The flattened source embeds the numerical macros, bibliography and TikZ figure. "
+            "It needs elsarticle and the packages named in its preamble.\n\n"
+            "The manuscript describes release v2.1.0 (C1 and C2 of the metadata table) and its Docker "
+            "image (C3); check that both are public before submitting.\n\n"
+            "Before submission, both authors must approve this final version, author roles, "
+            "funding and conflict statements, and the named tool-use disclosure.\n",
+            encoding="utf-8",
+        )
+        members.append(instructions.name)
+        manifest = out / "SHA256SUMS.txt"
+        manifest.write_text("".join(
+            f"{hashlib.sha256((out / name).read_bytes()).hexdigest()}  {name}\n"
+            for name in members), encoding="utf-8")
+        members.append(manifest.name)
     with zipfile.ZipFile(out / zip_name, "w", zipfile.ZIP_DEFLATED) as bundle:
-        for name in (f"{stem}.tex", f"{stem}.pdf", "highlights.docx"):
+        for name in members:
             bundle.write(out / name, name)
     for h in highlights:
         print(f"{len(h):3d}  {h}")

@@ -59,7 +59,7 @@ def report(n):
         "",
         "## 1. Correctness: does the compiler produce the right output?",
         "",
-        f"**Yes, on every program tested, after two bugs this evaluation found were fixed.** "
+        f"**The stored main-seed run has no disagreement with the reference interpreter.** "
         f"{n['DiffPrograms']} random table programs over random CSV files ({n['DiffRows']} output rows; "
         f"{n['DiffJoin']} with a `JOIN`, {n['DiffAggregate']} with an `AGGREGATE`) were compiled with `--O0` and "
         f"with the optimizer, run, and compared cell by cell with a reference interpreter of the language "
@@ -91,8 +91,8 @@ def report(n):
         f"(`pandas_corpus*.md`), {n['DriftRuns']} runs of lifted traffic and bike scripts "
         f"(`drift_corpus_*.md`), and {n['PrivRuns']} runs after {n['PrivCompilations']} private compilations "
         f"(`private.md`).",
-        f"- {n['TestCount']} unit tests in {n['TestSuites']} C++ suites plus the release tool's tests pass on "
-        f"Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is "
+        f"- The artifact reports {n['TestCount']} checks in {n['TestSuites']} C++ suites plus integration tests. "
+        f"CI configurations cover Windows, Ubuntu and macOS; current run status must be checked separately. The core analysis is "
         f"mechanized in "
         f"Lean 4 ({n['LeanLines']} lines, `proofs/`).",
         "",
@@ -102,15 +102,16 @@ def report(n):
         "",
         "## 2. Performance: how much faster or slower is it?",
         "",
-        f"**The generated program is as fast as a hand-written script, faster when the optimizer removes "
-        f"work, and the compiler itself takes milliseconds.**",
+        "Performance depends on the workload. The measurements below include both modest speedups "
+        "and cases where a handwritten streaming script is faster. Compilation has a long tail.",
         "",
         f"- Tables, 200,000 rows x 40 columns (`rq3.md`): optimized {n['TabOpt']} s, `--O0` {n['TabOz']} s, "
         f"script-style pandas {n['TabBase']} s: {n['TabSpeedup']}x end to end, {n['TabCut']}% less time "
         f"after Python's {n['TabStart']} s start-up.",
         f"- Images, 1,000 at 640x480 (`rq3.md`): {n['ImgPl']} s and {n['ImgPlMem']} MiB streaming, against "
         f"{n['ImgBase']} s and {n['ImgBaseMem']} MiB for a script that loads everything, and {n['ImgHw']} s for "
-        f"a hand-written streaming script.",
+        f"a hand-written streaming script. Memory is peak Python-tracked allocation (`tracemalloc`), "
+        f"not total process memory.",
         f"- With `--approx`, merging two RESIZEs saves {n['FusSave']}% at a mean PSNR of {n['FusPsnr']} dB "
         f"(minimum {n['FusPsnrMin']} dB).",
         f"- On the {n['CenPrograms']} real programs of the census (`census.md`) the data are small, so run "
@@ -133,7 +134,7 @@ def report(n):
         passes,
         "",
         "Removed checks are not lost: each is kept with the facts its proof needs and runs again on a new "
-        f"input that breaks them (deoptimization: {n['RealDeopted']} of {n['RealRuns']} real monthly batches, "
+        f"input that breaks them (deoptimization: {n['RealDeopted']} of {n['RealRuns']} pipeline-batch trials, "
         f"`realbatches.md`).",
         "",
         "## 4. Practical usefulness: does it work on real programs and datasets?",
@@ -143,13 +144,14 @@ def report(n):
         f"occur in a PrepLang program, {n['RbNone']} are not covered (input formats, operations the language "
         f"lacks, dates, ...).",
         f"- Other people's scripts: {n['CorpusBothScripts']} Titanic and House Prices scripts from GitHub; "
-        f"{n['CorpusBothLifted']} lifted by `frontend/pandas2prep.py` and compiled; {n['CorpusBothDerSame']} of "
-        f"{n['CorpusBothDerRuns']} runs on new batches identical to a fresh compilation, 0 unsound. "
+        f"{n['CorpusBothDerCompiled']} prefixes lifted by `frontend/pandas2prep.py` and compiled; {n['CorpusBothDerSame']} of "
+        f"{n['CorpusBothDerRuns']} runs on new batches identical to the corresponding source prefix, 0 unsound. "
         f"{n['DriftAll']} traffic and bike scripts; {n['DriftCompiled']} lifted and compiled; "
         f"{n['DriftSame']} of {n['DriftRuns']} runs on every later real month identical to a fresh run.",
-        f"- Real monthly data (UCI traffic, bikes and Beijing air quality, NYC taxi, Citi Bike; `realbatches.md`): a program compiled once is "
-        f"reused correctly on {n['RealDeoptCorrect']} of {n['RealRuns']} months ({n['RealDeoptCorrectPct']}%) "
-        f"without recompiling, against {n['RealFpCorrect']} with a checksum guard.",
+        f"- Real monthly data (UCI traffic, bikes and Beijing air quality, NYC taxi, Citi Bike; `realbatches.md`): "
+        f"reuse agrees with fresh compilation on {n['RealDeoptCorrect']} of {n['RealRuns']} pipeline-batch trials "
+        f"({n['RealDeoptCorrectPct']}%), including {n['RealFreshFails']} contract-failure outcomes. "
+        f"The first-month and previous-month anchor schedules reuse target months; these are not independent months.",
         f"- Scale (`scale.md`): a 16M-row, {n['PqSixteenSize']} MiB Parquet file compiles in {n['PqSixteen']} s "
         f"(footer only); 1M CSV rows in {n['CsvMillion']} s.",
         "",
@@ -161,7 +163,7 @@ def report(n):
         "Deciding whether a compiled pipeline may run on a new batch (`realbatches.md`, `certificates.md`; "
         "each tool given the same anchor file, scored against a fresh compilation):",
         "",
-        "| Policy | Real months: correct / needless stops / unsound | Edited batches: correct / needless / unsound |",
+        "| Policy | Monthly trials: correct / needless stops / unsound | Edited batches: correct / needless / unsound |",
         "|---|---|---|",
         f"| PrepLang (certificate + deoptimization) | {n['RealDeoptCorrect']} / {n['RealDeoptNeedless']} / {n['RealDeoptUnsound']} | {n['CertDeoptCorrect']} / {n['CertDeoptNeedless']} / {n['CertDeoptUnsound']} |",
         f"| PrepLang (full certificate) | {n['RealFullCorrect']} / {n['RealFullNeedless']} / {n['RealFullUnsound']} | {n['CertFullCorrect']} / {n['CertFullNeedless']} / {n['CertFullUnsound']} |",
@@ -181,9 +183,9 @@ def report(n):
         f"own workload (traffic {n['PrivAimTrafficEpsOneRecall']}%); synthetic data from AIM leaves the "
         f"monthly programs uncompiled ({n['PrivAimSynTrafficEpsOneCompiled']} traffic).",
         "",
-        "Limits: the validators are general tools configured as their documentation suggests; they were "
-        "not built for this decision, which is why they over-refuse or admit unsound batches. No existing "
-        "tool compiles the same language, so there is no like-for-like compiler baseline.",
+        "Limits: these validators use inferred schemas or profiled expectations as admission gates for "
+        "an optimized program. Their scores do not measure hand-written pipeline contracts or establish "
+        "general superiority over validation tools. No like-for-like compiler baseline was evaluated.",
         "",
         "## 6. Overhead: compile time, memory and run-time cost",
         "",
@@ -196,8 +198,9 @@ def report(n):
         f"- Certification: {n['CcAnalysesMin']} to {n['CcAnalysesMax']} re-analyses per program, "
         f"{n['CcMsMin']} to {n['CcMsMax']} ms of compile time in all (`certcost.md`).",
         f"- Run time of reuse (`overhead.md`): checking the certificate of a new batch costs {n['OhPct']}% "
-        f"({n['OhPctLow']}% to {n['OhPctHigh']}%, within noise) of a {n['OhTrusted']} s run, against "
-        f"{n['OhFresh']} s to compile and run fresh.",
+        f"({n['OhPctLow']}% to {n['OhPctHigh']}%) of a {n['OhTrusted']} s run, against "
+        f"{n['OhFresh']} s to compile and run fresh. These medians use three repetitions per month; "
+        f"no confidence intervals were reported.",
         f"- Generated code: one Python file; the run-time cost on the compiled input is a CRC-32 of each "
         f"input file, which is inside the timings above.",
         "",

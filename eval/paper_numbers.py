@@ -244,6 +244,7 @@ def census(data, numbers):
                    CenSpeedMax=f"{max(speed):.1f}",
                    CenCompileMed=f"{1000 * statistics.median(r['compile_s'] for r in ok):.0f}",
                    CenCompileMax=f"{1000 * max(r['compile_s'] for r in ok):.0f}",
+                   CenCompileMaxSeconds=f"{max(r['compile_s'] for r in ok):.1f}",
                    CenMemMax=f"{max(r['compile_mib'] for r in ok):.0f}")
     for row in data["large_inputs"]:
         key = {"CSV, 1,000,000 rows x 10 columns": "CenCsvMillion", "Parquet, 16,000,000 rows (footer only)": "CenPqSixteen",
@@ -374,6 +375,17 @@ def type_flips(runs, numbers):
                    DiffFlipRefused=f"{sum(u['outcome'] == 'refused' for u in flips):,}",
                    DiffFlipNoCompile=sum(u["truth"] == "compile error" for u in flips),
                    DiffFlipWrong=sum(u["outcome"] == "wrong" for u in flips))
+    # Refusals of batches a fresh compilation accepts, and how many of them changed a column that
+    # a DERIVE, AGGREGATE or JOIN combines (which the type rule leaves fixed by design).
+    import re
+    refused = [r for r in results if r.get("reuse", {}).get("flipped") and r["reuse"]["outcome"] == "refused"
+               and r["reuse"]["truth"] != "compile error"]
+    def combined(r):
+        found = re.search(r"its column '(\w+)' is \w+, not", r["reuse"].get("detail", ""))
+        return bool(found) and any(re.search(word + r"[^;]*\b" + found.group(1) + r"\b", r["program"])
+                                   for word in ("DERIVE", "AGGREGATE", "JOIN"))
+    numbers.update(DiffFlipRefusedCompiles=len(refused),
+                   DiffFlipRefusedCombined=sum(combined(r) for r in refused))
 
 
 def realbatches(rows, numbers):

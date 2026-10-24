@@ -6,53 +6,53 @@ file and the script behind it.
 
 ## 1. Correctness: does the compiler produce the right output?
 
-**Yes, on every program tested, after two bugs this evaluation found were fixed.** 2,000 random table programs over random CSV files (11,089 output rows; 623 with a `JOIN`, 717 with an `AGGREGATE`) were compiled with `--O0` and with the optimizer, run, and compared cell by cell with a reference interpreter of the language written in plain Python, sharing no code with the compiler or pandas (`differential.md`, `eval/compilation/differential.py`).
+**The stored main-seed run has no disagreement with the reference interpreter.** 2,000 random table programs over random CSV files (11,465 output rows; 623 with a `JOIN`, 713 with an `AGGREGATE`) were compiled with `--O0` and with the optimizer, run, and compared cell by cell with a reference interpreter of the language written in plain Python, sharing no code with the compiler or pandas (`differential.md`, `eval/compilation/differential.py`).
 
 - `--O0` agrees with the reference on 2,000 / 2,000; the optimized program on 2,000 / 2,000; `--O0` and optimized outputs are byte-identical (or fail at the same contract) on 2,000 / 2,000.
-- Of the 658 programs whose data breaks a contract, the compiler reports 465 (71%) at compile time, before any data is processed; the rest fail at the same line when they run.
-- Reused on a second random batch, the optimized programs ended as the reference does on that batch in 1,198 runs (same rows) and 301 stops (same failing line), refused 36 batches, and were wrong 0 times; 348 runs re-enabled a removed check or operation.
+- Of the 647 programs whose data breaks a contract, the compiler reports 431 (67%) at compile time, before any data is processed; the rest fail at the same line when they run.
+- Reused on a second random batch, the optimized programs ended as the reference does on that batch in 1,124 runs (same rows) and 270 stops (same failing line), refused 175 batches, and were wrong 0 times; 311 runs re-enabled a removed check or operation.
 - In an earlier run of 2,000 programs (before `JOIN` and `AGGREGATE`), the compiler before two fixes gave a wrong result in 109 optimized runs and 36 `--O0` runs (`differential_prefix.md`): 76 from column pruning keeping a `DROP` of a column a pruned `SELECT` had already removed (`KeyError`), and 33 from pandas 3, where a text comparison is `bool[pyarrow]` and combining it with a mask holding NA raises `TypeError`. Both are fixed, with regression tests in `tests/test_optimizer.cpp`.
 - Injected mistakes (`rq1.md`): 24 of 24 reported before any data is processed, 0 false alarms on the 5 original programs.
-- Reuse on new data is checked against a fresh compilation of every batch: 0 unsound outcomes in 244 edited batches (`certificates.md`), 426 real monthly batches (`realbatches.md`), 3212 runs of lifted Titanic and House Prices scripts (`pandas_corpus*.md`), 3255 runs of lifted traffic and bike scripts (`drift_corpus_*.md`), and 64,179 runs after 4,879 private compilations (`private.md`).
-- 300 unit tests in 10 C++ suites plus the release tool's tests pass on Windows (MSVC), Ubuntu (GCC 15.2) and macOS (GCC 14) with no compiler warnings; the core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
+- Reuse on new data is checked against a fresh compilation of every batch: 0 unsound outcomes in 244 edited batches (`certificates.md`), 426 real monthly batches (`realbatches.md`), 4158 runs of lifted Titanic and House Prices scripts (`pandas_corpus*.md`), 3710 runs of lifted traffic and bike scripts (`drift_corpus_*.md`), and 64,203 runs after 4,879 private compilations (`private.md`).
+- The artifact reports 316 checks in 10 C++ suites plus integration tests. CI configurations cover Windows, Ubuntu and macOS; current run status must be checked separately. The core analysis is mechanized in Lean 4 (1477 lines, `proofs/`).
 
 Limits: the random programs cover the table statements, `JOIN` and `AGGREGATE` included, but not dates and images; image pipelines are checked pixel by pixel against a hand-written script (`rq3.md`), not by a reference interpreter.
 
 ## 2. Performance: how much faster or slower is it?
 
-**The generated program is as fast as a hand-written script, faster when the optimizer removes work, and the compiler itself takes milliseconds.**
+Performance depends on the workload. The measurements below include both modest speedups and cases where a handwritten streaming script is faster. Compilation has a long tail.
 
-- Tables, 200,000 rows x 40 columns (`rq3.md`): optimized 1.49 s, `--O0` 1.81 s, script-style pandas 1.82 s: 1.21x end to end, 40% less time after Python's 1.02 s start-up.
-- Images, 1,000 at 640x480 (`rq3.md`): 3.52 s and 10 MiB streaming, against 4.01 s and 922 MiB for a script that loads everything, and 3.54 s for a hand-written streaming script.
-- With `--approx`, merging two RESIZEs saves 5% at a mean PSNR of 57.0 dB (minimum 51.8 dB).
-- On the 436 real programs of the census (`census.md`) the data are small, so run time is mostly fixed cost: over the 152 programs the optimizer changed, the median speedup is 1.09x (geometric mean 1.08x, up to 1.6x).
-- Time to the first error on 16M rows (`scale.md`): 0.02 s to compile against 2.81 s for the script to crash.
+- Tables, 200,000 rows x 40 columns (`rq3.md`): optimized 2.32 s, `--O0` 2.83 s, script-style pandas 2.49 s: 1.22x end to end, 38% less time after Python's 1.51 s start-up.
+- Images, 1,000 at 640x480 (`rq3.md`): 4.34 s and 10 MiB streaming, against 5.36 s and 922 MiB for a script that loads everything, and 4.01 s for a hand-written streaming script. Memory is peak Python-tracked allocation (`tracemalloc`), not total process memory.
+- With `--approx`, merging two RESIZEs saves 4% at a mean PSNR of 57.0 dB (minimum 51.8 dB).
+- On the 453 real programs of the census (`census.md`) the data are small, so run time is mostly fixed cost: over the 157 programs the optimizer changed, the median speedup is 1.07x (geometric mean 1.07x, up to 2.1x).
+- Time to the first error on 16M rows (`scale.md`): 0.02 s to compile against 3.96 s for the script to crash.
 
 ## 3. Optimization effectiveness: how much unnecessary work does it eliminate?
 
-On 436 programs (the examples and programs lifted from other people's GitHub pandas scripts), the optimizer removed 14% of IR instructions (2,080 -> 1,797), 75% of run-time contract checks (28 -> 7) and 2% of the columns read (28,030 -> 27,554); it changed 152 programs (35%), and the optimized and `--O0` programs wrote identical files on 436 of 436.
+On 453 programs (the examples and programs lifted from other people's GitHub pandas scripts), the optimizer removed 14% of IR instructions (2,167 -> 1,863), 82% of run-time contract checks (44 -> 8) and 2% of the columns read (28,253 -> 27,769); it changed 157 programs (35%), and the optimized and `--O0` programs wrote identical files on 453 of 453.
 
 | Corpus | Programs | Instructions | Run-time checks | Columns read | Programs with something removed |
 |---|---:|---:|---:|---:|---:|
-| examples | 9 | 110 -> 91 (-17%) | 15 -> 7 (-53%) | 59 -> 48 (-19%) | 7 (78%) |
+| examples | 10 | 120 -> 100 (-17%) | 16 -> 7 (-56%) | 65 -> 54 (-17%) | 8 (80%) |
 | Titanic scripts | 184 | 784 -> 684 (-13%) | 0 | 2957 -> 2736 (-7%) | 78 (42%) |
 | House Prices scripts | 168 | 836 -> 721 (-14%) | 0 | 24092 -> 23907 (-1%) | 45 (27%) |
-| traffic scripts | 41 | 191 -> 175 (-8%) | 0 | 369 -> 362 (-2%) | 7 (17%) |
-| bike scripts (days) | 19 | 76 -> 68 (-11%) | 0 | 304 -> 287 (-6%) | 6 (32%) |
-| bike scripts (hours) | 12 | 45 -> 39 (-13%) | 0 | 204 -> 193 (-5%) | 6 (50%) |
-| monthly pipelines | 3 | 38 -> 19 (-50%) | 13 -> 0 (-100%) | 45 -> 21 (-53%) | 3 (100%) |
-| **all** | 436 | 2080 -> 1797 (-14%) | 28 -> 7 (-75%) | 28030 -> 27554 (-2%) | 152 (35%) |
+| traffic scripts | 46 | 208 -> 192 (-8%) | 0 | 414 -> 407 (-2%) | 7 (15%) |
+| bike scripts (days) | 26 | 102 -> 92 (-10%) | 0 | 416 -> 397 (-5%) | 7 (27%) |
+| bike scripts (hours) | 14 | 51 -> 44 (-14%) | 0 | 238 -> 226 (-5%) | 7 (50%) |
+| monthly pipelines | 5 | 66 -> 30 (-55%) | 28 -> 1 (-96%) | 71 -> 42 (-41%) | 5 (100%) |
+| **all** | 453 | 2167 -> 1863 (-14%) | 44 -> 8 (-82%) | 28253 -> 27769 (-2%) | 157 (35%) |
 
-What the passes did, over all programs: column pruning 384, no-effect elimination 38, contract check elimination 21, dead store elimination 8, contract check made conditional 5, dead image operation 1.
+What the passes did, over all programs: column pruning 391, no-effect elimination 40, contract check elimination 36, dead store elimination 8, contract check made conditional 6, dead image operation 1.
 
-Removed checks are not lost: each is kept with the facts its proof needs and runs again on a new input that breaks them (deoptimization: 32 of 426 real monthly batches, `realbatches.md`).
+Removed checks are not lost: each is kept with the facts its proof needs and runs again on a new input that breaks them (deoptimization: 39 of 426 pipeline-batch trials, `realbatches.md`).
 
 ## 4. Practical usefulness: does it work on real programs and datasets?
 
 - Real bugs (`realbugs.md`): of 44 data-preparation failures from GitHub issues, 18 (41%) are reported before any data is processed, 3 cannot occur in a PrepLang program, 23 are not covered (input formats, operations the language lacks, dates, ...).
-- Other people's scripts: 733 Titanic and House Prices scripts from GitHub; 292 lifted by `frontend/pandas2prep.py` and compiled; 3198 of 3212 runs on new batches identical to a fresh compilation, 0 unsound. 945 traffic and bike scripts; 72 lifted and compiled; 3255 of 3255 runs on every later real month identical to a fresh run.
-- Real monthly data (UCI traffic, bikes and Beijing air quality, NYC taxi, Citi Bike; `realbatches.md`): a program compiled once is reused correctly on 400 of 426 months (94%) without recompiling, against 17 with a checksum guard.
-- Scale (`scale.md`): a 16M-row, 346 MiB Parquet file compiles in 0.018 s (footer only); 1M CSV rows in 0.13 s.
+- Other people's scripts: 733 Titanic and House Prices scripts from GitHub; 378 prefixes lifted by `frontend/pandas2prep.py` and compiled; 4131 of 4158 runs on new batches identical to the corresponding source prefix, 0 unsound. 945 traffic and bike scripts; 85 lifted and compiled; 3710 of 3710 runs on every later real month identical to a fresh run.
+- Real monthly data (UCI traffic, bikes and Beijing air quality, NYC taxi, Citi Bike; `realbatches.md`): reuse agrees with fresh compilation on 426 of 426 pipeline-batch trials (100%), including 17 contract-failure outcomes. The first-month and previous-month anchor schedules reuse target months; these are not independent months.
+- Scale (`scale.md`): a 16M-row, 346 MiB Parquet file compiles in 0.044 s (footer only); 1M CSV rows in 0.22 s.
 
 Limits: the scripts are lifted only as far as the language reaches (the lifter stops at the first statement it cannot express); no user study has been run yet (`docs/USER_STUDY.md` is the protocol).
 
@@ -60,25 +60,25 @@ Limits: the scripts are lifted only as far as the language reaches (the lifter s
 
 Deciding whether a compiled pipeline may run on a new batch (`realbatches.md`, `certificates.md`; each tool given the same anchor file, scored against a fresh compilation):
 
-| Policy | Real months: correct / needless stops / unsound | Edited batches: correct / needless / unsound |
+| Policy | Monthly trials: correct / needless stops / unsound | Edited batches: correct / needless / unsound |
 |---|---|---|
-| PrepLang (certificate + deoptimization) | 400 / 26 / 0 | 244 / 0 / 0 |
-| PrepLang (full certificate) | 371 / 55 / 0 | 244 / 0 / 0 |
+| PrepLang (certificate + deoptimization) | 426 / 0 / 0 | 244 / 0 / 0 |
+| PrepLang (full certificate) | 397 / 29 / 0 | 244 / 0 / 0 |
 | Great Expectations (profile of the columns read) | 17 / 409 / 0 | 140 / 104 / 0 |
 | pandera (inferred schema) | 19 / 407 / 0 | 124 / 79 / 41 |
-| TFDV (inferred schema) | 200 / 199 / 27 | 150 / 28 / 66 |
+| TFDV (inferred schema) | 217 / 199 / 10 | 150 / 28 / 66 |
 | checksum (recompile on any change) | 17 / 409 / 0 | 115 / 129 / 0 |
 
 - Against a script-style pandas program (`rq1.md`): PrepLang reports 24 of 24 injected mistakes before processing data; the script crashes on 20 while processing and finishes with silently wrong output on 4.
-- Compile-time CSV analysis of 1M rows (0.13 s) is 4.7x faster than one `pandas.read_csv`; pandas' multi-threaded pyarrow reader takes 0.11 s, so the analysis runs at about pyarrow speed, not faster.
-- Private compilation (`private.md`) against HDMM and AIM given the program's cells: same recall for HDMM and for AIM's marginals at epsilon 1 on the traffic and taxi programs (100%), lower for AIM's own workload (traffic 26%); synthetic data from AIM leaves the monthly programs uncompiled (0/5 traffic).
+- Compile-time CSV analysis of 1M rows (0.22 s) is 3.5x faster than one `pandas.read_csv`; pandas' multi-threaded pyarrow reader takes 0.15 s, so the analysis runs at about pyarrow speed, not faster.
+- Private compilation (`private.md`) against HDMM and AIM given the program's cells: same recall for HDMM and for AIM's marginals at epsilon 1 on the traffic and taxi programs (100%), lower for AIM's own workload (traffic 40%); synthetic data from AIM leaves the monthly programs uncompiled (0/5 traffic).
 
-Limits: the validators are general tools configured as their documentation suggests; they were not built for this decision, which is why they over-refuse or admit unsound batches. No existing tool compiles the same language, so there is no like-for-like compiler baseline.
+Limits: these validators use inferred schemas or profiled expectations as admission gates for an optimized program. Their scores do not measure hand-written pipeline contracts or establish general superiority over validation tools. No like-for-like compiler baseline was evaluated.
 
 ## 6. Overhead: compile time, memory and run-time cost
 
-- Compile time: median 28 ms, at most 904 ms on the 436 census programs; 22 to 39 ms on the RQ1 programs.
-- Compiler memory: at most 8 MiB peak on the census programs; 65 MiB for a 59 MiB CSV of 1M rows (the file is read into memory once); 6 MiB for a 346 MiB Parquet file (footer only); 9 MiB for 3,000 images (headers only) (`census.md`).
-- Certification: 14 to 207 re-analyses per program, 21 to 35 ms of compile time in all (`certcost.md`).
-- Run time of reuse (`overhead.md`): checking the certificate of a new batch costs -1% (-3% to +1%, within noise) of a 0.88 s run, against 0.94 s to compile and run fresh.
+- Compile time: median 29 ms, at most 2407 ms on the 453 census programs; 24 to 381 ms on the RQ1 programs.
+- Compiler memory: at most 24 MiB peak on the census programs; 65 MiB for a 59 MiB CSV of 1M rows (the file is read into memory once); 6 MiB for a 346 MiB Parquet file (footer only); 9 MiB for 3,000 images (headers only) (`census.md`).
+- Certification: 0 to 207 re-analyses per program, 13 to 293 ms of compile time in all (`certcost.md`).
+- Run time of reuse (`overhead.md`): checking the certificate of a new batch costs +0% (-1% to +2%) of a 0.97 s run, against 1.14 s to compile and run fresh. These medians use three repetitions per month; no confidence intervals were reported.
 - Generated code: one Python file; the run-time cost on the compiled input is a CRC-32 of each input file, which is inside the timings above.

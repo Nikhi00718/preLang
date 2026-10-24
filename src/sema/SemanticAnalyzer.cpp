@@ -225,10 +225,16 @@ Target SemanticAnalyzer::tableTarget(const DatasetSymbol& dataset, const TableSt
 
 void SemanticAnalyzer::recordColumn(const DatasetSymbol& dataset, const TableState& table, const ColumnState& column,
                                     int line, const std::string& operation) {
+    if (!recordLineage_) {
+        return;
+    }
     result_.lineage.record(columnDisplayName(dataset, table, column.name), line, operation, column.typeText());
 }
 
 void SemanticAnalyzer::recordImages(const DatasetSymbol& images, int line, const std::string& operation) {
+    if (!recordLineage_) {
+        return;
+    }
     result_.lineage.record(images.name, line, operation, images.images.summary());
 }
 

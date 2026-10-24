@@ -15,9 +15,17 @@ eval/reproduce.sh baselines   # after full: validators and the private-compilati
 ```
 
 `check` builds the compiler, runs every test, regenerates `paper/generated/numbers.tex` from the
-committed results and fails if it changes, and runs `evaluate.py --quick`. `full` runs every
-script below in order. Set `PYTHON` to the interpreter to use (default `py -3` or `python3`).
-Times and memory depend on the machine; counts and correctness outcomes do not.
+committed results and fails if it changes, and runs `evaluate.py --quick`. This validates stored-result
+aggregation and a small fresh sample; it does not reproduce the full experiment. `full` runs the main
+experiments, while `baselines` separately runs the validators and private-compilation comparisons.
+The `full` tier runs 2,000 differential programs per seed (1, 7, 8 and 9), preserves each seed's
+results, and evaluates both original and `--derived` Kaggle lifter modes. It requires all four Kaggle
+train/test files before starting and stops if frozen corpus downloads or hash verification fail.
+Historical pre-fix results remain archived evidence and are not rerun against the current compiler.
+Set `PYTHON` to the interpreter to use (default `py -3` or `python3`). Times and memory depend on
+the machine. Counts can also change if upstream corpus files are unavailable; inspect download and
+verification failures instead of treating a partial run as a full reproduction, and do not combine
+partial reruns with the stored results.
 
 **Inputs from elsewhere.** Nothing in `data/` is committed. `realbatches.py download` fetches the UCI
 traffic, bike and Beijing PM2.5 files, the NYC TLC green taxi months and the Citi Bike Jersey City months. The Kaggle files cannot be redistributed;

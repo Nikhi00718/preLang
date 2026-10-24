@@ -49,8 +49,7 @@
 
 \begin{frontmatter}
 
-\title{PrepLang: a data-aware compiler for data-preparation pipelines that reuses its proofs on new
-batches}
+\title{PrepLang: data-aware compilation and guarded reuse of data-preparation pipelines}
 
 \author[a]{Nikhil V\corref{cor1}}
 \ead{atnikhil06@gmail.com}
@@ -63,12 +62,17 @@ Tamil Nadu, India}
 Technology, Vellore 632014, Tamil Nadu, India}
 
 \begin{abstract}
-\PL is a compiler that checks a data-preparation pipeline against its first real input. It reads every CSV
-cell, the Parquet footers and the image headers at compile time, proves or refutes the pipeline's data
-contracts before any row is processed, and removes the checks that this input makes redundant. The
-generated pandas and OpenCV program keeps each removal behind a guard, so a later batch reruns only the
-removed code whose facts it breaks. On \RealRuns{} later months of five public datasets the compiled
-pipelines matched a fresh compilation every time.
+\PL is an open-source compiler for tabular and image preparation. It analyzes a pipeline together with
+an available input batch, using CSV values, Parquet metadata and image headers. The analysis discharges
+contracts it can prove, reports definite violations and retains unresolved checks for execution. The
+compiler emits Python code for pandas and OpenCV and records the input facts needed by each speculative
+removal. On a later batch, the generated program checks these facts and restores affected instructions;
+it refuses inputs outside its admission conditions. In \RealRuns{} pipeline--batch trials across five
+public datasets, using first-month and previous-month compilation anchors, reuse agreed with fresh
+compilation on outputs or contract failures. Differential testing also found no disagreement for
+\DiffAll{} generated tabular programs. Lean proofs establish correctness for a restricted language core;
+the C++ implementation is tested, not formally verified. The software includes a pandas-prefix translator,
+diagnostics, examples and scripts for inspecting and reproducing the evaluation.
 \end{abstract}
 
 \begin{keyword}
@@ -83,30 +87,30 @@ optimization \sep deoptimization \sep data validation
 \begin{table}[!h]
 \footnotesize
 \renewcommand{\arraystretch}{1.0}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{|l|p{5.6cm}|p{8.6cm}|}
+\begin{tabular}{|p{0.65cm}|>{\raggedright\arraybackslash}p{3.2cm}|>{\raggedright\arraybackslash}p{7.85cm}|}
 \hline
-\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Please fill in this column} \\
+\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Value} \\
 \hline
 C1 & Current code version & v2.1.0 \\
 \hline
 C2 & Permanent link to code/repository used for this code version &
   \url{https://github.com/Nikhi00718/preLang/tree/v2.1.0} \\
 \hline
-C3 & Permanent link to Reproducible Capsule & Docker image \texttt{ghcr.io/nikhi00718/preplang:2.1.0}
-  (\texttt{Dockerfile} in the repository); \texttt{eval/reproduce.sh check} builds, tests and regenerates
-  every number of this article from the committed results \\
+C3 & Permanent link to Reproducible Capsule & Docker image \texttt{ghcr.io/nikhi00718/preplang:2.1.0}, built
+  from the \texttt{Dockerfile} of the release; \texttt{eval/reproduce.sh} in C2 regenerates or reruns the
+  evaluation (Section~\ref{sec:impact}). \\
 \hline
 C4 & Legal Code License & MIT \\
 \hline
 C5 & Code versioning system used & git \\
 \hline
-C6 & Software code languages, tools, and services used & C++17 (no external libraries); Python~3 with
+C6 & Software code languages, tools, and services used & C++17 (standard library only); Python~3 with
   pandas, NumPy, PyArrow, OpenCV, matplotlib; Lean~4; CMake \\
 \hline
 C7 & Compilation requirements, operating environments and dependencies & CMake 3.16+, a C++17 compiler
-  (tested in CI: Visual Studio 2022 on Windows, GCC on Ubuntu and macOS); Python 3.12+ with pandas (2.0+, 3.0
-  tested), PyArrow, OpenCV, matplotlib (charts); Lean 4.34.1 (optional, for the proofs) \\
+  (CI configurations: Visual Studio 2022 on Windows, GCC on Ubuntu and macOS); Python 3.12+ recommended,
+  pandas 2.0+, NumPy and PyArrow; OpenCV for images, matplotlib for charts; Lean 4.34.1 for the optional
+  proof build. Evaluation versions are listed in Section~\ref{sec:impact}. \\
 \hline
 C8 & If available, link to developer documentation/manual & \texttt{README.md} (user manual),
   \texttt{LANGUAGE.md} (reference), \texttt{ARCHITECTURE.md}, \texttt{CONTRIBUTING.md}; the READMEs of \texttt{eval/}, \texttt{paper/},
@@ -115,8 +119,7 @@ C8 & If available, link to developer documentation/manual & \texttt{README.md} (
 C9 & Support email for questions & atnikhil06@gmail.com \\
 \hline
 \end{tabular}
-\end{adjustbox}
-\caption{Code metadata (mandatory)}
+\caption{Code metadata. C2 identifies the software and stored results evaluated in this article.}
 \label{tab:metadata}
 \end{table}
 
@@ -136,16 +139,18 @@ This research did not receive any specific grant from funding agencies in the pu
 not-for-profit sectors.
 
 \section*{Data availability}
-The source code, the evaluation scripts and every raw result are in the repository of the metadata table
-(C2), under the MIT license. The public datasets are downloaded by \texttt{eval/\allowbreak reproduce.sh};
-the GitHub script corpora are pinned there by URL, commit and hash.
+The source code, evaluation scripts and stored results are available in the v2.1.0 release in
+Table~\ref{tab:metadata}. PrepLang is distributed under the MIT license. External datasets and script
+corpora retain their original licenses and access conditions. Download instructions and corpus
+manifests are in \texttt{eval/README.md}; Kaggle inputs require manual access. The submission includes
+the user and developer documentation.
 
 % Science of Computer Programming requires this statement, before the references, when generative AI
 % tools were used; the section title is the one the Guide for Authors gives.
 \section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
-Generative AI tools assisted with implementation, literature search, evaluation scripts, analysis and
-drafting of this manuscript. The authors reviewed all text, code and results and take responsibility
-for them.
+During the preparation of this work, the authors used ChatGPT and Claude for implementation assistance,
+literature search, evaluation scripts, analysis, drafting and language editing. The authors reviewed and
+edited the resulting content and take full responsibility for the published work.
 
 \input{sections/references-osp}
 

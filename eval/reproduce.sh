@@ -4,8 +4,8 @@
 #   eval/reproduce.sh check       (default, ~10 minutes, no network) builds the compiler, runs every
 #                                 test, checks that the paper's numbers are the ones the committed
 #                                 results give, and reruns a small differential test and census
-#   eval/reproduce.sh full        (hours, network) downloads the inputs and reruns every experiment
-#                                 of the paper with PrepLang, then regenerates the paper's numbers;
+#   eval/reproduce.sh full        (hours, network) downloads public inputs and reruns the main
+#                                 experiments, all four differential seeds and both lifter versions;
 #                                 the committed results in eval/results/ are overwritten
 #   eval/reproduce.sh baselines   (after full) Great Expectations, pandera and TFDV, and private
 #                                 compilation (RQ8) with HDMM and AIM, which need their own Python
@@ -13,8 +13,9 @@
 #
 # Environment: PYTHON (default python3, or py -3 on Windows) must have pandas, numpy, pyarrow and
 # opencv-python; CMake 3.16+ and a C++17 compiler. Docker gives all of this: see the Dockerfile.
-# Timings depend on the machine, so time and memory numbers differ from the paper's; counts and
-# correctness outcomes (every "0 unsound", every "N of M") must not.
+# Kaggle train/test inputs must be downloaded manually before full. Full and baselines together
+# cover the current evaluation; historical pre-fix runs remain stored evidence, not fresh reruns.
+# Time and memory depend on the machine. Counts also depend on the exact corpus and software revision.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -66,28 +67,42 @@ check)
     ;;
 
 full)
+    for input in eval/data/titanic/train.csv eval/data/titanic/test.csv \
+                 eval/data/houses/kaggle_train.csv eval/data/houses/kaggle_test.csv; do
+        if [ ! -f "$input" ]; then
+            echo "Missing required Kaggle input: $input. See eval/README.md for manual download." >&2
+            exit 1
+        fi
+    done
     build
     step "Inputs: generated data, public datasets and the frozen script corpora"
     run eval/compilation/datasets.py examples
     run eval/compilation/datasets.py benchmark
     run eval/compilation/datasets.py scale
     run eval/reuse/realbatches.py download
-    run eval/corpora.py fetch || echo "some corpus files are no longer on GitHub (listed above); the rest are used"
-    run eval/corpora.py verify || echo "the Kaggle Titanic and House Prices files are downloaded by hand: eval/README.md"
+    run eval/corpora.py fetch
+    run eval/corpora.py verify
 
     step "Compilation: injected mistakes, optimizations, scale, real bugs, differential test (RQ1, RQ2)"
     run eval/compilation/run_eval.py "$compiler"
     run eval/compilation/bench.py "$compiler"
     run eval/compilation/scale.py "$compiler"
     run eval/compilation/run_realbugs.py "$compiler"
-    run eval/compilation/differential.py --programs 2000
+    for seed in 7 8 9; do
+        run eval/compilation/differential.py --programs 2000 --seed "$seed"
+        cp eval/results/differential.json.gz "eval/results/differential_seed${seed}.json.gz"
+        cp eval/results/differential.md "eval/results/differential_seed${seed}.md"
+    done
+    run eval/compilation/differential.py --programs 2000 --seed 1
 
     step "Reuse on new batches (RQ3 to RQ8)"
     run eval/reuse/certificates.py "$compiler"
     run eval/reuse/imagebatches.py "$compiler"
     run eval/reuse/realbatches.py "$compiler"
-    if [ -f eval/data/titanic/train.csv ]; then run eval/reuse/pandas_corpus.py titanic "$compiler"; fi
-    if [ -f eval/data/houses/kaggle_train.csv ]; then run eval/reuse/pandas_corpus.py houses "$compiler"; fi
+    for corpus in titanic houses; do
+        run eval/reuse/pandas_corpus.py "$corpus" "$compiler"
+        run eval/reuse/pandas_corpus.py "$corpus" --derived "$compiler"
+    done
     for corpus in traffic bikes hours; do run eval/reuse/drift_corpus.py "$corpus" "$compiler"; done
     run eval/reuse/composition.py "$compiler"
     run eval/reuse/overhead.py "$compiler"

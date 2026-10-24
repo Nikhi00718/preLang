@@ -173,7 +173,8 @@ Certifier::Proofs Certifier::analyse() {
     SymbolTable symbols;
     schemas_.setOverrides(facts_);
     schemas_.setImageOverrides(imageFacts_);
-    const AnalysisResult result = SemanticAnalyzer(symbols, schemas_, baseFolder_, diagnostics).analyze(program_);
+    const AnalysisResult result =
+        SemanticAnalyzer(symbols, schemas_, baseFolder_, diagnostics).withoutLineage().analyze(program_);
     ++runs_;
     for (const Diagnostic& diagnostic : diagnostics.all()) {
         if (diagnostic.severity == Severity::Error) {
@@ -189,7 +190,7 @@ std::vector<SavedTable> Certifier::outputsNow() {
     schemas_.setOverrides(facts_);
     schemas_.setImageOverrides(imageFacts_);
     ++runs_;
-    return SemanticAnalyzer(symbols, schemas_, baseFolder_, diagnostics).analyze(program_).saved;
+    return SemanticAnalyzer(symbols, schemas_, baseFolder_, diagnostics).withoutLineage().analyze(program_).saved;
 }
 
 Certifier::Proofs Certifier::proofsOf(const AnalysisResult& result, const std::string& error) {
@@ -621,6 +622,24 @@ TableCertificate Certifier::certifyTable(const Instruction& load, const IRProgra
         }
         return broken();
     };
+    // If the program keeps every proof without all of these columns at once, it keeps them
+    // without any subset (a missing column can only lose proofs), so the loop below would find
+    // each one optional: one analysis instead of two per column, which matters for wide tables.
+    std::set<std::string> unnamed;
+    for (const ColumnInfo& info : all) {
+        if (named.count(info.name) == 0) {
+            unnamed.insert(info.name);
+        }
+    }
+    if (!unnamed.empty() && without(unnamed).empty()) {
+        for (ColumnFacts& column : table.columns) {
+            if (unnamed.count(column.name) != 0) {
+                column.required = false;
+            }
+        }
+        facts.columns = all;
+        return table;
+    }
     // Every column of the file is tested, also the ones without other facts: a
     // statement the optimizer removed can still name it (DROP t [c] before c is
     // ever used), and a fresh compilation of a file without it would fail.
