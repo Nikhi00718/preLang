@@ -14,7 +14,7 @@ const std::vector<std::string> statementKeywords = {
     "LOAD",     "LOAD_TABLES", "LOAD_IMAGE",     "LOAD_IMAGES", "DROP_NULL", "FILL_NULL", "NORMALIZE",
     "FILTER",   "SELECT",      "DROP",           "PARSE_DATE",  "DERIVE",    "JOIN",      "AGGREGATE",
     "SAVE",     "SAVE_TABLES", "SAVE_IMAGE",     "SAVE_IMAGES", "EXPECT",    "RESIZE",    "GRAYSCALE",
-    "COMPRESS", "CONVERT",     "REMOVE_CORRUPT", "LINK"};
+    "COMPRESS", "CONVERT",     "REMOVE_CORRUPT", "LINK",        "PLOT",      "REPORT"};
 
 // How a token is shown in "found ..." messages.
 std::string describe(const Token& token) {
@@ -74,6 +74,8 @@ std::unique_ptr<Stmt> Parser::statement() {
         case TokenType::CONVERT:        return convertStatement();
         case TokenType::REMOVE_CORRUPT: return removeCorruptStatement();
         case TokenType::LINK:           return linkStatement();
+        case TokenType::PLOT:           return plotStatement();
+        case TokenType::REPORT:         return reportStatement();
         default:                        break;
     }
     const std::string hint = check(TokenType::IDENTIFIER) ? suggestClosest(peek().lexeme, statementKeywords) : "";
@@ -259,6 +261,50 @@ std::unique_ptr<Stmt> Parser::aggregateStatement() {
         item.name = identifier("the name of the new column");
         node->items.push_back(item);
     } while (match(TokenType::COMMA));
+    endStatement();
+    return node;
+}
+
+// plot   -> PLOT table_ref ( HISTOGRAM IDENTIFIER [ BINS integer ] | BAR IDENTIFIER
+//                          | ( SCATTER | LINE ) IDENTIFIER , IDENTIFIER ) TO STRING_LITERAL ;
+// HISTOGRAM, BINS, BAR, SCATTER and LINE are matched as words, not reserved.
+std::unique_ptr<Stmt> Parser::plotStatement() {
+    auto node = std::make_unique<PlotStmt>();
+    node->location = advance().location;
+    node->target = tableRef();
+    for (const char* kind : {"HISTOGRAM", "BAR", "SCATTER", "LINE"}) {
+        if (node->kind.empty() && matchWord(kind)) {
+            node->kind = kind;
+        }
+    }
+    if (node->kind.empty()) {
+        errorExpected("HISTOGRAM, BAR, SCATTER or LINE");
+    }
+    node->columns.push_back(identifier("the column to plot"));
+    if (node->kind == "SCATTER" || node->kind == "LINE") {
+        consume(TokenType::COMMA, "',' and the column for the y axis");
+        node->columns.push_back(identifier("the column for the y axis"));
+    }
+    if (node->kind == "HISTOGRAM" && matchWord("BINS")) {
+        const SourceLocation at = peek().location;
+        node->bins = integer("the number of bins");
+        if (node->bins < 1) {
+            errorAt(at, "BINS needs at least 1 bin");
+        }
+    }
+    consume(TokenType::TO, "'TO' and the image file");
+    node->path = consume(TokenType::STRING_LITERAL, "a file name in double quotes").lexeme;
+    endStatement();
+    return node;
+}
+
+// report -> REPORT table_ref TO STRING_LITERAL ;
+std::unique_ptr<Stmt> Parser::reportStatement() {
+    auto node = std::make_unique<ReportStmt>();
+    node->location = advance().location;
+    node->target = tableRef();
+    consume(TokenType::TO, "'TO' and the HTML file");
+    node->path = consume(TokenType::STRING_LITERAL, "a file name in double quotes").lexeme;
     endStatement();
     return node;
 }

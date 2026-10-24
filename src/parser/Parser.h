@@ -44,6 +44,8 @@ private:
     std::unique_ptr<Stmt> convertStatement();
     std::unique_ptr<Stmt> removeCorruptStatement();
     std::unique_ptr<Stmt> linkStatement();
+    std::unique_ptr<Stmt> plotStatement();
+    std::unique_ptr<Stmt> reportStatement();
 
     // FILTER conditions, from lowest to highest precedence
     std::unique_ptr<Expr> orExpression();

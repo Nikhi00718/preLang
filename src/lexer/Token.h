@@ -13,7 +13,7 @@ enum class TokenType {
     LOAD, LOAD_TABLES, LOAD_IMAGE, LOAD_IMAGES,
     DROP_NULL, FILL_NULL, NORMALIZE, FILTER, SELECT, DROP, PARSE_DATE, DERIVE, JOIN, AGGREGATE,
     SAVE, SAVE_TABLES, SAVE_IMAGE, SAVE_IMAGES, EXPECT,
-    RESIZE, GRAYSCALE, COMPRESS, CONVERT, REMOVE_CORRUPT, LINK,
+    RESIZE, GRAYSCALE, COMPRESS, CONVERT, REMOVE_CORRUPT, LINK, PLOT, REPORT,
 
     // Other keywords
     AS, WITH, TO, ON, USING, ZSCORE, MINMAX, RANGE, WHERE, TYPE, EXCEPT, IF_EXISTS, RECURSIVE,
@@ -45,5 +45,5 @@ struct Token {
     int length;               // characters it takes in the source, quotes included
 };
 
-inline bool isStatementKeyword(TokenType type) { return type <= TokenType::LINK; }
+inline bool isStatementKeyword(TokenType type) { return type <= TokenType::REPORT; }
 inline bool isKeyword(TokenType type) { return type < TokenType::IDENTIFIER; }

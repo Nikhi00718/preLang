@@ -181,6 +181,20 @@ void ASTPrinter::visit(const AggregateStmt& node) {
     printNode("Aggregate", fields);
 }
 
+void ASTPrinter::visit(const PlotStmt& node) {
+    std::string columns;
+    for (const std::string& column : node.columns) {
+        columns += (columns.empty() ? "" : ", ") + column;
+    }
+    printNode("Plot", {"dataset: " + node.target.text(), "kind: " + node.kind, "columns: " + columns,
+                       "bins: " + (node.bins > 0 ? std::to_string(node.bins) : std::string("default")),
+                       "to: \"" + node.path + "\""});
+}
+
+void ASTPrinter::visit(const ReportStmt& node) {
+    printNode("Report", {"dataset: " + node.target.text(), "to: \"" + node.path + "\""});
+}
+
 void ASTPrinter::visit(const SaveStmt& node) {
     printNode("Save " + dataKindName(node.kind), {"dataset: " + node.target.text(), "to: \"" + node.path + "\""});
 }

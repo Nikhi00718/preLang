@@ -364,6 +364,67 @@ void testAggregate() {
           "MEAN of a text column is a type error");
 }
 
+void testPlotAndReport() {
+    Analysis a;
+    analyze(
+        "PLOT s HISTOGRAM marks BINS 4 TO \"m.png\";\nPLOT s BAR city TO \"c.svg\";\n"
+        "PLOT s SCATTER age, marks TO \"am.pdf\";\nREPORT s TO \"profile.html\";\n",
+        a);
+    check(!a.diagnostics.hasErrors() && !reported(a, Severity::Warning, Phase::Semantic, "never saved"),
+          "PLOT and REPORT of valid columns compile, and count as outputs");
+    Analysis text;
+    analyze("PLOT s HISTOGRAM name TO \"n.png\";\n", text);
+    check(reported(text, Severity::Error, Phase::Type, "HISTOGRAM needs a numeric column, but s.name is STRING"),
+          "a histogram of a text column is a type error");
+    Analysis missing;
+    analyze("PLOT s SCATTER age, mark TO \"x.png\";\n", missing);
+    check(reported(missing, Severity::Error, Phase::Semantic, "mark"), "a misspelled column is an error");
+    Analysis format;
+    analyze("PLOT s BAR city TO \"c.csv\";\nREPORT s TO \"r.txt\";\n", format);
+    check(reported(format, Severity::Error, Phase::Semantic, "not a .png, .svg or .pdf file") &&
+              reported(format, Severity::Error, Phase::Semantic, "not an .html file"),
+          "a chart must be an image file and a report a web page");
+    Analysis bins;
+    analyze("PLOT s HISTOGRAM marks BINS 0 TO \"m.png\";\n", bins);
+    check(reported(bins, Severity::Error, Phase::Syntax, "at least 1 bin"), "BINS 0 is an error");
+    Analysis line;
+    analyze("PLOT s LINE city, marks TO \"l.png\";\n", line);
+    check(reported(line, Severity::Error, Phase::Type, "numeric or DATETIME column on the x axis"),
+          "a line chart needs a number or a date on the x axis");
+}
+
+void testNewAggregatesAndManyJoin() {
+    Analysis a;
+    analyze(
+        "AGGREGATE s BY [city] MEDIAN marks AS mid, STD marks AS spread, COUNT_DISTINCT name AS names;\n"
+        "SAVE s AS \"out.csv\";",
+        a);
+    const ColumnState* mid = column(a, "mid");
+    const ColumnState* spread = column(a, "spread");
+    const ColumnState* names = column(a, "names");
+    check(!a.diagnostics.hasErrors() && mid && mid->type == ColumnType::Float && mid->range.min == 42 &&
+              mid->range.max == 91,
+          "MEDIAN is FLOAT within the column's range");
+    check(spread && spread->type == ColumnType::Float && spread->nullable && spread->range.min == 0 &&
+              std::abs(spread->range.max - 49 / std::sqrt(2.0)) < 1e-9,
+          "STD is FLOAT, may be missing, and lies in [0, (max - min) / sqrt(2)]");
+    check(names && names->type == ColumnType::Integer && !names->nullable && names->range.min == 0,
+          "COUNT_DISTINCT counts any column's values: INTEGER, never missing, at least 0");
+    Analysis many;
+    analyze(
+        "LOAD \"test_semantic_zones_repeated.csv\" AS z;\nJOIN s WITH z ON city MANY;\n"
+        "EXPECT s.marks BETWEEN 0 AND 100;\nEXPECT s.name UNIQUE;\nSAVE s AS \"o.csv\";",
+        many);
+    bool rangeProven = false;
+    bool uniqueDeferred = false;
+    for (const ContractRecord& contract : many.result.contracts) {
+        rangeProven |= contract.contract == "s.marks BETWEEN 0 AND 100" && contract.verdict == Verdict::Proven;
+        uniqueDeferred |= contract.contract == "s.name UNIQUE" && contract.verdict == Verdict::Deferred;
+    }
+    check(!many.diagnostics.hasErrors() && rangeProven && uniqueDeferred,
+          "JOIN MANY allows repeated keys; ranges still hold, UNIQUE moves to run time");
+}
+
 }  // namespace
 
 int main() {
@@ -398,6 +459,8 @@ int main() {
     testJoin();
     testJoinErrors();
     testAggregate();
+    testPlotAndReport();
+    testNewAggregatesAndManyJoin();
 
     std::cout << (failures == 0 ? "All semantic tests passed.\n" : "Some semantic tests FAILED.\n");
     return failures == 0 ? 0 : 1;

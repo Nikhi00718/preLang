@@ -99,6 +99,20 @@ void ASTDot::visit(const AggregateStmt& node) {
     addStatement("Aggregate", fields);
 }
 
+static std::string plotText(const PlotStmt& node) {
+    std::string text = node.kind;
+    for (size_t i = 0; i < node.columns.size(); ++i) {
+        text += (i > 0 ? ", " : " ") + node.columns[i];
+    }
+    return text + (node.bins > 0 ? " BINS " + std::to_string(node.bins) : "");
+}
+
+void ASTDot::visit(const PlotStmt& node) {
+    addStatement("Plot", {node.target.text(), plotText(node), "\"" + node.path + "\""});
+}
+
+void ASTDot::visit(const ReportStmt& node) { addStatement("Report", {node.target.text(), "\"" + node.path + "\""}); }
+
 void ASTDot::visit(const SaveStmt& node) {
     addStatement("Save " + dataKindName(node.kind), {node.target.text(), "\"" + node.path + "\""});
 }

@@ -1,0 +1,17 @@
+# Look at the student data before and after cleaning: charts and a profile of every column.
+LOAD "students.csv" AS students;
+EXPECT students.marks BETWEEN 0 AND 100;
+
+# What the raw file holds, next to what the compiler knows about it.
+REPORT students TO "charts/students_raw.html";
+
+FILL_NULL students.department WITH "UNKNOWN";
+DROP_NULL students;
+
+# The contract's bounds (0 and 100) are drawn on the histogram.
+PLOT students HISTOGRAM marks BINS 10 TO "charts/marks.png";
+PLOT students BAR department TO "charts/departments.svg";
+PLOT students SCATTER attendance, marks TO "charts/attendance_vs_marks.png";
+
+REPORT students TO "charts/students_clean.html";
+SAVE students AS "students_clean.csv";

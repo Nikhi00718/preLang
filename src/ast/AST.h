@@ -28,6 +28,8 @@ struct CompressStmt;
 struct ConvertStmt;
 struct RemoveCorruptStmt;
 struct LinkStmt;
+struct PlotStmt;
+struct ReportStmt;
 struct ComparisonExpr;
 struct LogicalExpr;
 struct NotExpr;
@@ -57,6 +59,8 @@ public:
     virtual void visit(const ConvertStmt& node) = 0;
     virtual void visit(const RemoveCorruptStmt& node) = 0;
     virtual void visit(const LinkStmt& node) = 0;
+    virtual void visit(const PlotStmt& node) = 0;
+    virtual void visit(const ReportStmt& node) = 0;
     virtual void visit(const ComparisonExpr& node) = 0;
     virtual void visit(const LogicalExpr& node) = 0;
     virtual void visit(const NotExpr& node) = 0;
@@ -351,6 +355,24 @@ struct LinkStmt : Stmt {
     std::string table;
     std::string column;
     std::string dataset;
+    void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
+};
+
+// PLOT t HISTOGRAM fare BINS 30 TO "fare.png";   PLOT t BAR payment TO "payments.svg";
+// PLOT t SCATTER distance, fare TO "s.png";      PLOT t LINE when, volume TO "volume.pdf";
+struct PlotStmt : Stmt {
+    Selector target;
+    std::string kind;                  // HISTOGRAM, BAR, SCATTER or LINE
+    std::vector<std::string> columns;  // the column (HISTOGRAM, BAR), or x and y (SCATTER, LINE)
+    int bins = 0;                      // HISTOGRAM ... BINS n; 0 for matplotlib's default
+    std::string path;
+    void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
+};
+
+// REPORT t TO "profile.html";   a profile of every column, with what the compiler knows about it
+struct ReportStmt : Stmt {
+    Selector target;
+    std::string path;
     void accept(ASTVisitor& visitor) const override { visitor.visit(*this); }
 };
 

@@ -35,6 +35,8 @@ public:
     void visit(const ConvertStmt& node) override;
     void visit(const RemoveCorruptStmt& node) override;
     void visit(const LinkStmt& node) override;
+    void visit(const PlotStmt& node) override;
+    void visit(const ReportStmt& node) override;
     void visit(const ComparisonExpr& node) override;
     void visit(const LogicalExpr& node) override;
     void visit(const NotExpr& node) override;

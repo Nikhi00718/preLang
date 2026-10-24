@@ -1091,6 +1091,122 @@ void SemanticAnalyzer::visit(const SaveStmt& node) {
     log(node, "SAVE to \"" + node.path + "\": " + join(saved));
 }
 
+// ---------- Plots and reports ----------
+
+namespace {
+
+std::string extensionOf(const std::string& path) {
+    const size_t dot = path.find_last_of('.');
+    std::string extension = dot == std::string::npos ? "" : path.substr(dot + 1);
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return extension;
+}
+
+}  // namespace
+
+// PLOT reads a table and changes nothing. What each kind needs:
+//   HISTOGRAM  a numeric column (BINS from 1 to 1000)     BAR   a column that is not FLOAT
+//   SCATTER    two numeric columns                         LINE  x numeric or DATETIME, y numeric
+// The file is a .png, .svg or .pdf image.
+void SemanticAnalyzer::visit(const PlotStmt& node) {
+    std::optional<TableResolution> resolution = resolver_.singleTable(node.target, "PLOT");
+    if (!resolution) {
+        return;
+    }
+    DatasetSymbol& dataset = *resolution->dataset;
+    TableState& table = *resolution->tables.front();
+    dataset.saved = true;  // a chart is an output: no "never saved" warning
+    const int errorsBefore = diagnostics_.errorCount();
+    const std::string extension = extensionOf(node.path);
+    if (extension != "png" && extension != "svg" && extension != "pdf") {
+        diagnostics_.error(Phase::Semantic, node.location,
+                           "PLOT writes an image, but \"" + node.path + "\" is not a .png, .svg or .pdf file",
+                           "use a name such as \"plot.png\"");
+    }
+    if (node.bins > 1000) {
+        diagnostics_.error(Phase::Semantic, node.location,
+                           "BINS must be at most 1000, not " + std::to_string(node.bins));
+    }
+    std::vector<const ColumnState*> columns;
+    for (const std::string& name : node.columns) {
+        columns.push_back(resolver_.column(dataset, table, name, node.target.location));
+    }
+    const auto needs = [&](size_t i, bool allowed, const std::string& what, const std::string& hint) {
+        if (columns[i] && !allowed) {
+            diagnostics_.error(Phase::Type, node.target.location,
+                               node.kind + " needs " + what + ", but " +
+                                   columnDisplayName(dataset, table, columns[i]->name) + " is " +
+                                   columnTypeName(columns[i]->type),
+                               hint);
+        }
+    };
+    const auto numeric = [&](size_t i) { return columns[i] && isNumeric(columns[i]->type); };
+    if (node.kind == "HISTOGRAM") {
+        needs(0, numeric(0), "a numeric column", "BAR counts the rows of each value of a column");
+    } else if (node.kind == "BAR") {
+        needs(0, columns[0] && columns[0]->type != ColumnType::Float, "a column of categories",
+              "HISTOGRAM shows how the values of a FLOAT column are spread");
+    } else {
+        if (node.kind == "LINE") {
+            needs(0, numeric(0) || (columns[0] && columns[0]->type == ColumnType::DateTime),
+                  "a numeric or DATETIME column on the x axis", "PARSE_DATE turns a column of dates into DATETIME");
+        } else {
+            needs(0, numeric(0), "a numeric column on the x axis", "");
+        }
+        needs(1, numeric(1), "a numeric column on the y axis", "");
+    }
+    if (diagnostics_.errorCount() > errorsBefore ||
+        std::find(columns.begin(), columns.end(), nullptr) != columns.end()) {
+        return;
+    }
+    Target target = tableTarget(dataset, table);
+    target.args = node.columns;
+    addTarget(node, target);
+    std::string described;
+    for (const ColumnState* column : columns) {
+        described += (described.empty() ? "" : ", ") + column->name + " " + column->typeText();
+    }
+    log(node, "PLOT " + node.kind + " of " + columnDisplayName(dataset, table, "") + ": " + described + " to \"" +
+                  node.path + "\"");
+}
+
+// REPORT writes an HTML profile of every column. The compiler adds what it knows at this
+// point (type, missing values, range) and the verdicts of the contracts on the table so far,
+// one Target argument each: "column<TAB>INTEGER? [1, 9]", "contract<TAB>line 3: ...<TAB>PROVEN".
+void SemanticAnalyzer::visit(const ReportStmt& node) {
+    std::optional<TableResolution> resolution = resolver_.singleTable(node.target, "REPORT");
+    if (!resolution) {
+        return;
+    }
+    DatasetSymbol& dataset = *resolution->dataset;
+    TableState& table = *resolution->tables.front();
+    dataset.saved = true;
+    const std::string extension = extensionOf(node.path);
+    if (extension != "html" && extension != "htm") {
+        diagnostics_.error(Phase::Semantic, node.location,
+                           "REPORT writes a web page, but \"" + node.path + "\" is not an .html file",
+                           "use a name such as \"profile.html\"");
+        return;
+    }
+    Target target = tableTarget(dataset, table);
+    for (const ColumnState& column : table.columns) {
+        target.args.push_back("column\t" + column.name + "\t" + column.typeText());
+    }
+    const std::string prefix = columnDisplayName(dataset, table, "") + ".";
+    for (const ContractRecord& contract : result_.contracts) {
+        if (contract.line < node.location.line && contract.contract.rfind(prefix, 0) == 0) {
+            const char* verdict = contract.verdict == Verdict::Proven     ? "proven at compile time"
+                                  : contract.verdict == Verdict::Violated ? "violated"
+                                                                          : "checked when the program runs";
+            target.args.push_back("contract\tline " + std::to_string(contract.line) + ": EXPECT " + contract.contract +
+                                  "\t" + verdict);
+        }
+    }
+    addTarget(node, target);
+    log(node, "REPORT of " + columnDisplayName(dataset, table, "") + " to \"" + node.path + "\"");
+}
+
 // ---------- Contracts ----------
 
 void SemanticAnalyzer::visit(const ExpectStmt& node) {
