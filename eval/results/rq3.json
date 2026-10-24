@@ -1,8 +1,8 @@
 {
   "table_optimizations": {
-    "optimized_s": 1.4890753999352455,
-    "O0_s": 1.8078922999557108,
-    "baseline_s": 1.8246009999420494,
+    "optimized_s": 2.323357399960514,
+    "O0_s": 2.8280073999776505,
+    "baseline_s": 2.4908969000098296,
     "same_output": true,
     "columns_read": [
       5,
@@ -12,59 +12,59 @@
       0,
       2
     ],
-    "python_start_s": 1.019520099973306,
-    "speedup_vs_O0": 1.2141039332422854
+    "python_start_s": 1.5098640999640338,
+    "speedup_vs_O0": 1.2172072191844927
   },
   "image_streaming": {
     "images": 1000,
-    "preplang_s": 3.5183315000031143,
-    "baseline_s": 4.013305000029504,
-    "handwritten_s": 3.5381769000086933,
-    "preplang_peak_mib": 10.033805847167969,
-    "baseline_peak_mib": 922.1283655166626,
-    "handwritten_peak_mib": 11.582572937011719,
+    "preplang_s": 4.341002399974968,
+    "baseline_s": 5.363091500010341,
+    "handwritten_s": 4.0069219000288285,
+    "preplang_peak_mib": 10.054548263549805,
+    "baseline_peak_mib": 922.1262369155884,
+    "handwritten_peak_mib": 11.582662582397461,
     "same_pixels_in_sample": true
   },
   "resize_fusion": {
-    "exact_s": 5.555934899952263,
-    "approx_s": 5.255079299909994,
-    "speedup": 1.0572504395980136,
+    "exact_s": 6.219029999978375,
+    "approx_s": 5.982705099973828,
+    "speedup": 1.0395013453037458,
     "mean_psnr_db": 56.995981262688325,
     "min_psnr_db": 51.810706103618486
   },
   "compile_cost": [
     {
       "input": "CSV, 10,000 rows x 10 columns",
-      "compile_s": 0.014491100097075105,
-      "read_all_s": 0.05940250004641712,
-      "read_arrow_s": 0.03909209999255836
+      "compile_s": 0.0555560999782756,
+      "read_all_s": 0.06514190003508702,
+      "read_arrow_s": 0.0557285999529995
     },
     {
       "input": "CSV, 100,000 rows x 10 columns",
-      "compile_s": 0.02513980004005134,
-      "read_all_s": 0.07628340017981827,
-      "read_arrow_s": 0.014742800034582615
+      "compile_s": 0.06382439995650202,
+      "read_all_s": 0.09667360002640635,
+      "read_arrow_s": 0.01958510000258684
     },
     {
       "input": "CSV, 1,000,000 rows x 10 columns",
-      "compile_s": 0.13197450013831258,
-      "read_all_s": 0.6233069999143481,
-      "read_arrow_s": 0.10793669987469912
+      "compile_s": 0.21945039997808635,
+      "read_all_s": 0.7590269000502303,
+      "read_arrow_s": 0.1518493000185117
     },
     {
       "input": "100 JPG images, 640x480",
-      "compile_s": 0.015479799825698137,
-      "read_all_s": 0.1370778998825699
+      "compile_s": 0.04056230001151562,
+      "read_all_s": 0.14360020001186058
     },
     {
       "input": "1000 JPG images, 640x480",
-      "compile_s": 0.08036890020594001,
-      "read_all_s": 1.4762679000850767
+      "compile_s": 0.11998369998764247,
+      "read_all_s": 1.2699250999721698
     },
     {
       "input": "3000 JPG images, 640x480",
-      "compile_s": 0.33442529989406466,
-      "read_all_s": 5.733431299915537
+      "compile_s": 0.37945899995975196,
+      "read_all_s": 4.560289899993222
     }
   ]
 }

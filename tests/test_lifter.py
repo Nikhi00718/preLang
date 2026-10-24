@@ -97,6 +97,17 @@ def main():
                          '    main()\n')
         check(prep == ['LOAD "data/hour.csv" AS df;', "DROP_NULL df;"], "main(), try and with")
 
+        prep, _ = lifted('import pandas as pd\ndf = pd.read_csv("data/hour.csv")\n'
+                         'df = df[df.cnt != 0]\n')
+        check(prep == ['LOAD "data/hour.csv" AS df;'],
+              "!= is not lifted: pandas keeps rows with a missing value, PrepLang drops them")
+        prep, _ = lifted('import pandas as pd\ndf = pd.read_csv("data/hour.csv")\n'
+                         'df = df[~(df.cnt == 0)]\n')
+        check(prep == ['LOAD "data/hour.csv" AS df;'], "~ of a condition is not lifted either")
+        prep, _ = lifted('import pandas as pd\ndf = pd.read_csv("data/hour.csv")\n'
+                         'df = df[(df.cnt > 0) | (df.instant == 1)]\n')
+        check(prep[1:] == ["FILTER df WHERE (cnt > 0 OR instant == 1);"], "OR of comparisons is lifted")
+
         first = lift('import pandas as pd\nDATA = "data/"\ndf = pd.read_csv(DATA + "hour.csv")\n'
                      'df = df.dropna()\n', derived=False)
         check(not first.frames, "the first lifter version does not follow built paths")

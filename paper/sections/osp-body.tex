@@ -18,8 +18,10 @@ columns but change the contents. For every removal \PL therefore computes the fa
 depends on (its \emph{item certificate}), and the generated program checks them on each new batch. A
 removal whose facts hold stays removed. A removal whose facts the batch breaks runs again, as code does
 after deoptimization in dynamic compilers~\cite{holzle1992,barriere2021}; this article calls it
-\emph{selective deoptimization}. Only when a fact cannot be re-established by run-time code, as with a column whose type has
-changed, is the whole batch turned away. A user writes a \texttt{.prep} program, compiles it against the current
+\emph{selective deoptimization}. A numeric column may switch between whole and decimal numbers from one
+batch to the next when the program compiled with its other type is the same generated program; the
+program then reads the column as the batch has it. Only when a fact cannot be re-established by run-time
+code, as with a column that turned from numbers into text, is the whole batch turned away. A user writes a \texttt{.prep} program, compiles it against the current
 batch, reads the diagnostics and deploys the generated program for every later batch.
 
 Table~\ref{tab:related} compares \PL with the closest tools. Validators know the values but check them
@@ -85,8 +87,9 @@ checks the Lean proofs. \texttt{LANGUAGE.md} is the reference for the syntax, th
 \begin{itemize}
 \item \textbf{Compile-time checking.} Misspelled or removed columns, type errors and broken contracts
 (\texttt{NOT\_NULL}, \texttt{BETWEEN}, \texttt{UNIQUE}, \texttt{REFERENCES}, schemas, image channels and
-sizes, match rates of images and labels) and lookup joins on keys of other types or with repeated values
-are reported with the line, the offending row and a hint. Groups (\texttt{AGGREGATE}) keep their facts.
+sizes, match rates of images and labels) and joins on keys of other types are reported with the line,
+the offending row and a hint. A lookup join requires each key once; \texttt{JOIN ... MANY} takes every
+match. Groups (\texttt{AGGREGATE}, with eight functions from \texttt{COUNT} to \texttt{STD}) keep their facts.
 \item \textbf{Data-driven optimization.} Proven checks and operations without effect are removed, unused
 columns are not loaded, and image pipelines are streamed. Rewrites that change the output, such as merging
 two \texttt{RESIZE}s, are applied only with \texttt{--approx}.
@@ -97,7 +100,9 @@ data-cleaning statements of a pandas script into \PL, stopping at the first one 
 (\texttt{tools/\allowbreak release\_facts.py}) without opening an input file; the generated program checks
 those facts on the real data, so every run stays exact.
 \item \textbf{Inspection.} Every phase can be printed (\texttt{--tokens} to \texttt{--python}), with a plan
-(\texttt{--explain}) and JSON diagnostics (\texttt{--json}).
+(\texttt{--explain}) and JSON diagnostics (\texttt{--json}). \texttt{PLOT} writes histograms, bar, scatter and
+line charts with matplotlib, with contract bounds drawn in, and \texttt{REPORT} a web page that sets each
+column of a run beside what the compiler knew about it.
 \end{itemize}
 }
 
@@ -148,14 +153,16 @@ the author's experiments yet. Its evidence is the evaluation in \texttt{eval/}; 
 evaluate.py} writes every number below from the raw results.
 
 \begin{itemize}
-\item \textbf{Correctness.} \DiffPrograms{} random programs (with joins and groups), compiled with and
-without the optimizer, produce the same table, value for value, as an independent Python interpreter of the
-language that shares no code with the compiler. Reused on a second random batch, none of \DiffReuse{} runs differs from it. This
-test found two bugs (column pruning, a pandas~3 incompatibility) that had made \DiffBeforeWrongOpt{}
-optimized runs wrong, and three more seeds (\DiffSeedPrograms{} programs) found a third (a statistic fill
-removed as a dead store, \DiffSeedBeforeWrong{} wrong run); after the fixes all \DiffSeedAgree{} agree
-and none of \DiffSeedReuse{} reuses is wrong. The CSV fuzzer found an out-of-bounds read on a NUL byte.
-Each fix has a regression test.
+\item \textbf{Correctness.} \DiffAll{} random programs over four seeds (with lookup and \texttt{MANY}
+joins, the latter in \DiffMany, and groups), compiled with and without the optimizer, produce the same
+table, value for value, as an independent Python interpreter of the language that shares no code with the
+compiler; reused on a second random batch, none of \DiffReuse{} and \DiffSeedReuse{} runs differs from it.
+In \DiffFlipBatches{} of those batches one numeric column had the other numeric type: \DiffFlipRight{} ran
+or stopped as the interpreter does, \DiffFlipRefused{} were refused (\DiffFlipNoCompile{} of them cannot be
+compiled at all), and none was wrong. The test found two bugs (column pruning, a pandas~3
+incompatibility) that had made \DiffBeforeWrongOpt{} optimized runs wrong, and a third with more seeds (a
+statistic fill removed as a dead store, \DiffSeedBeforeWrong{} wrong run); the CSV fuzzer found an
+out-of-bounds read on a NUL byte. Each fix has a regression test.
 \item \textbf{Performance.} On a table of 200{,}000 rows the optimized program runs in \TabProcOpt\,s
 instead of \TabProcOz\,s after Python start-up, but most real inputs are small: over the \CenChanged{}
 programs of the census below that the optimizer changes, the median speedup is \CenSpeedMed$\times$ (at most
@@ -165,24 +172,23 @@ streaming script, in \ImgPlMem\,MiB instead of the \ImgBaseMem\,MiB of a script 
 lifted from GitHub scripts, the optimizer removes \CenInstrCut\% of the instructions (\CenInstrBefore{} to \CenInstrAfter),
 \CenChecksBefore{} to \CenChecksAfter{} run-time checks and \CenColsCut\% of the columns read, and changes
 \CenChanged{} programs; all \CenSame{} write the same files with and without it. The lifted scripts
-contain no contracts, so all removed checks come from the examples and the traffic, bikes and taxi pipelines below.
+contain no contracts, so all removed checks come from the examples and the monthly pipelines below.
 \item \textbf{Real programs.} Among \RbTotal{} preparation bugs that users filed as GitHub issues, \PL flags \RbEarly{}
 at compile time (\RbContract{} of them only after the requirement is written as an
-\texttt{EXPECT}). The lifter translates \CorpusBothLifted{} of the \CorpusBothScripts{} public scripts
-written for the Kaggle Titanic and House Prices data; their programs reproduce a fresh compilation in \CorpusBothSame{} of
-\CorpusBothRuns{} runs on new batches, refuse the other 14, and are never wrong. Of \DriftAll{} traffic and
-bike scripts it translates \DriftCompiled{}, which reproduce a fresh run on all \DriftRuns{} later real
-months. Most untranslated scripts fail before the language matters: 547 of the 945 never call
-\texttt{pd.read\_csv} on a file path, which the lifter needs to find the input.
+\texttt{EXPECT}). The lifter translates \CorpusBothDerCompiled{} of the \CorpusBothScripts{} public
+scripts written for the Kaggle Titanic and House Prices data; their programs reproduce the script on
+\CorpusBothDerSame{} of \CorpusBothDerRuns{} new batches, stop or refuse the others, and are never wrong. Of
+\DriftAll{} traffic and bike scripts it translates \DriftCompiled{}, which reproduce the script on all
+\DriftRuns{} later real months. For \DriftNoRead{} of the 945 the
+lifter cannot find which file the script reads (a path known only when it runs, or read options that change
+the table). The lifter does not translate \texttt{!=} or \texttt{\textasciitilde}: pandas keeps a row with a missing value
+for them, \PL drops it.
 \item \textbf{Comparison.} Five monthly pipelines on public data (UCI traffic, bikes and Beijing air
 quality; NYC green taxi; Citi Bike Jersey City), each compiled on one month and run on the later ones,
 match a fresh compilation on \RealDeoptCorrect{} of \RealRuns{} months (\RealDeoptCorrectPct\%) and
-never produce a different result. Every one of the \RealDeoptNeedless{} rejected months had a column
-whose type differed from the compiled month (taxi
-\texttt{passenger\_count}; air pressure and temperature between whole and decimal numbers). The Citi Bike
-and air-quality pipelines were added for this version, with bounds taken from the domain (the New York
-area, physical ranges), and handle \RealCitibikeCorrect{} of \RealCitibikeRuns{} and \RealAirCorrect{} of
-\RealAirRuns{} months. Each validator decides whether the pipeline may run on a month after learning
+never produce a different result, including the taxi and air-quality months whose columns switched
+between whole and decimal numbers, which version 2.0 refused. The Citi Bike and air-quality pipelines,
+with bounds taken from the domain (the New York area, physical ranges), were written after the tool. Each validator decides whether the pipeline may run on a month after learning
 from the compiled month as its documentation suggests (Great Expectations profiles the columns, pandera
 and TFDV infer a schema), and is scored against the same fresh compilation. Under that setup, Great Expectations and pandera turn away \RealValidatorStopMax\% of all
 months, and TFDV admits \RealValidatorWrongMax{}
@@ -193,7 +199,8 @@ compile time, where a script-style pandas program crashes on 20 and writes wrong
 removals in the taxi and traffic pipelines yet only 14\% in the bikes pipeline (AIM~\cite{mckenna2022aim}: 54\%), and
 \PrivTitanicDeoptEpsOne{} of \PrivTitanicScripts{} Titanic compilations re-enable a removal on their own
 input; no output of \PrivRuns{} runs differs from a fresh compilation.
-\item \textbf{Overhead.} Compiling takes a median of \CenCompileMed\,ms and at most \CenMemMax\,MiB
+\item \textbf{Overhead.} Compiling takes a median of \CenCompileMed\,ms, most of it the extra
+compilations that decide which numeric columns may change type, and at most \CenMemMax\,MiB
 (\CenCsvMillionMem\,MiB for a million CSV rows). Admission of a new batch by its certificate alters the run time
 by \OhPctLow\% to \OhPctHigh\%, within measurement noise.
 \end{itemize}
@@ -206,9 +213,12 @@ the inputs, including the GitHub scripts frozen by URL, commit and hash, and rer
 
 \section{Limitations and conclusions}
 
-Joins are lookups on a key with one name in both tables (no many-to-many joins), groups have five
-aggregates, and only Python is generated. A changed column type is refused rather than handled. The
-mechanized proofs do not cover joins, groups, dates or images. The lifter translated a minority of the
-GitHub scripts above. The five monthly pipelines were written by the author, and
-\PL has no outside users yet and no user study; \texttt{docs/\allowbreak USER\_STUDY.md} is its protocol. Planned work is general joins,
-generated code that adapts to type changes, and that study, with people who write pandas cleaning scripts.
+Joins match on one key column with the same name in both tables, and only Python is generated. A
+numeric column may change type only if no statement combines it with another column (a \texttt{DERIVE}, a
+join key, an aggregate); any other change of type is refused. The mechanized proofs do not cover joins,
+groups, dates or images; the rule for numeric types rests on the proved exactness of the generated
+program and a recompilation, not on a separate proof. The lifter translates a minority of the GitHub
+scripts above. The five monthly pipelines were written by the author, and \PL has no outside users yet and
+no user study; \texttt{docs/\allowbreak USER\_STUDY.md} is its protocol. Planned work is joins on several
+columns, generated code for other targets, and that study, with people who write pandas cleaning
+scripts.

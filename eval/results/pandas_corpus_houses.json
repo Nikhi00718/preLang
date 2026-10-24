@@ -18128,7 +18128,7 @@
    "warning[semantic]: FILL_NULL has no effect: test_df.Electrical has no missing values here"
   ],
   "errors": [],
-  "facts": 198,
+  "facts": 197,
   "url": "https://github.com/LorMart/LDA-DBSCAN_forOutliersDetection/blob/576c6b2bd0040734b6727961f36acf815d335ee1/main.py",
   "batches": [
    {

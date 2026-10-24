@@ -3,69 +3,69 @@
     {
       "rows": 1000000,
       "mib": 21.62766456604004,
-      "compile_s": 0.015107700019143522,
-      "read_all_s": 0.6637961999513209
+      "compile_s": 0.028385800018440932,
+      "read_all_s": 0.7110773999593221
     },
     {
       "rows": 4000000,
       "mib": 86.50532531738281,
-      "compile_s": 0.016343299997970462,
-      "read_all_s": 0.19294570002239197
+      "compile_s": 0.03395369998179376,
+      "read_all_s": 0.19322429999010637
     },
     {
       "rows": 16000000,
       "mib": 346.0146026611328,
-      "compile_s": 0.01811720000114292,
-      "read_all_s": 0.8350226000184193
+      "compile_s": 0.04363150004064664,
+      "read_all_s": 0.8118311000289395
     }
   ],
   "table_cases": [
     {
       "case": "tables: correct program",
-      "preplang_compile_s": 0.02035709994379431,
+      "preplang_compile_s": 0.03879259998211637,
       "preplang_report": "compiled",
-      "preplang_run_s": 4.740604399936274,
+      "preplang_run_s": 5.429269900021609,
       "preplang_run": "finished",
-      "script_s": 4.506499500013888,
+      "script_s": 5.288920699968003,
       "script_result": "finished"
     },
     {
       "case": "tables: misspelled column in the last step",
-      "preplang_compile_s": 0.016908799996599555,
+      "preplang_compile_s": 0.022323700017295778,
       "preplang_report": "compile error: column 'amont' does not exist in 'events'",
-      "script_s": 2.813847699901089,
+      "script_s": 3.9584639000240713,
       "script_result": "crashed: KeyError: \"['amont'] not in index\""
     },
     {
       "case": "tables: range contract broken by the data",
-      "preplang_compile_s": 0.01908030000049621,
+      "preplang_compile_s": 0.04218749998835847,
       "preplang_report": "compile error: contract violated: events.amount has values from 0 to 999, according to the statistics in ",
-      "script_s": 1.7897412999300286,
+      "script_s": 2.3747328000026755,
       "script_result": "crashed: AssertionError: amount out of range"
     }
   ],
   "image_cases": [
     {
       "case": "images: correct program",
-      "preplang_compile_s": 0.3343336000107229,
+      "preplang_compile_s": 0.33053859998472035,
       "preplang_report": "compiled",
-      "preplang_run_s": 10.51000050001312,
+      "preplang_run_s": 10.952104299969506,
       "preplang_run": "finished",
-      "script_s": 8.534963799989782,
+      "script_s": 17.594214499986265,
       "script_result": "finished"
     },
     {
       "case": "images: broken file (sorted last) not removed",
-      "preplang_compile_s": 0.2561226999387145,
+      "preplang_compile_s": 0.3319045000243932,
       "preplang_report": "compile error: 1 of 3001 files in C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/eval/data/images_3000",
-      "script_s": 9.151488999952562,
+      "script_s": 9.680397300049663,
       "script_result": "crashed: cv2.error: OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\imgproc\\src\\resiz"
     },
     {
       "case": "images: float pixels saved as PNG",
-      "preplang_compile_s": 0.2554668999509886,
+      "preplang_compile_s": 0.31682800000999123,
       "preplang_report": "compile error: cannot save FLOAT32 pixels as PNG: NORMALIZE at line 4 scaled them to [0, 1]",
-      "script_s": 8.540374299976975,
+      "script_s": 9.739563399984036,
       "script_result": "finished, but every image is black"
     }
   ]

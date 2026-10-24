@@ -79,13 +79,21 @@
   "id": "755d6badffdeb5fa",
   "url": "https://github.com/nogibjj/Alex_Ackerman_Mini_Project_3/blob/d7a3238ff9da554d8c5adafb7b445e3f6c87f42f/mylib/lib.py",
   "rank": 13,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "46472956f9460903",
   "url": "https://github.com/PAVANKUMARELETI/traffic-prediction-streamlit-app/blob/f24dbdc03a1cdfe2e0ba45476765fd5bdb0a0a35/app.py",
   "rank": 14,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "66c9c21aedb90341",
@@ -101,9 +109,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -849,10 +860,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "a6b0fe65ee9118b1",
@@ -864,7 +872,11 @@
   "id": "c5ce7c7681c02cd8",
   "url": "https://github.com/nogibjj/Alex_Ackerman_IDS706_Assignment2/blob/a7b63c497008db9f38687f7d278b373b25df9e48/main.py",
   "rank": 18,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "9a24bc8ac4f0acb9",
@@ -896,9 +908,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -1644,10 +1659,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "9c4d75620ad50eb2",
@@ -1679,9 +1691,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nFILL_NULL df.holiday WITH \"None\";\nDERIVE df.temp_celsius = (temp - 273.15);\nDROP df [temp];\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 9,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -2427,10 +2442,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nFILL_NULL df.holiday WITH \"None\";\nDERIVE df.temp_celsius = (temp - 273.15);\nDROP df [temp];\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "93ffecb3df581a96",
@@ -2468,9 +2480,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -3216,10 +3231,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "25c76ae558adbf3a",
@@ -3245,9 +3257,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -3993,10 +4008,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "edc16bead0055e14",
@@ -4006,12 +4018,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nFILL_NULL df.holiday WITH 0;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [
    "error[type]: FILL_NULL with number 0 needs a matching column type, but df.holiday is STRING"
   ],
   "outcome": "compile error",
-  "script_on_first_month": "runs",
-  "program": "LOAD \"data.csv\" AS df;\nFILL_NULL df.holiday WITH 0;\nSAVE df AS \"df_lifted.csv\";\n"
+  "script_on_first_month": "runs"
  },
  {
   "id": "faeea4bca270d84b",
@@ -4027,9 +4039,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -4775,10 +4790,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "f360ce273436fc1c",
@@ -4798,9 +4810,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -5546,10 +5561,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "b56915edd202fa79",
@@ -5559,9 +5571,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -6307,10 +6322,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "81ca46bd947a6b6d",
@@ -6330,9 +6342,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.date_time;\nDERIVE data.hour = HOUR(date_time);\nDERIVE data.day = DAY(date_time);\nDERIVE data.month = MONTH(date_time);\nDERIVE data.day_of_week = WEEKDAY(date_time);\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -7078,10 +7093,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.date_time;\nDERIVE data.hour = HOUR(date_time);\nDERIVE data.day = DAY(date_time);\nDERIVE data.month = MONTH(date_time);\nDERIVE data.day_of_week = WEEKDAY(date_time);\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "e8c20e64a3e788ec",
@@ -7107,9 +7119,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_c = (temp - 273.15);\nFILTER df WHERE temp > 0;\nFILTER df WHERE rain_1h < 500;\nFILTER df WHERE snow_1h < 5;\nFILL_NULL df.holiday WITH \"None\";\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 13,
+  "removals": 3,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2012-11",
@@ -7861,10 +7876,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_c = (temp - 273.15);\nFILTER df WHERE temp > 0;\nFILTER df WHERE rain_1h < 500;\nFILTER df WHERE snow_1h < 5;\nFILL_NULL df.holiday WITH \"None\";\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 3,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "d9413d6e1dcce5e3",
@@ -7880,9 +7892,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -8628,10 +8643,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "8c8a76f6c8398a8a",
@@ -8647,9 +8659,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -9395,10 +9410,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "90cb0997e930e972",
@@ -9450,9 +9462,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -10198,10 +10213,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "e018d713d30005e9",
@@ -10211,9 +10223,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDROP df [holiday, weather_description, date_time];\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 13,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -10959,10 +10974,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDROP df [holiday, weather_description, date_time];\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "40ee137215a3f753",
@@ -10972,9 +10984,12 @@
   "lifted": 3,
   "statements": 5,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -11720,16 +11735,17 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "c4c30f9266211126",
   "url": "https://github.com/PAVANKUMARELETI/traffic-prediction-streamlit-app/blob/f24dbdc03a1cdfe2e0ba45476765fd5bdb0a0a35/traffic_prediction_model.py",
   "rank": 58,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "2780d74010fd8684",
@@ -11739,9 +11755,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.weekday = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -12487,10 +12506,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.weekday = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "d14a6170d1782df6",
@@ -12516,9 +12532,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS traffic;\nPARSE_DATE traffic.date_time;\nSAVE traffic AS \"traffic_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -13264,10 +13283,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS traffic;\nPARSE_DATE traffic.date_time;\nSAVE traffic AS \"traffic_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "10b7910b30cfd08a",
@@ -13299,7 +13315,16 @@
   "id": "13459e5d1432d91b",
   "url": "https://github.com/Charliechen0829/DLproject/blob/daf666afba45e1e4a8fce2c51091a23c8bb89a57/preprocessing.py",
   "rank": 66,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 4,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.date_time;\nFILTER data WHERE date_time >= \"2016-01-01\";\nSAVE data AS \"data_lifted.csv\";\n",
+  "errors": [
+   "error[type]: cannot compare DATETIME column 'date_time' with text \"2016-01-01\""
+  ],
+  "outcome": "compile error",
+  "script_on_first_month": "runs"
  },
  {
   "id": "5e0096bbc6a88d23",
@@ -13315,9 +13340,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -14063,10 +14091,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "9010a1b0a49f2566",
@@ -14076,9 +14101,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -14824,10 +14852,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "2731c3324bf062ff",
@@ -14837,9 +14862,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -15585,10 +15613,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "89e77abfb4cc5c4b",
@@ -15610,9 +15635,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nDROP_NULL df [date_time, traffic_volume, weather_main];\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 1,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2012-11",
@@ -16358,10 +16386,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP_NULL df [date_time, traffic_volume, weather_main];\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 1,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "9824778dc5435740",
@@ -16371,9 +16396,12 @@
   "lifted": 3,
   "statements": 5,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dayofweek = WEEKDAY(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -17119,16 +17147,17 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dayofweek = WEEKDAY(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "4c800c6b1fef8e86",
   "url": "https://github.com/Jupudy-Nagendra/MLOPS/blob/d3c14bd283877a831faf8c6890d935b17ed2ad1e/Notebooks/Archive/Notebook.py",
   "rank": 75,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "a2c9b822267f441e",
@@ -17214,9 +17243,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS traffic_data;\nFILL_NULL traffic_data.holiday WITH \"None\";\nPARSE_DATE traffic_data.date_time;\nPARSE_DATE traffic_data.date_time;\nDERIVE traffic_data.hour = HOUR(date_time);\nDERIVE traffic_data.dayofweek = WEEKDAY(date_time);\nSAVE traffic_data AS \"traffic_data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 10,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -17962,10 +17994,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS traffic_data;\nFILL_NULL traffic_data.holiday WITH \"None\";\nPARSE_DATE traffic_data.date_time;\nPARSE_DATE traffic_data.date_time;\nDERIVE traffic_data.hour = HOUR(date_time);\nDERIVE traffic_data.dayofweek = WEEKDAY(date_time);\nSAVE traffic_data AS \"traffic_data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "e7cd56d5f0dd114e",
@@ -17975,9 +18004,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -18723,10 +18755,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.day_of_week = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "3cd184e9dcdc184c",
@@ -18738,7 +18767,762 @@
   "id": "b9e4c16009fc120c",
   "url": "https://github.com/ValliSisira/I-94_traffic_analysis/blob/b613b70e79ca2b6b916a360eec4baa062b140313/app.py",
   "rank": 91,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 1,
+  "statements": 3,
+  "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "b286ddd66ff47114",
@@ -18760,9 +19544,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [holiday, date_time, weather_main, weather_description];\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 15,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2012-11",
@@ -19508,10 +20295,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP df [holiday, date_time, weather_main, weather_description];\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "dbee9e8e3ef47e7a",
@@ -19537,9 +20321,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dayofweek = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -20285,10 +21072,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dayofweek = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "c341e21b2632ec95",
@@ -20314,9 +21098,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -21062,10 +21849,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "c6986a6b313f0bed",
@@ -21085,9 +21869,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -21833,10 +22620,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "bfacf3854a031e23",
@@ -21862,9 +22646,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS dataset;\nDROP dataset [holiday];\nSAVE dataset AS \"dataset_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 12,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2012-11",
@@ -22610,10 +23397,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS dataset;\nDROP dataset [holiday];\nSAVE dataset AS \"dataset_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "9ad151ce8d02be29",
@@ -22623,9 +23407,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS df_metro;\nDERIVE df_metro.tempC = (temp - 273.15);\nPARSE_DATE df_metro.date_time;\nDERIVE df_metro.hour = HOUR(date_time);\nDERIVE df_metro.day_of_week = WEEKDAY(date_time);\nDERIVE df_metro.month = MONTH(date_time);\nSAVE df_metro AS \"df_metro_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 10,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -23371,10 +24158,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df_metro;\nDERIVE df_metro.tempC = (temp - 273.15);\nPARSE_DATE df_metro.date_time;\nDERIVE df_metro.hour = HOUR(date_time);\nDERIVE df_metro.day_of_week = WEEKDAY(date_time);\nDERIVE df_metro.month = MONTH(date_time);\nSAVE df_metro AS \"df_metro_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "00156a3966b20071",
@@ -23390,9 +24174,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -24138,10 +24925,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "f2086b92e420ae09",
@@ -24175,9 +24959,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_c = (temp - 273.15);\nFILTER df WHERE temp > 0;\nFILTER df WHERE rain_1h < 500;\nFILTER df WHERE snow_1h < 5;\nFILL_NULL df.holiday WITH \"None\";\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 13,
+  "removals": 3,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2012-11",
@@ -24929,10 +25716,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_c = (temp - 273.15);\nFILTER df WHERE temp > 0;\nFILTER df WHERE rain_1h < 500;\nFILTER df WHERE snow_1h < 5;\nFILL_NULL df.holiday WITH \"None\";\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 3,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "a5f95f080a6a6e80",
@@ -25038,9 +25822,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS load_dataset;\nPARSE_DATE load_dataset.date_time;\nDERIVE load_dataset.hour = HOUR(date_time);\nSAVE load_dataset AS \"load_dataset_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -25786,10 +26573,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS load_dataset;\nPARSE_DATE load_dataset.date_time;\nDERIVE load_dataset.hour = HOUR(date_time);\nSAVE load_dataset AS \"load_dataset_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "2ef98df476b5fe12",
@@ -25807,7 +26591,762 @@
   "id": "03aa2bbd9f8ec09a",
   "url": "https://github.com/Tanvi2k25/TransitIQ-Smart-Traffic-Congestion-Prediction/blob/54489dc3e2aa8eff270b7588919da0477f301318/pages/analysis.py",
   "rank": 131,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 2,
+  "statements": 4,
+  "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "1f59e2e38bbdc4b5",
@@ -25827,9 +27366,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS traffic;\nPARSE_DATE traffic.date_time;\nSAVE traffic AS \"traffic_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -26575,16 +28117,768 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS traffic;\nPARSE_DATE traffic.date_time;\nSAVE traffic AS \"traffic_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "6b309f03e8d68a85",
   "url": "https://github.com/Subham0822/final-year-project/blob/e89e10d35412a7358e264a4f6f92322a820d1346/services/ai/train_traffic_model.py",
   "rank": 134,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "88d7c599320721d1",
@@ -26602,7 +28896,11 @@
   "id": "2b40277b7a74a783",
   "url": "https://github.com/6Shuzhou/chronos-2-project/blob/d920a1d18692e24658baf4056276c2a3d4572ee8/src/preprocess_metro_traffic.py",
   "rank": 137,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 3,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "68c5f52651f4eaca",
@@ -26630,9 +28928,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nDERIVE df.year = YEAR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -27378,10 +29679,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.dow = WEEKDAY(date_time);\nDERIVE df.month = MONTH(date_time);\nDERIVE df.year = YEAR(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "90f3f0757ca1a289",
@@ -27421,9 +29719,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.month = MONTH(date_time);\nDERIVE df.weekday = WEEKDAY(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -28169,16 +30470,17 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nDERIVE df.hour = HOUR(date_time);\nDERIVE df.month = MONTH(date_time);\nDERIVE df.weekday = WEEKDAY(date_time);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "cc26b58bb9e2852b",
   "url": "https://github.com/ioantreas/Synthetic-Time-Series-Generation/blob/67eabfd1bee6023af74cb2c885bcacf1c0195f53/scripts/metro/preprocess_metro.py",
   "rank": 148,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "aecfc881ad936db7",
@@ -28200,9 +30502,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS traffic_df;\nFILL_NULL traffic_df.holiday WITH \"No Holiday\";\nDERIVE traffic_df.temp_celsius = (temp - 273.15);\nSAVE traffic_df AS \"traffic_df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 9,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2012-11",
@@ -28948,10 +31253,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS traffic_df;\nFILL_NULL traffic_df.holiday WITH \"No Holiday\";\nDERIVE traffic_df.temp_celsius = (temp - 273.15);\nSAVE traffic_df AS \"traffic_df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "0c2fd6156cf21dd3",
@@ -28969,7 +31271,11 @@
   "id": "77304e1bd1679799",
   "url": "https://github.com/6Shuzhou/chronos-2-project/blob/d920a1d18692e24658baf4056276c2a3d4572ee8/src/metro_traffic_feature_analysis.py",
   "rank": 154,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 3,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "e4169b1fbc5d030b",
@@ -29041,7 +31347,11 @@
   "id": "df07b4abaf349b48",
   "url": "https://github.com/raijin0704/TrDART/blob/1feb796b011b8f0e72d5fea8156637f491babf4e/scripts/make_traffic_dataset.py",
   "rank": 166,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 3,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "88c9bc49c56f1891",
@@ -29071,7 +31381,11 @@
   "id": "ad5b589538a06794",
   "url": "https://github.com/Sanjay-0110/Traffic_Prediction_Project/blob/df4d92a4ba490a5be4d3578bfb52fde6cf32a184/pages/Traffic_flow_dashboard.py",
   "rank": 171,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "e8ec3a3ebe7058e0",
@@ -29105,9 +31419,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -29853,10 +32170,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "f15520fc48bf683c",
@@ -29962,9 +32276,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -30710,10 +33027,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "8368002f27e49f55",
@@ -30741,9 +33055,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -31489,16 +33806,768 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "f9903fa0dc5dfcc6",
   "url": "https://github.com/CodxAbhay/CollageMazorProject/blob/f26b4c3ba255cf9a37eaffcfd6871efd216783a1/ai_model/train_full_model.py",
   "rank": 198,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2013-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2014-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2015-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2016-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2017-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2018-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "813e9d0cbd6ebf9e",
@@ -31586,7 +34655,11 @@
   "id": "25bf50369f85107d",
   "url": "https://github.com/Aravind419/trafficpredection/blob/7c05e97e376c40252295ee38703a1ffeedb5d55a/ml_engine/download_kaggle_data.py",
   "rank": 212,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "3677f9d77cd3d5e3",
@@ -31644,9 +34717,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 11,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2012-11",
@@ -32392,10 +35468,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.date_time;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "f60f5b41012c12d2",
@@ -32413,7 +35486,11 @@
   "id": "7136dafd37ced0dd",
   "url": "https://github.com/BondanTriwibowo/Eksperimen_SML_Bondan-Tri-Wibowo/blob/8842bd88d2cdb21710897d08d803443ebbca1295/preprocessing/automate_Bondan-Tri-Wibowo.py",
   "rank": 224,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "569863176714bcaf",

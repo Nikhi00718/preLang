@@ -4,12 +4,12 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 
 | Workload | Facts | Compilations | Runs | Correct run | Correct stop | Needless stop | Wrong stop | Unsound | Removals precision | Removals recall | Deoptimized on the compiled file | Likely violated |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| rq8:bikes | aim eps=1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 54% | 0/5 | 7 |
-| rq8:bikes | aim eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 69% | 0/5 | 9 |
+| rq8:bikes | aim eps=1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 43% | 0/5 | 8 |
+| rq8:bikes | aim eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 66% | 0/5 | 9 |
 | rq8:bikes | aim-marginals eps=1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 14% | 0/5 | 0 |
-| rq8:bikes | aim-marginals eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 80% | 0/5 | 0 |
+| rq8:bikes | aim-marginals eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 77% | 0/5 | 0 |
 | rq8:bikes | aim-synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
-| rq8:bikes | aim-synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
+| rq8:bikes | aim-synthetic eps=10 | 1/5 | 24 | 24 | 0 | 0 | 0 | 0 | 100% | 100% | 0/1 | 0 |
 | rq8:bikes | eps=0.1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 14% | 0/5 | 0 |
 | rq8:bikes | eps=1 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 14% | 0/5 | 0 |
 | rq8:bikes | eps=10 | 5/5 | 120 | 120 | 0 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
@@ -24,8 +24,8 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:bikes | random | 10/10 | 240 | 240 | 0 | 0 | 0 | 0 | 100% | 30% | 0/10 | 0 |
 | rq8:bikes | synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:bikes | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
-| rq8:taxi | aim eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 56% | 0/5 | 9 |
-| rq8:taxi | aim eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 20% | 0/5 | 16 |
+| rq8:taxi | aim eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 52% | 0/5 | 9 |
+| rq8:taxi | aim eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 12% | 0/5 | 17 |
 | rq8:taxi | aim-marginals eps=1 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:taxi | aim-marginals eps=10 | 5/5 | 180 | 65 | 35 | 80 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:taxi | aim-synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
@@ -44,8 +44,8 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:taxi | random | 10/10 | 360 | 130 | 70 | 160 | 0 | 0 | 64% | 56% | 8/10 | 0 |
 | rq8:taxi | synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:taxi | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
-| rq8:traffic | aim eps=1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 26% | 0/5 | 18 |
-| rq8:traffic | aim eps=10 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 49% | 0/5 | 10 |
+| rq8:traffic | aim eps=1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 40% | 0/5 | 9 |
+| rq8:traffic | aim eps=10 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 66% | 0/5 | 8 |
 | rq8:traffic | aim-marginals eps=1 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:traffic | aim-marginals eps=10 | 5/5 | 315 | 305 | 10 | 0 | 0 | 0 | 100% | 100% | 0/5 | 0 |
 | rq8:traffic | aim-synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
@@ -64,12 +64,12 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | rq8:traffic | random | 10/10 | 630 | 610 | 20 | 0 | 0 | 0 | 100% | 26% | 0/10 | 0 |
 | rq8:traffic | synthetic eps=1 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
 | rq8:traffic | synthetic eps=10 | 0/5 | 0 | 0 | 0 | 0 | 0 | 0 | - | - | 0/0 | 0 |
-| titanic | aim eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 18% | 25% | 18/184 | 0 |
-| titanic | aim eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 39% | 44% | 11/184 | 0 |
+| titanic | aim eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 21% | 38% | 23/184 | 0 |
+| titanic | aim eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 38% | 31% | 8/184 | 0 |
 | titanic | aim-marginals eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 16% | 100% | 74/184 | 0 |
-| titanic | aim-marginals eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 18% | 100% | 69/184 | 0 |
-| titanic | aim-synthetic eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 9% | 12% | 20/184 | 0 |
-| titanic | aim-synthetic eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 47% | 50% | 9/184 | 0 |
+| titanic | aim-marginals eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 18% | 100% | 66/184 | 0 |
+| titanic | aim-synthetic eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 23% | 44% | 24/184 | 0 |
+| titanic | aim-synthetic eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 38% | 31% | 8/184 | 0 |
 | titanic | corpus eps=1 | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 17% | 100% | 148/368 | 0 |
 | titanic | corpus eps=10 | 368/368 | 4416 | 4392 | 24 | 0 | 0 | 0 | 17% | 100% | 148/368 | 0 |
 | titanic | eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 74/184 | 0 |
@@ -87,7 +87,7 @@ The analyst compiles from facts the data owner released (tools/release_facts.py)
 | titanic | unit eps=1 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 74/184 | 0 |
 | titanic | unit eps=10 | 184/184 | 2208 | 2196 | 12 | 0 | 0 | 0 | 17% | 100% | 73/184 | 0 |
 
-All runs: 64179; correct run: 62054, correct stop: 957, needless stop: 1168, wrong stop: 0, unsound: 0.
+All runs: 64203; correct run: 62078, correct stop: 957, needless stop: 1168, wrong stop: 0, unsound: 0.
 
 ## Private compilations that failed
 
@@ -101,13 +101,13 @@ All runs: 64179; correct run: 62054, correct stop: 957, needless stop: 1168, wro
 - rq8 traffic synthetic eps=10 seed 2: error[contract]: contract violated: traffic.temp has values from 100.7011947 to 998.5835324; row 1 of traffic.csv has 606.8524835026894; error[contract]: contract violated: traffic.clouds_all has valu
 - rq8 traffic synthetic eps=10 seed 3: error[contract]: contract violated: traffic.temp has values from 100.5289522 to 999.170763; row 1 of traffic.csv has 436.7513212172264; error[contract]: contract violated: traffic.clouds_all has value
 - rq8 traffic synthetic eps=10 seed 4: error[contract]: contract violated: traffic.temp has values from 101.4276313 to 999.4431185; row 1 of traffic.csv has 320.35170206324983; error[contract]: contract violated: traffic.clouds_all has val
-- rq8 bikes synthetic eps=1 seed 0: error[contract]: contract violated: days.cnt has values from -8634738 to 8029637; row 2 of days.csv has -1; error[contract]: contract violated: days.hum has values from -9901172.341 to 8391714.081; ro
-- rq8 bikes synthetic eps=1 seed 1: error[contract]: contract violated: days.cnt has values from -3444448 to 9388674; row 1 of days.csv has -77; error[contract]: contract violated: days.hum has values from -3383247.545 to 8422426.617; r
-- rq8 bikes synthetic eps=1 seed 2: error[contract]: contract violated: days.cnt has values from -9828303 to 9956093; row 1 of days.csv has -1; error[contract]: contract violated: days.hum has values from -9813118.524 to 7874809.903; ro
-- rq8 bikes synthetic eps=1 seed 3: error[contract]: contract violated: days.cnt has values from -8037100 to 9708905; row 1 of days.csv has -1; error[contract]: contract violated: days.hum has values from -8859902.206 to 9564665.217; ro
-- rq8 bikes synthetic eps=1 seed 4: error[contract]: contract violated: days.cnt has values from -7892201 to 6940211; row 1 of days.csv has -4; error[contract]: contract violated: days.hum has values from -9834109.383 to 9985186.033; ro
-- rq8 bikes synthetic eps=10 seed 0: error[contract]: contract violated: days.weathersit has values from 1 to 9; row 2 of days.csv has 8
-- rq8 bikes synthetic eps=10 seed 1: error[contract]: contract violated: days.weathersit has values from 1 to 9; row 1 of days.csv has 6
-- rq8 bikes synthetic eps=10 seed 2: error[contract]: contract violated: days.weathersit has values from 1 to 9; row 3 of days.csv has 7
-- rq8 bikes synthetic eps=10 seed 3: error[contract]: contract violated: days.weathersit has values from 1 to 9; row 1 of days.csv has 7
-- rq8 bikes synthetic eps=10 seed 4: error[contract]: contract violated: days.weathersit has values from 1 to 9; row 2 of days.csv has 5
+- rq8 traffic aim-synthetic eps=1 seed 0: error[contract]: contract violated: traffic.traffic_volume has values from 231 to 19903; row 9 of traffic.csv has 15787; error[contract]: contract violated: traffic.temp has values from 0 to 10000; ro
+- rq8 traffic aim-synthetic eps=1 seed 1: error[contract]: contract violated: traffic.temp has values from 230 to 10000; row 19 of traffic.csv has 10000.0; error[contract]: contract violated: traffic.clouds_all has values from 1 to 14755; row
+- rq8 traffic aim-synthetic eps=1 seed 2: error[contract]: contract violated: traffic.temp has values from 5.134107516 to 315.4840453; row 82 of traffic.csv has 12.70842504292619; error[contract]: contract violated: traffic.weather_main has 9
+- rq8 traffic aim-synthetic eps=1 seed 3: error[contract]: contract violated: traffic.clouds_all has values from 0 to 19134; row 60 of traffic.csv has 10000; error[contract]: contract violated: traffic.weather_main has 3 missing values in tra
+- rq8 traffic aim-synthetic eps=1 seed 4: error[contract]: contract violated: traffic.clouds_all has values from -1 to 10000; row 9 of traffic.csv has 215; error[contract]: contract violated: traffic.weather_main has 24 missing values in traf
+- rq8 traffic aim-synthetic eps=10 seed 0: error[contract]: contract violated: traffic.clouds_all has values from 1 to 6639; row 223 of traffic.csv has 6639; error[contract]: contract violated: traffic.weather_main has 1 missing value in traff
+- rq8 traffic aim-synthetic eps=10 seed 1: error[contract]: contract violated: traffic.traffic_volume has values from 236 to 10137; row 582 of traffic.csv has 10137; error[contract]: contract violated: traffic.temp has values from 234.6723035 
+- rq8 traffic aim-synthetic eps=10 seed 2: error[contract]: contract violated: traffic.temp has values from 12.70842504 to 315.4840453; row 62 of traffic.csv has 100.0; error[contract]: contract violated: traffic.clouds_all has values from 1 t
+- rq8 traffic aim-synthetic eps=10 seed 3: error[contract]: contract violated: traffic.temp has values from 234.6944739 to 17235.80166; row 200 of traffic.csv has 10000.0; error[contract]: contract violated: traffic.clouds_all has values from 
+- rq8 traffic aim-synthetic eps=10 seed 4: error[contract]: contract violated: traffic.temp has values from -0.2254973686 to 320; row 86 of traffic.csv has -0.2254973686291578

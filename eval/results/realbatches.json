@@ -36,8 +36,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.36829219997162,
-   "fresh compile and run": 1.5829667000216432
+   "deopt run": 1.1422529999981634,
+   "fresh compile and run": 1.3323255000286736
   },
   "validators": {
    "pandera/all": false,
@@ -85,8 +85,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3619765000184998,
-   "fresh compile and run": 1.516437899961602
+   "deopt run": 1.199157600000035,
+   "fresh compile and run": 1.298230699962005
   },
   "validators": {
    "pandera/all": false,
@@ -134,8 +134,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5671387999900617,
-   "fresh compile and run": 1.891366099996958
+   "deopt run": 1.126117100007832,
+   "fresh compile and run": 1.3099028999567963
   },
   "validators": {
    "pandera/all": false,
@@ -183,8 +183,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9159244999755174,
-   "fresh compile and run": 1.4837503000162542
+   "deopt run": 1.1547256999765523,
+   "fresh compile and run": 1.3002616000012495
   },
   "validators": {
    "pandera/all": false,
@@ -232,8 +232,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6610314999707043,
-   "fresh compile and run": 1.570575900026597
+   "deopt run": 1.2237165999831632,
+   "fresh compile and run": 1.3597698000376113
   },
   "validators": {
    "pandera/all": false,
@@ -281,8 +281,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.38359019998461,
-   "fresh compile and run": 1.5513265999616124
+   "deopt run": 1.1541553000570275,
+   "fresh compile and run": 1.3497795999865048
   },
   "validators": {
    "pandera/all": false,
@@ -330,8 +330,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3931352000217885,
-   "fresh compile and run": 1.6791609000065364
+   "deopt run": 1.099685400025919,
+   "fresh compile and run": 1.2730663000256754
   },
   "validators": {
    "pandera/all": false,
@@ -379,8 +379,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6586018999805674,
-   "fresh compile and run": 1.4685749000054784
+   "deopt run": 1.1603554000030272,
+   "fresh compile and run": 1.2895563999773003
   },
   "validators": {
    "pandera/all": false,
@@ -428,8 +428,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3748292000382207,
-   "fresh compile and run": 1.4836732000112534
+   "deopt run": 1.15303230000427,
+   "fresh compile and run": 1.3052200000383891
   },
   "validators": {
    "pandera/all": false,
@@ -477,8 +477,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3840160999679938,
-   "fresh compile and run": 1.5091594000114128
+   "deopt run": 1.1811805000179447,
+   "fresh compile and run": 1.3181448000250384
   },
   "validators": {
    "pandera/all": false,
@@ -526,8 +526,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4289485000190325,
-   "fresh compile and run": 1.527734600007534
+   "deopt run": 1.1367465000366792,
+   "fresh compile and run": 1.317105799971614
   },
   "validators": {
    "pandera/all": false,
@@ -575,8 +575,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4838599999784492,
-   "fresh compile and run": 1.5844233999960124
+   "deopt run": 1.18092399998568,
+   "fresh compile and run": 1.28722589998506
   },
   "validators": {
    "pandera/all": false,
@@ -624,8 +624,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4041159999906085,
-   "fresh compile and run": 1.5560261000064202
+   "deopt run": 1.1400023000314832,
+   "fresh compile and run": 1.2969373999512754
   },
   "validators": {
    "pandera/all": false,
@@ -673,8 +673,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3400972999515943,
-   "fresh compile and run": 1.4300272000255063
+   "deopt run": 1.174318100034725,
+   "fresh compile and run": 1.3348068000050262
   },
   "validators": {
    "pandera/all": false,
@@ -724,8 +724,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3572048000060022,
-   "fresh compile and run": 0.04499219998251647
+   "deopt run": 1.1328689999645576,
+   "fresh compile and run": 0.04304249997949228
   },
   "validators": {
    "pandera/all": false,
@@ -775,8 +775,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.349576700013131,
-   "fresh compile and run": 0.03317569999489933
+   "deopt run": 1.1711968000163324,
+   "fresh compile and run": 0.0433134000049904
   },
   "validators": {
    "pandera/all": false,
@@ -824,8 +824,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3967317000497133,
-   "fresh compile and run": 1.5023110999609344
+   "deopt run": 1.118221300013829,
+   "fresh compile and run": 1.2986841999809258
   },
   "validators": {
    "pandera/all": false,
@@ -873,8 +873,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3103310999576934,
-   "fresh compile and run": 1.4347262000082992
+   "deopt run": 1.1257538999780081,
+   "fresh compile and run": 1.334002900053747
   },
   "validators": {
    "pandera/all": false,
@@ -922,8 +922,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3905204000184312,
-   "fresh compile and run": 1.4607025000150315
+   "deopt run": 1.1652875999570824,
+   "fresh compile and run": 1.3029723999788985
   },
   "validators": {
    "pandera/all": false,
@@ -971,8 +971,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3496459999587387,
-   "fresh compile and run": 1.4426162000163458
+   "deopt run": 1.1663257000036538,
+   "fresh compile and run": 1.3724667999777012
   },
   "validators": {
    "pandera/all": false,
@@ -1020,8 +1020,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3886696000117809,
-   "fresh compile and run": 1.5770715000107884
+   "deopt run": 1.2845535000087693,
+   "fresh compile and run": 1.398301300010644
   },
   "validators": {
    "pandera/all": false,
@@ -1069,8 +1069,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.250270200020168,
-   "fresh compile and run": 1.641323299962096
+   "deopt run": 1.1678675999864936,
+   "fresh compile and run": 1.2572596000391059
   },
   "validators": {
    "pandera/all": false,
@@ -1118,8 +1118,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3658471999806352,
-   "fresh compile and run": 1.3844133999664336
+   "deopt run": 1.17943080002442,
+   "fresh compile and run": 1.3192370000178926
   },
   "validators": {
    "pandera/all": false,
@@ -1167,8 +1167,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4067755999858491,
-   "fresh compile and run": 1.6138868000125512
+   "deopt run": 1.1329151999671012,
+   "fresh compile and run": 1.2822685999562964
   },
   "validators": {
    "pandera/all": false,
@@ -1216,8 +1216,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3471420000423677,
-   "fresh compile and run": 1.3592502999817953
+   "deopt run": 1.1281410999945365,
+   "fresh compile and run": 1.3019275999977253
   },
   "validators": {
    "pandera/all": false,
@@ -1265,8 +1265,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3842469999799505,
-   "fresh compile and run": 1.384377599984873
+   "deopt run": 1.2026749000069685,
+   "fresh compile and run": 1.3547315999749117
   },
   "validators": {
    "pandera/all": false,
@@ -1314,8 +1314,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.315666299953591,
-   "fresh compile and run": 1.5251773999771103
+   "deopt run": 1.1364239999675192,
+   "fresh compile and run": 1.3386590000009164
   },
   "validators": {
    "pandera/all": false,
@@ -1363,8 +1363,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3325277999974787,
-   "fresh compile and run": 1.431732299970463
+   "deopt run": 1.1484355999855325,
+   "fresh compile and run": 1.3078582999878563
   },
   "validators": {
    "pandera/all": false,
@@ -1412,8 +1412,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4689555000513792,
-   "fresh compile and run": 1.4484281999757513
+   "deopt run": 1.214118600008078,
+   "fresh compile and run": 1.3554197999765165
   },
   "validators": {
    "pandera/all": false,
@@ -1461,8 +1461,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3172873000148684,
-   "fresh compile and run": 1.4546019000117667
+   "deopt run": 1.2205094000091776,
+   "fresh compile and run": 1.2627101000398397
   },
   "validators": {
    "pandera/all": false,
@@ -1510,8 +1510,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3829201000044122,
-   "fresh compile and run": 1.5125932000228204
+   "deopt run": 1.1690454000490718,
+   "fresh compile and run": 1.259928400046192
   },
   "validators": {
    "pandera/all": false,
@@ -1559,8 +1559,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2812546000350267,
-   "fresh compile and run": 1.2818333999603055
+   "deopt run": 1.1294236999819987,
+   "fresh compile and run": 1.281329499965068
   },
   "validators": {
    "pandera/all": false,
@@ -1608,8 +1608,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2635443999897689,
-   "fresh compile and run": 1.3523149999673478
+   "deopt run": 1.1676169999991544,
+   "fresh compile and run": 1.3444159000064246
   },
   "validators": {
    "pandera/all": false,
@@ -1657,8 +1657,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2623497000313364,
-   "fresh compile and run": 1.356386500003282
+   "deopt run": 1.1309232000494376,
+   "fresh compile and run": 1.284004700020887
   },
   "validators": {
    "pandera/all": false,
@@ -1706,8 +1706,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2121363999904133,
-   "fresh compile and run": 1.3018933000275865
+   "deopt run": 1.1298919000546448,
+   "fresh compile and run": 1.320491399965249
   },
   "validators": {
    "pandera/all": false,
@@ -1757,8 +1757,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2521076000411995,
-   "fresh compile and run": 1.3077844000072218
+   "deopt run": 1.184923399996478,
+   "fresh compile and run": 1.2158289999933913
   },
   "validators": {
    "pandera/all": false,
@@ -1806,8 +1806,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2289356000255793,
-   "fresh compile and run": 1.4261351999593899
+   "deopt run": 1.1385647999704815,
+   "fresh compile and run": 1.3743571999948472
   },
   "validators": {
    "pandera/all": false,
@@ -1855,8 +1855,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.207324700022582,
-   "fresh compile and run": 1.4071694999583997
+   "deopt run": 1.1428474999847822,
+   "fresh compile and run": 1.408372199977748
   },
   "validators": {
    "pandera/all": false,
@@ -1904,8 +1904,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2472787000006065,
-   "fresh compile and run": 1.2597225999925286
+   "deopt run": 1.123755100008566,
+   "fresh compile and run": 1.2889602999784984
   },
   "validators": {
    "pandera/all": false,
@@ -1953,8 +1953,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2353357000392862,
-   "fresh compile and run": 1.3384110000333749
+   "deopt run": 1.184293499973137,
+   "fresh compile and run": 1.2897125000017695
   },
   "validators": {
    "pandera/all": false,
@@ -2002,8 +2002,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3106786999851465,
-   "fresh compile and run": 1.3599535000394098
+   "deopt run": 1.174302700033877,
+   "fresh compile and run": 1.4125043000094593
   },
   "validators": {
    "pandera/all": false,
@@ -2051,8 +2051,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.252394600014668,
-   "fresh compile and run": 1.2541851000278257
+   "deopt run": 1.151791900047101,
+   "fresh compile and run": 1.349146299995482
   },
   "validators": {
    "pandera/all": false,
@@ -2100,8 +2100,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2486605999874882,
-   "fresh compile and run": 1.4154393000062555
+   "deopt run": 1.1975266999797896,
+   "fresh compile and run": 1.301806100003887
   },
   "validators": {
    "pandera/all": false,
@@ -2149,8 +2149,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2003080999711528,
-   "fresh compile and run": 1.4446239999961108
+   "deopt run": 1.1995606999844313,
+   "fresh compile and run": 1.3067252999753691
   },
   "validators": {
    "pandera/all": false,
@@ -2198,8 +2198,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3533461000188254,
-   "fresh compile and run": 1.271114699949976
+   "deopt run": 1.196585200028494,
+   "fresh compile and run": 1.367269699985627
   },
   "validators": {
    "pandera/all": false,
@@ -2247,8 +2247,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2534663999686018,
-   "fresh compile and run": 1.3457181999692693
+   "deopt run": 1.1670545999659225,
+   "fresh compile and run": 1.325149800046347
   },
   "validators": {
    "pandera/all": false,
@@ -2296,8 +2296,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2114592000143602,
-   "fresh compile and run": 1.357339399983175
+   "deopt run": 1.1286968000349589,
+   "fresh compile and run": 1.2778141999733634
   },
   "validators": {
    "pandera/all": false,
@@ -2345,8 +2345,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.201624100038316,
-   "fresh compile and run": 1.2705321999965236
+   "deopt run": 1.0653499000472948,
+   "fresh compile and run": 1.3333110999665223
   },
   "validators": {
    "pandera/all": false,
@@ -2394,8 +2394,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3487613000324927,
-   "fresh compile and run": 1.3509628000319935
+   "deopt run": 1.159274900041055,
+   "fresh compile and run": 1.2742091999971308
   },
   "validators": {
    "pandera/all": false,
@@ -2443,8 +2443,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2375529000419192,
-   "fresh compile and run": 1.3585707999882288
+   "deopt run": 1.1422568000270985,
+   "fresh compile and run": 1.2705101000028662
   },
   "validators": {
    "pandera/all": false,
@@ -2492,8 +2492,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.170297099975869,
-   "fresh compile and run": 1.3272033000248484
+   "deopt run": 1.1342630999861285,
+   "fresh compile and run": 1.234877199982293
   },
   "validators": {
    "pandera/all": false,
@@ -2541,8 +2541,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3459767999593168,
-   "fresh compile and run": 1.4357850000378676
+   "deopt run": 1.1808572000009008,
+   "fresh compile and run": 1.3104697999660857
   },
   "validators": {
    "pandera/all": false,
@@ -2590,8 +2590,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2774516000063159,
-   "fresh compile and run": 1.3771418999531306
+   "deopt run": 1.1971111000166275,
+   "fresh compile and run": 1.2651791999815032
   },
   "validators": {
    "pandera/all": false,
@@ -2639,8 +2639,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2168329000123776,
-   "fresh compile and run": 1.3419035999686457
+   "deopt run": 1.1484743999899365,
+   "fresh compile and run": 1.320883899985347
   },
   "validators": {
    "pandera/all": false,
@@ -2688,8 +2688,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.172156199987512,
-   "fresh compile and run": 1.3135219999821857
+   "deopt run": 1.1401066999533214,
+   "fresh compile and run": 1.2818439999828115
   },
   "validators": {
    "pandera/all": false,
@@ -2737,8 +2737,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2959290000144392,
-   "fresh compile and run": 1.3132486999966204
+   "deopt run": 1.0887876000488177,
+   "fresh compile and run": 1.2945448000100441
   },
   "validators": {
    "pandera/all": false,
@@ -2786,8 +2786,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2066715999972075,
-   "fresh compile and run": 1.3550117000122555
+   "deopt run": 1.1604491000180133,
+   "fresh compile and run": 1.2842197000281885
   },
   "validators": {
    "pandera/all": false,
@@ -2835,8 +2835,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.175363100017421,
-   "fresh compile and run": 1.3075663999770768
+   "deopt run": 1.1161732000182383,
+   "fresh compile and run": 1.279896100051701
   },
   "validators": {
    "pandera/all": false,
@@ -2884,8 +2884,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3293243999942206,
-   "fresh compile and run": 1.2726703999796882
+   "deopt run": 1.1256583000067621,
+   "fresh compile and run": 1.3042090000235476
   },
   "validators": {
    "pandera/all": false,
@@ -2933,8 +2933,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.241965599998366,
-   "fresh compile and run": 1.339615499950014
+   "deopt run": 1.2578088999725878,
+   "fresh compile and run": 1.3621875999961048
   },
   "validators": {
    "pandera/all": false,
@@ -2982,8 +2982,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1666954000247642,
-   "fresh compile and run": 1.3028136999928392
+   "deopt run": 1.1444121000240557,
+   "fresh compile and run": 1.3253976000123657
   },
   "validators": {
    "pandera/all": false,
@@ -3031,8 +3031,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.246153799991589,
-   "fresh compile and run": 1.3275985000072978
+   "deopt run": 1.2072506999829784,
+   "fresh compile and run": 1.4868623999645934
   },
   "validators": {
    "pandera/all": false,
@@ -3080,8 +3080,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3135063999798149,
-   "fresh compile and run": 1.3393160999985412
+   "deopt run": 1.142932299990207,
+   "fresh compile and run": 1.3183908000355586
   },
   "validators": {
    "pandera/all": false,
@@ -3129,8 +3129,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2280672999913804,
-   "fresh compile and run": 1.3527958000195213
+   "deopt run": 1.1797548000467941,
+   "fresh compile and run": 1.338403300032951
   },
   "validators": {
    "pandera/all": false,
@@ -3178,8 +3178,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2002557999803685,
-   "fresh compile and run": 1.2904944000183605
+   "deopt run": 1.159116199996788,
+   "fresh compile and run": 1.3664329000166617
   },
   "validators": {
    "pandera/all": false,
@@ -3227,8 +3227,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2109613999491557,
-   "fresh compile and run": 1.3738586000399664
+   "deopt run": 1.166010599990841,
+   "fresh compile and run": 1.3991283000214025
   },
   "validators": {
    "pandera/all": false,
@@ -3276,8 +3276,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2272227000212297,
-   "fresh compile and run": 1.3492290999856777
+   "deopt run": 1.1895516000222415,
+   "fresh compile and run": 1.2760385000146925
   },
   "validators": {
    "pandera/all": false,
@@ -3325,8 +3325,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1668225000030361,
-   "fresh compile and run": 1.4346037999494001
+   "deopt run": 1.1545102000236511,
+   "fresh compile and run": 1.342199900012929
   },
   "validators": {
    "pandera/all": false,
@@ -3374,8 +3374,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2105161999934353,
-   "fresh compile and run": 1.2660008000093512
+   "deopt run": 1.1293811000068672,
+   "fresh compile and run": 1.3235665999818593
   },
   "validators": {
    "pandera/all": false,
@@ -3423,8 +3423,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2448191999574192,
-   "fresh compile and run": 1.419178500014823
+   "deopt run": 1.1473627999657765,
+   "fresh compile and run": 1.3204798999940977
   },
   "validators": {
    "pandera/all": false,
@@ -3472,8 +3472,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1838678000494838,
-   "fresh compile and run": 1.3362569999881089
+   "deopt run": 1.1668375000008382,
+   "fresh compile and run": 1.2997090999851935
   },
   "validators": {
    "pandera/all": false,
@@ -3521,8 +3521,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1870607999735512,
-   "fresh compile and run": 1.2795813000411727
+   "deopt run": 1.145355099986773,
+   "fresh compile and run": 1.3617489999742247
   },
   "validators": {
    "pandera/all": false,
@@ -3570,8 +3570,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2327945999568328,
-   "fresh compile and run": 1.3205769000342116
+   "deopt run": 1.119934700021986,
+   "fresh compile and run": 1.3426397999865003
   },
   "validators": {
    "pandera/all": false,
@@ -3619,8 +3619,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.285521299985703,
-   "fresh compile and run": 1.3195287000271492
+   "deopt run": 1.1819542999728583,
+   "fresh compile and run": 1.2979669999913312
   },
   "validators": {
    "pandera/all": false,
@@ -3668,8 +3668,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1859835999784991,
-   "fresh compile and run": 1.3568771000136621
+   "deopt run": 1.1889662999892607,
+   "fresh compile and run": 1.331350399996154
   },
   "validators": {
    "pandera/all": false,
@@ -3717,8 +3717,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2767152999876998,
-   "fresh compile and run": 1.3023138999706134
+   "deopt run": 1.1799583000247367,
+   "fresh compile and run": 1.329275099968072
   },
   "validators": {
    "pandera/all": false,
@@ -3768,8 +3768,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1887794000213034,
-   "fresh compile and run": 0.049228299991227686
+   "deopt run": 1.135322600021027,
+   "fresh compile and run": 0.0449749999679625
   },
   "validators": {
    "pandera/all": false,
@@ -3831,8 +3831,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2972986999666318,
-   "fresh compile and run": 1.3015029999660328
+   "deopt run": 1.1275397000135854,
+   "fresh compile and run": 1.2940139999845996
   },
   "validators": {
    "pandera/all": false,
@@ -3880,8 +3880,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2758801999734715,
-   "fresh compile and run": 1.3243918000371195
+   "deopt run": 1.1272571999579668,
+   "fresh compile and run": 1.2849053000099957
   },
   "validators": {
    "pandera/all": false,
@@ -3929,8 +3929,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2090312999789603,
-   "fresh compile and run": 1.313930900010746
+   "deopt run": 1.1280390999745578,
+   "fresh compile and run": 1.2865548999980092
   },
   "validators": {
    "pandera/all": false,
@@ -3978,8 +3978,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2217322999495082,
-   "fresh compile and run": 1.2843251999584027
+   "deopt run": 1.177868300001137,
+   "fresh compile and run": 1.2969060000032187
   },
   "validators": {
    "pandera/all": false,
@@ -4027,8 +4027,8 @@
   },
   "file_facts_admit": true,
   "seconds": {
-   "deopt run": 1.1434294000500813,
-   "fresh compile and run": 1.3035198000143282
+   "deopt run": 1.1649226000299677,
+   "fresh compile and run": 1.2868917000014335
   },
   "validators": {
    "pandera/all": true,
@@ -4076,8 +4076,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.158796900010202,
-   "fresh compile and run": 1.3902645999914967
+   "deopt run": 1.1297331999521703,
+   "fresh compile and run": 1.3261403000215068
   },
   "validators": {
    "pandera/all": false,
@@ -4125,8 +4125,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2038639000384137,
-   "fresh compile and run": 1.2386359000229277
+   "deopt run": 1.1550275000045076,
+   "fresh compile and run": 1.3113226999994367
   },
   "validators": {
    "pandera/all": false,
@@ -4174,8 +4174,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2158963000401855,
-   "fresh compile and run": 1.466782100033015
+   "deopt run": 1.1941242000320926,
+   "fresh compile and run": 1.317107799986843
   },
   "validators": {
    "pandera/all": false,
@@ -4223,8 +4223,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.207542199990712,
-   "fresh compile and run": 1.381501699972432
+   "deopt run": 1.1775507000274956,
+   "fresh compile and run": 1.3497855000314303
   },
   "validators": {
    "pandera/all": false,
@@ -4272,8 +4272,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1397092000115663,
-   "fresh compile and run": 1.3340786999906413
+   "deopt run": 1.1441946999984793,
+   "fresh compile and run": 1.3246836999896914
   },
   "validators": {
    "pandera/all": false,
@@ -4321,8 +4321,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3001692999969237,
-   "fresh compile and run": 1.4329833000083454
+   "deopt run": 1.1301880999817513,
+   "fresh compile and run": 1.3316691999789327
   },
   "validators": {
    "pandera/all": false,
@@ -4370,8 +4370,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2178991000400856,
-   "fresh compile and run": 1.382152899983339
+   "deopt run": 1.1207562000490725,
+   "fresh compile and run": 1.26206199999433
   },
   "validators": {
    "pandera/all": false,
@@ -4419,8 +4419,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3211983000510372,
-   "fresh compile and run": 1.3679248000262305
+   "deopt run": 1.1377155999653041,
+   "fresh compile and run": 1.4799699000432156
   },
   "validators": {
    "pandera/all": false,
@@ -4468,8 +4468,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2920955999870785,
-   "fresh compile and run": 1.340610800019931
+   "deopt run": 1.125781000009738,
+   "fresh compile and run": 1.2971154000260867
   },
   "validators": {
    "pandera/all": false,
@@ -4517,8 +4517,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.241038300038781,
-   "fresh compile and run": 1.3785291000385769
+   "deopt run": 1.174318800040055,
+   "fresh compile and run": 1.29191880003782
   },
   "validators": {
    "pandera/all": false,
@@ -4566,8 +4566,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2663927000248805,
-   "fresh compile and run": 1.3507400999660604
+   "deopt run": 1.170731500023976,
+   "fresh compile and run": 1.3235651000286452
   },
   "validators": {
    "pandera/all": false,
@@ -4615,8 +4615,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.173323499970138,
-   "fresh compile and run": 1.3156014999840409
+   "deopt run": 1.1300154000055045,
+   "fresh compile and run": 1.2909102000412531
   },
   "validators": {
    "pandera/all": false,
@@ -4664,8 +4664,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2366489000269212,
-   "fresh compile and run": 1.3638555000070482
+   "deopt run": 1.127929700014647,
+   "fresh compile and run": 1.3779534000204876
   },
   "validators": {
    "pandera/all": false,
@@ -4715,8 +4715,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3327453000238165,
-   "fresh compile and run": 1.3493080000043847
+   "deopt run": 1.1138336000149138,
+   "fresh compile and run": 1.2765222000307404
   },
   "validators": {
    "pandera/all": false,
@@ -4764,8 +4764,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2389441999839619,
-   "fresh compile and run": 1.420476500003133
+   "deopt run": 1.1340244999737479,
+   "fresh compile and run": 1.32433829997899
   },
   "validators": {
    "pandera/all": false,
@@ -4813,8 +4813,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2403346999781206,
-   "fresh compile and run": 1.398446699953638
+   "deopt run": 1.109778699988965,
+   "fresh compile and run": 1.3008191999979317
   },
   "validators": {
    "pandera/all": false,
@@ -4862,8 +4862,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.234901100047864,
-   "fresh compile and run": 1.310358599992469
+   "deopt run": 1.1181309000239708,
+   "fresh compile and run": 1.371138200047426
   },
   "validators": {
    "pandera/all": false,
@@ -4911,8 +4911,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3737681999919005,
-   "fresh compile and run": 1.3798708000103943
+   "deopt run": 1.1502320999861695,
+   "fresh compile and run": 1.2744605999905616
   },
   "validators": {
    "pandera/all": false,
@@ -4960,8 +4960,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1924739999813028,
-   "fresh compile and run": 1.3596774999750778
+   "deopt run": 1.1715219999896362,
+   "fresh compile and run": 1.3544664999935776
   },
   "validators": {
    "pandera/all": false,
@@ -5009,8 +5009,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.292711700021755,
-   "fresh compile and run": 1.3305353000178002
+   "deopt run": 1.1110665999585763,
+   "fresh compile and run": 1.4350246000103652
   },
   "validators": {
    "pandera/all": false,
@@ -5058,8 +5058,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.246744799951557,
-   "fresh compile and run": 1.3631104999803938
+   "deopt run": 1.1336991999996826,
+   "fresh compile and run": 1.3186822999850847
   },
   "validators": {
    "pandera/all": false,
@@ -5107,8 +5107,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2476523999939673,
-   "fresh compile and run": 1.3538369999732822
+   "deopt run": 1.1067708000191487,
+   "fresh compile and run": 1.3352550999843515
   },
   "validators": {
    "pandera/all": false,
@@ -5156,8 +5156,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2330320000182837,
-   "fresh compile and run": 1.3993813999695703
+   "deopt run": 1.13035160000436,
+   "fresh compile and run": 1.347214300010819
   },
   "validators": {
    "pandera/all": false,
@@ -5205,8 +5205,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2064725999953225,
-   "fresh compile and run": 1.446658800006844
+   "deopt run": 1.1314115000423044,
+   "fresh compile and run": 1.2842580000287853
   },
   "validators": {
    "pandera/all": false,
@@ -5254,8 +5254,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2504730999935418,
-   "fresh compile and run": 1.3686509999679402
+   "deopt run": 1.1872778999968432,
+   "fresh compile and run": 1.7130111999576911
   },
   "validators": {
    "pandera/all": false,
@@ -5303,8 +5303,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2329882999765687,
-   "fresh compile and run": 1.3701951999682933
+   "deopt run": 1.1923006999422796,
+   "fresh compile and run": 1.307840200024657
   },
   "validators": {
    "pandera/all": false,
@@ -5352,8 +5352,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.21003820002079,
-   "fresh compile and run": 1.4860826999647543
+   "deopt run": 1.2688313000253402,
+   "fresh compile and run": 1.3441522000357509
   },
   "validators": {
    "pandera/all": false,
@@ -5401,8 +5401,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.248198700021021,
-   "fresh compile and run": 1.4208998999674805
+   "deopt run": 1.1379200000083074,
+   "fresh compile and run": 1.2866295999847353
   },
   "validators": {
    "pandera/all": false,
@@ -5450,8 +5450,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2481176999863237,
-   "fresh compile and run": 1.4161837000283413
+   "deopt run": 1.135479300050065,
+   "fresh compile and run": 1.2348466999828815
   },
   "validators": {
    "pandera/all": false,
@@ -5499,8 +5499,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4293069999548607,
-   "fresh compile and run": 1.4552077000262216
+   "deopt run": 1.1727103000157513,
+   "fresh compile and run": 1.3399662000010721
   },
   "validators": {
    "pandera/all": false,
@@ -5548,8 +5548,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.360819800000172,
-   "fresh compile and run": 1.3841591999516822
+   "deopt run": 1.103072699974291,
+   "fresh compile and run": 1.226793000008911
   },
   "validators": {
    "pandera/all": false,
@@ -5597,8 +5597,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.250340500031598,
-   "fresh compile and run": 1.3551072999835014
+   "deopt run": 1.1687365000252612,
+   "fresh compile and run": 1.2969611000153236
   },
   "validators": {
    "pandera/all": false,
@@ -5646,8 +5646,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.193432500003837,
-   "fresh compile and run": 1.3274289999972098
+   "deopt run": 1.1273922999971546,
+   "fresh compile and run": 1.2930192000349052
   },
   "validators": {
    "pandera/all": false,
@@ -5695,8 +5695,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4046066000009887,
-   "fresh compile and run": 1.411296800011769
+   "deopt run": 1.1006228000042029,
+   "fresh compile and run": 1.3045418999972753
   },
   "validators": {
    "pandera/all": false,
@@ -5744,8 +5744,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3575589999672957,
-   "fresh compile and run": 1.444035199994687
+   "deopt run": 1.130029599997215,
+   "fresh compile and run": 1.3284820000408217
   },
   "validators": {
    "pandera/all": false,
@@ -5793,8 +5793,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3663868000148796,
-   "fresh compile and run": 1.4249139999737963
+   "deopt run": 1.1722586999530904,
+   "fresh compile and run": 1.3282036000164226
   },
   "validators": {
    "pandera/all": false,
@@ -5842,8 +5842,8 @@
   },
   "file_facts_admit": true,
   "seconds": {
-   "deopt run": 1.3135187000152655,
-   "fresh compile and run": 1.4028284999658354
+   "deopt run": 1.1662012999877334,
+   "fresh compile and run": 1.2803728000144474
   },
   "validators": {
    "pandera/all": true,
@@ -5891,8 +5891,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3105102999834344,
-   "fresh compile and run": 1.365867500018794
+   "deopt run": 1.132685600023251,
+   "fresh compile and run": 1.3749023000127636
   },
   "validators": {
    "pandera/all": false,
@@ -5940,8 +5940,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.28161689999979,
-   "fresh compile and run": 1.377975500014145
+   "deopt run": 1.112850499979686,
+   "fresh compile and run": 1.2705316999927163
   },
   "validators": {
    "pandera/all": false,
@@ -5989,8 +5989,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3033241999801248,
-   "fresh compile and run": 1.31993609998608
+   "deopt run": 1.176905399945099,
+   "fresh compile and run": 1.4047321999678388
   },
   "validators": {
    "pandera/all": false,
@@ -6039,8 +6039,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4472815000335686,
-   "fresh compile and run": 1.4016310999868438
+   "deopt run": 1.1778915000031702,
+   "fresh compile and run": 1.3633413999923505
   },
   "validators": {
    "pandera/all": false,
@@ -6091,8 +6091,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2266631000093184,
-   "fresh compile and run": 1.5174944999744184
+   "deopt run": 1.147686899988912,
+   "fresh compile and run": 1.3625876999576576
   },
   "validators": {
    "pandera/all": false,
@@ -6141,8 +6141,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2520502000115812,
-   "fresh compile and run": 1.3505146999959834
+   "deopt run": 1.1605976999853738,
+   "fresh compile and run": 1.3527567000128329
   },
   "validators": {
    "pandera/all": false,
@@ -6191,8 +6191,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5027974999975413,
-   "fresh compile and run": 1.4082614000071771
+   "deopt run": 1.1607357999891974,
+   "fresh compile and run": 1.3699135999777354
   },
   "validators": {
    "pandera/all": false,
@@ -6241,8 +6241,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3440676999744028,
-   "fresh compile and run": 1.3714374999981374
+   "deopt run": 1.1924089000094682,
+   "fresh compile and run": 1.4094674999942072
   },
   "validators": {
    "pandera/all": false,
@@ -6291,8 +6291,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2414326999569312,
-   "fresh compile and run": 1.3952933000400662
+   "deopt run": 1.1974385000066832,
+   "fresh compile and run": 1.4156804999802262
   },
   "validators": {
    "pandera/all": false,
@@ -6341,8 +6341,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2939523999812081,
-   "fresh compile and run": 1.4100232999771833
+   "deopt run": 1.1411453000037,
+   "fresh compile and run": 1.3641126999864355
   },
   "validators": {
    "pandera/all": false,
@@ -6391,8 +6391,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2926341000129469,
-   "fresh compile and run": 1.2608045000233687
+   "deopt run": 1.077700800029561,
+   "fresh compile and run": 1.3654174000257626
   },
   "validators": {
    "pandera/all": false,
@@ -6441,8 +6441,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3119879000005312,
-   "fresh compile and run": 1.5410077999695204
+   "deopt run": 1.1285495000192896,
+   "fresh compile and run": 1.340223299979698
   },
   "validators": {
    "pandera/all": false,
@@ -6491,8 +6491,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.20961860002717,
-   "fresh compile and run": 1.3671680000261404
+   "deopt run": 1.1036929999827407,
+   "fresh compile and run": 1.3825246999622323
   },
   "validators": {
    "pandera/all": false,
@@ -6541,8 +6541,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.356651000038255,
-   "fresh compile and run": 1.389254699985031
+   "deopt run": 1.122136199963279,
+   "fresh compile and run": 1.347979900019709
   },
   "validators": {
    "pandera/all": false,
@@ -6591,8 +6591,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2563173999660648,
-   "fresh compile and run": 1.3932718000141904
+   "deopt run": 1.143691100005526,
+   "fresh compile and run": 1.3832488999469206
   },
   "validators": {
    "pandera/all": false,
@@ -6641,8 +6641,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.267992300039623,
-   "fresh compile and run": 1.2871229000156745
+   "deopt run": 1.163512900006026,
+   "fresh compile and run": 1.3472324999747798
   },
   "validators": {
    "pandera/all": false,
@@ -6691,8 +6691,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2178464000462554,
-   "fresh compile and run": 1.4460179000161588
+   "deopt run": 1.139608199999202,
+   "fresh compile and run": 1.3062527000438422
   },
   "validators": {
    "pandera/all": false,
@@ -6741,8 +6741,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2534669000306167,
-   "fresh compile and run": 1.4970780999865383
+   "deopt run": 1.1263848000089638,
+   "fresh compile and run": 1.327334499976132
   },
   "validators": {
    "pandera/all": false,
@@ -6791,8 +6791,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2209511999972165,
-   "fresh compile and run": 1.2840962000191212
+   "deopt run": 1.142269900010433,
+   "fresh compile and run": 1.3371145999990404
   },
   "validators": {
    "pandera/all": false,
@@ -6841,8 +6841,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2485038000158966,
-   "fresh compile and run": 1.369046600011643
+   "deopt run": 1.1322584999725223,
+   "fresh compile and run": 1.2983940000412986
   },
   "validators": {
    "pandera/all": false,
@@ -6891,8 +6891,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2425914999912493,
-   "fresh compile and run": 1.3280715000000782
+   "deopt run": 1.1928176999790594,
+   "fresh compile and run": 1.358387699990999
   },
   "validators": {
    "pandera/all": false,
@@ -6941,8 +6941,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3038544000010006,
-   "fresh compile and run": 1.36555300001055
+   "deopt run": 1.1627050999668427,
+   "fresh compile and run": 1.3430917999939993
   },
   "validators": {
    "pandera/all": false,
@@ -6991,8 +6991,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.343511299986858,
-   "fresh compile and run": 1.345160200027749
+   "deopt run": 1.1260232999920845,
+   "fresh compile and run": 1.4349906999850646
   },
   "validators": {
    "pandera/all": false,
@@ -7041,8 +7041,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2550335999694653,
-   "fresh compile and run": 1.3916604000260122
+   "deopt run": 1.206839399994351,
+   "fresh compile and run": 1.3541504999739118
   },
   "validators": {
    "pandera/all": false,
@@ -7091,8 +7091,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3158648000098765,
-   "fresh compile and run": 1.403121099981945
+   "deopt run": 1.1588801000034437,
+   "fresh compile and run": 1.4292362999985926
   },
   "validators": {
    "pandera/all": false,
@@ -7141,8 +7141,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1867114000488073,
-   "fresh compile and run": 1.3668250999762677
+   "deopt run": 1.1942200000048615,
+   "fresh compile and run": 1.3602412000182085
   },
   "validators": {
    "pandera/all": false,
@@ -7191,8 +7191,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2346213999553584,
-   "fresh compile and run": 1.265874899982009
+   "deopt run": 1.1077966999728233,
+   "fresh compile and run": 1.3800061999936588
   },
   "validators": {
    "pandera/all": false,
@@ -7243,8 +7243,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2165855999919586,
-   "fresh compile and run": 1.301801500027068
+   "deopt run": 1.1146214000182226,
+   "fresh compile and run": 1.392205800046213
   },
   "validators": {
    "pandera/all": false,
@@ -7293,8 +7293,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2079214999685064,
-   "fresh compile and run": 1.2862413999973796
+   "deopt run": 1.1854424000484869,
+   "fresh compile and run": 1.3385634999722242
   },
   "validators": {
    "pandera/all": false,
@@ -7343,8 +7343,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.218892999982927,
-   "fresh compile and run": 1.2918282999889925
+   "deopt run": 1.1156360000022687,
+   "fresh compile and run": 1.3566220999928191
   },
   "validators": {
    "pandera/all": false,
@@ -7393,8 +7393,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.116000299982261,
-   "fresh compile and run": 1.3137817999813706
+   "deopt run": 1.0677314000204206,
+   "fresh compile and run": 1.3278023000457324
   },
   "validators": {
    "pandera/all": false,
@@ -7443,8 +7443,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.165279200009536,
-   "fresh compile and run": 1.2773295000079088
+   "deopt run": 1.164340400020592,
+   "fresh compile and run": 1.3865572000504471
   },
   "validators": {
    "pandera/all": false,
@@ -7493,8 +7493,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2335243999841623,
-   "fresh compile and run": 1.3094832000206225
+   "deopt run": 1.123775799991563,
+   "fresh compile and run": 1.4424670999869704
   },
   "validators": {
    "pandera/all": false,
@@ -7543,8 +7543,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1815533999470063,
-   "fresh compile and run": 1.2923588000121526
+   "deopt run": 1.1116859000176191,
+   "fresh compile and run": 1.333806700014975
   },
   "validators": {
    "pandera/all": false,
@@ -7593,8 +7593,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1671773999696597,
-   "fresh compile and run": 1.2568096000468358
+   "deopt run": 1.0929519000346772,
+   "fresh compile and run": 1.3674454999854788
   },
   "validators": {
    "pandera/all": false,
@@ -7643,8 +7643,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.250642400002107,
-   "fresh compile and run": 1.3000423000194132
+   "deopt run": 1.1084754000185058,
+   "fresh compile and run": 1.3741764000151306
   },
   "validators": {
    "pandera/all": false,
@@ -7693,8 +7693,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.183904799981974,
-   "fresh compile and run": 1.3266020000446588
+   "deopt run": 1.1316356000024825,
+   "fresh compile and run": 1.3860375999938697
   },
   "validators": {
    "pandera/all": false,
@@ -7743,8 +7743,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1704255000222474,
-   "fresh compile and run": 1.246625200030394
+   "deopt run": 1.0902724000043236,
+   "fresh compile and run": 1.396481000003405
   },
   "validators": {
    "pandera/all": false,
@@ -7793,8 +7793,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2366501000360586,
-   "fresh compile and run": 1.3347568000317551
+   "deopt run": 1.1285835000453517,
+   "fresh compile and run": 1.3525454999762587
   },
   "validators": {
    "pandera/all": false,
@@ -7843,8 +7843,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1797566000022925,
-   "fresh compile and run": 1.3249028000282124
+   "deopt run": 1.094785499968566,
+   "fresh compile and run": 1.3447864999761805
   },
   "validators": {
    "pandera/all": false,
@@ -7893,8 +7893,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1552262000041083,
-   "fresh compile and run": 1.38190370000666
+   "deopt run": 1.1070971000008285,
+   "fresh compile and run": 1.3491740999743342
   },
   "validators": {
    "pandera/all": false,
@@ -7943,8 +7943,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.22049540001899,
-   "fresh compile and run": 1.3885331000201404
+   "deopt run": 1.145968199998606,
+   "fresh compile and run": 1.3335566999739967
   },
   "validators": {
    "pandera/all": false,
@@ -7993,8 +7993,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.172005700005684,
-   "fresh compile and run": 1.3477628999971785
+   "deopt run": 1.1076064000371844,
+   "fresh compile and run": 1.364892499987036
   },
   "validators": {
    "pandera/all": false,
@@ -8043,8 +8043,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1566642000107095,
-   "fresh compile and run": 1.3057779999799095
+   "deopt run": 1.087884499982465,
+   "fresh compile and run": 1.3671835999703035
   },
   "validators": {
    "pandera/all": false,
@@ -8093,8 +8093,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2286190000013448,
-   "fresh compile and run": 1.3116674999473616
+   "deopt run": 1.0781950000091456,
+   "fresh compile and run": 1.3777700999635272
   },
   "validators": {
    "pandera/all": false,
@@ -8143,8 +8143,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2909352999995463,
-   "fresh compile and run": 1.3213958999840543
+   "deopt run": 1.151249699993059,
+   "fresh compile and run": 1.3464245999930426
   },
   "validators": {
    "pandera/all": false,
@@ -8193,8 +8193,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1306455999729224,
-   "fresh compile and run": 1.272737999970559
+   "deopt run": 1.1088368999771774,
+   "fresh compile and run": 1.3683466999791563
   },
   "validators": {
    "pandera/all": false,
@@ -8243,8 +8243,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2075867999810725,
-   "fresh compile and run": 1.289685100025963
+   "deopt run": 1.109164600027725,
+   "fresh compile and run": 1.344551699992735
   },
   "validators": {
    "pandera/all": false,
@@ -8293,8 +8293,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1795293999603018,
-   "fresh compile and run": 1.3211727000307292
+   "deopt run": 1.1182519999565557,
+   "fresh compile and run": 1.4418822000152431
   },
   "validators": {
    "pandera/all": false,
@@ -8345,8 +8345,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4030555000063032,
-   "fresh compile and run": 1.4572467999532819
+   "deopt run": 1.27150570001686,
+   "fresh compile and run": 1.580545799981337
   },
   "validators": {
    "pandera/all": false,
@@ -8397,8 +8397,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.354058300028555,
-   "fresh compile and run": 1.4705406000139192
+   "deopt run": 1.2888583000167273,
+   "fresh compile and run": 1.542452699970454
   },
   "validators": {
    "pandera/all": false,
@@ -8449,8 +8449,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3999655999941751,
-   "fresh compile and run": 1.3762147999950685
+   "deopt run": 1.3267328000511043,
+   "fresh compile and run": 1.5976846999838017
   },
   "validators": {
    "pandera/all": false,
@@ -8501,8 +8501,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.409960500022862,
-   "fresh compile and run": 1.3768617999739945
+   "deopt run": 1.318551899981685,
+   "fresh compile and run": 1.6146411999943666
   },
   "validators": {
    "pandera/all": false,
@@ -8553,8 +8553,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3902058999519795,
-   "fresh compile and run": 1.441021799982991
+   "deopt run": 1.255396299995482,
+   "fresh compile and run": 1.5548883999581449
   },
   "validators": {
    "pandera/all": false,
@@ -8605,8 +8605,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3798330999561585,
-   "fresh compile and run": 1.4384579000179656
+   "deopt run": 1.2741865999996662,
+   "fresh compile and run": 1.5393685000017285
   },
   "validators": {
    "pandera/all": false,
@@ -8657,8 +8657,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3370313000050373,
-   "fresh compile and run": 1.438758400036022
+   "deopt run": 1.2818582999752834,
+   "fresh compile and run": 1.5200547999702394
   },
   "validators": {
    "pandera/all": false,
@@ -8709,8 +8709,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.38393619999988,
-   "fresh compile and run": 1.4500630999682471
+   "deopt run": 1.313737399992533,
+   "fresh compile and run": 1.8140339000383392
   },
   "validators": {
    "pandera/all": false,
@@ -8761,8 +8761,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3762294999905862,
-   "fresh compile and run": 1.387114399985876
+   "deopt run": 1.6343161999830045,
+   "fresh compile and run": 1.6952812999952585
   },
   "validators": {
    "pandera/all": false,
@@ -8815,8 +8815,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.410641799971927,
-   "fresh compile and run": 1.3792802999960259
+   "deopt run": 1.441032400005497,
+   "fresh compile and run": 1.7368230000138283
   },
   "validators": {
    "pandera/all": false,
@@ -8867,8 +8867,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4594198999693617,
-   "fresh compile and run": 1.380585200036876
+   "deopt run": 1.500574300007429,
+   "fresh compile and run": 2.186276699998416
   },
   "validators": {
    "pandera/all": false,
@@ -8919,8 +8919,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4292534999549389,
-   "fresh compile and run": 1.4106734999804758
+   "deopt run": 1.5744474999955855,
+   "fresh compile and run": 2.297013200004585
   },
   "validators": {
    "pandera/all": false,
@@ -8950,29 +8950,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-02.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-02.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4558163000037894,
-   "fresh compile and run": 1.4782040999853052
+   "deopt run": 2.226189999957569,
+   "fresh compile and run": 1.7895574999856763
   },
   "validators": {
    "pandera/all": false,
@@ -9002,29 +9002,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-03.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-03.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4318724000477232,
-   "fresh compile and run": 1.4792785000172444
+   "deopt run": 1.5077475999714807,
+   "fresh compile and run": 1.8355902999755926
   },
   "validators": {
    "pandera/all": false,
@@ -9054,29 +9054,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-04.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-04.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.289737100014463,
-   "fresh compile and run": 1.3776176000246778
+   "deopt run": 1.6679994000005536,
+   "fresh compile and run": 1.6599949999945238
   },
   "validators": {
    "pandera/all": false,
@@ -9106,29 +9106,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-05.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-05.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3822974999784492,
-   "fresh compile and run": 1.3959570999722928
+   "deopt run": 1.469116499996744,
+   "fresh compile and run": 1.7336732000112534
   },
   "validators": {
    "pandera/all": false,
@@ -9158,11 +9158,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-06.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 4003.0, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-06.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-06.parquet is not the input the program was compiled with, and fare_amount is 4003.0 in data row 2881, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9179,8 +9181,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.324439199990593,
-   "fresh compile and run": 1.530040400044527
+   "deopt run": 1.4224972000229172,
+   "fresh compile and run": 1.64131770003587
   },
   "validators": {
    "pandera/all": false,
@@ -9210,29 +9212,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-07.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-07.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2212842999724671,
-   "fresh compile and run": 1.3813257000292651
+   "deopt run": 1.593469399958849,
+   "fresh compile and run": 1.6726212000357918
   },
   "validators": {
    "pandera/all": false,
@@ -9262,11 +9264,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-08.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 1256.7, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-08.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-08.parquet is not the input the program was compiled with, and fare_amount is 1256.7 in data row 54312, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9283,8 +9287,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3615945000201464,
-   "fresh compile and run": 1.3094891000073403
+   "deopt run": 1.4448187000234611,
+   "fresh compile and run": 1.7974292999715544
   },
   "validators": {
    "pandera/all": false,
@@ -9314,11 +9318,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-09.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 1369.4, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-09.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-09.parquet is not the input the program was compiled with, and fare_amount is 1368.7 in data row 11495, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9335,8 +9341,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3168619999778457,
-   "fresh compile and run": 1.458931900036987
+   "deopt run": 1.6139458000543527,
+   "fresh compile and run": 1.3912795999785885
   },
   "validators": {
    "pandera/all": false,
@@ -9366,11 +9372,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-10.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 1024.3, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-10.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-10.parquet is not the input the program was compiled with, and fare_amount is 1024.3 in data row 58512, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9387,8 +9395,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2414554000133649,
-   "fresh compile and run": 1.3981836999882944
+   "deopt run": 1.3378325999947265,
+   "fresh compile and run": 1.4515110999927856
   },
   "validators": {
    "pandera/all": false,
@@ -9418,11 +9426,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-11.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 3523.3, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-11.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-11.parquet is not the input the program was compiled with, and fare_amount is 3523.3 in data row 56108, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9439,8 +9449,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.252998799958732,
-   "fresh compile and run": 1.3966888000140898
+   "deopt run": 1.2696694000042044,
+   "fresh compile and run": 1.3372112000361085
   },
   "validators": {
    "pandera/all": false,
@@ -9470,11 +9480,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-12.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 1618.6, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-12.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-12.parquet is not the input the program was compiled with, and fare_amount is 1587.8 in data row 17720, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9491,8 +9503,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3806441000197083,
-   "fresh compile and run": 1.3193066000239924
+   "deopt run": 1.1732852999703027,
+   "fresh compile and run": 1.4015283999615349
   },
   "validators": {
    "pandera/all": false,
@@ -9522,11 +9534,13 @@
    "payment_type"
   ],
   "fresh": "contract error",
-  "deopt": "refused",
-  "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-01.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "deopt": "contract error",
+  "deopts": [
+   "line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000: fare_amount goes up to 1422.6, above 1000"
+  ],
+  "reason": "ContractError: line 10: trips.fare_amount has values outside 0 to 1000",
   "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-01.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-01.parquet is not the input the program was compiled with, and fare_amount is 1422.6 in data row 23149, above 1000; the compiled program relies on this for line 10: EXPECT trips.fare_amount BETWEEN 0 AND 1000. Compile the .prep file again for this input.",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "correct stop",
@@ -9543,8 +9557,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3341954000061378,
-   "fresh compile and run": 1.3884518999839202
+   "deopt run": 1.3014719000202604,
+   "fresh compile and run": 1.3480830999906175
   },
   "validators": {
    "pandera/all": false,
@@ -9574,29 +9588,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-02.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-02.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2166540999896824,
-   "fresh compile and run": 1.4437732999795116
+   "deopt run": 1.2398704999941401,
+   "fresh compile and run": 1.4291907000006177
   },
   "validators": {
    "pandera/all": false,
@@ -9626,29 +9640,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-03.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-03.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3497844000230543,
-   "fresh compile and run": 1.3266350000048988
+   "deopt run": 1.2752456999733113,
+   "fresh compile and run": 1.375459399947431
   },
   "validators": {
    "pandera/all": false,
@@ -9678,29 +9692,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-04.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-04.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.390719100018032,
-   "fresh compile and run": 1.3933696000021882
+   "deopt run": 1.300112699973397,
+   "fresh compile and run": 1.460431499988772
   },
   "validators": {
    "pandera/all": false,
@@ -9730,29 +9744,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-05.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-05.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3229105999926105,
-   "fresh compile and run": 1.4956311999703757
+   "deopt run": 1.327748799987603,
+   "fresh compile and run": 1.4076488999999128
   },
   "validators": {
    "pandera/all": false,
@@ -9782,29 +9796,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-06.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-06.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2256051999866031,
-   "fresh compile and run": 1.3931554000009783
+   "deopt run": 1.356917400029488,
+   "fresh compile and run": 1.423686499998439
   },
   "validators": {
    "pandera/all": false,
@@ -9834,29 +9848,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-07.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-07.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3535577000002377,
-   "fresh compile and run": 1.327471200027503
+   "deopt run": 1.307735499984119,
+   "fresh compile and run": 1.9112817000132054
   },
   "validators": {
    "pandera/all": false,
@@ -9886,29 +9900,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-08.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-08.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3120631000492722,
-   "fresh compile and run": 1.5315267000114545
+   "deopt run": 1.623619400023017,
+   "fresh compile and run": 1.778206399991177
   },
   "validators": {
    "pandera/all": false,
@@ -9938,29 +9952,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-09.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-09.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2350934999994934,
-   "fresh compile and run": 1.5232449999894015
+   "deopt run": 1.3877442000084557,
+   "fresh compile and run": 1.8990249000489712
   },
   "validators": {
    "pandera/all": false,
@@ -9990,29 +10004,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-10.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-10.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2492294000112452,
-   "fresh compile and run": 1.488063000026159
+   "deopt run": 1.5908787000225857,
+   "fresh compile and run": 1.9966941999737173
   },
   "validators": {
    "pandera/all": false,
@@ -10042,29 +10056,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-11.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-11.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3523066000198014,
-   "fresh compile and run": 1.636611400055699
+   "deopt run": 1.811074200028088,
+   "fresh compile and run": 2.312657299975399
   },
   "validators": {
    "pandera/all": false,
@@ -10094,29 +10108,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-12.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2024-12.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5400051000178792,
-   "fresh compile and run": 1.3890786000411026
+   "deopt run": 1.5672181000118144,
+   "fresh compile and run": 1.7940851000021212
   },
   "validators": {
    "pandera/all": false,
@@ -10167,8 +10181,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4856249000295065,
-   "fresh compile and run": 1.464581200038083
+   "deopt run": 1.358559799962677,
+   "fresh compile and run": 1.7416713999700733
   },
   "validators": {
    "pandera/all": false,
@@ -10219,8 +10233,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5268655000254512,
-   "fresh compile and run": 1.5162740999949165
+   "deopt run": 1.46918530005496,
+   "fresh compile and run": 1.6867053000023589
   },
   "validators": {
    "pandera/all": false,
@@ -10271,8 +10285,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4599341000430286,
-   "fresh compile and run": 1.4059092000243254
+   "deopt run": 1.4608953000279143,
+   "fresh compile and run": 1.9106907999957912
   },
   "validators": {
    "pandera/all": false,
@@ -10323,8 +10337,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3878198000020348,
-   "fresh compile and run": 1.3800898999907076
+   "deopt run": 1.4639812000095844,
+   "fresh compile and run": 1.7810032999841496
   },
   "validators": {
    "pandera/all": false,
@@ -10375,8 +10389,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4226697999984026,
-   "fresh compile and run": 1.4784021000377834
+   "deopt run": 1.5247600000002421,
+   "fresh compile and run": 1.7606518000247888
   },
   "validators": {
    "pandera/all": false,
@@ -10427,8 +10441,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3835688999970444,
-   "fresh compile and run": 1.4316683000070043
+   "deopt run": 1.4106974999886006,
+   "fresh compile and run": 1.8008357000071555
   },
   "validators": {
    "pandera/all": false,
@@ -10479,8 +10493,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4704662000294775,
-   "fresh compile and run": 1.4653919999836944
+   "deopt run": 1.3345307999989018,
+   "fresh compile and run": 1.7618724000058137
   },
   "validators": {
    "pandera/all": false,
@@ -10531,8 +10545,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4096201000502333,
-   "fresh compile and run": 1.4961237999959849
+   "deopt run": 1.5101464000181295,
+   "fresh compile and run": 1.6600728000048548
   },
   "validators": {
    "pandera/all": false,
@@ -10583,8 +10597,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3537895000190474,
-   "fresh compile and run": 1.4882805000524968
+   "deopt run": 1.4213748999754898,
+   "fresh compile and run": 1.8015248000156134
   },
   "validators": {
    "pandera/all": false,
@@ -10637,8 +10651,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3348270999849774,
-   "fresh compile and run": 1.573831000016071
+   "deopt run": 1.3899316000170074,
+   "fresh compile and run": 1.7264852999942377
   },
   "validators": {
    "pandera/all": false,
@@ -10689,8 +10703,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3407550000119954,
-   "fresh compile and run": 1.4351304000010714
+   "deopt run": 1.4688717999961227,
+   "fresh compile and run": 1.8010604999726638
   },
   "validators": {
    "pandera/all": false,
@@ -10741,8 +10755,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3176173000247218,
-   "fresh compile and run": 1.5522367999656126
+   "deopt run": 1.5806023000041023,
+   "fresh compile and run": 1.9916830000001937
   },
   "validators": {
    "pandera/all": false,
@@ -10772,29 +10786,29 @@
    "payment_type"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-02.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\green\\2023-02.parquet is not the input the program was compiled with, and its column 'passenger_count' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
-   "tfdv/all": "unsound",
+   "tfdv/all": "correct run",
    "pandera/read": "needless stop",
    "gx/read": "needless stop",
-   "tfdv/read": "unsound"
+   "tfdv/read": "correct run"
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.273731300025247,
-   "fresh compile and run": 1.4183740999433212
+   "deopt run": 1.4790300999884494,
+   "fresh compile and run": 1.700720899971202
   },
   "validators": {
    "pandera/all": false,
@@ -10845,8 +10859,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3256620000465773,
-   "fresh compile and run": 1.3841832000180148
+   "deopt run": 1.5178798999986611,
+   "fresh compile and run": 1.6228473999653943
   },
   "validators": {
    "pandera/all": false,
@@ -10897,8 +10911,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3584011999773793,
-   "fresh compile and run": 1.473664099990856
+   "deopt run": 1.436166800034698,
+   "fresh compile and run": 1.7442755000083707
   },
   "validators": {
    "pandera/all": false,
@@ -10949,8 +10963,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4012480999808758,
-   "fresh compile and run": 1.425109900010284
+   "deopt run": 1.4345950999995694,
+   "fresh compile and run": 1.6621910000103526
   },
   "validators": {
    "pandera/all": false,
@@ -11001,8 +11015,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3579532000003383,
-   "fresh compile and run": 1.4407341000041924
+   "deopt run": 1.8204365000128746,
+   "fresh compile and run": 2.5232980000437237
   },
   "validators": {
    "pandera/all": false,
@@ -11053,8 +11067,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3758854999905452,
-   "fresh compile and run": 1.5203697999822907
+   "deopt run": 1.8276337999850512,
+   "fresh compile and run": 2.1101627000025474
   },
   "validators": {
    "pandera/all": false,
@@ -11105,8 +11119,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3285413000267,
-   "fresh compile and run": 1.3564978999784216
+   "deopt run": 1.441367000050377,
+   "fresh compile and run": 1.7953176000155509
   },
   "validators": {
    "pandera/all": false,
@@ -11157,8 +11171,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3812325000180863,
-   "fresh compile and run": 1.3487804000033066
+   "deopt run": 1.4267735999892466,
+   "fresh compile and run": 1.551309400005266
   },
   "validators": {
    "pandera/all": false,
@@ -11209,8 +11223,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2863889000145718,
-   "fresh compile and run": 1.3087434000335634
+   "deopt run": 1.4498829999938607,
+   "fresh compile and run": 1.7491709999740124
   },
   "validators": {
    "pandera/all": false,
@@ -11261,8 +11275,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.341395299998112,
-   "fresh compile and run": 1.4894259999855421
+   "deopt run": 1.5205130000249483,
+   "fresh compile and run": 1.6193748000077903
   },
   "validators": {
    "pandera/all": false,
@@ -11313,8 +11327,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2787061000126414,
-   "fresh compile and run": 1.4248163000447676
+   "deopt run": 1.5499915999826044,
+   "fresh compile and run": 1.7034152999985963
   },
   "validators": {
    "pandera/all": false,
@@ -11365,8 +11379,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2146996000083163,
-   "fresh compile and run": 1.3528997999965213
+   "deopt run": 1.444871100015007,
+   "fresh compile and run": 1.7699920000159182
   },
   "validators": {
    "pandera/all": false,
@@ -11417,8 +11431,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.300491600006353,
-   "fresh compile and run": 1.4071095999679528
+   "deopt run": 1.479248799965717,
+   "fresh compile and run": 1.9297050000168383
   },
   "validators": {
    "pandera/all": false,
@@ -11469,8 +11483,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3369528999901377,
-   "fresh compile and run": 1.4067917000502348
+   "deopt run": 1.5277204000158235,
+   "fresh compile and run": 1.906031400023494
   },
   "validators": {
    "pandera/all": false,
@@ -11521,8 +11535,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.331247300026007,
-   "fresh compile and run": 1.4039686000323854
+   "deopt run": 1.694572500011418,
+   "fresh compile and run": 1.5520260999910533
   },
   "validators": {
    "pandera/all": false,
@@ -11573,8 +11587,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3046231000334956,
-   "fresh compile and run": 1.4696907000034116
+   "deopt run": 1.3566955999704078,
+   "fresh compile and run": 1.720539000001736
   },
   "validators": {
    "pandera/all": false,
@@ -11625,8 +11639,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2675804000464268,
-   "fresh compile and run": 1.4506597999716178
+   "deopt run": 1.495516199967824,
+   "fresh compile and run": 1.6353526000166312
   },
   "validators": {
    "pandera/all": false,
@@ -11677,8 +11691,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2699025999754667,
-   "fresh compile and run": 1.4185798999969848
+   "deopt run": 1.42642039997736,
+   "fresh compile and run": 1.6431640000082552
   },
   "validators": {
    "pandera/all": false,
@@ -11729,8 +11743,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2937286000233144,
-   "fresh compile and run": 1.4206315000192262
+   "deopt run": 1.3126517999917269,
+   "fresh compile and run": 1.7611789000220597
   },
   "validators": {
    "pandera/all": false,
@@ -11781,8 +11795,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3559631999814883,
-   "fresh compile and run": 1.4363844000035897
+   "deopt run": 1.520715199992992,
+   "fresh compile and run": 1.9928521999972872
   },
   "validators": {
    "pandera/all": false,
@@ -11833,8 +11847,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3906888000201434,
-   "fresh compile and run": 1.3596197000006214
+   "deopt run": 1.6626880000112578,
+   "fresh compile and run": 1.7456327000400051
   },
   "validators": {
    "pandera/all": false,
@@ -11885,8 +11899,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4542785999947228,
-   "fresh compile and run": 1.4206768000149168
+   "deopt run": 1.3887174999690615,
+   "fresh compile and run": 1.9104887999710627
   },
   "validators": {
    "pandera/all": false,
@@ -11937,8 +11951,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3418261000188068,
-   "fresh compile and run": 1.4635725999833085
+   "deopt run": 1.4908242000383325,
+   "fresh compile and run": 1.7934191999956965
   },
   "validators": {
    "pandera/all": false,
@@ -11991,8 +12005,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6044862000271678,
-   "fresh compile and run": 1.5821586000383832
+   "deopt run": 1.7817191000212915,
+   "fresh compile and run": 2.333429399994202
   },
   "validators": {
    "pandera/all": false,
@@ -12045,8 +12059,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6971372999832965,
-   "fresh compile and run": 1.7529926000279374
+   "deopt run": 1.7510961000225507,
+   "fresh compile and run": 3.253570500004571
   },
   "validators": {
    "pandera/all": false,
@@ -12099,8 +12113,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.8306990999844857,
-   "fresh compile and run": 1.980201099999249
+   "deopt run": 1.8146691999863833,
+   "fresh compile and run": 3.7944436999969184
   },
   "validators": {
    "pandera/all": false,
@@ -12153,8 +12167,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9291377000045031,
-   "fresh compile and run": 2.266279499977827
+   "deopt run": 2.1330132000148296,
+   "fresh compile and run": 6.085316500044428
   },
   "validators": {
    "pandera/all": false,
@@ -12207,8 +12221,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1080860000220127,
-   "fresh compile and run": 2.4857304000179283
+   "deopt run": 2.5431217000004835,
+   "fresh compile and run": 6.377705899998546
   },
   "validators": {
    "pandera/all": false,
@@ -12261,8 +12275,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.128551999980118,
-   "fresh compile and run": 2.3852732000523247
+   "deopt run": 2.386243299988564,
+   "fresh compile and run": 6.513531900011003
   },
   "validators": {
    "pandera/all": false,
@@ -12315,8 +12329,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1707235000212677,
-   "fresh compile and run": 2.5113525000051595
+   "deopt run": 2.2314481000066735,
+   "fresh compile and run": 6.2414986999938264
   },
   "validators": {
    "pandera/all": false,
@@ -12369,8 +12383,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1083641999866813,
-   "fresh compile and run": 2.480538300005719
+   "deopt run": 2.7768785000080243,
+   "fresh compile and run": 7.151957100024447
   },
   "validators": {
    "pandera/all": false,
@@ -12423,8 +12437,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9274306999868713,
-   "fresh compile and run": 2.3010383999790065
+   "deopt run": 2.2200158000341617,
+   "fresh compile and run": 5.0476159999961965
   },
   "validators": {
    "pandera/all": false,
@@ -12479,8 +12493,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.8121776000480168,
-   "fresh compile and run": 2.182723400008399
+   "deopt run": 1.7179517000331543,
+   "fresh compile and run": 4.984960499976296
   },
   "validators": {
    "pandera/all": false,
@@ -12533,8 +12547,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6789831999922171,
-   "fresh compile and run": 1.772894699999597
+   "deopt run": 1.7362572000129148,
+   "fresh compile and run": 3.3940998000325635
   },
   "validators": {
    "pandera/all": false,
@@ -12587,8 +12601,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.759766999981366,
-   "fresh compile and run": 1.9794934000237845
+   "deopt run": 1.9976451999973506,
+   "fresh compile and run": 3.5743901999667287
   },
   "validators": {
    "pandera/all": false,
@@ -12641,8 +12655,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6335821999819018,
-   "fresh compile and run": 1.9037396000348963
+   "deopt run": 1.5674972000415437,
+   "fresh compile and run": 3.586883099982515
   },
   "validators": {
    "pandera/all": false,
@@ -12695,8 +12709,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.7976541999960318,
-   "fresh compile and run": 1.978145599947311
+   "deopt run": 3.103875299973879,
+   "fresh compile and run": 7.308034799993038
   },
   "validators": {
    "pandera/all": false,
@@ -12751,8 +12765,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9745089000207372,
-   "fresh compile and run": 2.236409300006926
+   "deopt run": 5.09128839999903,
+   "fresh compile and run": 6.978594499989413
   },
   "validators": {
    "pandera/all": false,
@@ -12805,8 +12819,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.126089699973818,
-   "fresh compile and run": 2.3829374000197276
+   "deopt run": 3.0854324999963865,
+   "fresh compile and run": 11.46393910003826
   },
   "validators": {
    "pandera/all": false,
@@ -12861,8 +12875,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.115080699964892,
-   "fresh compile and run": 2.384604299964849
+   "deopt run": 3.8468860000139102,
+   "fresh compile and run": 8.913431099965237
   },
   "validators": {
    "pandera/all": false,
@@ -12917,8 +12931,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.121441599971149,
-   "fresh compile and run": 2.6218301999615505
+   "deopt run": 2.648502300027758,
+   "fresh compile and run": 7.758004500006791
   },
   "validators": {
    "pandera/all": false,
@@ -12971,8 +12985,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1955829999642447,
-   "fresh compile and run": 2.639305900025647
+   "deopt run": 2.306310099957045,
+   "fresh compile and run": 7.599176299991086
   },
   "validators": {
    "pandera/all": false,
@@ -13027,8 +13041,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.017234599974472,
-   "fresh compile and run": 2.393207099987194
+   "deopt run": 2.3332037000218406,
+   "fresh compile and run": 6.4365450000041164
   },
   "validators": {
    "pandera/all": false,
@@ -13083,8 +13097,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1206425999989733,
-   "fresh compile and run": 2.404558599984739
+   "deopt run": 2.425765499996487,
+   "fresh compile and run": 8.258568999997806
   },
   "validators": {
    "pandera/all": false,
@@ -13139,8 +13153,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9315204999875277,
-   "fresh compile and run": 2.112526800017804
+   "deopt run": 2.5764025000389665,
+   "fresh compile and run": 7.805841199995484
   },
   "validators": {
    "pandera/all": false,
@@ -13195,8 +13209,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.756332700024359,
-   "fresh compile and run": 2.009055799979251
+   "deopt run": 3.1012044999515638,
+   "fresh compile and run": 5.953588300035335
   },
   "validators": {
    "pandera/all": false,
@@ -13251,8 +13265,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6160121000139043,
-   "fresh compile and run": 1.9308693999773823
+   "deopt run": 2.5201012999750674,
+   "fresh compile and run": 5.0197312999516726
   },
   "validators": {
    "pandera/all": false,
@@ -13307,8 +13321,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6938895999919623,
-   "fresh compile and run": 1.8902245999779552
+   "deopt run": 2.035656900028698,
+   "fresh compile and run": 5.374218800046947
   },
   "validators": {
    "pandera/all": false,
@@ -13363,8 +13377,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.829459999979008,
-   "fresh compile and run": 2.0010075999889523
+   "deopt run": 2.821864199999254,
+   "fresh compile and run": 5.269851699995343
   },
   "validators": {
    "pandera/all": false,
@@ -13419,8 +13433,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9112508000107482,
-   "fresh compile and run": 2.3310473000165075
+   "deopt run": 2.3982876000227407,
+   "fresh compile and run": 8.512712099996861
   },
   "validators": {
    "pandera/all": false,
@@ -13475,8 +13489,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.2049922000151128,
-   "fresh compile and run": 2.5372552999760956
+   "deopt run": 5.27290909999283,
+   "fresh compile and run": 7.829397900030017
   },
   "validators": {
    "pandera/all": false,
@@ -13531,8 +13545,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.161840500019025,
-   "fresh compile and run": 2.5676292999996804
+   "deopt run": 2.851351200020872,
+   "fresh compile and run": 10.25133509997977
   },
   "validators": {
    "pandera/all": false,
@@ -13585,8 +13599,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.2110038999817334,
-   "fresh compile and run": 2.6870388999814168
+   "deopt run": 3.046037799969781,
+   "fresh compile and run": 11.866907999967225
   },
   "validators": {
    "pandera/all": false,
@@ -13639,8 +13653,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1640882000210695,
-   "fresh compile and run": 2.6420177000109106
+   "deopt run": 3.1693395000183955,
+   "fresh compile and run": 9.18887439998798
   },
   "validators": {
    "pandera/all": false,
@@ -13693,8 +13707,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.226822099997662,
-   "fresh compile and run": 2.8191971000051126
+   "deopt run": 2.4057358999853022,
+   "fresh compile and run": 6.910193599993363
   },
   "validators": {
    "pandera/all": false,
@@ -13749,8 +13763,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.2833922000136226,
-   "fresh compile and run": 2.8651860000099987
+   "deopt run": 2.6171260999981314,
+   "fresh compile and run": 6.973399900016375
   },
   "validators": {
    "pandera/all": false,
@@ -13803,8 +13817,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.0218662999686785,
-   "fresh compile and run": 2.4220096999779344
+   "deopt run": 3.2879447999875993,
+   "fresh compile and run": 5.571066299977247
   },
   "validators": {
    "pandera/all": false,
@@ -13857,8 +13871,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6894918999751098,
-   "fresh compile and run": 1.897199799946975
+   "deopt run": 2.0489087000023574,
+   "fresh compile and run": 4.8067210000008345
   },
   "validators": {
    "pandera/all": false,
@@ -13911,8 +13925,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.540588999981992,
-   "fresh compile and run": 1.611443399975542
+   "deopt run": 1.9362025000154972,
+   "fresh compile and run": 2.575164499983657
   },
   "validators": {
    "pandera/all": false,
@@ -13965,8 +13979,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.730058699962683,
-   "fresh compile and run": 1.9322347999550402
+   "deopt run": 1.8828936999780126,
+   "fresh compile and run": 3.5474695000448264
   },
   "validators": {
    "pandera/all": false,
@@ -14019,8 +14033,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.8046971999574453,
-   "fresh compile and run": 1.8654312000144273
+   "deopt run": 2.0794574999599718,
+   "fresh compile and run": 4.054247800027952
   },
   "validators": {
    "pandera/all": false,
@@ -14073,8 +14087,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9346507000154816,
-   "fresh compile and run": 2.13326179998694
+   "deopt run": 2.3424156000255607,
+   "fresh compile and run": 5.154383599990979
   },
   "validators": {
    "pandera/all": false,
@@ -14127,8 +14141,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.0116446999600157,
-   "fresh compile and run": 2.4023544000228867
+   "deopt run": 2.3464672000263818,
+   "fresh compile and run": 6.105641199974343
   },
   "validators": {
    "pandera/all": false,
@@ -14181,8 +14195,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.106697399984114,
-   "fresh compile and run": 2.4982787999906577
+   "deopt run": 2.170572999981232,
+   "fresh compile and run": 6.466061200015247
   },
   "validators": {
    "pandera/all": false,
@@ -14235,8 +14249,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1941410999861546,
-   "fresh compile and run": 2.549291400006041
+   "deopt run": 2.5454578999779187,
+   "fresh compile and run": 7.116726699983701
   },
   "validators": {
    "pandera/all": false,
@@ -14289,8 +14303,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.0266180000035092,
-   "fresh compile and run": 2.5027352000470273
+   "deopt run": 2.2024138999986462,
+   "fresh compile and run": 6.8438454999704845
   },
   "validators": {
    "pandera/all": false,
@@ -14343,8 +14357,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.080769299995154,
-   "fresh compile and run": 2.343437300005462
+   "deopt run": 2.0622180000063963,
+   "fresh compile and run": 6.311772200046107
   },
   "validators": {
    "pandera/all": false,
@@ -14399,8 +14413,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.8641305000055581,
-   "fresh compile and run": 2.198554599948693
+   "deopt run": 2.347202399978414,
+   "fresh compile and run": 4.5980687999981456
   },
   "validators": {
    "pandera/all": false,
@@ -14453,8 +14467,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.7321488000452518,
-   "fresh compile and run": 1.8625630000024103
+   "deopt run": 1.6209135999670252,
+   "fresh compile and run": 4.19360370002687
   },
   "validators": {
    "pandera/all": false,
@@ -14507,8 +14521,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6516389999887906,
-   "fresh compile and run": 1.9737106999964453
+   "deopt run": 1.8799141999916174,
+   "fresh compile and run": 4.537468499969691
   },
   "validators": {
    "pandera/all": false,
@@ -14561,8 +14575,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6705388000118546,
-   "fresh compile and run": 1.824547199998051
+   "deopt run": 1.8103056999971159,
+   "fresh compile and run": 3.7654567999998108
   },
   "validators": {
    "pandera/all": false,
@@ -14615,8 +14629,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6897677999804728,
-   "fresh compile and run": 2.2118636000086553
+   "deopt run": 2.5565424999804236,
+   "fresh compile and run": 5.138499699998647
   },
   "validators": {
    "pandera/all": false,
@@ -14671,8 +14685,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.008850199985318,
-   "fresh compile and run": 2.280910599976778
+   "deopt run": 1.9758968999958597,
+   "fresh compile and run": 5.968423099955544
   },
   "validators": {
    "pandera/all": false,
@@ -14725,8 +14739,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1728545000078157,
-   "fresh compile and run": 2.4600426999968477
+   "deopt run": 3.1633989999536425,
+   "fresh compile and run": 7.783412999997381
   },
   "validators": {
    "pandera/all": false,
@@ -14781,8 +14795,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1392016999889165,
-   "fresh compile and run": 2.4621384000056423
+   "deopt run": 2.3433198999846354,
+   "fresh compile and run": 6.552539099997375
   },
   "validators": {
    "pandera/all": false,
@@ -14835,8 +14849,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1631025999668054,
-   "fresh compile and run": 2.716680000012275
+   "deopt run": 2.2164441000204533,
+   "fresh compile and run": 7.642146199999843
   },
   "validators": {
    "pandera/all": false,
@@ -14889,8 +14903,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.166038900031708,
-   "fresh compile and run": 2.6282718000002205
+   "deopt run": 2.7866852000006475,
+   "fresh compile and run": 8.618956500024069
   },
   "validators": {
    "pandera/all": false,
@@ -14945,8 +14959,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1097692999755964,
-   "fresh compile and run": 2.4696899999980815
+   "deopt run": 2.4342409999808297,
+   "fresh compile and run": 5.996673199988436
   },
   "validators": {
    "pandera/all": false,
@@ -14999,8 +15013,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.0814192999969237,
-   "fresh compile and run": 2.4678246999974363
+   "deopt run": 1.8980088999960572,
+   "fresh compile and run": 6.061658899998292
   },
   "validators": {
    "pandera/all": false,
@@ -15053,8 +15067,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.9164196999627165,
-   "fresh compile and run": 2.251490800001193
+   "deopt run": 2.191434800042771,
+   "fresh compile and run": 4.910710099968128
   },
   "validators": {
    "pandera/all": false,
@@ -15107,8 +15121,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.784921599959489,
-   "fresh compile and run": 1.9757404000265524
+   "deopt run": 1.7184167999657802,
+   "fresh compile and run": 3.7967802000348456
   },
   "validators": {
    "pandera/all": false,
@@ -15161,8 +15175,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6825618000002578,
-   "fresh compile and run": 1.8130530000198632
+   "deopt run": 1.6164839999983087,
+   "fresh compile and run": 3.2075075000175275
   },
   "validators": {
    "pandera/all": false,
@@ -15215,8 +15229,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.647815999982413,
-   "fresh compile and run": 1.9496986000449397
+   "deopt run": 1.700812200026121,
+   "fresh compile and run": 3.499597799964249
   },
   "validators": {
    "pandera/all": false,
@@ -15269,8 +15283,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.8746500000124797,
-   "fresh compile and run": 2.025002999987919
+   "deopt run": 2.0483330999850295,
+   "fresh compile and run": 6.053376500029117
   },
   "validators": {
    "pandera/all": false,
@@ -15323,8 +15337,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.860611800046172,
-   "fresh compile and run": 2.1585035000462085
+   "deopt run": 2.2620626999996603,
+   "fresh compile and run": 5.299479499983136
   },
   "validators": {
    "pandera/all": false,
@@ -15377,8 +15391,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.043298100004904,
-   "fresh compile and run": 2.3887026999727823
+   "deopt run": 2.1694720999803394,
+   "fresh compile and run": 5.817613799998071
   },
   "validators": {
    "pandera/all": false,
@@ -15431,8 +15445,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.2039624999742955,
-   "fresh compile and run": 2.662081400048919
+   "deopt run": 2.7927043000236154,
+   "fresh compile and run": 7.250243000045884
   },
   "validators": {
    "pandera/all": false,
@@ -15485,8 +15499,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1126569000189193,
-   "fresh compile and run": 2.662104899995029
+   "deopt run": 2.2521358999656513,
+   "fresh compile and run": 7.441735000000335
   },
   "validators": {
    "pandera/all": false,
@@ -15539,8 +15553,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1469944999553263,
-   "fresh compile and run": 2.5905131000326946
+   "deopt run": 4.207467200001702,
+   "fresh compile and run": 6.786066700005904
   },
   "validators": {
    "pandera/all": false,
@@ -15593,8 +15607,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.1618872999679297,
-   "fresh compile and run": 2.6629137999843806
+   "deopt run": 2.727970300009474,
+   "fresh compile and run": 7.230489599984139
   },
   "validators": {
    "pandera/all": false,
@@ -15649,8 +15663,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 2.2927452999865636,
-   "fresh compile and run": 2.7136959999916144
+   "deopt run": 2.329571800015401,
+   "fresh compile and run": 7.252051300019957
   },
   "validators": {
    "pandera/all": false,
@@ -15703,8 +15717,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.8912812999915332,
-   "fresh compile and run": 2.257072900014464
+   "deopt run": 2.196730099967681,
+   "fresh compile and run": 6.111116799991578
   },
   "validators": {
    "pandera/all": false,
@@ -15757,8 +15771,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6649981000227854,
-   "fresh compile and run": 1.9325080999988131
+   "deopt run": 2.309298599953763,
+   "fresh compile and run": 4.057188800012227
   },
   "validators": {
    "pandera/all": false,
@@ -15810,8 +15824,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3051067999913357,
-   "fresh compile and run": 1.365800500032492
+   "deopt run": 1.3222000999958254,
+   "fresh compile and run": 1.8608145999605767
   },
   "validators": {
    "pandera/all": false,
@@ -15863,8 +15877,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2878829999826849,
-   "fresh compile and run": 1.3839768000179902
+   "deopt run": 1.3373409999767318,
+   "fresh compile and run": 1.8668856000294909
   },
   "validators": {
    "pandera/all": false,
@@ -15916,8 +15930,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2247296000132337,
-   "fresh compile and run": 1.4261532999807969
+   "deopt run": 1.2536123999743722,
+   "fresh compile and run": 1.9044550000107847
   },
   "validators": {
    "pandera/all": false,
@@ -15969,8 +15983,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2864995999843813,
-   "fresh compile and run": 1.2891629000077955
+   "deopt run": 1.256061199994292,
+   "fresh compile and run": 1.9738983000279404
   },
   "validators": {
    "pandera/all": false,
@@ -16022,8 +16036,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2525806000339799,
-   "fresh compile and run": 1.4230544000165537
+   "deopt run": 1.2859139000065625,
+   "fresh compile and run": 1.9760398999787867
   },
   "validators": {
    "pandera/all": false,
@@ -16075,8 +16089,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1594595999922603,
-   "fresh compile and run": 1.3761825999827124
+   "deopt run": 1.19637469999725,
+   "fresh compile and run": 1.7504573999904096
   },
   "validators": {
    "pandera/all": false,
@@ -16128,8 +16142,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2449473000015132,
-   "fresh compile and run": 1.2716660000151023
+   "deopt run": 1.240328399988357,
+   "fresh compile and run": 1.8895896999747492
   },
   "validators": {
    "pandera/all": false,
@@ -16181,8 +16195,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6825962999719195,
-   "fresh compile and run": 1.6200975999818183
+   "deopt run": 1.2858851000200957,
+   "fresh compile and run": 2.3678302000043914
   },
   "validators": {
    "pandera/all": false,
@@ -16234,8 +16248,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.678655499999877,
-   "fresh compile and run": 1.3126882999786176
+   "deopt run": 1.3175893999869004,
+   "fresh compile and run": 1.7800077999709174
   },
   "validators": {
    "pandera/all": false,
@@ -16266,17 +16280,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2010-11.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2010-11.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -16287,8 +16301,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2423102999455296,
-   "fresh compile and run": 1.2491488000378013
+   "deopt run": 1.2826533000334166,
+   "fresh compile and run": 1.9131706000189297
   },
   "validators": {
    "pandera/all": false,
@@ -16340,8 +16354,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1024022999918088,
-   "fresh compile and run": 1.222601699992083
+   "deopt run": 1.5345708000240847,
+   "fresh compile and run": 1.8869696999900043
   },
   "validators": {
    "pandera/all": false,
@@ -16393,8 +16407,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1264366999967024,
-   "fresh compile and run": 1.3533832000102848
+   "deopt run": 1.3946254000184126,
+   "fresh compile and run": 1.8936066000023857
   },
   "validators": {
    "pandera/all": false,
@@ -16446,8 +16460,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4690480999997817,
-   "fresh compile and run": 1.291549599962309
+   "deopt run": 1.2997429000097327,
+   "fresh compile and run": 2.11811200005468
   },
   "validators": {
    "pandera/all": false,
@@ -16499,8 +16513,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1947764999931678,
-   "fresh compile and run": 1.5761460000067018
+   "deopt run": 1.8609006000333466,
+   "fresh compile and run": 2.560770100040827
   },
   "validators": {
    "pandera/all": false,
@@ -16552,8 +16566,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4699182999902405,
-   "fresh compile and run": 1.9862137000309303
+   "deopt run": 2.053141200041864,
+   "fresh compile and run": 2.063011899997946
   },
   "validators": {
    "pandera/all": false,
@@ -16605,8 +16619,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3848981999908574,
-   "fresh compile and run": 2.0369473000173457
+   "deopt run": 1.398048100003507,
+   "fresh compile and run": 2.096829499991145
   },
   "validators": {
    "pandera/all": false,
@@ -16658,8 +16672,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.7882502999855205,
-   "fresh compile and run": 1.305618200043682
+   "deopt run": 1.3039367999881506,
+   "fresh compile and run": 2.7341507999808528
   },
   "validators": {
    "pandera/all": false,
@@ -16711,8 +16725,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2954582999809645,
-   "fresh compile and run": 1.379189300001599
+   "deopt run": 1.7038085999665782,
+   "fresh compile and run": 2.3014926000032574
   },
   "validators": {
    "pandera/all": false,
@@ -16764,8 +16778,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2671755000483245,
-   "fresh compile and run": 1.3654612999525853
+   "deopt run": 1.7043390999897383,
+   "fresh compile and run": 2.011494800040964
   },
   "validators": {
    "pandera/all": false,
@@ -16817,8 +16831,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2537225999985822,
-   "fresh compile and run": 1.3493162000086159
+   "deopt run": 1.464424300007522,
+   "fresh compile and run": 1.9746237000217661
   },
   "validators": {
    "pandera/all": false,
@@ -16870,8 +16884,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1818580999970436,
-   "fresh compile and run": 1.3358833999955095
+   "deopt run": 1.2465813999879174,
+   "fresh compile and run": 1.9596134999883361
   },
   "validators": {
    "pandera/all": false,
@@ -16923,8 +16937,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.293067799997516,
-   "fresh compile and run": 1.5329331000102684
+   "deopt run": 1.4547436999855563,
+   "fresh compile and run": 2.1279474000330083
   },
   "validators": {
    "pandera/all": false,
@@ -16976,8 +16990,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4422442999784835,
-   "fresh compile and run": 1.3986414999817498
+   "deopt run": 1.4324635000084527,
+   "fresh compile and run": 2.0218199999653734
   },
   "validators": {
    "pandera/all": false,
@@ -17029,8 +17043,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.240145699994173,
-   "fresh compile and run": 1.4207933999714442
+   "deopt run": 1.2991942000226118,
+   "fresh compile and run": 1.891723999986425
   },
   "validators": {
    "pandera/all": false,
@@ -17082,8 +17096,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4983021999942139,
-   "fresh compile and run": 1.525398900033906
+   "deopt run": 1.322207100049127,
+   "fresh compile and run": 2.087900999991689
   },
   "validators": {
    "pandera/all": false,
@@ -17135,8 +17149,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2882615000125952,
-   "fresh compile and run": 1.4767298999940977
+   "deopt run": 1.56433660001494,
+   "fresh compile and run": 2.0796653000288643
   },
   "validators": {
    "pandera/all": false,
@@ -17188,8 +17202,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2288798000081442,
-   "fresh compile and run": 1.390872300020419
+   "deopt run": 1.6452967000077479,
+   "fresh compile and run": 3.779945200018119
   },
   "validators": {
    "pandera/all": false,
@@ -17241,8 +17255,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2179178000078537,
-   "fresh compile and run": 1.2760123999905773
+   "deopt run": 2.6068442999967374,
+   "fresh compile and run": 3.9504450000240467
   },
   "validators": {
    "pandera/all": false,
@@ -17294,8 +17308,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2812712999875657,
-   "fresh compile and run": 1.5623050999711268
+   "deopt run": 3.1860696999938227,
+   "fresh compile and run": 4.4915021999622695
   },
   "validators": {
    "pandera/all": false,
@@ -17347,8 +17361,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3007703000330366,
-   "fresh compile and run": 1.3911550999619067
+   "deopt run": 3.1648113999981433,
+   "fresh compile and run": 2.74498889996903
   },
   "validators": {
    "pandera/all": false,
@@ -17400,8 +17414,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1694172999705188,
-   "fresh compile and run": 1.3410704999696463
+   "deopt run": 2.0550311999977566,
+   "fresh compile and run": 2.309605599963106
   },
   "validators": {
    "pandera/all": false,
@@ -17453,8 +17467,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2033089000033215,
-   "fresh compile and run": 1.2687472999677993
+   "deopt run": 1.6575151000288315,
+   "fresh compile and run": 2.9326237000059336
   },
   "validators": {
    "pandera/all": false,
@@ -17506,8 +17520,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.131427899992559,
-   "fresh compile and run": 1.268049800011795
+   "deopt run": 2.068118199997116,
+   "fresh compile and run": 2.7725237000267953
   },
   "validators": {
    "pandera/all": false,
@@ -17559,8 +17573,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.10807770001702,
-   "fresh compile and run": 1.2355784000246786
+   "deopt run": 1.9491401999839582,
+   "fresh compile and run": 2.1883358000195585
   },
   "validators": {
    "pandera/all": false,
@@ -17612,8 +17626,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.157562099979259,
-   "fresh compile and run": 1.2672693000058644
+   "deopt run": 1.56644269998651,
+   "fresh compile and run": 3.502035600016825
   },
   "validators": {
    "pandera/all": false,
@@ -17665,8 +17679,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1147514000185765,
-   "fresh compile and run": 1.2151334999944083
+   "deopt run": 1.717807899985928,
+   "fresh compile and run": 2.516250199987553
   },
   "validators": {
    "pandera/all": false,
@@ -17697,17 +17711,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2013-02.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2013-02.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -17718,8 +17732,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1008855999680236,
-   "fresh compile and run": 1.3735649000154808
+   "deopt run": 1.6278946999809705,
+   "fresh compile and run": 2.724962299980689
   },
   "validators": {
    "pandera/all": false,
@@ -17771,8 +17785,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3945125000318512,
-   "fresh compile and run": 1.2509285000269301
+   "deopt run": 1.8735830999794416,
+   "fresh compile and run": 2.2915765999932773
   },
   "validators": {
    "pandera/all": false,
@@ -17824,8 +17838,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1550946999923326,
-   "fresh compile and run": 1.3036365000298247
+   "deopt run": 1.5317696999991313,
+   "fresh compile and run": 2.70048100000713
   },
   "validators": {
    "pandera/all": false,
@@ -17877,8 +17891,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2602887999964878,
-   "fresh compile and run": 1.231122699973639
+   "deopt run": 1.3873436999856494,
+   "fresh compile and run": 2.260741500009317
   },
   "validators": {
    "pandera/all": false,
@@ -17930,8 +17944,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1095150000182912,
-   "fresh compile and run": 1.2535299999872223
+   "deopt run": 1.8604190000332892,
+   "fresh compile and run": 2.271227599994745
   },
   "validators": {
    "pandera/all": false,
@@ -17983,8 +17997,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1522832000046037,
-   "fresh compile and run": 1.264095599995926
+   "deopt run": 1.6379808000056073,
+   "fresh compile and run": 2.9093817999819294
   },
   "validators": {
    "pandera/all": false,
@@ -18036,8 +18050,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1443092999979854,
-   "fresh compile and run": 1.2180549000040628
+   "deopt run": 1.8993547999998555,
+   "fresh compile and run": 2.520584999991115
   },
   "validators": {
    "pandera/all": false,
@@ -18089,8 +18103,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.12069229996996,
-   "fresh compile and run": 1.2356533000129275
+   "deopt run": 1.6003508000285365,
+   "fresh compile and run": 2.5899769000243396
   },
   "validators": {
    "pandera/all": false,
@@ -18142,8 +18156,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0987962000072002,
-   "fresh compile and run": 1.2266202000319026
+   "deopt run": 1.779382800043095,
+   "fresh compile and run": 2.311463799967896
   },
   "validators": {
    "pandera/all": false,
@@ -18195,8 +18209,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0896884999820031,
-   "fresh compile and run": 1.221767000039108
+   "deopt run": 1.8231574000092223,
+   "fresh compile and run": 2.516010000021197
   },
   "validators": {
    "pandera/all": false,
@@ -18248,8 +18262,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1428192000021227,
-   "fresh compile and run": 1.3552445999812335
+   "deopt run": 2.2886203000089154,
+   "fresh compile and run": 3.3350791000411846
   },
   "validators": {
    "pandera/all": false,
@@ -18301,8 +18315,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1468419000157155,
-   "fresh compile and run": 1.2371697999769822
+   "deopt run": 1.9548823999939486,
+   "fresh compile and run": 2.6777603999944404
   },
   "validators": {
    "pandera/all": false,
@@ -18354,8 +18368,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1131805999903008,
-   "fresh compile and run": 1.2554197999997996
+   "deopt run": 1.8406966000329703,
+   "fresh compile and run": 2.6103638999629766
   },
   "validators": {
    "pandera/all": false,
@@ -18407,8 +18421,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.140954700007569,
-   "fresh compile and run": 1.2049392000189982
+   "deopt run": 1.8031284000026062,
+   "fresh compile and run": 2.760531300038565
   },
   "validators": {
    "pandera/all": false,
@@ -18460,8 +18474,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1288922000094317,
-   "fresh compile and run": 1.5789322000346147
+   "deopt run": 1.7997129000141285,
+   "fresh compile and run": 2.2650730999885127
   },
   "validators": {
    "pandera/all": false,
@@ -18513,8 +18527,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.449890099989716,
-   "fresh compile and run": 1.251558499992825
+   "deopt run": 1.6516985999769531,
+   "fresh compile and run": 1.9239421999664046
   },
   "validators": {
    "pandera/all": false,
@@ -18566,8 +18580,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1016227999934927,
-   "fresh compile and run": 1.1892735000001267
+   "deopt run": 1.2861399000394158,
+   "fresh compile and run": 2.8571556999813765
   },
   "validators": {
    "pandera/all": false,
@@ -18619,8 +18633,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0988396999891847,
-   "fresh compile and run": 1.1951716999756172
+   "deopt run": 2.0174476000247523,
+   "fresh compile and run": 2.761190000048373
   },
   "validators": {
    "pandera/all": false,
@@ -18672,8 +18686,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0687325000180863,
-   "fresh compile and run": 1.2070653000264429
+   "deopt run": 2.1700600999756716,
+   "fresh compile and run": 2.6994978000293486
   },
   "validators": {
    "pandera/all": false,
@@ -18725,8 +18739,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0887152000213973,
-   "fresh compile and run": 1.220704699982889
+   "deopt run": 1.6631866999669,
+   "fresh compile and run": 2.216501499991864
   },
   "validators": {
    "pandera/all": false,
@@ -18778,8 +18792,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1093259999761358,
-   "fresh compile and run": 1.1889256000285968
+   "deopt run": 1.6994729000143707,
+   "fresh compile and run": 4.021937100042123
   },
   "validators": {
    "pandera/all": false,
@@ -18810,17 +18824,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2014-11.csv is not the input the program was compiled with, and its column 'TEMP' is Float64, not INTEGER. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2014-11.csv is not the input the program was compiled with, and its column 'TEMP' is Float64, not INTEGER. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -18831,8 +18845,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0590017999638803,
-   "fresh compile and run": 1.2329539000056684
+   "deopt run": 2.749433599994518,
+   "fresh compile and run": 2.718610899988562
   },
   "validators": {
    "pandera/all": false,
@@ -18884,8 +18898,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0980561000178568,
-   "fresh compile and run": 1.226864799973555
+   "deopt run": 1.8299852999625728,
+   "fresh compile and run": 3.1365787999820895
   },
   "validators": {
    "pandera/all": false,
@@ -18937,8 +18951,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1193010000279173,
-   "fresh compile and run": 1.2040824999567121
+   "deopt run": 2.3155513999518007,
+   "fresh compile and run": 2.9995596000226215
   },
   "validators": {
    "pandera/all": false,
@@ -18990,8 +19004,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0877308000344783,
-   "fresh compile and run": 1.2390091000124812
+   "deopt run": 1.7051379000185989,
+   "fresh compile and run": 3.259231499978341
   },
   "validators": {
    "pandera/all": false,
@@ -19043,8 +19057,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2253405000083148,
-   "fresh compile and run": 1.2681597000337206
+   "deopt run": 2.2002752000116743,
+   "fresh compile and run": 2.477425699995365
   },
   "validators": {
    "pandera/all": false,
@@ -19096,8 +19110,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1097806000034325,
-   "fresh compile and run": 1.3741960999905132
+   "deopt run": 1.5320863000233658,
+   "fresh compile and run": 2.1689415000146255
   },
   "validators": {
    "pandera/all": false,
@@ -19149,8 +19163,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1286085000028834,
-   "fresh compile and run": 1.228447200031951
+   "deopt run": 1.5467180000268854,
+   "fresh compile and run": 1.988535700016655
   },
   "validators": {
    "pandera/all": false,
@@ -19202,8 +19216,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.131589399999939,
-   "fresh compile and run": 1.2585803999681957
+   "deopt run": 1.3733005999820307,
+   "fresh compile and run": 1.8940251000458375
   },
   "validators": {
    "pandera/all": false,
@@ -19257,8 +19271,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.134466200019233,
-   "fresh compile and run": 1.677223899983801
+   "deopt run": 1.4161783999879844,
+   "fresh compile and run": 2.031973499979358
   },
   "validators": {
    "pandera/all": false,
@@ -19310,8 +19324,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3105316999717616,
-   "fresh compile and run": 1.3924170999671333
+   "deopt run": 1.2982142000109889,
+   "fresh compile and run": 2.0707190000102855
   },
   "validators": {
    "pandera/all": false,
@@ -19363,8 +19377,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5116731000016443,
-   "fresh compile and run": 1.2719316000002436
+   "deopt run": 1.4480058999615721,
+   "fresh compile and run": 1.8940075999707915
   },
   "validators": {
    "pandera/all": false,
@@ -19395,17 +19409,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2010-11.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2010-11.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -19416,8 +19430,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0665732000488788,
-   "fresh compile and run": 1.319826999970246
+   "deopt run": 1.3133721000049263,
+   "fresh compile and run": 2.027505200006999
   },
   "validators": {
    "pandera/all": false,
@@ -19448,17 +19462,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2010-12.csv is not the input the program was compiled with, and its column 'PRES' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2010-12.csv is not the input the program was compiled with, and its column 'PRES' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -19469,8 +19483,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3021888000075705,
-   "fresh compile and run": 1.4449879999738187
+   "deopt run": 1.2187346999999136,
+   "fresh compile and run": 2.254130700021051
   },
   "validators": {
    "pandera/all": false,
@@ -19524,8 +19538,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.303540900000371,
-   "fresh compile and run": 1.4536013000179082
+   "deopt run": 1.5441469000070356,
+   "fresh compile and run": 1.7507998999790289
   },
   "validators": {
    "pandera/all": false,
@@ -19577,8 +19591,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2770310000050813,
-   "fresh compile and run": 1.4098827000125311
+   "deopt run": 1.2176139999646693,
+   "fresh compile and run": 1.7759311000118032
   },
   "validators": {
    "pandera/all": false,
@@ -19632,8 +19646,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2728300000308082,
-   "fresh compile and run": 1.4110160000273027
+   "deopt run": 1.2156889999751002,
+   "fresh compile and run": 1.8608149999636225
   },
   "validators": {
    "pandera/all": false,
@@ -19685,8 +19699,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2932796000386588,
-   "fresh compile and run": 1.3621681000222452
+   "deopt run": 1.3576421000179835,
+   "fresh compile and run": 1.763820099993609
   },
   "validators": {
    "pandera/all": false,
@@ -19738,8 +19752,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.333440399961546,
-   "fresh compile and run": 1.4006634000106715
+   "deopt run": 1.5062731999787502,
+   "fresh compile and run": 1.8070776000386104
   },
   "validators": {
    "pandera/all": false,
@@ -19791,8 +19805,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2673551000189036,
-   "fresh compile and run": 1.503066500008572
+   "deopt run": 1.2225282000144944,
+   "fresh compile and run": 1.8068707999773324
   },
   "validators": {
    "pandera/all": false,
@@ -19844,8 +19858,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4708817999926396,
-   "fresh compile and run": 1.24139149999246
+   "deopt run": 1.2336705999914557,
+   "fresh compile and run": 2.101157900004182
   },
   "validators": {
    "pandera/all": false,
@@ -19897,8 +19911,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3325454999576323,
-   "fresh compile and run": 1.6378476999816485
+   "deopt run": 1.3236684000003152,
+   "fresh compile and run": 2.2261647999985144
   },
   "validators": {
    "pandera/all": false,
@@ -19950,8 +19964,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0992222999921069,
-   "fresh compile and run": 1.4250385999912396
+   "deopt run": 1.55073270003777,
+   "fresh compile and run": 3.407228900003247
   },
   "validators": {
    "pandera/all": false,
@@ -20003,8 +20017,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1897136999759823,
-   "fresh compile and run": 1.2704164999886416
+   "deopt run": 1.7408456000266597,
+   "fresh compile and run": 1.9795537000172772
   },
   "validators": {
    "pandera/all": false,
@@ -20056,8 +20070,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6238960000337102,
-   "fresh compile and run": 1.343022600049153
+   "deopt run": 1.5396874000434764,
+   "fresh compile and run": 1.9824586000177078
   },
   "validators": {
    "pandera/all": false,
@@ -20109,8 +20123,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2065853999811225,
-   "fresh compile and run": 1.4759291000082158
+   "deopt run": 1.7038285000016913,
+   "fresh compile and run": 2.217548099986743
   },
   "validators": {
    "pandera/all": false,
@@ -20162,8 +20176,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4404991999617778,
-   "fresh compile and run": 1.4830411999719217
+   "deopt run": 1.457353100006003,
+   "fresh compile and run": 2.660668299999088
   },
   "validators": {
    "pandera/all": false,
@@ -20215,8 +20229,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2928000999963842,
-   "fresh compile and run": 1.4270302000222728
+   "deopt run": 1.6434644000255503,
+   "fresh compile and run": 2.438705300039146
   },
   "validators": {
    "pandera/all": false,
@@ -20268,8 +20282,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5826878999941982,
-   "fresh compile and run": 1.4336522999801673
+   "deopt run": 1.4488913000095636,
+   "fresh compile and run": 2.134036000003107
   },
   "validators": {
    "pandera/all": false,
@@ -20321,8 +20335,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.388841699983459,
-   "fresh compile and run": 1.5017891000024974
+   "deopt run": 1.391233199974522,
+   "fresh compile and run": 2.0165536000276916
   },
   "validators": {
    "pandera/all": false,
@@ -20374,8 +20388,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.267978000047151,
-   "fresh compile and run": 1.4957029999932274
+   "deopt run": 1.3456886999774724,
+   "fresh compile and run": 2.0112241999595426
   },
   "validators": {
    "pandera/all": false,
@@ -20427,8 +20441,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3641787999658845,
-   "fresh compile and run": 1.5043662000098266
+   "deopt run": 1.3422887000488117,
+   "fresh compile and run": 2.0174931999645196
   },
   "validators": {
    "pandera/all": false,
@@ -20480,8 +20494,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.28655219997745,
-   "fresh compile and run": 1.425881200004369
+   "deopt run": 1.4218680000049062,
+   "fresh compile and run": 2.019145700032823
   },
   "validators": {
    "pandera/all": false,
@@ -20533,8 +20547,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3195394999929704,
-   "fresh compile and run": 1.4157992000109516
+   "deopt run": 1.67505900003016,
+   "fresh compile and run": 1.7537138999905437
   },
   "validators": {
    "pandera/all": false,
@@ -20586,8 +20600,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.344330100051593,
-   "fresh compile and run": 1.3252171999774873
+   "deopt run": 1.3466697999974713,
+   "fresh compile and run": 2.3334830999956466
   },
   "validators": {
    "pandera/all": false,
@@ -20639,8 +20653,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3423470999696292,
-   "fresh compile and run": 1.654796399991028
+   "deopt run": 1.6014800000120886,
+   "fresh compile and run": 2.6347520999843255
   },
   "validators": {
    "pandera/all": false,
@@ -20692,8 +20706,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5755067000281997,
-   "fresh compile and run": 1.3221975000342354
+   "deopt run": 2.047290400019847,
+   "fresh compile and run": 2.084808899962809
   },
   "validators": {
    "pandera/all": false,
@@ -20745,8 +20759,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.448960299952887,
-   "fresh compile and run": 1.6644122000434436
+   "deopt run": 1.3213287999969907,
+   "fresh compile and run": 2.2037722999812104
   },
   "validators": {
    "pandera/all": false,
@@ -20798,8 +20812,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4529268000042066,
-   "fresh compile and run": 1.235645700013265
+   "deopt run": 1.291783699998632,
+   "fresh compile and run": 2.1178724999772385
   },
   "validators": {
    "pandera/all": false,
@@ -20830,17 +20844,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2013-02.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2013-02.csv is not the input the program was compiled with, and its column 'PRES' is Float64, not INTEGER. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -20851,8 +20865,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1674559999955818,
-   "fresh compile and run": 1.2789060999639332
+   "deopt run": 1.5426029999507591,
+   "fresh compile and run": 2.2427053000428714
   },
   "validators": {
    "pandera/all": false,
@@ -20883,17 +20897,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2013-03.csv is not the input the program was compiled with, and its column 'PRES' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2013-03.csv is not the input the program was compiled with, and its column 'PRES' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -20904,8 +20918,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.0740800999919884,
-   "fresh compile and run": 1.6184795000008307
+   "deopt run": 1.526213800010737,
+   "fresh compile and run": 1.9783581000519916
   },
   "validators": {
    "pandera/all": false,
@@ -20957,8 +20971,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.6107573000481352,
-   "fresh compile and run": 1.3129848000244237
+   "deopt run": 1.2611606999998912,
+   "fresh compile and run": 1.9961971000302583
   },
   "validators": {
    "pandera/all": false,
@@ -21010,8 +21024,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2219434000435285,
-   "fresh compile and run": 1.3153419999871403
+   "deopt run": 1.3228049000026658,
+   "fresh compile and run": 2.7047173000173643
   },
   "validators": {
    "pandera/all": false,
@@ -21063,8 +21077,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.181447000009939,
-   "fresh compile and run": 1.6610212000086904
+   "deopt run": 1.535282799974084,
+   "fresh compile and run": 2.8441493999562226
   },
   "validators": {
    "pandera/all": false,
@@ -21116,8 +21130,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.447526599979028,
-   "fresh compile and run": 1.4835682000266388
+   "deopt run": 1.8869623000500724,
+   "fresh compile and run": 2.897521900013089
   },
   "validators": {
    "pandera/all": false,
@@ -21169,8 +21183,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2337774999905378,
-   "fresh compile and run": 1.4571268999716267
+   "deopt run": 3.2202175999991596,
+   "fresh compile and run": 2.5088006000150926
   },
   "validators": {
    "pandera/all": false,
@@ -21222,8 +21236,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1799385999911465,
-   "fresh compile and run": 1.7260615000268444
+   "deopt run": 1.5274975000065751,
+   "fresh compile and run": 3.0792578000109643
   },
   "validators": {
    "pandera/all": false,
@@ -21275,8 +21289,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4559833999956027,
-   "fresh compile and run": 1.4131261000293307
+   "deopt run": 1.6472269000369124,
+   "fresh compile and run": 1.9991381000145338
   },
   "validators": {
    "pandera/all": false,
@@ -21328,8 +21342,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.188966900052037,
-   "fresh compile and run": 1.295131599996239
+   "deopt run": 1.347384799970314,
+   "fresh compile and run": 1.9856846999609843
   },
   "validators": {
    "pandera/all": false,
@@ -21381,8 +21395,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4470523999771103,
-   "fresh compile and run": 1.5406731000402942
+   "deopt run": 1.4054487999528646,
+   "fresh compile and run": 2.231940299971029
   },
   "validators": {
    "pandera/all": false,
@@ -21434,8 +21448,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5960485999821685,
-   "fresh compile and run": 1.443666699982714
+   "deopt run": 1.3968792000086978,
+   "fresh compile and run": 2.0206853999989107
   },
   "validators": {
    "pandera/all": false,
@@ -21487,8 +21501,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3389478999888524,
-   "fresh compile and run": 1.3670360999531113
+   "deopt run": 1.2642467999830842,
+   "fresh compile and run": 1.9787628999911249
   },
   "validators": {
    "pandera/all": false,
@@ -21540,8 +21554,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3181988000287674,
-   "fresh compile and run": 1.67859419999877
+   "deopt run": 1.4843702999642119,
+   "fresh compile and run": 2.1423688999493606
   },
   "validators": {
    "pandera/all": false,
@@ -21593,8 +21607,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.5533462000312284,
-   "fresh compile and run": 1.5655789999873377
+   "deopt run": 1.6235702999983914,
+   "fresh compile and run": 1.8439354000147432
   },
   "validators": {
    "pandera/all": false,
@@ -21646,8 +21660,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.4882136000087485,
-   "fresh compile and run": 1.9864374999888241
+   "deopt run": 1.3614294999861158,
+   "fresh compile and run": 1.9421110999537632
   },
   "validators": {
    "pandera/all": false,
@@ -21699,8 +21713,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.7153317999909632,
-   "fresh compile and run": 1.7728567000012845
+   "deopt run": 1.3046502000070177,
+   "fresh compile and run": 1.8945121000288054
   },
   "validators": {
    "pandera/all": false,
@@ -21752,8 +21766,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3487736000097357,
-   "fresh compile and run": 1.4113895000191405
+   "deopt run": 1.2084089999552816,
+   "fresh compile and run": 1.9491619999753311
   },
   "validators": {
    "pandera/all": false,
@@ -21805,8 +21819,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2403960000374354,
-   "fresh compile and run": 1.3686946999514475
+   "deopt run": 1.741602599970065,
+   "fresh compile and run": 2.0148109999718145
   },
   "validators": {
    "pandera/all": false,
@@ -21858,8 +21872,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.1717875000322238,
-   "fresh compile and run": 1.3697748000267893
+   "deopt run": 1.3137521999888122,
+   "fresh compile and run": 2.615195299964398
   },
   "validators": {
    "pandera/all": false,
@@ -21911,8 +21925,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2072311000083573,
-   "fresh compile and run": 1.357068800018169
+   "deopt run": 1.3977006999775767,
+   "fresh compile and run": 2.1566982000367716
   },
   "validators": {
    "pandera/all": false,
@@ -21943,17 +21957,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2014-11.csv is not the input the program was compiled with, and its column 'TEMP' is Float64, not INTEGER. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2014-11.csv is not the input the program was compiled with, and its column 'TEMP' is Float64, not INTEGER. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -21964,8 +21978,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.3340671999612823,
-   "fresh compile and run": 1.4058262999751605
+   "deopt run": 1.3517352000344545,
+   "fresh compile and run": 1.9690988999791443
   },
   "validators": {
    "pandera/all": false,
@@ -21996,17 +22010,17 @@
    "Iws"
   ],
   "fresh": "finished",
-  "deopt": "refused",
+  "deopt": "finished",
   "deopts": [],
-  "reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2014-12.csv is not the input the program was compiled with, and its column 'TEMP' is Int64, not FLOAT. Compile the .prep file again for this input.",
-  "full": "refused",
-  "full_reason": "ContractError: C:\\Users\\atnik\\Documents\\ChatGPT\\comp_v1\\PrepLang\\eval\\data\\real\\air\\2014-12.csv is not the input the program was compiled with, and its column 'TEMP' is Int64, not FLOAT. Compile the .prep file again for this input.",
+  "reason": "",
+  "full": "finished",
+  "full_reason": "",
   "trusted": "finished",
   "outcome": {
    "fingerprint": "needless stop",
-   "full": "needless stop",
-   "deopt": "needless stop",
-   "trusted": "unsound",
+   "full": "correct run",
+   "deopt": "correct run",
+   "trusted": "correct run",
    "file facts": "needless stop",
    "pandera/all": "needless stop",
    "gx/all": "needless stop",
@@ -22017,8 +22031,8 @@
   },
   "file_facts_admit": false,
   "seconds": {
-   "deopt run": 1.2255529000540264,
-   "fresh compile and run": 1.5697281999746338
+   "deopt run": 1.4126067000324838,
+   "fresh compile and run": 2.1377015999751166
   },
   "validators": {
    "pandera/all": false,

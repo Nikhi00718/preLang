@@ -7,7 +7,7 @@
       "verdict": "not reported",
       "errors": [],
       "warnings": [],
-      "ms": 32.564799999818206,
+      "ms": 82.04439998371527,
       "contracts": {
         "proven": 3,
         "violated": 0,
@@ -17,7 +17,7 @@
     "baseline": {
       "verdict": "completed",
       "detail": "",
-      "ms": 50.96899997442961
+      "ms": 95.92430002521724
     }
   },
   {
@@ -28,7 +28,7 @@
       "verdict": "not reported",
       "errors": [],
       "warnings": [],
-      "ms": 39.10419996827841,
+      "ms": 380.90220000594854,
       "contracts": {
         "proven": 7,
         "violated": 0,
@@ -38,7 +38,7 @@
     "baseline": {
       "verdict": "completed",
       "detail": "",
-      "ms": 31.428299844264984
+      "ms": 30.505599977914244
     }
   },
   {
@@ -49,7 +49,7 @@
       "verdict": "not reported",
       "errors": [],
       "warnings": [],
-      "ms": 29.85999989323318,
+      "ms": 53.963700018357486,
       "contracts": {
         "proven": 2,
         "violated": 0,
@@ -59,7 +59,7 @@
     "baseline": {
       "verdict": "completed",
       "detail": "",
-      "ms": 6.899800151586533
+      "ms": 6.874300015624613
     }
   },
   {
@@ -70,7 +70,7 @@
       "verdict": "not reported",
       "errors": [],
       "warnings": [],
-      "ms": 26.941000018268824,
+      "ms": 88.29549996880814,
       "contracts": {
         "proven": 2,
         "violated": 0,
@@ -80,7 +80,7 @@
     "baseline": {
       "verdict": "completed",
       "detail": "",
-      "ms": 15.76669979840517
+      "ms": 52.79260000679642
     }
   },
   {
@@ -91,7 +91,7 @@
       "verdict": "not reported",
       "errors": [],
       "warnings": [],
-      "ms": 31.54899994842708,
+      "ms": 41.445599985308945,
       "contracts": {
         "proven": 1,
         "violated": 0,
@@ -101,7 +101,7 @@
     "baseline": {
       "verdict": "completed",
       "detail": "",
-      "ms": 23.705000057816505
+      "ms": 23.558200045954436
     }
   },
   {
@@ -114,13 +114,13 @@
         "column 'attendence' does not exist in 'students'"
       ],
       "warnings": [],
-      "ms": 26.294599985703826,
+      "ms": 36.24609997496009,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (KeyError)",
       "detail": "'attendence'",
-      "ms": 2.7842000126838684
+      "ms": 3.813299990724772
     }
   },
   {
@@ -133,13 +133,13 @@
         "NORMALIZE needs a numeric column, but students.name is STRING"
       ],
       "warnings": [],
-      "ms": 28.733300045132637,
+      "ms": 40.63549998681992,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (TypeError)",
       "detail": "operation 'sub' not supported for dtype 'str' with object of type <class 'str'>",
-      "ms": 9.160000132396817
+      "ms": 14.08130000345409
     }
   },
   {
@@ -152,13 +152,13 @@
         "cannot compare INTEGER column 'marks' with text \"50\""
       ],
       "warnings": [],
-      "ms": 27.968900045379996,
+      "ms": 37.60270000202581,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (TypeError)",
       "detail": "Invalid comparison between dtype=int64 and str",
-      "ms": 2.970299916341901
+      "ms": 3.2654000096954405
     }
   },
   {
@@ -171,13 +171,13 @@
         "FILL_NULL with text \"UNKNOWN\" needs a matching column type, but students.age is INTEGER"
       ],
       "warnings": [],
-      "ms": 31.954600010067225,
+      "ms": 40.60319997370243,
       "contracts": {}
     },
     "baseline": {
       "verdict": "silent wrong output",
       "detail": "",
-      "ms": 7.831900147721171
+      "ms": 8.942599990405142
     }
   },
   {
@@ -190,13 +190,13 @@
         "column 'passed' was removed from 'students' at line 19"
       ],
       "warnings": [],
-      "ms": 28.714400017634034,
+      "ms": 38.19140000268817,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (KeyError)",
       "detail": "'passed'",
-      "ms": 6.404799874871969
+      "ms": 6.704500003252178
     }
   },
   {
@@ -209,13 +209,13 @@
         "contract violated: students.marks has values from 35 to 95; row 2 of C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/students.csv has 95"
       ],
       "warnings": [],
-      "ms": 23.377500008791685,
+      "ms": 43.7528999755159,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "marks out of range",
-      "ms": 1.6101000364869833
+      "ms": 2.3373999865725636
     }
   },
   {
@@ -228,13 +228,13 @@
         "contract violated: students.department has 1 missing value in C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/students.csv"
       ],
       "warnings": [],
-      "ms": 21.556599996984005,
+      "ms": 42.61720000067726,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "department has missing values",
-      "ms": 1.6753999516367912
+      "ms": 3.831300011370331
     }
   },
   {
@@ -247,7 +247,7 @@
       "warnings": [
         "FILTER removes every row: the condition is never true"
       ],
-      "ms": 30.60719999484718,
+      "ms": 57.38959996961057,
       "contracts": {
         "proven": 3,
         "violated": 0,
@@ -257,7 +257,7 @@
     "baseline": {
       "verdict": "silent wrong output",
       "detail": "",
-      "ms": 5.876899929717183
+      "ms": 7.206799986306578
     }
   },
   {
@@ -272,13 +272,13 @@
       "warnings": [
         "missing values in company.employees.salary, company.managers.salary stay missing after NORMALIZE"
       ],
-      "ms": 33.1063000485301,
+      "ms": 43.234099983237684,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (KeyError)",
       "detail": "'salary'",
-      "ms": 5.108200013637543
+      "ms": 5.644099961500615
     }
   },
   {
@@ -291,13 +291,13 @@
         "NORMALIZE needs a numeric column: 4 of 4 columns matched by 'company.*.name' break it"
       ],
       "warnings": [],
-      "ms": 28.766099829226732,
+      "ms": 66.19630003115162,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (TypeError)",
       "detail": "Cannot perform reduction 'mean' with string dtype",
-      "ms": 5.154300015419722
+      "ms": 7.693100022152066
     }
   },
   {
@@ -310,13 +310,13 @@
         "contract violated: 4 of 4 values of company.interns.department have no match in company.employees.name"
       ],
       "warnings": [],
-      "ms": 28.89040019363165,
+      "ms": 45.512600045185536,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "department has unknown keys",
-      "ms": 4.796799970790744
+      "ms": 5.583399964962155
     }
   },
   {
@@ -329,13 +329,13 @@
         "FILTER works on one table at a time"
       ],
       "warnings": [],
-      "ms": 29.31530005298555,
+      "ms": 39.36480003176257,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (KeyError)",
       "detail": "'age'",
-      "ms": 8.6367002222687
+      "ms": 8.400999999139458
     }
   },
   {
@@ -349,13 +349,13 @@
         "contract violated: company.managers.age has values from 47 to 52; row 1 of C:/Users/atnik/Documents/ChatGPT/comp_v1/PrepLang/examples/tabular/company\\managers.csv has 52"
       ],
       "warnings": [],
-      "ms": 32.23660006187856,
+      "ms": 42.37119999015704,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "age out of range",
-      "ms": 4.793700063601136
+      "ms": 5.715599982067943
     }
   },
   {
@@ -368,13 +368,13 @@
         "contract violated: train and test have different schemas"
       ],
       "warnings": [],
-      "ms": 22.936899913474917,
+      "ms": 34.498199995141476,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "",
-      "ms": 2.9689997900277376
+      "ms": 2.137299976311624
     }
   },
   {
@@ -387,13 +387,13 @@
         "column 'lable' does not exist in 'train'"
       ],
       "warnings": [],
-      "ms": 28.569000074639916,
+      "ms": 35.35349998855963,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (KeyError)",
       "detail": "'lable'",
-      "ms": 1.9199999514967203
+      "ms": 2.7125999913550913
     }
   },
   {
@@ -407,13 +407,13 @@
         "contract violated: 5 of 6 images in train break CHANNELS 1"
       ],
       "warnings": [],
-      "ms": 26.05580003000796,
+      "ms": 37.51270001521334,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AttributeError)",
       "detail": "'NoneType' object has no attribute 'shape'",
-      "ms": 6.372499978169799
+      "ms": 7.008999993558973
     }
   },
   {
@@ -426,13 +426,13 @@
         "contract violated: 1 of 6 images in train break CHANNELS 3"
       ],
       "warnings": [],
-      "ms": 27.69559994339943,
+      "ms": 33.44850003486499,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "dogs/dog_03.png breaks CHANNELS 3",
-      "ms": 6.602699868381023
+      "ms": 6.9561999989673495
     }
   },
   {
@@ -445,13 +445,13 @@
         "contract violated: 1 of 6 images in train break MIN_WIDTH 300"
       ],
       "warnings": [],
-      "ms": 29.37730005942285,
+      "ms": 24.408900004345924,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "dogs/dog_03.png breaks MIN_WIDTH 300",
-      "ms": 6.542599992826581
+      "ms": 7.420399982947856
     }
   },
   {
@@ -465,13 +465,13 @@
         "contract violated: 5 of 6 images in train break CHANNELS 1"
       ],
       "warnings": [],
-      "ms": 30.475700041279197,
+      "ms": 35.98099999362603,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (TypeError)",
       "detail": "'Images' object is not iterable",
-      "ms": 7.305200211703777
+      "ms": 9.401500050444156
     }
   },
   {
@@ -484,13 +484,13 @@
         "cannot save FLOAT32 pixels as JPG: NORMALIZE at line 12 scaled them to [0, 1]"
       ],
       "warnings": [],
-      "ms": 28.450699988752604,
+      "ms": 36.68289998313412,
       "contracts": {}
     },
     "baseline": {
       "verdict": "silent wrong output",
       "detail": "",
-      "ms": 25.111000053584576
+      "ms": 22.005499980878085
     }
   },
   {
@@ -503,13 +503,13 @@
         "RESIZE needs a width and height from 1 to 65535"
       ],
       "warnings": [],
-      "ms": 27.327300049364567,
+      "ms": 41.52750002685934,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (error)",
       "detail": "OpenCV(5.0.0) D:\\a\\opencv-python\\opencv-python\\opencv\\modules\\core\\src\\copy.cpp:1230: error: (-215:Assertion failed) top",
-      "ms": 15.004999935626984
+      "ms": 10.252900014165789
     }
   },
   {
@@ -522,13 +522,13 @@
         "contract violated: match rate of training is 83.33%, expected at least 100%"
       ],
       "warnings": [],
-      "ms": 25.953999953344464,
+      "ms": 49.68090000329539,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "match rate 83.33%",
-      "ms": 8.964600041508675
+      "ms": 8.829200000036508
     }
   },
   {
@@ -541,13 +541,13 @@
         "cannot save FLOAT32 pixels as PNG: NORMALIZE at line 10 scaled them to [0, 1]"
       ],
       "warnings": [],
-      "ms": 30.43049992993474,
+      "ms": 35.53029999602586,
       "contracts": {}
     },
     "baseline": {
       "verdict": "silent wrong output",
       "detail": "",
-      "ms": 31.04730020277202
+      "ms": 19.21060000313446
     }
   },
   {
@@ -560,13 +560,13 @@
         "contract violated: match rate of training is 0%, expected at least 100%"
       ],
       "warnings": [],
-      "ms": 29.659199994057417,
+      "ms": 31.290700018871576,
       "contracts": {}
     },
     "baseline": {
       "verdict": "run-time crash (AssertionError)",
       "detail": "match rate 0.00%",
-      "ms": 9.230799973011017
+      "ms": 9.96070000110194
     }
   }
 ]

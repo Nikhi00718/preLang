@@ -221,7 +221,11 @@
   "id": "df5e78038323b8f1",
   "url": "https://github.com/harshithluc073/model-monitoring-dashboard/blob/802ade1a1390723909239797e68a217bb2e0dc96/scripts/train.py",
   "rank": 30,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 3,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "31407822a94ae66f",
@@ -303,7 +307,7 @@
   "id": "29918bc628c8e8bf",
   "url": "https://github.com/Ocramoi/SCC0275_Projeto3/blob/348f3c9b43e8bf84b38db77c74dd5b3af29943d0/src/main.py",
   "rank": 41,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "1ac3569bb0eebb7e",
@@ -319,7 +323,11 @@
   "id": "20cf746a7aae216b",
   "url": "https://github.com/Kunj63/kafka-streaming-assignment/blob/1ed7ad4fa3bece4a870e06a16dd1d405e9548bd9/train_model.py",
   "rank": 43,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "202e6d0d07735999",
@@ -359,7 +367,11 @@
   "id": "9c2e4896d938e72c",
   "url": "https://github.com/Lumysia/kafka-bike-sharing-ml-streaming/blob/1c6142ec4ce797868c8178423c10ad548ed9786a/src/train_model.py",
   "rank": 49,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "f555d5362f24cb2f",
@@ -381,9 +393,12 @@
   "lifted": 6,
   "statements": 8,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nDROP data [instant, casual, registered];\nDERIVE data.year = YEAR(dteday);\nDERIVE data.month = MONTH(dteday);\nDERIVE data.dayofweek = WEEKDAY(dteday);\nDERIVE data.temp_humidity = (temp * hum);\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 20,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -661,10 +676,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nDROP data [instant, casual, registered];\nDERIVE data.year = YEAR(dteday);\nDERIVE data.month = MONTH(dteday);\nDERIVE data.dayofweek = WEEKDAY(dteday);\nDERIVE data.temp_humidity = (temp * hum);\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "17f74637c869ff1c",
@@ -674,9 +686,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 19,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -954,10 +969,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "29c215dc4b78dfdb",
@@ -1141,9 +1153,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.avg_temp = ((atemp + temp) / 2);\nDERIVE df.heat_index = ((0.5 * avg_temp) + (0.5 * hum));\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 16,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -1421,10 +1436,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.avg_temp = ((atemp + temp) / 2);\nDERIVE df.heat_index = ((0.5 * avg_temp) + (0.5 * hum));\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "cfe1e36f4e4595f7",
@@ -1514,7 +1526,11 @@
   "id": "6ba74d61dbab5a05",
   "url": "https://github.com/akshaybharadwaj11/Model-Monitoring-System/blob/d9790e71104b0aa8666f9c6ca4caed12992bd41f/bike_share_dataloader.py",
   "rank": 92,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "be76508ebe84f8db",
@@ -1582,9 +1598,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDROP_NULL df;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 36,
+  "removals": 1,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -1862,10 +1881,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP_NULL df;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 1,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "d1d866faee2e7211",
@@ -1875,9 +1891,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nDERIVE data.day = DAY(dteday);\nDROP data [dteday];\nDROP data [instant, casual, registered];\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 22,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -2155,10 +2174,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nDERIVE data.day = DAY(dteday);\nDROP data [dteday];\nDROP data [instant, casual, registered];\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "d67a6a40d3068b2b",
@@ -2194,9 +2210,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS dataset;\nDROP dataset [instant, dteday];\nSAVE dataset AS \"dataset_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 21,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -2474,10 +2493,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS dataset;\nDROP dataset [instant, dteday];\nSAVE dataset AS \"dataset_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "c54a64cafe8fc3fa",
@@ -2509,9 +2525,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 19,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -2789,10 +2808,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "a1822622bb9f87b5",
@@ -2858,7 +2874,7 @@
   "id": "37013aa47e626498",
   "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/run_analysis.py",
   "rank": 120,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "e42d51c0d743d3e2",
@@ -2920,9 +2936,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS dataset;\nDROP dataset [instant, dteday];\nSAVE dataset AS \"dataset_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 21,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -3200,22 +3219,27 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS dataset;\nDROP dataset [instant, dteday];\nSAVE dataset AS \"dataset_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "fcf22fc7653106fa",
   "url": "https://github.com/Haroun-Jinzo/UCL_Bike_Sharing_MLOPS/blob/f5aab1d57e2e9211a1ac16d2a66195d315883717/src/data/prepare_data.py",
   "rank": 130,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "7e3f76943189bdff",
   "url": "https://github.com/Aya-Sherif/Bike-Sharing-analysis/blob/b0b5e7cad39b27af802d167684498c9e2bf575d6/dashboard.py",
   "rank": 131,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "5188bfcd40e2e9a5",
@@ -3275,13 +3299,304 @@
   "id": "aafba37849c24e75",
   "url": "https://github.com/mervedin/ENG346_Final_Project/blob/c3ffcefc2503b264122ef6870307cfe4a52b668f/code/bike_eda.py",
   "rank": 139,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 19,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "abad2a1d43bdd4ab",
   "url": "https://github.com/rishisubedi/Deep-Learning-Demand-Prediction/blob/28fc97316d07718daee516bc66730ecc871a9ed1/Your_first_neural_network.py",
   "rank": 140,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "397ec215ca7c9277",
@@ -3433,7 +3748,11 @@
   "id": "efc33bdc3278b7be",
   "url": "https://github.com/PacktPublishing/Real-world-End-to-End-Machine-Learning-Ops-on-Google-Cloud/blob/370e922a62187d7543dd808a815ac3030223467e/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/python-sdk/batch-prediction.py",
   "rank": 162,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "3b8dc7433bf6b8f7",
@@ -3559,7 +3878,11 @@
   "id": "79f79817548d346a",
   "url": "https://github.com/shaheerzubery/GCP-mlops/blob/c50a3299631996cbbe6ede849f0b234ca62bd386/gcp-mlops-main/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/CI-CD/model_training_code.py",
   "rank": 181,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "67cd8e5dab7ac37d",
@@ -3581,9 +3904,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 19,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -3861,10 +4187,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "fc57592a3eb54033",
@@ -3954,7 +4277,7 @@
   "id": "49260e4f3a6f1cfc",
   "url": "https://github.com/Basavaprabhu46/bike-rental-forecasting/blob/74cd7f6d8f653a1686cd5cb1cbd5b79f06a4f15a/notebooks/01_eda.py",
   "rank": 197,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "ad01f43bf7f4ce56",
@@ -4062,7 +4385,7 @@
   "id": "2c90a633f289b810",
   "url": "https://github.com/wisnufrmdhn/Project-Laskar-AI/blob/2fccdd67155c9788b539621891afc9772ad53847/dashboard/dashboard.py",
   "rank": 213,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "0c4e3c5ce6e1728e",
@@ -4126,7 +4449,11 @@
   "id": "2efd60073effe1c1",
   "url": "https://github.com/naznienfevrianne/dicode/blob/5c0a7fe7e908e036eb25b116dd8306a90224ef32/dashboard/dashboard.py",
   "rank": 223,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "df7eec97ccc8d964",
@@ -4244,7 +4571,11 @@
   "id": "657de917e57512b8",
   "url": "https://github.com/ZeroDreamJadeEaston/zstu-study-blindlight/blob/0a04e0cca0217e81a3df4ada322c886b620db79a/\u673a\u5668\u5b66\u4e60\u8bfe\u8bbe-2026/\u4f5c\u4e1a/\u4f5c\u4e1a1/gru_forecast.py",
   "rank": 240,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "92658e8f1c852f8a",
@@ -4368,7 +4699,11 @@
   "id": "a2a1e93082602097",
   "url": "https://github.com/PacktPublishing/Real-world-End-to-End-Machine-Learning-Ops-on-Google-Cloud/blob/370e922a62187d7543dd808a815ac3030223467e/Section6-Kubeflow-Pipelines/Kubeflow-pipeline/bikeshare-model/model-training-code.py",
   "rank": 256,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "c12d2aae3d86a720",
@@ -4384,7 +4719,11 @@
   "id": "eeef13f6a2537aae",
   "url": "https://github.com/PacktPublishing/Real-world-End-to-End-Machine-Learning-Ops-on-Google-Cloud/blob/370e922a62187d7543dd808a815ac3030223467e/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/python-sdk/model-training-code.py",
   "rank": 258,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "d3a5ccebcd27a24e",
@@ -4402,7 +4741,11 @@
   "id": "26988cd8702d9640",
   "url": "https://github.com/sidoncloud/gcp-mlops/blob/a82425fbda4a4ba2b081e1e5c57e4c832ea381c0/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/Model-training-container-files/model-training-code.py",
   "rank": 261,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "115678e3929e4d19",
@@ -4426,7 +4769,7 @@
   "id": "8094b3882586eaef",
   "url": "https://github.com/Suryy16/IDCamp-Data-Science-2024/blob/66b434c0b0822b5da69122b209f63805798bb86c/dashboard/dashboard.py",
   "rank": 265,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "3483476efa755aca",
@@ -4450,7 +4793,11 @@
   "id": "14e90c2765062992",
   "url": "https://github.com/PacktPublishing/Real-world-End-to-End-Machine-Learning-Ops-on-Google-Cloud/blob/370e922a62187d7543dd808a815ac3030223467e/Section6-Kubeflow-Pipelines/Experiments/bike-share-regression-model/training-with-models.py",
   "rank": 269,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "131445ba46f210ba",
@@ -4528,7 +4875,11 @@
   "id": "2ef987a952c29ee4",
   "url": "https://github.com/saurabhsinha09/gcp-cloudrun-bikeshare-model-repo/blob/9973552625ad51bf3c9cbb826fa0f1030ff4aba1/model-training.py",
   "rank": 280,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "24b380d29606332d",
@@ -4598,7 +4949,7 @@
   "id": "19a269ab5271f01b",
   "url": "https://github.com/bluevita/Submission-Dicoding-Belajar-Data-Analytics-dengan-Python-/blob/f32bac1d0a14c20f1e6376488b6a96a54b97a8f6/dashbord/dashboard.py",
   "rank": 289,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "dfba69abde78a502",
@@ -4724,9 +5075,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [dteday];\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 20,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -5004,10 +5358,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP df [dteday];\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "05d0a8425cfe1f6d",
@@ -5221,7 +5572,11 @@
   "id": "e0e664d1eb52cc16",
   "url": "https://github.com/ZeroDreamJadeEaston/zstu-study-blindlight/blob/0a04e0cca0217e81a3df4ada322c886b620db79a/\u673a\u5668\u5b66\u4e60\u8bfe\u8bbe-2026/\u4f5c\u4e1a/\u4f5c\u4e1a1/lstm_transformer_forecast.py",
   "rank": 335,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "ac2a7e8c83b9a84e",
@@ -5233,7 +5588,11 @@
   "id": "8e3966c27c120ba1",
   "url": "https://github.com/PacktPublishing/Real-world-End-to-End-Machine-Learning-Ops-on-Google-Cloud/blob/370e922a62187d7543dd808a815ac3030223467e/Section6-Kubeflow-Pipelines/Experiments/bike-share-regression-model/training-with-hyperparams.py",
   "rank": 337,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "e22720655881d47b",
@@ -5295,9 +5654,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS bike_hour;\nPARSE_DATE bike_hour.dteday;\nSAVE bike_hour AS \"bike_hour_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 19,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -5575,10 +5937,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS bike_hour;\nPARSE_DATE bike_hour.dteday;\nSAVE bike_hour AS \"bike_hour_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "7acf37321606cb99",
@@ -5674,7 +6033,11 @@
   "id": "0dd13a36fc9b61bc",
   "url": "https://github.com/shaheerzubery/GCP-mlops/blob/c50a3299631996cbbe6ede849f0b234ca62bd386/gcp-mlops-main/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/explainability-ai/model-training-code.py",
   "rank": 358,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "ad927166c644cbd2",
@@ -5776,7 +6139,11 @@
   "id": "8fef023fcb1c62ae",
   "url": "https://github.com/Zejin-Liu2022/Shared_Bicycle_Usage/blob/50e97a02bff19ba035af81a7a0a17548a4271582/\u4ee3\u7801.py",
   "rank": 373,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "49647409cfa44ae1",
@@ -5892,7 +6259,11 @@
   "id": "47dba2aafc4a8f1f",
   "url": "https://github.com/6Shuzhou/chronos-2-project/blob/d920a1d18692e24658baf4056276c2a3d4572ee8/src/preprocess_bike_sharing.py",
   "rank": 391,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 3,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "46c3453b0f0cae61",
@@ -5904,7 +6275,11 @@
   "id": "edf6c945861639e0",
   "url": "https://github.com/chasedreamdkf/DeepLearn/blob/9735e01c4cd18b25b1aaf7a18a474afec1a3279c/\u5927\u4f5c\u4e1a1/main.py",
   "rank": 393,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "2f3d3a5bcb5482ef",
@@ -5944,25 +6319,16 @@
   "id": "9381438533fab2db",
   "url": "https://github.com/hastasuci/finalproject_DA/blob/6623fea0064c49e4f48d345bdef7145abdaf69d2/dashboard/dashboard.py",
   "rank": 399,
-  "outcome": "does not read the data file with pd.read_csv(path)"
- },
- {
-  "id": "c2988a2046daa3f0",
-  "url": "https://github.com/Ankitk25/bike-sharing-demand-prediction/blob/8a111dc38a4837578dd9514f29b9b630951c0d96/Bike Sharing Demand.py",
-  "rank": 400,
-  "outcome": "reads other data files"
- },
- {
-  "id": "1cd5c352a534ed68",
-  "url": "https://github.com/Ilhamokta74/Analisis-Data-dengan-Python/blob/3653dc344f633d49246c5a08a4cf93c78ab37e4c/dashboard/dashboard.py",
-  "rank": 401,
   "changes": 2,
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS rent_df;\nDROP rent_df [instant];\nSAVE rent_df AS \"rent_df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
-  "facts": 19,
+  "facts": 20,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -6240,10 +6606,306 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
+  ]
+ },
+ {
+  "id": "c2988a2046daa3f0",
+  "url": "https://github.com/Ankitk25/bike-sharing-demand-prediction/blob/8a111dc38a4837578dd9514f29b9b630951c0d96/Bike Sharing Demand.py",
+  "rank": 400,
+  "outcome": "reads other data files"
+ },
+ {
+  "id": "1cd5c352a534ed68",
+  "url": "https://github.com/Ilhamokta74/Analisis-Data-dengan-Python/blob/3653dc344f633d49246c5a08a4cf93c78ab37e4c/dashboard/dashboard.py",
+  "rank": 401,
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
   "program": "LOAD \"data.csv\" AS hour;\nPARSE_DATE hour.dteday;\nSAVE hour AS \"hour_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 19,
   "removals": 0,
-  "dates_admitted": true
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "9bd5790f25ef7860",
@@ -6255,7 +6917,11 @@
   "id": "c704aaa88fca1556",
   "url": "https://github.com/sidoncloud/gcp-mlops/blob/a82425fbda4a4ba2b081e1e5c57e4c832ea381c0/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/CI-CD/model_training_code.py",
   "rank": 403,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "a54ef3f372d36352",
@@ -6359,7 +7025,11 @@
   "id": "c313df1a4c5f67fd",
   "url": "https://github.com/sidoncloud/gcp-mlops/blob/a82425fbda4a4ba2b081e1e5c57e4c832ea381c0/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/python-sdk/model-training-code.py",
   "rank": 419,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "05434fd724aa12fc",
@@ -6417,7 +7087,11 @@
   "id": "16304ccb92cbf825",
   "url": "https://github.com/sidoncloud/gcp-mlops/blob/a82425fbda4a4ba2b081e1e5c57e4c832ea381c0/Sections 5 & 7-VertexAI-Development/Bikeshare-Model/explainability-ai/model-training-code.py",
   "rank": 426,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "a4ad3f8e58671be7",
@@ -6433,7 +7107,7 @@
   "id": "8761cf5306cc3f89",
   "url": "https://github.com/baiskiki1/dasss/blob/cee1fb5184a3b69b1af71546cb7883127389cf86/dashbroad/app.py",
   "rank": 428,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "1d10cf448e949da2",
@@ -6445,7 +7119,7 @@
   "id": "880716653beb077b",
   "url": "https://github.com/azzahangely/bike-sharing/blob/a355f7e92275513e9891596729c30769daf20aa9/Dashboard/dashboard_bike-sharing-analysis.py",
   "rank": 430,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "bc72ef69700f1665",

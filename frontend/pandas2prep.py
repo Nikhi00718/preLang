@@ -562,8 +562,13 @@ class Lifter:
         if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.BitAnd, ast.BitOr)):
             word = "AND" if isinstance(node.op, ast.BitAnd) else "OR"
             return f"({self.condition(node.left, variable)} {word} {self.condition(node.right, variable)})"
+        # pandas keeps a row with a missing value for c != v and for ~(c == v) (NaN != v is True),
+        # PrepLang drops it (the comparison is unknown); the two agree for every other comparison,
+        # AND and OR. Whether a column has missing values is not known here, so these are refused.
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Invert):
-            return f"NOT ({self.condition(node.operand, variable)})"
+            raise Unsupported("~ of a row condition, which keeps rows with missing values in pandas")
+        if isinstance(node, ast.Compare) and len(node.ops) == 1 and isinstance(node.ops[0], ast.NotEq):
+            raise Unsupported("!= in a row condition, which keeps rows with missing values in pandas")
         if isinstance(node, ast.Compare) and len(node.ops) == 1 and type(node.ops[0]) in COMPARISONS:
             column = self.column_of(node.left, variable)
             if column is None:

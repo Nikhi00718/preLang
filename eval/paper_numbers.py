@@ -130,6 +130,10 @@ def main():
     if all(found(f"differential_seed{seed}.json") for seed in NEW_SEEDS) and found("differential_seed7_prefix.json"):
         new_seeds([load(f"differential_seed{seed}.json")["results"] for seed in NEW_SEEDS],
                   load("differential_seed7_prefix.json")["results"], numbers)
+    if found("differential.json") and all(found(f"differential_seed{seed}.json") for seed in NEW_SEEDS):
+        type_flips([load("differential.json")["results"]] +
+                   [load(f"differential_seed{seed}.json")["results"] for seed in NEW_SEEDS], numbers)
+    drift_unread(numbers)
     if found("census.json"):
         census(load("census.json"), numbers)
 
@@ -345,6 +349,31 @@ def certificates(rows, numbers):
                  "(ok: the fresh files, or a stop where the fresh run stops), refused although a fresh "
                  "compilation runs (ref.), and finished with other files or where the fresh run fails (wrong).",
                  "tab:rq-edits", "certtable.tex")
+
+
+def drift_unread(numbers):
+    """DriftNoRead: traffic and bike scripts whose data read the lifter does not find."""
+    total = 0
+    for name in ("traffic", "bikes", "hours"):
+        if (RESULTS / f"drift_corpus_{name}.json").exists():
+            total += sum(r.get("outcome", "").startswith("does not read") for r in load(f"drift_corpus_{name}.json"))
+    numbers["DriftNoRead"] = total
+
+
+def type_flips(runs, numbers):
+    """Second batches of the differential test in which one numeric column has the other numeric
+    type, over every seed: DiffFlipBatches, ...Right (ran or stopped as the reference),
+    ...Refused, ...NoCompile (no compilation of that batch exists), ...Wrong; and the programs
+    with a JOIN ... MANY (DiffMany) of DiffAll."""
+    results = [r for run in runs for r in run]
+    flips = [r["reuse"] for r in results if r.get("reuse", {}).get("flipped")]
+    numbers.update(DiffAll=f"{len(results):,}",
+                   DiffMany=f"{sum(r.get('join_many', False) for r in results):,}",
+                   DiffFlipBatches=f"{len(flips):,}",
+                   DiffFlipRight=f"{sum(u['outcome'] in ('correct run', 'correct stop') for u in flips):,}",
+                   DiffFlipRefused=f"{sum(u['outcome'] == 'refused' for u in flips):,}",
+                   DiffFlipNoCompile=sum(u["truth"] == "compile error" for u in flips),
+                   DiffFlipWrong=sum(u["outcome"] == "wrong" for u in flips))
 
 
 def realbatches(rows, numbers):

@@ -5,14 +5,14 @@
 | Measure | Value |
 |---|---:|
 | programs | 2000 |
-| reference saves a table / a contract fails | 1365 / 635 |
-| rows saved by the reference, in all | 11,795 |
+| reference saves a table / a contract fails | 1389 / 611 |
+| rows saved by the reference, in all | 12,332 |
 | --O0 agrees with the reference | 2000 / 2000 |
 | optimized agrees with the reference | 2000 / 2000 |
 | --O0 and optimized give byte-identical outputs or the same failure | 2000 / 2000 |
-| failing contracts reported at compile time (before any data is processed) | 446 / 635 |
-| programs with a JOIN / an AGGREGATE | 669 / 677 |
-| time for the whole run (s) | 132 |
+| failing contracts reported at compile time (before any data is processed) | 397 / 611 |
+| programs with a JOIN (of them MANY) / an AGGREGATE | 669 (266) / 682 |
+| time for the whole run (s) | 79 |
 
 ## Reuse on a second batch
 
@@ -20,9 +20,11 @@ The optimized program of every program that compiled, run on another random batc
 
 | Outcome | Programs |
 |---|---:|
-| ran, same rows as the reference | 1212 |
-| stopped at the line where the reference fails | 309 |
-| refused (the batch breaks the admission certificate) | 33 |
+| ran, same rows as the reference | 1170 |
+| stopped at the line where the reference fails | 269 |
+| refused (the batch breaks the admission certificate) | 164 |
 | wrong (other rows, another line, or a crash) | 0 |
-| runs that re-enabled at least one removed check or operation | 361 |
+| runs that re-enabled at least one removed check or operation | 326 |
+
+In 485 of these batches one numeric column had the other numeric type (INTEGER values made x.5, or FLOAT values rounded): 279 ran with the reference's rows, 63 stopped where it fails, 143 were refused (20 of the batches do not compile at all), 0 were wrong.
 

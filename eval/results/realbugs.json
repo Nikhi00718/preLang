@@ -17,8 +17,7 @@
     "case": "fluxgym",
     "note": "before the fix the files were reported as broken, a misleading reason",
     "reproduced": true,
-    "compiler_says": "JPG cannot store transparency, but 1 image(s) have 4 channels / hint: add CONVERT dataset TO PNG; or GRAYSCALE dataset;",
-    "before_measured": "1 of 3 files in dataset/ cannot be decoded / note: screenshot.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT dataset; before line 2"
+    "compiler_says": "JPG cannot store transparency, but 1 image(s) have 4 channels / hint: add CONVERT dataset TO PNG; or GRAYSCALE dataset;"
   },
   {
     "signature": "S1",
@@ -38,8 +37,7 @@
     "case": "comt",
     "note": "",
     "reproduced": true,
-    "compiler_says": "1 of 3 files in images/ cannot be decoded / note: 0003.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT images; before line 2",
-    "before_measured": "same as now"
+    "compiler_says": "1 of 3 files in images/ cannot be decoded / note: 0003.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT images; before line 2"
   },
   {
     "signature": "S2",
@@ -50,8 +48,7 @@
     "case": "crawler",
     "note": "",
     "reproduced": true,
-    "compiler_says": "1 of 3 files in blobs/ cannot be decoded / note: 1354.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT tiles; before line 3",
-    "before_measured": "same as now"
+    "compiler_says": "1 of 3 files in blobs/ cannot be decoded / note: 1354.jpg: not a JPEG file (bad signature) / hint: add REMOVE_CORRUPT tiles; before line 3"
   },
   {
     "signature": "S2",
@@ -62,8 +59,7 @@
     "case": "inigo",
     "note": "LOAD_IMAGES reads PNG and JPEG files only",
     "reproduced": true,
-    "compiler_says": "compiled and ran; 2 output file(s)",
-    "before_measured": "same as now"
+    "compiler_says": "compiled and ran; 3 output file(s)"
   },
   {
     "signature": "S3",
@@ -74,8 +70,7 @@
     "case": "packt",
     "note": "",
     "reproduced": true,
-    "compiler_says": "cannot open image file 'images/dog.jpg' / hint: LOAD_IMAGE expects one file; use LOAD_IMAGES for a folder",
-    "before_measured": "same as now"
+    "compiler_says": "cannot open image file 'images/dog.jpg' / hint: LOAD_IMAGE expects one file; use LOAD_IMAGES for a folder"
   },
   {
     "signature": "S3",
@@ -86,8 +81,7 @@
     "case": "gogul",
     "note": "LOAD_IMAGES reads the files that exist",
     "reproduced": true,
-    "compiler_says": "compiled and ran; 3 output file(s)",
-    "before_measured": "same as now"
+    "compiler_says": "compiled and ran; 4 output file(s)"
   },
   {
     "signature": "S3",
@@ -116,8 +110,7 @@
     "case": "tuigan",
     "note": "EXPECT ... CHANNELS 3",
     "reproduced": true,
-    "compiler_says": "contract violated: 2 of 2 images in train_a break CHANNELS 3 / note: 1 channel: 2 images / note: a1.png: 1 channel / note: a2.png: 1 channel / hint: use GRAYSCALE, or fix the files",
-    "before_measured": "same as now"
+    "compiler_says": "contract violated: 2 of 2 images in train_a break CHANNELS 3 / note: 1 channel: 2 images / note: a1.png: 1 channel / note: a2.png: 1 channel / hint: use GRAYSCALE, or fix the files"
   },
   {
     "signature": "S5",
@@ -137,8 +130,7 @@
     "case": "wavect",
     "note": "EXPECT ... CHANNELS 3",
     "reproduced": true,
-    "compiler_says": "contract violated: 1 of 2 images in content break CHANNELS 3 / note: 1 channel: 1 image / note: 3 channels: 1 image / note: 2.png: 1 channel / hint: use GRAYSCALE, or fix the files",
-    "before_measured": "same as now"
+    "compiler_says": "contract violated: 1 of 2 images in content break CHANNELS 3 / note: 1 channel: 1 image / note: 3 channels: 1 image / note: 2.png: 1 channel / hint: use GRAYSCALE, or fix the files"
   },
   {
     "signature": "S6",
@@ -167,8 +159,7 @@
     "case": "rfr",
     "note": "EXPECT ... CHANNELS 3",
     "reproduced": true,
-    "compiler_says": "contract violated: 1 of 3 images in train break CHANNELS 3 / note: 3 channels: 2 images / note: 4 channels: 1 image / note: 2.png: 4 channels / hint: use GRAYSCALE, or fix the files",
-    "before_measured": "same as now"
+    "compiler_says": "contract violated: 1 of 3 images in train break CHANNELS 3 / note: 3 channels: 2 images / note: 4 channels: 1 image / note: 2.png: 4 channels / hint: use GRAYSCALE, or fix the files"
   },
   {
     "signature": "S7",
@@ -206,8 +197,7 @@
     "case": "popsim",
     "note": "EXPECT ... REFERENCES",
     "reproduced": true,
-    "compiler_says": "contract violated: 3 of 6 values of crosswalk.TAZ have no match in gq.TAZ / note: row 2: 2 / note: row 4: 4 / note: row 6: 6",
-    "before_measured": "same as now"
+    "compiler_says": "contract violated: 3 of 6 values of crosswalk.TAZ have no match in gq.TAZ / note: row 2: 2 / note: row 4: 4 / note: row 6: 6"
   },
   {
     "signature": "S8",
@@ -218,8 +208,7 @@
     "case": "umami",
     "note": "",
     "reproduced": true,
-    "compiler_says": "column 'subdivision1' does not exist in 'events' / hint: columns of 'events': session_id, hostname, browser, os, country, region",
-    "before_measured": "same as now"
+    "compiler_says": "column 'subdivision1' does not exist in 'events' / hint: columns of 'events': session_id, hostname, browser, os, country, region"
   },
   {
     "signature": "S8",
@@ -239,8 +228,7 @@
     "case": "sjaracne",
     "note": "",
     "reproduced": true,
-    "compiler_says": "NORMALIZE needs a numeric column, but expression.value_1 is STRING / hint: 'value_1' is STRING because line 4 has \"RPL10\"",
-    "before_measured": "same as now"
+    "compiler_says": "NORMALIZE needs a numeric column, but expression.value_1 is STRING / hint: 'value_1' is STRING because line 4 has \"RPL10\""
   },
   {
     "signature": "S9",
@@ -251,8 +239,7 @@
     "case": "kstar",
     "note": "",
     "reproduced": true,
-    "compiler_says": "NORMALIZE needs a numeric column: 1 of 3 columns matched by 'network.*' break it / note: network.accession : STRING   <-- breaks the rule / note: network.net_1 : FLOAT [0.3, 0.8]   ok / note: network.net_2 : FLOAT [0.1, 0.9]   ok / hint: narrow the selector, e.g. WHERE TYPE NUMERIC or EXCEPT [...]",
-    "before_measured": "same as now"
+    "compiler_says": "NORMALIZE needs a numeric column: 1 of 3 columns matched by 'network.*' break it / note: network.accession : STRING   <-- breaks the rule / note: network.net_1 : FLOAT [0.3, 0.8]   ok / note: network.net_2 : FLOAT [0.1, 0.9]   ok / hint: narrow the selector, e.g. WHERE TYPE NUMERIC or EXCEPT [...]"
   },
   {
     "signature": "S9",
@@ -263,8 +250,7 @@
     "case": "gnps",
     "note": "",
     "reproduced": true,
-    "compiler_says": "cannot compare STRING column 'mz' with number 100 / hint: 'mz' is STRING because line 3 has \"unknonw\"",
-    "before_measured": "cannot compare STRING column 'mz' with number 100 / hint: put the text in double quotes"
+    "compiler_says": "cannot compare STRING column 'mz' with number 100 / hint: 'mz' is STRING because line 3 has \"unknonw\""
   },
   {
     "signature": "S10",
@@ -275,8 +261,7 @@
     "case": "clothing",
     "note": "",
     "reproduced": true,
-    "compiler_says": "cannot compare STRING column 'category' with number 21 / hint: 'category' is STRING because line 4 has \"category_label\"",
-    "before_measured": "cannot compare STRING column 'category' with number 21 / hint: put the text in double quotes"
+    "compiler_says": "cannot compare STRING column 'category' with number 21 / hint: 'category' is STRING because line 4 has \"category_label\""
   },
   {
     "signature": "S10",
@@ -287,8 +272,7 @@
     "case": "datacleaner",
     "note": "every column has one inferred type",
     "reproduced": true,
-    "compiler_says": "compiled and ran; 1 output file(s)",
-    "before_measured": "same as now"
+    "compiler_says": "compiled and ran; 2 output file(s)"
   },
   {
     "signature": "S12",
@@ -299,8 +283,7 @@
     "case": "junction",
     "note": "EXPECT ... SCHEMA_SAME_AS",
     "reproduced": true,
-    "compiler_says": "contract violated: predict and train have different schemas / note: avg_order_size is in train but not in predict / note: avg_purchase_size is in train but not in predict / hint: list columns that may differ in EXCEPT [...]",
-    "before_measured": "same as now"
+    "compiler_says": "contract violated: predict and train have different schemas / note: avg_order_size is in train but not in predict / note: avg_purchase_size is in train but not in predict / hint: list columns that may differ in EXCEPT [...]"
   },
   {
     "signature": "S12",
@@ -401,8 +384,7 @@
     "case": "cp1252",
     "note": "found by the UTF-8 check added during the study",
     "reproduced": true,
-    "compiler_says": "line 3 of 'issues.csv' is not UTF-8 text (byte 0xE9) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)",
-    "before_measured": "compiled without an error"
+    "compiler_says": "line 3 of 'issues.csv' is not UTF-8 text (byte 0xE9) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)"
   },
   {
     "signature": "S16",
@@ -413,8 +395,7 @@
     "case": "buildium",
     "note": "found by the UTF-8 check added during the study",
     "reproduced": true,
-    "compiler_says": "line 2 of 'Rental_Owner_Statement.csv' is not UTF-8 text (byte 0x96) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)",
-    "before_measured": "compiled without an error"
+    "compiler_says": "line 2 of 'Rental_Owner_Statement.csv' is not UTF-8 text (byte 0x96) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)"
   },
   {
     "signature": "S16",
@@ -425,8 +406,7 @@
     "case": "aly6140",
     "note": "the encoding is reported; tab-separated files are still read as one column",
     "reproduced": true,
-    "compiler_says": "line 2 of 'MisleInjury.txt' is not UTF-8 text (byte 0xED) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)",
-    "before_measured": "compiled without an error"
+    "compiler_says": "line 2 of 'MisleInjury.txt' is not UTF-8 text (byte 0xED) / hint: the file was probably saved as Windows-1252 or Latin-1; save it as UTF-8 (in Excel: Save As > CSV UTF-8)"
   },
   {
     "signature": "S17",
@@ -455,7 +435,6 @@
     "case": "flower",
     "note": "EXPECT ... MATCH_RATE 100%",
     "reproduced": true,
-    "compiler_says": "contract violated: match rate of flowers is 66.67%, expected at least 100% / note: images: 6, labels: 4, matched: 4 / note: images without a label: 2 (0005.png, 0006.png) / hint: fix the file names in labels.file or the image files",
-    "before_measured": "same as now"
+    "compiler_says": "contract violated: match rate of flowers is 66.67%, expected at least 100% / note: images: 6, labels: 4, matched: 4 / note: images without a label: 2 (0005.png, 0006.png) / hint: fix the file names in labels.file or the image files"
   }
 ]

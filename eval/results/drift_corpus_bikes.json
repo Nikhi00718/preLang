@@ -23,9 +23,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS bike;\nDERIVE bike.trend = (instant - 1);\nSAVE bike AS \"bike_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 17,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -303,10 +306,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS bike;\nDERIVE bike.trend = (instant - 1);\nSAVE bike AS \"bike_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "251af3b71fadb844",
@@ -354,13 +354,17 @@
   "id": "29918bc628c8e8bf",
   "url": "https://github.com/Ocramoi/SCC0275_Projeto3/blob/348f3c9b43e8bf84b38db77c74dd5b3af29943d0/src/main.py",
   "rank": 11,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "a1fd9dfdd5084627",
   "url": "https://github.com/Ahmadfaisal04/bike-sharing-submission/blob/bb2edd3acc59db1b041f299dfc0db1f9863b2a74/dashboard/dashboard.py",
   "rank": 12,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "866fd501cfef1a2d",
@@ -372,7 +376,11 @@
   "id": "3e5a8144026d7d74",
   "url": "https://github.com/NichikouGN/TUDTK-DoAn2-Nhom13/blob/53bc0ae9ac9e8a5c67c5ded4329c386c35f4950d/main.py",
   "rank": 14,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "10289426c2c8488f",
@@ -420,7 +428,11 @@
   "id": "46658dcb09073c2b",
   "url": "https://github.com/Imam-f/dicoding-datas/blob/beecfe914df37cb5c74c9ee4d03376ae44c30b31/Hello.py",
   "rank": 22,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "0fbbb60167430c84",
@@ -436,9 +448,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.check_total = (casual + registered);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 16,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -716,10 +731,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.check_total = (casual + registered);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "000f6a4277fad668",
@@ -769,9 +781,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_humidity = (temp * hum);\nDERIVE df.temp_windspeed = (temp * windspeed);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 15,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -1049,10 +1064,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.temp_humidity = (temp * hum);\nDERIVE df.temp_windspeed = (temp * windspeed);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "657d60bb14fe49b2",
@@ -1064,7 +1076,294 @@
   "id": "724f946138b4fe95",
   "url": "https://github.com/avilog/shap2llm/blob/74c24a9df6ad9df008f465c23f231f6c0810addb/examples/bike_counts.py",
   "rank": 33,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 5,
+  "lifted": 5,
+  "statements": 8,
+  "complete": true,
+  "program": "LOAD \"data.csv\" AS bike_df;\nDROP bike_df [dteday];\nDROP bike_df [instant];\nDERIVE bike_df.temp = (temp * 41);\nDERIVE bike_df.atemp = (atemp * 50);\nDERIVE bike_df.hum = (hum * 100);\nDERIVE bike_df.windspeed = (windspeed * 67);\nSAVE bike_df AS \"bike_df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 16,
+  "removals": 0,
+  "dates_admitted": false,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "7dc3c84fe0a79a47",
@@ -1122,9 +1421,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS day_df;\nPARSE_DATE day_df.dteday;\nSAVE day_df AS \"day_df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -1402,10 +1704,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS day_df;\nPARSE_DATE day_df.dteday;\nSAVE day_df AS \"day_df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "807463951bbda578",
@@ -1417,7 +1716,11 @@
   "id": "987e20a62af9a400",
   "url": "https://github.com/jisron/BIKE/blob/58345f61bc2df2b3295f6477a197673b8859101e/Bike.py",
   "rank": 44,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "65a6448e5a647277",
@@ -1461,7 +1764,11 @@
   "id": "71e7a43417f189ee",
   "url": "https://github.com/nasthasawulan/dicoding_project/blob/3d35892bc7e835440d1c569cfda8f3beb446f2c9/dashboard.py",
   "rank": 50,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "3e5e4153d309a2e1",
@@ -1601,9 +1908,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -1881,10 +2191,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "db804d6adf8d44c7",
@@ -1906,9 +2213,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS bike;\nSELECT bike [season, yr, mnth, holiday, weekday, workingday, weathersit, temp, atemp, hum, windspeed, cnt];\nSAVE bike AS \"bike_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 2,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -2186,10 +2496,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS bike;\nSELECT bike [season, yr, mnth, holiday, weekday, workingday, weathersit, temp, atemp, hum, windspeed, cnt];\nSAVE bike AS \"bike_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "ed1e8b7827b105dd",
@@ -2205,9 +2512,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -2485,10 +2795,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "16e5942e61686540",
@@ -2538,9 +2845,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nDROP df [instant, dteday];\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 22,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -2818,10 +3128,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nDROP df [instant, dteday];\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "47043833fdd5f43f",
@@ -2837,7 +3144,294 @@
   "id": "13bfe9826be5d043",
   "url": "https://github.com/adityaananda17/dbAdit/blob/793b29d592c0d362a8aebbc30568c8c93d4dcfbb/dashboard.py",
   "rank": 84,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS df_day;\nPARSE_DATE df_day.dteday;\nSAVE df_day AS \"df_day_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "5204503d5a7ec7b2",
@@ -2849,7 +3443,7 @@
   "id": "37013aa47e626498",
   "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/run_analysis.py",
   "rank": 86,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "e42d51c0d743d3e2",
@@ -2929,7 +3523,11 @@
   "id": "806a5e91971f020a",
   "url": "https://github.com/mariouskono/bike-rental-analisis/blob/3ab58b7c77072c99b98a6e77e5a370bda5d441ac/dashboard/dashboard.py",
   "rank": 98,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "d5ffa159bfc448b5",
@@ -2951,9 +3549,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -3231,10 +3832,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "197b7f68717aa7e9",
@@ -3266,9 +3864,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df_day;\nDERIVE df_day.temp2 = ((temp * 47) - 8);\nDERIVE df_day.atemp2 = ((atemp * 66) - 16);\nDERIVE df_day.hum2 = (hum * 100);\nDERIVE df_day.windspeed2 = (windspeed * 67);\nSAVE df_day AS \"df_day_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 14,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -3546,10 +4147,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df_day;\nDERIVE df_day.temp2 = ((temp * 47) - 8);\nDERIVE df_day.atemp2 = ((atemp * 66) - 16);\nDERIVE df_day.hum2 = (hum * 100);\nDERIVE df_day.windspeed2 = (windspeed * 67);\nSAVE df_day AS \"df_day_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "93aa2c8821490524",
@@ -3571,13 +4169,21 @@
   "id": "1e2b3ecf53029a5d",
   "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/generate_models.py",
   "rank": 108,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "e9f717f7aac9f7d3",
   "url": "https://github.com/ngamije30/Linear__Regression_model/blob/87971ad5a1cd3e7880217f03175656f886539bc0/simple_analysis.py",
   "rank": 109,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "339ecf7753a3952e",
@@ -3607,7 +4213,7 @@
   "id": "19a269ab5271f01b",
   "url": "https://github.com/bluevita/Submission-Dicoding-Belajar-Data-Analytics-dengan-Python-/blob/f32bac1d0a14c20f1e6376488b6a96a54b97a8f6/dashbord/dashboard.py",
   "rank": 114,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "40e905ed1706cfec",
@@ -3617,9 +4223,12 @@
   "lifted": 2,
   "statements": 4,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.atemp = (atemp * 10000);\nDERIVE df.temp = (temp * 41);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 16,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -3897,16 +4506,300 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDERIVE df.atemp = (atemp * 10000);\nDERIVE df.temp = (temp * 41);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "da0f51eaf11a5323",
   "url": "https://github.com/MalikaPutriRahmawati/RentalSepeda/blob/a0bc79dda145036aa11afaae0c5c7fbe6e28ea46/dashboard/dashboard.py",
   "rank": 116,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS days_df;\nPARSE_DATE days_df.dteday;\nSAVE days_df AS \"days_df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "356bc7d04f0f5608",
@@ -3944,7 +4837,7 @@
   "id": "49260e4f3a6f1cfc",
   "url": "https://github.com/Basavaprabhu46/bike-rental-forecasting/blob/74cd7f6d8f653a1686cd5cb1cbd5b79f06a4f15a/notebooks/01_eda.py",
   "rank": 121,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "841b149a7792d7b3",
@@ -3960,9 +4853,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -4240,10 +5136,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "397ec215ca7c9277",
@@ -4305,9 +5198,12 @@
   "lifted": 4,
   "statements": 6,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df_day;\nDERIVE df_day.temp2 = ((temp * 47) - 8);\nDERIVE df_day.atemp2 = ((atemp * 66) - 16);\nDERIVE df_day.hum2 = (hum * 100);\nDERIVE df_day.windspeed2 = (windspeed * 67);\nSAVE df_day AS \"df_day_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 14,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -4585,10 +5481,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df_day;\nDERIVE df_day.temp2 = ((temp * 47) - 8);\nDERIVE df_day.atemp2 = ((atemp * 66) - 16);\nDERIVE df_day.hum2 = (hum * 100);\nDERIVE df_day.windspeed2 = (windspeed * 67);\nSAVE df_day AS \"df_day_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "3bd69a13d3729b29",
@@ -4642,19 +5535,310 @@
   "id": "d9d2412979885802",
   "url": "https://github.com/adityaananda17/dbAdit/blob/793b29d592c0d362a8aebbc30568c8c93d4dcfbb/dashboard/dashboard.py",
   "rank": 141,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS df_day;\nPARSE_DATE df_day.dteday;\nSAVE df_day AS \"df_day_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "2c90a633f289b810",
   "url": "https://github.com/wisnufrmdhn/Project-Laskar-AI/blob/2fccdd67155c9788b539621891afc9772ad53847/dashboard/dashboard.py",
   "rank": 142,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "6231ac9411c82e38",
   "url": "https://github.com/gabriellodwi/Bike-Sharing-Final-Project-Data-Analysis-with-Python/blob/49d456ef5fbab0ba890c4e5390af8cbfd06e2dca/Dashboard/dashboard.py",
   "rank": 143,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 2,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "6ec14a5cffb45203",
@@ -4696,7 +5880,294 @@
   "id": "d3f57fc57e47a49f",
   "url": "https://github.com/Aionn-99/Dicoding-Analisis-Data/blob/0f0717604c94a2acb148f5ea086f8d1abd04ab8c/dashboard/dashboard.py",
   "rank": 150,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS day_df;\nPARSE_DATE day_df.dteday;\nSAVE day_df AS \"day_df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "eceecb4e4da60bfe",
@@ -4792,9 +6263,12 @@
   "lifted": 3,
   "statements": 5,
   "complete": true,
+  "program": "LOAD \"data.csv\" AS bike;\nPARSE_DATE bike.dteday;\nDROP bike [instant, hum, temp, atemp, windspeed];\nDROP bike [dteday];\nSAVE bike AS \"bike_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 26,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -5072,10 +6546,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS bike;\nPARSE_DATE bike.dteday;\nDROP bike [instant, hum, temp, atemp, windspeed];\nDROP bike [dteday];\nSAVE bike AS \"bike_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "16f1e59451ebcea0",
@@ -5097,7 +6568,294 @@
   "id": "1e98d8bad103e37b",
   "url": "https://github.com/biradarshiv/Python/blob/39160881babc1d158c33d74379883827c942a8b9/Matplotlibrary/2_First_Project.py",
   "rank": 167,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS daily_data;\nPARSE_DATE daily_data.dteday;\nSAVE daily_data AS \"daily_data_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "68411d47937119c8",
@@ -5167,9 +6925,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant];\nDERIVE df.temp = ((temp * (39 - -8)) + -8);\nDERIVE df.atemp = ((atemp * (50 - -16)) + -16);\nDERIVE df.hum = (hum * 100);\nDERIVE df.windspeed = (windspeed * 67);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 15,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -5447,10 +7208,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant];\nDERIVE df.temp = ((temp * (39 - -8)) + -8);\nDERIVE df.atemp = ((atemp * (50 - -16)) + -16);\nDERIVE df.hum = (hum * 100);\nDERIVE df.windspeed = (windspeed * 67);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "2038f921a2240be4",
@@ -5472,9 +7230,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS bike_sharing;\nPARSE_DATE bike_sharing.dteday;\nSAVE bike_sharing AS \"bike_sharing_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -5752,10 +7513,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS bike_sharing;\nPARSE_DATE bike_sharing.dteday;\nSAVE bike_sharing AS \"bike_sharing_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "63f9716eae9915cc",
@@ -5807,7 +7565,11 @@
   "id": "1ecee30069e3c0e3",
   "url": "https://github.com/YoungDong99/Py-bigdata-analytics/blob/90337fdf64e0d14c258012359deaa7ba1d3e4b96/MachineLearning/chap08_Tree_Ensemble/exam02/exam03_XGBoostRegressor.py",
   "rank": 189,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "ef0cf46cd3a365e8",
@@ -5891,9 +7653,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
   "months": [
    {
     "month": "2011-02",
@@ -6171,16 +7936,17 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS data;\nPARSE_DATE data.dteday;\nSAVE data AS \"data_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": true
+  ]
  },
  {
   "id": "8e581e59c9e9bfe7",
   "url": "https://github.com/wdffdw07/CityuSDSC2004CodePart/blob/59e2319259417174d7a29ef3af29b6d190b81aab/q1_eda_script.py",
   "rank": 202,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 1,
+  "lifted": 0,
+  "statements": 3,
+  "complete": false,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "6e15d38b0a7aad8d",
@@ -6340,7 +8106,7 @@
   "id": "880716653beb077b",
   "url": "https://github.com/azzahangely/bike-sharing/blob/a355f7e92275513e9891596729c30769daf20aa9/Dashboard/dashboard_bike-sharing-analysis.py",
   "rank": 226,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "c50fcefaaa30fb34",
@@ -6362,9 +8128,12 @@
   "lifted": 5,
   "statements": 7,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant, dteday];\nDERIVE df.temp = ((temp * (39 - -8)) + -8);\nDERIVE df.atemp = ((atemp * (50 - -16)) + -16);\nDERIVE df.hum = (hum * 100);\nDERIVE df.windspeed = (windspeed * 67);\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 16,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -6642,10 +8411,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant, dteday];\nDERIVE df.temp = ((temp * (39 - -8)) + -8);\nDERIVE df.atemp = ((atemp * (50 - -16)) + -16);\nDERIVE df.hum = (hum * 100);\nDERIVE df.windspeed = (windspeed * 67);\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "7d1780bcac299b55",
@@ -6679,9 +8445,12 @@
   "lifted": 1,
   "statements": 3,
   "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant, dteday];\nSAVE df AS \"df_lifted.csv\";\n",
   "errors": [],
   "outcome": "lifted",
   "facts": 20,
+  "removals": 0,
+  "dates_admitted": false,
   "months": [
    {
     "month": "2011-02",
@@ -6959,10 +8728,7 @@
     "same_full": true,
     "reason_full": ""
    }
-  ],
-  "program": "LOAD \"data.csv\" AS df;\nDROP df [instant, dteday];\nSAVE df AS \"df_lifted.csv\";\n",
-  "removals": 0,
-  "dates_admitted": false
+  ]
  },
  {
   "id": "d3a5ccebcd27a24e",
@@ -6980,13 +8746,300 @@
   "id": "f7cb7f514a0c7bf8",
   "url": "https://github.com/auliakhalfanii/analisis-data-dengan-python/blob/94c127ae733d6268187f82dea2fb1fb00ffe7493/dashboard/dashboard.py",
   "rank": 237,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 2,
+  "lifted": 1,
+  "statements": 3,
+  "complete": false,
+  "program": "LOAD \"data.csv\" AS df;\nPARSE_DATE df.dteday;\nSAVE df AS \"df_lifted.csv\";\n",
+  "errors": [],
+  "outcome": "lifted",
+  "facts": 18,
+  "removals": 0,
+  "dates_admitted": true,
+  "months": [
+   {
+    "month": "2011-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2011-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-01",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-02",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-03",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-04",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-05",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-06",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-07",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-08",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-09",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-10",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-11",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   },
+   {
+    "month": "2012-12",
+    "script": "runs",
+    "script_error": "",
+    "prep": "finished",
+    "same": true,
+    "reason": "",
+    "deopts": [],
+    "prep_full": "finished",
+    "same_full": true,
+    "reason_full": ""
+   }
+  ]
  },
  {
   "id": "8094b3882586eaef",
   "url": "https://github.com/Suryy16/IDCamp-Data-Science-2024/blob/66b434c0b0822b5da69122b209f63805798bb86c/dashboard/dashboard.py",
   "rank": 238,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "outcome": "reads other data files"
  },
  {
   "id": "f40c8e04052f09db",
@@ -7068,7 +9121,11 @@
   "id": "f439a3898036810c",
   "url": "https://github.com/YoungDong99/Py-bigdata-analytics/blob/90337fdf64e0d14c258012359deaa7ba1d3e4b96/MachineLearning/chap12_TimeSeries/lecture/step01_default_model.py",
   "rank": 251,
-  "outcome": "does not read the data file with pd.read_csv(path)"
+  "changes": 0,
+  "lifted": 0,
+  "statements": 2,
+  "complete": true,
+  "outcome": "no cleaning statement lifted"
  },
  {
   "id": "f63a8ce1cefba76d",
