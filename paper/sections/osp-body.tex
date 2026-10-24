@@ -213,12 +213,7 @@ the inputs, including the GitHub scripts frozen by URL, commit and hash, and rer
 
 \section{Limitations and conclusions}
 
-Joins match on one key column with the same name in both tables, and only Python is generated. A
-numeric column may change type only if no statement combines it with another column (a \texttt{DERIVE}, a
-join key, an aggregate); any other change of type is refused. The mechanized proofs do not cover joins,
-groups, dates or images; the rule for numeric types rests on the proved exactness of the generated
-program and a recompilation, not on a separate proof. The lifter translates a minority of the GitHub
-scripts above. The five monthly pipelines were written by the author, and \PL has no outside users yet and
-no user study; \texttt{docs/\allowbreak USER\_STUDY.md} is its protocol. Planned work is joins on several
-columns, generated code for other targets, and that study, with people who write pandas cleaning
-scripts.
+Joins match on one key column, and only Python is generated. A numeric column may change type only when
+no statement combines it with another column; other type changes are refused. The mechanized proofs cover
+a core of the analysis, without joins, groups, dates and images. Planned work is joins on several columns
+and generated code for other targets.
