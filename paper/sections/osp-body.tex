@@ -24,7 +24,9 @@ same program. A batch is refused only when no run-time code can recover a fact, 
 numeric column arrives as text.
 
 Table~\ref{tab:related} sets \PL against the closest tools. Validators see the values but check them away
-from the code, on every batch; static analyses follow the code but see only declared or inferred structure.
+from the code, on every batch; static analyses follow the code but see only declared or inferred structure;
+provenance-based screening~\cite{schelter2024screening} runs the pipeline to catch issues such as leakage
+between training and test data, but keeps nothing for the next batch.
 We know of no other tool that decides value contracts at each point of a program from the real data and
 carries those decisions forward to later batches.
 
@@ -44,6 +46,7 @@ F\# type providers~\cite{petricek2016} & compile time & types, from a sample & n
 Zhuang and Lu~\cite{zhuang2022} & compile time & column types, from the code & yes & -- \\
 Gerstl et al.~\cite{gerstl2026} & compile time & R data-frame shapes, optionally from the data & yes & -- \\
 Mirji~\cite{mirji2026} & compile time & declared schemas & yes & checks the output schema \\
+Schelter et al.~\cite{schelter2024screening} & development time, by running it & record-level provenance & yes & -- \\
 \textbf{\PL} & \textbf{compile time} & \textbf{types and values of every cell; image headers} & \textbf{yes}
   & \textbf{admits by certificate; reruns only the removals it breaks} \\
 \bottomrule
