@@ -4,7 +4,7 @@
 % running text. The research article is preplang-scp.tex.
 % Build from this folder: py -3 ../eval/paper_numbers.py, pdflatex preplang-osp.tex,
 % py -3 osp_references.py, then pdflatex preplang-osp.tex twice.
-\documentclass[preprint,12pt,a4paper]{elsarticle}
+\documentclass[3p,10pt,a4paper]{elsarticle}  % Elsevier's single-column journal layout
 
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
@@ -78,8 +78,8 @@ optimization \sep deoptimization \sep data validation
 
 \end{frontmatter}
 
-% The template's code metadata table (its caption names it), at the top of the next page.
-\begin{table}[t]
+% The template's code metadata table (its caption names it), right after the abstract.
+\begin{table}[h!]
 \footnotesize
 \renewcommand{\arraystretch}{1.0}
 \begin{adjustbox}{max width=\linewidth}
