@@ -4,7 +4,7 @@
 % running text. The research article is preplang-scp.tex.
 % Build from this folder: py -3 ../eval/paper_numbers.py, pdflatex preplang-osp.tex,
 % py -3 osp_references.py, then pdflatex preplang-osp.tex twice.
-\documentclass[3p,10pt,a4paper]{elsarticle}  % Elsevier's single-column journal layout
+\documentclass[preprint,12pt,a4paper]{elsarticle}  % the OSP template's settings, unchanged
 
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
@@ -63,17 +63,12 @@ Tamil Nadu, India}
 Technology, Vellore 632014, Tamil Nadu, India}
 
 \begin{abstract}
-In batch data preparation, a pipeline is compiled when its input already exists and is then reused on
-batches the compiler has never seen. \PL, a compiler written in C++17 for a small language of table and
-image pipelines, exploits both facts. At compile time it reads every CSV cell, the Parquet footers and the
-image headers, proves or refutes the pipeline's data contracts before any row is processed, and removes the
-checks and operations that this input makes redundant. Each removal is kept in the generated pandas and
-OpenCV program behind a guard holding the facts it relied on. On a new batch the program runs unchanged
-unless the batch breaks those facts; the removed code then runs again, and the result is the one a fresh
-compilation would give. Across \RealRuns{} later months of five public datasets, the compiled pipelines
-agreed with a fresh compilation on \RealDeoptCorrectPct\% of the months and never produced a different
-result. The repository includes \TestCount{} test checks with sanitizer, coverage and fuzzing jobs, Lean~4
-proofs for a core of the analysis, and one script that reproduces every number reported here.
+\PL is a compiler that checks a data-preparation pipeline against its first real input. It reads every CSV
+cell, the Parquet footers and the image headers at compile time, proves or refutes the pipeline's data
+contracts before any row is processed, and removes the checks that this input makes redundant. The
+generated pandas and OpenCV program keeps each removal behind a guard, so a later batch reruns only the
+removed code whose facts it breaks. On \RealRuns{} later months of five public datasets the compiled
+pipelines matched a fresh compilation every time.
 \end{abstract}
 
 \begin{keyword}
@@ -83,8 +78,9 @@ optimization \sep deoptimization \sep data validation
 
 \end{frontmatter}
 
-% The template's code metadata table (its caption names it), right after the abstract.
-\begin{table}[h!]
+% The template's code metadata table, as the template places it: after the front matter.
+\section*{Metadata}
+\begin{table}[!h]
 \footnotesize
 \renewcommand{\arraystretch}{1.0}
 \begin{adjustbox}{max width=\linewidth}
@@ -126,17 +122,27 @@ C9 & Support email for questions & atnikhil06@gmail.com \\
 
 \input{sections/osp-body}
 
+\section*{CRediT authorship contribution statement}
+\textbf{Nikhil V:} Conceptualization, Methodology, Software, Validation, Investigation, Data curation,
+Visualization, Writing -- original draft. \textbf{Ranjithkumar S:} Supervision, Writing -- review and
+editing.
+
 \section*{Declaration of competing interest}
-The authors declare no known competing financial interests or personal relationships that could have
-appeared to influence the work reported in this paper.
+The authors declare that they have no known competing financial interests or personal relationships that
+could have appeared to influence the work reported in this paper.
 
 \section*{Funding}
 This research did not receive any specific grant from funding agencies in the public, commercial, or
 not-for-profit sectors.
 
+\section*{Data availability}
+The source code, the evaluation scripts and every raw result are in the repository of the metadata table
+(C2), under the MIT license. The public datasets are downloaded by \texttt{eval/\allowbreak reproduce.sh};
+the GitHub script corpora are pinned there by URL, commit and hash.
+
 % Science of Computer Programming requires this statement, before the references, when generative AI
-% tools were used.
-\section*{Use of generative AI}
+% tools were used; the section title is the one the Guide for Authors gives.
+\section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
 Generative AI tools assisted with implementation, literature search, evaluation scripts, analysis and
 drafting of this manuscript. The authors reviewed all text, code and results and take responsibility
 for them.
